@@ -29,7 +29,6 @@ const compute = new ComputeStack(app, `${prefix}-compute`, {
   prefix,
   vpc: network.vpc,
   db: data.db,
-  redisSecurityGroup: data.redisSecurityGroup,
   redisEndpointAddress: data.redisEndpointAddress,
   redisEndpointPort: data.redisEndpointPort,
   domainName,

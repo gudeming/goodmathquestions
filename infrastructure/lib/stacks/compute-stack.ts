@@ -19,7 +19,6 @@ export class ComputeStack extends cdk.Stack {
       prefix: string;
       vpc: ec2.IVpc;
       db: rds.DatabaseInstance;
-      redisSecurityGroup: ec2.ISecurityGroup;
       redisEndpointAddress: string;
       redisEndpointPort: string;
       domainName?: string;
@@ -116,13 +115,6 @@ export class ComputeStack extends cdk.Stack {
       scaleInCooldown: cdk.Duration.seconds(90),
       scaleOutCooldown: cdk.Duration.seconds(60),
     });
-
-    props.db.connections.allowDefaultPortFrom(fargate.service.connections);
-    props.redisSecurityGroup.addIngressRule(
-      fargate.service.connections.securityGroups[0],
-      ec2.Port.tcp(6379),
-      "Allow ECS tasks to reach Redis"
-    );
 
     if (zone && fullDomainName && zoneDomainName) {
       const recordName = fullDomainName.replace(`.${zoneDomainName}`, "");

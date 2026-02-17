@@ -25,6 +25,11 @@ export class DataStack extends cdk.Stack {
       description: "PostgreSQL security group",
       allowAllOutbound: true,
     });
+    dbSg.addIngressRule(
+      ec2.Peer.ipv4(props.vpc.vpcCidrBlock),
+      ec2.Port.tcp(5432),
+      "Allow Postgres access from within VPC"
+    );
 
     this.db = new rds.DatabaseInstance(this, "Postgres", {
       vpc: props.vpc,
@@ -50,6 +55,11 @@ export class DataStack extends cdk.Stack {
       description: "Redis security group",
       allowAllOutbound: true,
     });
+    this.redisSecurityGroup.addIngressRule(
+      ec2.Peer.ipv4(props.vpc.vpcCidrBlock),
+      ec2.Port.tcp(6379),
+      "Allow Redis access from within VPC"
+    );
 
     const redisSubnetGroup = new elasticache.CfnSubnetGroup(this, "RedisSubnetGroup", {
       cacheSubnetGroupName: `${props.prefix}-redis-subnets`,
