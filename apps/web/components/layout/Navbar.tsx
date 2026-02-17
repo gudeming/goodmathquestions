@@ -59,6 +59,12 @@ export function Navbar() {
           >
             {t("leaderboard")}
           </Link>
+          <Link
+            href="/mastery"
+            className="font-heading font-medium text-gray-600 hover:text-primary-600 transition-colors"
+          >
+            {t("mastery")}
+          </Link>
 
           {/* Language Toggle */}
           <button
@@ -131,6 +137,13 @@ export function Navbar() {
             onClick={() => setMobileOpen(false)}
           >
             {t("leaderboard")}
+          </Link>
+          <Link
+            href="/mastery"
+            className="block font-heading text-gray-600 py-2"
+            onClick={() => setMobileOpen(false)}
+          >
+            {t("mastery")}
           </Link>
           <button
             onClick={switchLocale}

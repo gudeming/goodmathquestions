@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { buildUSK12QuestionBank } from "./us-k12-question-bank";
+import { KNOWLEDGE_POINT_TAXONOMY } from "@gmq/math-engine";
 
 const prisma = new PrismaClient();
 
@@ -8,6 +9,8 @@ async function main() {
   console.log("🌱 Seeding database...");
 
   // Development seed reset: make script repeatable
+  await prisma.userKnowledgePointMastery.deleteMany();
+  await prisma.knowledgePoint.deleteMany();
   await prisma.challengeParticipant.deleteMany();
   await prisma.challenge.deleteMany();
   await prisma.comment.deleteMany();
@@ -50,7 +53,56 @@ async function main() {
       update: {},
       create: { nameEn: "Classic", nameZh: "经典" },
     }),
+    prisma.tag.upsert({
+      where: { nameEn: "GRADE_4" },
+      update: {},
+      create: { nameEn: "GRADE_4", nameZh: "四年级闯关" },
+    }),
+    prisma.tag.upsert({
+      where: { nameEn: "GRADE_5" },
+      update: {},
+      create: { nameEn: "GRADE_5", nameZh: "五年级闯关" },
+    }),
+    prisma.tag.upsert({
+      where: { nameEn: "GRADE_6" },
+      update: {},
+      create: { nameEn: "GRADE_6", nameZh: "六年级闯关" },
+    }),
+    prisma.tag.upsert({
+      where: { nameEn: "GRADE_7" },
+      update: {},
+      create: { nameEn: "GRADE_7", nameZh: "七年级闯关" },
+    }),
+    prisma.tag.upsert({
+      where: { nameEn: "GRADE_8" },
+      update: {},
+      create: { nameEn: "GRADE_8", nameZh: "八年级闯关" },
+    }),
+    prisma.tag.upsert({
+      where: { nameEn: "KNOWLEDGE_CHECK" },
+      update: {},
+      create: { nameEn: "KNOWLEDGE_CHECK", nameZh: "知识检查" },
+    }),
   ]);
+
+  // Seed knowledge points for mastery tracking
+  for (let i = 0; i < KNOWLEDGE_POINT_TAXONOMY.length; i++) {
+    const kp = KNOWLEDGE_POINT_TAXONOMY[i];
+    await prisma.knowledgePoint.upsert({
+      where: { slug: kp.slug },
+      update: {},
+      create: {
+        slug: kp.slug,
+        domain: kp.domain as any,
+        nameEn: kp.nameEn,
+        nameZh: kp.nameZh,
+        minLevel: kp.minLevel,
+        maxLevel: kp.maxLevel,
+        sortOrder: i,
+      },
+    });
+  }
+  console.log(`  ✓ ${KNOWLEDGE_POINT_TAXONOMY.length} knowledge points seeded`);
 
   // ============================================================
   // 56 BILINGUAL MATH QUESTIONS
@@ -1314,6 +1366,38 @@ async function main() {
         animationConfig: q.animationConfig,
         tags: questionTags.length > 0 ? { create: questionTags } : undefined,
       },
+    });
+  }
+
+  // Attach grade-level focus tags so students can directly pick Grade 4-8 challenge tracks.
+  const gradeTagRules: Array<{
+    tagName: string;
+    ageGroups: Array<"AGE_8_10" | "AGE_10_12" | "AGE_12_14" | "AGE_14_16" | "AGE_16_18">;
+  }> = [
+    { tagName: "GRADE_4", ageGroups: ["AGE_8_10"] },
+    { tagName: "GRADE_5", ageGroups: ["AGE_8_10", "AGE_10_12"] },
+    { tagName: "GRADE_6", ageGroups: ["AGE_10_12"] },
+    { tagName: "GRADE_7", ageGroups: ["AGE_12_14"] },
+    { tagName: "GRADE_8", ageGroups: ["AGE_12_14", "AGE_14_16"] },
+  ];
+
+  for (const rule of gradeTagRules) {
+    const gradeTag = await prisma.tag.findUnique({ where: { nameEn: rule.tagName } });
+    if (!gradeTag) continue;
+
+    const targetQuestions = await prisma.question.findMany({
+      where: { ageGroup: { in: rule.ageGroups } },
+      select: { id: true },
+    });
+
+    if (targetQuestions.length === 0) continue;
+
+    await prisma.tagsOnQuestions.createMany({
+      data: targetQuestions.map((q) => ({
+        questionId: q.id,
+        tagId: gradeTag.id,
+      })),
+      skipDuplicates: true,
     });
   }
 

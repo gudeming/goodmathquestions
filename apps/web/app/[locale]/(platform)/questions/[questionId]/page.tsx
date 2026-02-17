@@ -32,7 +32,8 @@ export default function QuestionPage() {
   const isZh = locale === "zh";
   const params = useParams();
   const { data: session } = useSession();
-  const questionId = params.questionId as string;
+  const rawQuestionId = params.questionId;
+  const questionId = Array.isArray(rawQuestionId) ? rawQuestionId[0] : rawQuestionId;
 
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
@@ -43,6 +44,7 @@ export default function QuestionPage() {
   const [showExplanation, setShowExplanation] = useState(false);
   const [explanationText, setExplanationText] = useState<string | null>(null);
   const [liked, setLiked] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Fetch question from API
   const { data: question, isLoading } = trpc.question.getById.useQuery(
@@ -58,6 +60,7 @@ export default function QuestionPage() {
       explanation?: { en: string | null; zh: string | null } | null;
     }) => {
       if (payload.isCorrect) {
+        setSubmitError(null);
         setResult("correct");
         setShowCelebration(true);
         setXpEarned(payload.xpEarned ?? 0);
@@ -87,11 +90,25 @@ export default function QuestionPage() {
   // Submit answer mutation
   const submitAnswer = trpc.question.submitAnswer.useMutation({
     onSuccess: (data) => handleAnswerResult(data),
+    onError: (error) => {
+      setSubmitError(
+        isZh
+          ? `提交失败：${error.message}`
+          : `Submit failed: ${error.message}`
+      );
+    },
   });
 
   // Guest answer check mutation (no XP / no DB submission)
   const checkAnswer = trpc.question.checkAnswer.useMutation({
     onSuccess: (data) => handleAnswerResult(data),
+    onError: (error) => {
+      setSubmitError(
+        isZh
+          ? `检查失败：${error.message}`
+          : `Check failed: ${error.message}`
+      );
+    },
   });
 
   // Like toggle mutation
@@ -117,6 +134,8 @@ export default function QuestionPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!answer.trim()) return;
+    if (!questionId) return;
+    setSubmitError(null);
 
     if (session?.user) {
       // Authenticated: submit via API
@@ -312,6 +331,12 @@ export default function QuestionPage() {
                   </motion.p>
                 )}
               </AnimatePresence>
+
+              {submitError && (
+                <p className="mt-2 text-sm text-fun-red text-center font-heading">
+                  {submitError}
+                </p>
+              )}
 
               {/* Login prompt for guests */}
               {!session?.user && (

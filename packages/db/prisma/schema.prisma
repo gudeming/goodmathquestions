@@ -74,14 +74,15 @@ model User {
   updatedAt    DateTime   @updatedAt
 
   // Relations
-  submissions Submission[]
-  badges      UserBadge[]
-  comments    Comment[]
-  likes       QuestionLike[]
-  accounts    Account[]
-  sessions    Session[]
-  classroom   Classroom?     @relation(fields: [classroomId], references: [id])
-  classroomId String?
+  submissions      Submission[]
+  badges           UserBadge[]
+  comments         Comment[]
+  likes            QuestionLike[]
+  accounts         Account[]
+  sessions         Session[]
+  classroom        Classroom?     @relation(fields: [classroomId], references: [id])
+  classroomId      String?
+  knowledgeMastery UserKnowledgePointMastery[]
 
   @@index([xp(sort: Desc)])
   @@index([classroomId])
@@ -299,4 +300,46 @@ model ChallengeParticipant {
   challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
 
   @@unique([challengeId, userId])
+}
+
+// ============================================================
+// KNOWLEDGE POINT MASTERY TRACKING
+// ============================================================
+
+model KnowledgePoint {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  domain    Category
+  nameEn    String
+  nameZh    String
+  sortOrder Int      @default(0)
+  minLevel  Int      @default(1)
+  maxLevel  Int      @default(5)
+
+  masteryRecords UserKnowledgePointMastery[]
+
+  @@index([domain])
+}
+
+model UserKnowledgePointMastery {
+  id               String    @id @default(cuid())
+  userId           String
+  knowledgePointId String
+
+  accuracy         Float     @default(0.5)
+  avgTimeMs        Float     @default(30000)
+  streak           Int       @default(0)
+  bestStreak       Int       @default(0)
+  level            Int       @default(1)
+  totalAttempts    Int       @default(0)
+  totalCorrect     Int       @default(0)
+  lastPracticedAt  DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  knowledgePoint KnowledgePoint @relation(fields: [knowledgePointId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, knowledgePointId])
+  @@index([userId])
 }

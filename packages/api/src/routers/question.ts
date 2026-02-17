@@ -1,10 +1,45 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import {
   createTRPCRouter,
   publicProcedure,
   protectedProcedure,
 } from "../trpc";
 import { validateAnswer } from "@gmq/math-engine";
+
+async function resolveSessionUserId(ctx: {
+  session: { user: { id: string; email?: string | null } };
+  db: {
+    user: {
+      findUnique: (args: any) => Promise<{ id: string } | null>;
+    };
+  };
+}): Promise<string> {
+  const sessionUserId = ctx.session.user.id;
+  const existingById = await ctx.db.user.findUnique({
+    where: { id: sessionUserId },
+    select: { id: true },
+  });
+  if (existingById) {
+    return existingById.id;
+  }
+
+  const email = ctx.session.user.email;
+  if (email) {
+    const existingByEmail = await ctx.db.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+    if (existingByEmail) {
+      return existingByEmail.id;
+    }
+  }
+
+  throw new TRPCError({
+    code: "UNAUTHORIZED",
+    message: "Session is stale. Please log in again.",
+  });
+}
 
 export const questionRouter = createTRPCRouter({
   // Get all published questions with filters
@@ -154,6 +189,8 @@ export const questionRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const userId = await resolveSessionUserId(ctx as any);
+
       const question = await ctx.db.question.findUnique({
         where: { id: input.questionId },
         select: {
@@ -177,7 +214,7 @@ export const questionRouter = createTRPCRouter({
       // Count previous attempts
       const attemptCount = await ctx.db.submission.count({
         where: {
-          userId: ctx.session.user.id,
+          userId,
           questionId: input.questionId,
         },
       });
@@ -185,7 +222,7 @@ export const questionRouter = createTRPCRouter({
       // Create submission
       const submission = await ctx.db.submission.create({
         data: {
-          userId: ctx.session.user.id,
+          userId,
           questionId: input.questionId,
           answer: input.answer,
           isCorrect,
@@ -198,7 +235,7 @@ export const questionRouter = createTRPCRouter({
       // Award XP if correct
       if (isCorrect && xpEarned > 0) {
         const user = await ctx.db.user.update({
-          where: { id: ctx.session.user.id },
+          where: { id: userId },
           data: {
             xp: { increment: xpEarned },
             lastActiveAt: new Date(),
@@ -209,7 +246,7 @@ export const questionRouter = createTRPCRouter({
         const newLevel = Math.floor(user.xp / 100) + 1;
         if (newLevel > user.level) {
           await ctx.db.user.update({
-            where: { id: ctx.session.user.id },
+            where: { id: userId },
             data: { level: newLevel },
           });
         }
@@ -232,10 +269,12 @@ export const questionRouter = createTRPCRouter({
   toggleLike: protectedProcedure
     .input(z.object({ questionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      const userId = await resolveSessionUserId(ctx as any);
+
       const existing = await ctx.db.questionLike.findUnique({
         where: {
           userId_questionId: {
-            userId: ctx.session.user.id,
+            userId,
             questionId: input.questionId,
           },
         },
@@ -248,7 +287,7 @@ export const questionRouter = createTRPCRouter({
 
       await ctx.db.questionLike.create({
         data: {
-          userId: ctx.session.user.id,
+          userId,
           questionId: input.questionId,
         },
       });
