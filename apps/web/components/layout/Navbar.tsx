@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { trpc } from "@/lib/trpc";
 
 export function Navbar() {
   const t = useTranslations("common");
@@ -14,11 +15,41 @@ export function Navbar() {
   const router = useRouter();
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const updateProfile = trpc.user.updateProfile.useMutation();
+
+  const getLocalizedPath = (targetLocale: "en" | "zh") => {
+    const currentPath = pathname || "/";
+    const segments = currentPath.split("/").filter(Boolean);
+    if (segments[0] === "en" || segments[0] === "zh") {
+      segments.shift();
+    }
+    const basePath = segments.length > 0 ? `/${segments.join("/")}` : "/";
+    return targetLocale === "en"
+      ? basePath
+      : basePath === "/"
+      ? "/zh"
+      : `/zh${basePath}`;
+  };
+
+  const toCurrentLocalePath = (path: string) => {
+    const normalized = path.startsWith("/") ? path : `/${path}`;
+    if (locale === "zh") {
+      return normalized === "/" ? "/zh" : `/zh${normalized}`;
+    }
+    return normalized;
+  };
 
   const switchLocale = () => {
-    const newLocale = locale === "en" ? "zh" : "en";
-    const pathWithoutLocale = pathname.replace(`/${locale}`, "") || "/";
-    router.push(`/${newLocale}${pathWithoutLocale}`);
+    const newLocale = (locale === "en" ? "zh" : "en") as "en" | "zh";
+    const targetPath = getLocalizedPath(newLocale);
+
+    // Persist language globally for next requests and direct visits.
+    document.cookie = `NEXT_LOCALE=${newLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
+
+    if (session?.user) {
+      updateProfile.mutate({ locale: newLocale });
+    }
+    router.push(targetPath);
   };
 
   const isLoggedIn = !!session?.user;
@@ -32,7 +63,7 @@ export function Navbar() {
     >
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href={toCurrentLocalePath("/")} className="flex items-center gap-2 group">
           <motion.span
             className="text-3xl"
             whileHover={{ rotate: 20 }}
@@ -48,19 +79,19 @@ export function Navbar() {
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-5">
           <Link
-            href="/questions"
+            href={toCurrentLocalePath("/questions")}
             className="font-heading font-medium text-gray-600 hover:text-primary-600 transition-colors"
           >
             {t("questions")}
           </Link>
           <Link
-            href="/leaderboard"
+            href={toCurrentLocalePath("/leaderboard")}
             className="font-heading font-medium text-gray-600 hover:text-primary-600 transition-colors"
           >
             {t("leaderboard")}
           </Link>
           <Link
-            href="/mastery"
+            href={toCurrentLocalePath("/mastery")}
             className="font-heading font-medium text-gray-600 hover:text-primary-600 transition-colors"
           >
             {t("mastery")}
@@ -79,7 +110,7 @@ export function Navbar() {
           {isLoggedIn ? (
             <div className="flex items-center gap-3">
               <Link
-                href="/profile"
+                href={toCurrentLocalePath("/profile")}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-bubble bg-gradient-to-r from-primary-50 to-fun-purple/10 hover:from-primary-100 hover:to-fun-purple/20 transition-all"
               >
                 <div className="w-7 h-7 rounded-full bg-gradient-to-r from-primary-400 to-fun-purple flex items-center justify-center text-white text-xs font-bold">
@@ -90,7 +121,7 @@ export function Navbar() {
                 </span>
               </Link>
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => signOut({ callbackUrl: toCurrentLocalePath("/") })}
                 className="text-sm text-gray-400 hover:text-gray-600 font-heading transition-colors"
               >
                 {t("logout")}
@@ -98,10 +129,10 @@ export function Navbar() {
             </div>
           ) : (
             <>
-              <Link href="/login" className="btn-secondary text-sm py-2 px-4">
+              <Link href={toCurrentLocalePath("/login")} className="btn-secondary text-sm py-2 px-4">
                 {t("login")}
               </Link>
-              <Link href="/signup" className="btn-primary text-sm py-2 px-4">
+              <Link href={toCurrentLocalePath("/signup")} className="btn-primary text-sm py-2 px-4">
                 {t("signup")}
               </Link>
             </>
@@ -125,21 +156,21 @@ export function Navbar() {
           animate={{ opacity: 1, height: "auto" }}
         >
           <Link
-            href="/questions"
+            href={toCurrentLocalePath("/questions")}
             className="block font-heading text-gray-600 py-2"
             onClick={() => setMobileOpen(false)}
           >
             {t("questions")}
           </Link>
           <Link
-            href="/leaderboard"
+            href={toCurrentLocalePath("/leaderboard")}
             className="block font-heading text-gray-600 py-2"
             onClick={() => setMobileOpen(false)}
           >
             {t("leaderboard")}
           </Link>
           <Link
-            href="/mastery"
+            href={toCurrentLocalePath("/mastery")}
             className="block font-heading text-gray-600 py-2"
             onClick={() => setMobileOpen(false)}
           >
@@ -155,14 +186,14 @@ export function Navbar() {
           {isLoggedIn ? (
             <div className="pt-2 space-y-2">
               <Link
-                href="/profile"
+                href={toCurrentLocalePath("/profile")}
                 className="block w-full text-center btn-secondary text-sm py-2"
                 onClick={() => setMobileOpen(false)}
               >
                 {t("profile")}
               </Link>
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => signOut({ callbackUrl: toCurrentLocalePath("/") })}
                 className="block w-full text-center text-sm text-gray-400 py-2"
               >
                 {t("logout")}
@@ -171,14 +202,14 @@ export function Navbar() {
           ) : (
             <div className="flex gap-3 pt-2">
               <Link
-                href="/login"
+                href={toCurrentLocalePath("/login")}
                 className="btn-secondary text-sm py-2 px-4 flex-1 text-center"
                 onClick={() => setMobileOpen(false)}
               >
                 {t("login")}
               </Link>
               <Link
-                href="/signup"
+                href={toCurrentLocalePath("/signup")}
                 className="btn-primary text-sm py-2 px-4 flex-1 text-center"
                 onClick={() => setMobileOpen(false)}
               >
