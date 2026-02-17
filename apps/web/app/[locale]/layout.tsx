@@ -1,15 +1,18 @@
-import { NextIntlClientProvider, useMessages } from "next-intl";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { locales, type Locale } from "@gmq/i18n";
-import "../globals.css";
+import { TRPCProvider } from "@/lib/trpc-provider";
+import { AuthProvider } from "@/lib/auth-provider";
 
 export const metadata = {
   title: "Good Math Questions - Where Math Becomes an Adventure!",
   description:
     "A fun, interactive math learning platform for kids aged 8-14. Solve puzzles, watch animated solutions, and compete with friends!",
+  icons: { icon: "/favicon.ico" },
 };
 
-export default function LocaleLayout({
+export default async function LocaleLayout({
   children,
   params: { locale },
 }: {
@@ -20,15 +23,15 @@ export default function LocaleLayout({
     notFound();
   }
 
-  const messages = useMessages();
+  const messages = await getMessages({ locale });
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body className="font-body antialiased">
+    <AuthProvider>
+      <TRPCProvider>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>
-      </body>
-    </html>
+      </TRPCProvider>
+    </AuthProvider>
   );
 }

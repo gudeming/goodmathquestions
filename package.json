@@ -7,7 +7,9 @@
     "lint": "turbo lint",
     "db:push": "turbo db:push --filter=@gmq/db",
     "db:generate": "turbo db:generate --filter=@gmq/db",
-    "db:seed": "turbo db:seed --filter=@gmq/db"
+    "db:seed": "turbo db:seed --filter=@gmq/db",
+    "start:deploy": "bash scripts/start.sh",
+    "stop:deploy": "bash scripts/stop.sh"
   },
   "devDependencies": {
     "turbo": "^2.3.0",

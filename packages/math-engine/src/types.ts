@@ -6,11 +6,19 @@ export type MathCategory =
   | "NUMBER_THEORY"
   | "WORD_PROBLEMS"
   | "LOGIC"
-  | "PROBABILITY";
+  | "PROBABILITY"
+  | "TRIGONOMETRY"
+  | "CALCULUS"
+  | "STATISTICS";
 
 export type DifficultyLevel = "EASY" | "MEDIUM" | "HARD" | "CHALLENGE";
 
-export type AgeGroup = "AGE_8_10" | "AGE_10_12" | "AGE_12_14";
+export type AgeGroup =
+  | "AGE_8_10"
+  | "AGE_10_12"
+  | "AGE_12_14"
+  | "AGE_14_16"
+  | "AGE_16_18";
 
 export const XP_REWARDS: Record<DifficultyLevel, number> = {
   EASY: 10,

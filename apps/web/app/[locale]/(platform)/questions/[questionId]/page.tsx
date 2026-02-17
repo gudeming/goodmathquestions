@@ -1,63 +1,112 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { trpc } from "@/lib/trpc";
 import { MathAnimation } from "@/components/animations/MathAnimation";
 import { CelebrationEffect } from "@/components/animations/CelebrationEffect";
 import { HintRevealer } from "@/components/questions/HintRevealer";
 import { DiscussionSection } from "@/components/questions/DiscussionSection";
+import { type AnimationConfig } from "@gmq/animation-engine";
 
-// Mock question data (will be replaced with tRPC query)
-const MOCK_QUESTION = {
-  id: "1",
-  titleEn: "The Pizza Problem",
-  titleZh: "披萨问题",
-  contentEn:
-    "If you cut a pizza into 8 equal slices and eat 3, what fraction of the pizza is left?",
-  contentZh: "如果你把一个披萨切成8等份，吃了3片，剩下多少？",
-  difficulty: "EASY",
-  category: "FRACTIONS",
-  ageGroup: "AGE_8_10",
-  answer: "5/8",
-  hints: [
-    { en: "Think about how many slices you started with", zh: "想想你一开始有多少片" },
-    { en: "You had 8 slices and ate 3...", zh: "你有8片，吃了3片..." },
-    { en: "8 - 3 = 5 slices left out of 8 total", zh: "8 - 3 = 5片，总共8片" },
-  ],
-  animationConfig: {
-    type: "pizza_slice",
-    totalSlices: 8,
-    eatenSlices: 3,
-    colors: ["#ff6b9d", "#fbbf24", "#4ade80", "#60a5fa"],
-  },
-  funFactEn: "Did you know? The word 'fraction' comes from the Latin word 'fractio' which means 'to break'!",
-  funFactZh: "你知道吗？分数这个概念最早出现在古埃及，他们用分数来分配尼罗河的土地！",
+const CATEGORY_ICONS: Record<string, string> = {
+  ARITHMETIC: "🔢",
+  ALGEBRA: "🔤",
+  GEOMETRY: "📐",
+  FRACTIONS: "🍕",
+  NUMBER_THEORY: "🔍",
+  WORD_PROBLEMS: "📖",
+  LOGIC: "🧩",
+  PROBABILITY: "🎲",
+  TRIGONOMETRY: "📏",
+  CALCULUS: "∫",
+  STATISTICS: "📊",
 };
 
 export default function QuestionPage() {
   const t = useTranslations("questions");
+  const locale = useLocale();
+  const isZh = locale === "zh";
   const params = useParams();
+  const { data: session } = useSession();
+  const questionId = params.questionId as string;
+
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
   const [attempts, setAttempts] = useState(0);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [explanationText, setExplanationText] = useState<string | null>(null);
+  const [liked, setLiked] = useState(false);
 
-  const question = MOCK_QUESTION; // Will be tRPC query
-  const isZh =
-    typeof window !== "undefined" &&
-    window.location.pathname.includes("/zh");
+  // Fetch question from API
+  const { data: question, isLoading } = trpc.question.getById.useQuery(
+    { id: questionId },
+    { enabled: !!questionId }
+  );
+
+  const handleAnswerResult = useCallback(
+    (payload: {
+      isCorrect: boolean;
+      xpEarned?: number;
+      attempt?: number;
+      explanation?: { en: string | null; zh: string | null } | null;
+    }) => {
+      if (payload.isCorrect) {
+        setResult("correct");
+        setShowCelebration(true);
+        setXpEarned(payload.xpEarned ?? 0);
+        setShowExplanation(true);
+        setExplanationText(
+          isZh
+            ? payload.explanation?.zh ?? null
+            : payload.explanation?.en ?? null
+        );
+        setTimeout(() => setShowCelebration(false), 3000);
+      } else {
+        setResult("incorrect");
+        setShowExplanation(false);
+        setExplanationText(null);
+        setTimeout(() => setResult(null), 2500);
+      }
+
+      if (typeof payload.attempt === "number") {
+        setAttempts(payload.attempt);
+      } else {
+        setAttempts((prev) => prev + 1);
+      }
+    },
+    [isZh]
+  );
+
+  // Submit answer mutation
+  const submitAnswer = trpc.question.submitAnswer.useMutation({
+    onSuccess: (data) => handleAnswerResult(data),
+  });
+
+  // Guest answer check mutation (no XP / no DB submission)
+  const checkAnswer = trpc.question.checkAnswer.useMutation({
+    onSuccess: (data) => handleAnswerResult(data),
+  });
+
+  // Like toggle mutation
+  const toggleLike = trpc.question.toggleLike.useMutation({
+    onSuccess: (data) => setLiked(data.liked),
+  });
 
   // Timer
   useEffect(() => {
+    if (result === "correct") return; // Stop timer when solved
     const timer = setInterval(() => {
       setTimeSpent((prev) => prev + 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [result]);
 
   const formatTime = useCallback((seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -67,21 +116,50 @@ export default function QuestionPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setAttempts((prev) => prev + 1);
+    if (!answer.trim()) return;
 
-    const isCorrect =
-      answer.trim().toLowerCase() === question.answer.trim().toLowerCase();
-
-    if (isCorrect) {
-      setResult("correct");
-      setShowCelebration(true);
-      setXpEarned(10); // Based on difficulty
-      setTimeout(() => setShowCelebration(false), 3000);
+    if (session?.user) {
+      // Authenticated: submit via API
+      submitAnswer.mutate({
+        questionId,
+        answer: answer.trim(),
+        timeSpent,
+      });
     } else {
-      setResult("incorrect");
-      setTimeout(() => setResult(null), 2000);
+      // Guest mode: server-side check (no XP / no DB submission)
+      checkAnswer.mutate({
+        questionId,
+        answer: answer.trim(),
+      });
     }
   };
+
+  const handleLike = () => {
+    if (session?.user) {
+      toggleLike.mutate({ questionId });
+    }
+  };
+
+  // Loading state
+  if (isLoading || !question) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-20">
+        <motion.div
+          className="text-5xl mb-4 inline-block"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          🧮
+        </motion.div>
+        <p className="text-gray-500 font-heading">
+          {isZh ? "加载题目中..." : "Loading question..."}
+        </p>
+      </div>
+    );
+  }
+
+  const animConfig = question.animationConfig as AnimationConfig;
+  const hints = (question.hints as Array<{ en: string; zh: string }>) || [];
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -98,7 +176,7 @@ export default function QuestionPage() {
       >
         <div className="flex items-center gap-3 mb-4">
           <span className="text-3xl">
-            {question.category === "FRACTIONS" ? "🍕" : "🧮"}
+            {CATEGORY_ICONS[question.category] || "🧮"}
           </span>
           <h1 className="text-3xl font-heading font-bold text-gray-800">
             {isZh ? question.titleZh : question.titleEn}
@@ -106,7 +184,7 @@ export default function QuestionPage() {
         </div>
 
         {/* Metadata bar */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
           <span className="badge-level">{question.difficulty}</span>
           <span className="badge-xp">⏱️ {formatTime(timeSpent)}</span>
           {attempts > 0 && (
@@ -114,6 +192,27 @@ export default function QuestionPage() {
               {t("attempts")}: {attempts}
             </span>
           )}
+          {result === "correct" && (
+            <motion.span
+              className="bg-fun-green/20 text-fun-green text-sm font-bold py-1 px-3 rounded-full"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+            >
+              {t("solved")} ✅
+            </motion.span>
+          )}
+
+          {/* Like Button */}
+          <button
+            onClick={handleLike}
+            className={`ml-auto flex items-center gap-1 px-3 py-1 rounded-full text-sm font-heading transition-all ${
+              liked
+                ? "bg-fun-pink/20 text-fun-pink"
+                : "bg-gray-100 text-gray-500 hover:bg-fun-pink/10"
+            }`}
+          >
+            {liked ? "❤️" : "🤍"} {question._count.likes + (liked ? 1 : 0)}
+          </button>
         </div>
       </motion.div>
 
@@ -122,12 +221,12 @@ export default function QuestionPage() {
         <div>
           {/* Animation Display */}
           <motion.div
-            className="bg-white rounded-card shadow-lg p-6 mb-6 border-2 border-primary-100"
+            className="bg-white rounded-card shadow-lg p-6 mb-6 border-2 border-primary-100 overflow-hidden"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <MathAnimation config={question.animationConfig} />
+            <MathAnimation config={animConfig} revealSolution={result === "correct"} />
           </motion.div>
 
           {/* Question Text */}
@@ -166,18 +265,23 @@ export default function QuestionPage() {
                     result === "correct"
                       ? "border-fun-green bg-green-50"
                       : result === "incorrect"
-                      ? "border-fun-red bg-red-50"
+                      ? "border-fun-red bg-red-50 animate-wiggle"
                       : ""
                   }`}
                   placeholder="?"
-                  disabled={result === "correct"}
+                  disabled={
+                    result === "correct" ||
+                    submitAnswer.isPending ||
+                    checkAnswer.isPending
+                  }
+                  autoFocus
                 />
 
-                {/* Result feedback */}
+                {/* Result feedback emoji */}
                 <AnimatePresence>
                   {result && (
                     <motion.div
-                      className={`absolute -right-2 -top-2 text-2xl`}
+                      className="absolute -right-2 -top-2 text-2xl"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1, rotate: [0, -10, 10, 0] }}
                       exit={{ scale: 0 }}
@@ -193,16 +297,14 @@ export default function QuestionPage() {
                 {result && (
                   <motion.p
                     className={`mt-3 font-heading font-bold text-center ${
-                      result === "correct"
-                        ? "text-fun-green"
-                        : "text-fun-orange"
+                      result === "correct" ? "text-fun-green" : "text-fun-orange"
                     }`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                   >
                     {result === "correct" ? t("correct") : t("incorrect")}
-                    {result === "correct" && (
+                    {result === "correct" && xpEarned > 0 && (
                       <span className="block text-sm mt-1">
                         +{xpEarned} {t("xpEarned")} ✨
                       </span>
@@ -211,42 +313,77 @@ export default function QuestionPage() {
                 )}
               </AnimatePresence>
 
+              {/* Login prompt for guests */}
+              {!session?.user && (
+                <p className="text-xs text-gray-400 mt-2 text-center">
+                  {isZh
+                    ? "登录后提交答案可以获得经验值！"
+                    : "Log in to earn XP when you submit answers!"}
+                </p>
+              )}
+
               {result !== "correct" && (
                 <motion.button
                   type="submit"
-                  className="w-full btn-primary mt-4 text-lg"
+                  disabled={
+                    !answer.trim() ||
+                    submitAnswer.isPending ||
+                    checkAnswer.isPending
+                  }
+                  className="w-full btn-primary mt-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {t("submitAnswer")} ✨
+                  {submitAnswer.isPending || checkAnswer.isPending
+                    ? isZh ? "检查中..." : "Checking..."
+                    : `${t("submitAnswer")} ✨`}
                 </motion.button>
               )}
             </form>
           </motion.div>
 
+          {/* Explanation (shown after correct answer) */}
+          <AnimatePresence>
+            {showExplanation && explanationText && (
+              <motion.div
+                className="bg-gradient-to-r from-fun-green/10 to-fun-cyan/10 rounded-card p-6 border-2 border-fun-green/30"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0 }}
+              >
+                <h3 className="font-heading font-bold text-lg text-fun-green mb-2">
+                  ✅ {isZh ? "解题思路" : "Solution Explanation"}
+                </h3>
+                <p className="text-gray-700 font-body">{explanationText}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Hints */}
-          <HintRevealer hints={question.hints} isZh={isZh} />
+          <HintRevealer hints={hints} isZh={isZh} />
 
           {/* Fun Fact */}
-          <motion.div
-            className="bg-gradient-to-r from-fun-yellow/20 to-fun-orange/20 rounded-card p-6 border-2 border-fun-yellow/30"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            <h3 className="font-heading font-bold text-lg text-gray-800 mb-2">
-              💡 {t("funFact")}
-            </h3>
-            <p className="text-gray-700 font-body">
-              {isZh ? question.funFactZh : question.funFactEn}
-            </p>
-          </motion.div>
+          {(question.funFactEn || question.funFactZh) && (
+            <motion.div
+              className="bg-gradient-to-r from-fun-yellow/20 to-fun-orange/20 rounded-card p-6 border-2 border-fun-yellow/30"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              <h3 className="font-heading font-bold text-lg text-gray-800 mb-2">
+                💡 {t("funFact")}
+              </h3>
+              <p className="text-gray-700 font-body">
+                {isZh ? question.funFactZh : question.funFactEn}
+              </p>
+            </motion.div>
+          )}
         </div>
       </div>
 
       {/* Discussion Section */}
       <div className="mt-12">
-        <DiscussionSection questionId={question.id} />
+        <DiscussionSection questionId={questionId} />
       </div>
     </div>
   );

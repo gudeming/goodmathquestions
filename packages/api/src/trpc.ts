@@ -37,12 +37,18 @@ export const publicProcedure = t.procedure;
 
 // Protected procedure - requires authentication
 const enforceAuth = t.middleware(({ ctx, next }) => {
-  if (!ctx.session?.user) {
+  if (!ctx.session?.user || !(ctx.session.user as { id?: string }).id) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({
     ctx: {
-      session: { ...ctx.session, user: ctx.session.user },
+      session: {
+        ...ctx.session,
+        user: {
+          ...ctx.session.user,
+          id: (ctx.session.user as { id: string }).id,
+        },
+      },
     },
   });
 });

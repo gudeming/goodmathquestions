@@ -38,6 +38,8 @@ export interface AnimationScene {
   objects: AnimationObject[];
   duration: number;
   interactive: boolean;
+  metadata?: Record<string, any>;
+  interactions?: InteractiveElement[];
 }
 
 export interface InteractiveElement {

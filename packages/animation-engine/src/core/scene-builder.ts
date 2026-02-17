@@ -20,6 +20,12 @@ export class SceneBuilder {
         return SceneBuilder.buildTriangleScene(config);
       case "candy_jar":
         return SceneBuilder.buildCandyJarScene(config);
+      case "staircase":
+        return SceneBuilder.buildStaircaseScene(config);
+      case "magic_square":
+        return SceneBuilder.buildMagicSquareScene(config);
+      case "number_combine":
+        return SceneBuilder.buildNumberCombineScene(config);
       default:
         return SceneBuilder.buildDefaultScene(config);
     }
@@ -74,11 +80,29 @@ export class SceneBuilder {
       backgroundColor: "transparent",
       objects,
       duration: totalSlices * 300 + 1000,
-      interactive: false,
+      interactive: true,
+      metadata: {
+        totalSlices,
+        eatenSlices,
+        remainingSlices: totalSlices - eatenSlices,
+      },
+      interactions: [
+        {
+          objectId: "pizza-base",
+          action: "click",
+          feedback: {
+            correct: "Great slicing!",
+            incorrect: "Try another slice!",
+          },
+        },
+      ],
     };
   }
 
   private static buildBalanceScene(config: AnimationConfig): AnimationScene {
+    const rightValue =
+      typeof config?.rightSide?.value === "number" ? config.rightSide.value : null;
+
     return {
       type: "balance_scale",
       width: 300,
@@ -110,6 +134,21 @@ export class SceneBuilder {
       ],
       duration: 3000,
       interactive: true,
+      metadata: {
+        leftExpression: config?.leftSide?.expression ?? "x",
+        rightValue,
+      },
+      interactions: [
+        {
+          objectId: "beam",
+          action: "input",
+          correctValue: rightValue,
+          feedback: {
+            correct: "Balanced!",
+            incorrect: "Adjust the value to balance both sides.",
+          },
+        },
+      ],
     };
   }
 
@@ -163,7 +202,22 @@ export class SceneBuilder {
       backgroundColor: "transparent",
       objects,
       duration: highlights.length * 200 + 1000,
-      interactive: false,
+      interactive: true,
+      metadata: {
+        range,
+        highlights,
+      },
+      interactions: [
+        {
+          objectId: "number-line",
+          action: "drag",
+          validRange: { min: range[0], max: range[1] },
+          feedback: {
+            correct: "Nice jump!",
+            incorrect: "Try snapping to a highlighted number.",
+          },
+        },
+      ],
     };
   }
 
@@ -219,6 +273,7 @@ export class SceneBuilder {
       ],
       duration: 2200,
       interactive: false,
+      metadata: { angles },
     };
   }
 
@@ -268,7 +323,168 @@ export class SceneBuilder {
       backgroundColor: "transparent",
       objects,
       duration: index * 100 + 500,
-      interactive: false,
+      interactive: true,
+      metadata: {
+        totals: Object.entries(config).reduce<Record<string, number>>((acc, [k, v]) => {
+          if (k !== "type" && typeof v === "number") {
+            acc[k] = v;
+          }
+          return acc;
+        }, {}),
+      },
+      interactions: [
+        {
+          objectId: "candy-red-0",
+          action: "click",
+          feedback: {
+            correct: "Good counting!",
+            incorrect: "Count each color carefully.",
+          },
+        },
+      ],
+    };
+  }
+
+  private static buildStaircaseScene(config: AnimationConfig): AnimationScene {
+    const totalStairs = Math.max(1, Number(config.totalStairs ?? 4));
+    const stepOptions = Array.isArray(config.stepOptions) ? config.stepOptions : [1, 2];
+    const objects: AnimationObject[] = [];
+
+    for (let i = 0; i < totalStairs; i++) {
+      objects.push({
+        id: `stair-${i + 1}`,
+        type: "shape",
+        position: { x: 40 + i * 45, y: 170 - i * 25 },
+        properties: {
+          shape: "rect",
+          width: 45,
+          height: 25,
+          fill: i % 2 === 0 ? "#bfdbfe" : "#93c5fd",
+        },
+        animations: [
+          {
+            property: "opacity",
+            from: 0.5,
+            to: 1,
+            duration: 250,
+            delay: i * 120,
+          },
+        ],
+      });
+    }
+
+    return {
+      type: "staircase",
+      width: 300,
+      height: 200,
+      backgroundColor: "transparent",
+      objects,
+      duration: totalStairs * 120 + 600,
+      interactive: true,
+      metadata: { totalStairs, stepOptions },
+      interactions: [
+        {
+          objectId: "stair-1",
+          action: "click",
+          feedback: {
+            correct: "Great path!",
+            incorrect: "Try another way up the stairs.",
+          },
+        },
+      ],
+    };
+  }
+
+  private static buildMagicSquareScene(config: AnimationConfig): AnimationScene {
+    const size = Math.max(2, Number(config.size ?? 3));
+    const targetSum = Number(config.targetSum ?? size * (size * size + 1) / 2);
+    const known = (config.known ?? {}) as Record<string, number>;
+    const cellSize = 52;
+    const objects: AnimationObject[] = [];
+
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col < size; col++) {
+        const key = `${row},${col}`;
+        const value = known[key];
+        objects.push({
+          id: `cell-${row}-${col}`,
+          type: "shape",
+          position: { x: 30 + col * cellSize, y: 30 + row * cellSize },
+          properties: {
+            shape: "rect",
+            width: cellSize - 4,
+            height: cellSize - 4,
+            fill: value != null ? "#d9f99d" : "#f8fafc",
+            value,
+          },
+          animations: [],
+        });
+      }
+    }
+
+    return {
+      type: "magic_square",
+      width: 30 + size * cellSize,
+      height: 30 + size * cellSize,
+      backgroundColor: "transparent",
+      objects,
+      duration: 1000,
+      interactive: true,
+      metadata: { size, targetSum, known },
+      interactions: [
+        {
+          objectId: "cell-0-0",
+          action: "input",
+          feedback: {
+            correct: "Nice pattern spotting!",
+            incorrect: "Check row and column sums.",
+          },
+        },
+      ],
+    };
+  }
+
+  private static buildNumberCombineScene(config: AnimationConfig): AnimationScene {
+    const numbers = Array.isArray(config.numbers) ? config.numbers : [];
+    const operation = config.operation ?? "add";
+    const objects: AnimationObject[] = numbers.map((value: number, i: number) => ({
+      id: `num-${i}`,
+      type: "number",
+      position: { x: 30 + (i % 4) * 80, y: 40 + Math.floor(i / 4) * 80 },
+      properties: {
+        value,
+        fill: "#1d4ed8",
+      },
+      animations: [
+        {
+          property: "scale",
+          from: 0.8,
+          to: 1.05,
+          duration: 400,
+          delay: i * 120,
+        },
+      ],
+    }));
+
+    return {
+      type: "number_combine",
+      width: 360,
+      height: 220,
+      backgroundColor: "transparent",
+      objects,
+      duration: numbers.length * 120 + 800,
+      interactive: true,
+      metadata: { numbers, operation },
+      interactions: [
+        {
+          objectId: "num-0",
+          action: "click",
+          feedback: {
+            correct: "Good combine!",
+            incorrect: "Try combining in a different order.",
+          },
+        },
+      ],
     };
   }
 

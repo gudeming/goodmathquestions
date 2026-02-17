@@ -24,6 +24,7 @@ build/
 
 # Debug
 npm-debug.log*
+.run/
 
 # Turbo
 .turbo

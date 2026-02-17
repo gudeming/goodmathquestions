@@ -27,12 +27,17 @@ enum Category {
   WORD_PROBLEMS
   LOGIC
   PROBABILITY
+  TRIGONOMETRY
+  CALCULUS
+  STATISTICS
 }
 
 enum AgeGroup {
   AGE_8_10
   AGE_10_12
   AGE_12_14
+  AGE_14_16
+  AGE_16_18
 }
 
 enum ChallengeStatus {

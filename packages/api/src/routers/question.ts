@@ -4,6 +4,7 @@ import {
   publicProcedure,
   protectedProcedure,
 } from "../trpc";
+import { validateAnswer } from "@gmq/math-engine";
 
 export const questionRouter = createTRPCRouter({
   // Get all published questions with filters
@@ -30,7 +31,23 @@ export const questionRouter = createTRPCRouter({
           ...(ageGroup && { ageGroup: ageGroup as any }),
         },
         orderBy: { sortOrder: "asc" },
-        include: {
+        select: {
+          id: true,
+          titleEn: true,
+          titleZh: true,
+          contentEn: true,
+          contentZh: true,
+          difficulty: true,
+          category: true,
+          ageGroup: true,
+          hints: true,
+          animationConfig: true,
+          funFactEn: true,
+          funFactZh: true,
+          isPublished: true,
+          sortOrder: true,
+          createdAt: true,
+          updatedAt: true,
           tags: { include: { tag: true } },
           _count: {
             select: {
@@ -57,7 +74,23 @@ export const questionRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const question = await ctx.db.question.findUnique({
         where: { id: input.id, isPublished: true },
-        include: {
+        select: {
+          id: true,
+          titleEn: true,
+          titleZh: true,
+          contentEn: true,
+          contentZh: true,
+          difficulty: true,
+          category: true,
+          ageGroup: true,
+          hints: true,
+          animationConfig: true,
+          funFactEn: true,
+          funFactZh: true,
+          isPublished: true,
+          sortOrder: true,
+          createdAt: true,
+          updatedAt: true,
           tags: { include: { tag: true } },
           _count: {
             select: {
@@ -76,6 +109,41 @@ export const questionRouter = createTRPCRouter({
       return question;
     }),
 
+  // Check answer for guests (no XP, no submission record)
+  checkAnswer: publicProcedure
+    .input(
+      z.object({
+        questionId: z.string(),
+        answer: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const question = await ctx.db.question.findUnique({
+        where: { id: input.questionId, isPublished: true },
+        select: {
+          answer: true,
+          answerExplainEn: true,
+          answerExplainZh: true,
+        },
+      });
+
+      if (!question) {
+        throw new Error("Question not found");
+      }
+
+      const isCorrect = validateAnswer(input.answer, question.answer);
+
+      return {
+        isCorrect,
+        explanation: isCorrect
+          ? {
+              en: question.answerExplainEn ?? null,
+              zh: question.answerExplainZh ?? null,
+            }
+          : null,
+      };
+    }),
+
   // Submit an answer
   submitAnswer: protectedProcedure
     .input(
@@ -88,13 +156,19 @@ export const questionRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const question = await ctx.db.question.findUnique({
         where: { id: input.questionId },
+        select: {
+          answer: true,
+          difficulty: true,
+          answerExplainEn: true,
+          answerExplainZh: true,
+        },
       });
 
       if (!question) {
         throw new Error("Question not found");
       }
 
-      const isCorrect = input.answer.trim().toLowerCase() === question.answer.trim().toLowerCase();
+      const isCorrect = validateAnswer(input.answer, question.answer);
 
       // Calculate XP based on difficulty and correctness
       const xpMap = { EASY: 10, MEDIUM: 25, HARD: 50, CHALLENGE: 100 };
@@ -146,8 +220,11 @@ export const questionRouter = createTRPCRouter({
         xpEarned,
         attempt: attemptCount + 1,
         explanation: isCorrect
-          ? undefined
-          : undefined, // Don't reveal answer on wrong attempt
+          ? {
+              en: question.answerExplainEn ?? null,
+              zh: question.answerExplainZh ?? null,
+            }
+          : null,
       };
     }),
 

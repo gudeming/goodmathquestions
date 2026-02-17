@@ -5,9 +5,9 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:generate": "set -a; . ../../.env; set +a; prisma generate",
+    "db:push": "set -a; . ../../.env; set +a; prisma db push",
+    "db:seed": "set -a; . ../../.env; set +a; tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },
   "dependencies": {

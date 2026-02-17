@@ -5,12 +5,14 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 
 export function Navbar() {
   const t = useTranslations("common");
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const switchLocale = () => {
@@ -18,6 +20,8 @@ export function Navbar() {
     const pathWithoutLocale = pathname.replace(`/${locale}`, "") || "/";
     router.push(`/${newLocale}${pathWithoutLocale}`);
   };
+
+  const isLoggedIn = !!session?.user;
 
   return (
     <motion.nav
@@ -42,7 +46,7 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-6">
+        <div className="hidden md:flex items-center gap-5">
           <Link
             href="/questions"
             className="font-heading font-medium text-gray-600 hover:text-primary-600 transition-colors"
@@ -65,13 +69,37 @@ export function Navbar() {
             {t("switchLang")}
           </button>
 
-          {/* Auth Buttons */}
-          <Link href="/login" className="btn-secondary text-sm py-2 px-4">
-            {t("login")}
-          </Link>
-          <Link href="/signup" className="btn-primary text-sm py-2 px-4">
-            {t("signup")}
-          </Link>
+          {/* Authenticated / Guest buttons */}
+          {isLoggedIn ? (
+            <div className="flex items-center gap-3">
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-bubble bg-gradient-to-r from-primary-50 to-fun-purple/10 hover:from-primary-100 hover:to-fun-purple/20 transition-all"
+              >
+                <div className="w-7 h-7 rounded-full bg-gradient-to-r from-primary-400 to-fun-purple flex items-center justify-center text-white text-xs font-bold">
+                  {session.user?.name?.[0] || "?"}
+                </div>
+                <span className="text-sm font-heading font-medium text-gray-700">
+                  {session.user?.name}
+                </span>
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="text-sm text-gray-400 hover:text-gray-600 font-heading transition-colors"
+              >
+                {t("logout")}
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link href="/login" className="btn-secondary text-sm py-2 px-4">
+                {t("login")}
+              </Link>
+              <Link href="/signup" className="btn-primary text-sm py-2 px-4">
+                {t("signup")}
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -110,14 +138,41 @@ export function Navbar() {
           >
             {t("switchLang")}
           </button>
-          <div className="flex gap-3 pt-2">
-            <Link href="/login" className="btn-secondary text-sm py-2 px-4 flex-1 text-center">
-              {t("login")}
-            </Link>
-            <Link href="/signup" className="btn-primary text-sm py-2 px-4 flex-1 text-center">
-              {t("signup")}
-            </Link>
-          </div>
+
+          {isLoggedIn ? (
+            <div className="pt-2 space-y-2">
+              <Link
+                href="/profile"
+                className="block w-full text-center btn-secondary text-sm py-2"
+                onClick={() => setMobileOpen(false)}
+              >
+                {t("profile")}
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="block w-full text-center text-sm text-gray-400 py-2"
+              >
+                {t("logout")}
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-3 pt-2">
+              <Link
+                href="/login"
+                className="btn-secondary text-sm py-2 px-4 flex-1 text-center"
+                onClick={() => setMobileOpen(false)}
+              >
+                {t("login")}
+              </Link>
+              <Link
+                href="/signup"
+                className="btn-primary text-sm py-2 px-4 flex-1 text-center"
+                onClick={() => setMobileOpen(false)}
+              >
+                {t("signup")}
+              </Link>
+            </div>
+          )}
         </motion.div>
       )}
     </motion.nav>
