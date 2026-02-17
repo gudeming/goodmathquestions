@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Debug
+npm-debug.log*
+
+# Turbo
+.turbo
+
+# Prisma
+packages/db/prisma/migrations/
+
+# Docker volumes
+postgres_data/
+redis_data/

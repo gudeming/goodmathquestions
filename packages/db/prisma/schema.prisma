@@ -1,0 +1,297 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+  CHALLENGE
+}
+
+enum Category {
+  ARITHMETIC
+  ALGEBRA
+  GEOMETRY
+  FRACTIONS
+  NUMBER_THEORY
+  WORD_PROBLEMS
+  LOGIC
+  PROBABILITY
+}
+
+enum AgeGroup {
+  AGE_8_10
+  AGE_10_12
+  AGE_12_14
+}
+
+enum ChallengeStatus {
+  WAITING
+  ACTIVE
+  FINISHED
+}
+
+enum AuthMethod {
+  PARENT_EMAIL
+  CLASS_CODE
+}
+
+// ============================================================
+// USER SYSTEM
+// ============================================================
+
+model User {
+  id           String     @id @default(cuid())
+  email        String?    @unique
+  username     String     @unique
+  displayName  String
+  password     String // hashed
+  age          Int
+  avatarUrl    String?
+  xp           Int        @default(0)
+  level        Int        @default(1)
+  streak       Int        @default(0)
+  lastActiveAt DateTime   @default(now())
+  parentEmail  String? // required for PARENT_EMAIL auth
+  authMethod   AuthMethod @default(PARENT_EMAIL)
+  locale       String     @default("en") // "en" or "zh"
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  submissions Submission[]
+  badges      UserBadge[]
+  comments    Comment[]
+  likes       QuestionLike[]
+  accounts    Account[]
+  sessions    Session[]
+  classroom   Classroom?     @relation(fields: [classroomId], references: [id])
+  classroomId String?
+
+  @@index([xp(sort: Desc)])
+  @@index([classroomId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// SCHOOL / CLASS SYSTEM
+// ============================================================
+
+model Classroom {
+  id           String   @id @default(cuid())
+  name         String
+  classCode    String   @unique // e.g. "MATH-2024-ABC"
+  teacherName  String
+  teacherEmail String
+  school       String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  students User[]
+
+  @@index([classCode])
+}
+
+// ============================================================
+// QUESTION SYSTEM
+// ============================================================
+
+model Question {
+  id              String     @id @default(cuid())
+  titleEn         String
+  titleZh         String
+  contentEn       String // Math problem in English (LaTeX/Markdown)
+  contentZh       String // Math problem in Chinese (LaTeX/Markdown)
+  difficulty      Difficulty
+  category        Category
+  ageGroup        AgeGroup
+  answer          String // Correct answer (hashed for security)
+  answerExplainEn String? // Solution explanation in English
+  answerExplainZh String? // Solution explanation in Chinese
+  hints           Json       @default("[]") // Array of progressive hints [{en, zh}]
+  animationConfig Json       @default("{}") // Config for animation engine
+  funFactEn       String? // Fun math fact in English
+  funFactZh       String? // Fun math fact in Chinese
+  isPublished     Boolean    @default(false)
+  sortOrder       Int        @default(0)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // Relations
+  submissions Submission[]
+  comments    Comment[]
+  tags        TagsOnQuestions[]
+  likes       QuestionLike[]
+
+  @@index([category, difficulty])
+  @@index([ageGroup])
+  @@index([isPublished])
+}
+
+model Tag {
+  id        String            @id @default(cuid())
+  nameEn    String            @unique
+  nameZh    String
+  questions TagsOnQuestions[]
+}
+
+model TagsOnQuestions {
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId String
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId      String
+
+  @@id([questionId, tagId])
+}
+
+model QuestionLike {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+}
+
+// ============================================================
+// GAMIFICATION
+// ============================================================
+
+model Submission {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  answer     String
+  isCorrect  Boolean
+  timeSpent  Int // seconds
+  xpEarned   Int      @default(0)
+  attempt    Int      @default(1) // which attempt number
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, questionId])
+  @@index([userId, createdAt])
+}
+
+model Badge {
+  id          String @id @default(cuid())
+  nameEn      String
+  nameZh      String
+  descEn      String
+  descZh      String
+  iconUrl     String
+  criteria    Json // auto-award rules: { type, threshold }
+  xpReward    Int    @default(0)
+  sortOrder   Int    @default(0)
+
+  users UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+}
+
+// ============================================================
+// DISCUSSION
+// ============================================================
+
+model Comment {
+  id          String   @id @default(cuid())
+  content     String
+  userId      String
+  questionId  String
+  parentId    String? // threaded replies
+  isApproved  Boolean  @default(false) // moderation: must be approved
+  isFlagged   Boolean  @default(false) // flagged for review
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentReplies")
+
+  @@index([questionId, createdAt])
+  @@index([userId])
+}
+
+// ============================================================
+// LIVE CHALLENGES (Phase 5 - placeholder)
+// ============================================================
+
+model Challenge {
+  id         String          @id @default(cuid())
+  titleEn    String
+  titleZh    String
+  questions  Json // question IDs + order
+  startTime  DateTime
+  duration   Int // minutes
+  maxPlayers Int             @default(50)
+  status     ChallengeStatus @default(WAITING)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  participants ChallengeParticipant[]
+}
+
+model ChallengeParticipant {
+  id          String   @id @default(cuid())
+  challengeId String
+  userId      String
+  score       Int      @default(0)
+  joinedAt    DateTime @default(now())
+
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
+}
