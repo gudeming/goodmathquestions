@@ -35,4 +35,6 @@ packages/db/prisma/migrations/
 # Docker volumes
 postgres_data/
 redis_data/
+infrastructure/node_modules/
+infrastructure/cdk.out/
 *.md

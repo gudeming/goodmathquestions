@@ -1,0 +1,15 @@
+.git
+.gitignore
+.turbo
+.run
+node_modules
+**/node_modules
+**/.next
+**/dist
+**/build
+**/.DS_Store
+npm-debug.log*
+.env
+.env.*
+CLAUDE.md
+infrastructure/cdk.out
