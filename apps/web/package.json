@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "set -a; . ../../.env; set +a; NODE_ENV=development next dev --port 3000",
-    "build": "set -a; . ../../.env; set +a; NODE_ENV=production next build",
-    "start": "set -a; . ../../.env; set +a; NODE_ENV=production next start",
+    "dev": "set -a; test -f ../../.env && . ../../.env; set +a; NODE_ENV=development next dev --port 3000",
+    "build": "set -a; test -f ../../.env && . ../../.env; set +a; next build",
+    "start": "set -a; test -f ../../.env && . ../../.env; set +a; next start",
     "lint": "next lint"
   },
   "dependencies": {

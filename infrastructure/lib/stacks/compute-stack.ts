@@ -19,10 +19,13 @@ export class ComputeStack extends cdk.Stack {
       prefix: string;
       vpc: ec2.IVpc;
       db: rds.DatabaseInstance;
-      redisEndpointAddress: string;
-      redisEndpointPort: string;
+      redisEndpointAddress?: string;
+      redisEndpointPort?: string;
       domainName?: string;
       hostedZoneName?: string;
+      hostedZoneId?: string;
+      certificateArn?: string;
+      isFreeMode?: boolean;
     }
   ) {
     super(scope, id, props);
@@ -30,7 +33,6 @@ export class ComputeStack extends cdk.Stack {
     const cluster = new ecs.Cluster(this, "Cluster", {
       vpc: props.vpc,
       clusterName: `${props.prefix}-cluster`,
-      containerInsights: true,
     });
 
     const repository = new ecr.Repository(this, "WebRepository", {
@@ -53,28 +55,38 @@ export class ComputeStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    const hasDomain = Boolean(props.domainName && props.hostedZoneName);
+    const hasDomain = Boolean(props.domainName);
     const fullDomainName = props.domainName;
     const zoneDomainName = props.hostedZoneName;
-    const zone = hasDomain
-      ? route53.HostedZone.fromLookup(this, "HostedZone", {
+    const canManageDnsInRoute53 = Boolean(fullDomainName && zoneDomainName);
+    const zone = canManageDnsInRoute53
+      ? props.hostedZoneId
+        ? route53.HostedZone.fromHostedZoneAttributes(this, "HostedZone", {
+          hostedZoneId: props.hostedZoneId,
+          zoneName: zoneDomainName!,
+        })
+        : route53.HostedZone.fromLookup(this, "HostedZone", {
           domainName: zoneDomainName!,
         })
       : undefined;
 
-    const certificate = hasDomain
+    const certificate = props.certificateArn
+      ? acm.Certificate.fromCertificateArn(this, "ImportedCertificate", props.certificateArn)
+      : canManageDnsInRoute53
       ? new acm.Certificate(this, "WebCertificate", {
           domainName: fullDomainName!,
           validation: acm.CertificateValidation.fromDns(zone!),
         })
       : undefined;
 
+    const hasRedis = Boolean(props.redisEndpointAddress && props.redisEndpointPort);
     const fargate = new ecsPatterns.ApplicationLoadBalancedFargateService(this, "WebService", {
       cluster,
-      desiredCount: 2,
+      desiredCount: props.isFreeMode ? 1 : 2,
+      minHealthyPercent: 100,
       publicLoadBalancer: true,
-      cpu: 512,
-      memoryLimitMiB: 1024,
+      cpu: props.isFreeMode ? 256 : 512,
+      memoryLimitMiB: props.isFreeMode ? 512 : 1024,
       taskImageOptions: {
         image: ecs.ContainerImage.fromEcrRepository(repository, "latest"),
         containerPort: 3000,
@@ -89,9 +101,15 @@ export class ComputeStack extends cdk.Stack {
           POSTGRES_HOST: props.db.dbInstanceEndpointAddress,
           POSTGRES_PORT: props.db.dbInstanceEndpointPort,
           POSTGRES_DB: "goodmathquestions",
-          REDIS_HOST: props.redisEndpointAddress,
-          REDIS_PORT: props.redisEndpointPort,
-          NEXTAUTH_URL: hasDomain ? `https://${fullDomainName}` : "http://localhost:3000",
+          NEXTAUTH_URL: hasDomain
+            ? `${certificate ? "https" : "http"}://${fullDomainName}`
+            : "http://localhost:3000",
+          ...(hasRedis
+            ? {
+                REDIS_HOST: props.redisEndpointAddress!,
+                REDIS_PORT: props.redisEndpointPort!,
+              }
+            : {}),
         },
         secrets: {
           NEXTAUTH_SECRET: ecs.Secret.fromSecretsManager(nextAuthSecret),
@@ -110,11 +128,13 @@ export class ComputeStack extends cdk.Stack {
       healthyHttpCodes: "200-399",
     });
 
-    fargate.service.autoScaleTaskCount({ minCapacity: 2, maxCapacity: 10 }).scaleOnCpuUtilization("CpuScaling", {
-      targetUtilizationPercent: 60,
-      scaleInCooldown: cdk.Duration.seconds(90),
-      scaleOutCooldown: cdk.Duration.seconds(60),
-    });
+    if (!props.isFreeMode) {
+      fargate.service.autoScaleTaskCount({ minCapacity: 2, maxCapacity: 10 }).scaleOnCpuUtilization("CpuScaling", {
+        targetUtilizationPercent: 60,
+        scaleInCooldown: cdk.Duration.seconds(90),
+        scaleOutCooldown: cdk.Duration.seconds(60),
+      });
+    }
 
     if (zone && fullDomainName && zoneDomainName) {
       const recordName = fullDomainName.replace(`.${zoneDomainName}`, "");
