@@ -29,6 +29,8 @@ type ActiveGeneratedQuestion = {
 };
 
 const activeQuestionStore = new Map<string, ActiveGeneratedQuestion>();
+const recentTemplateStore = new Map<string, string[]>();
+const RECENT_TEMPLATE_WINDOW = 6;
 
 const GRADE_DOMAIN_MAP: Record<string, MasteryDomain[]> = {
   GRADE_4: ["ARITHMETIC", "FRACTIONS", "GEOMETRY", "WORD_PROBLEMS", "NUMBER_THEORY", "PROBABILITY"],
@@ -244,6 +246,20 @@ function pruneStore() {
     const ids = Array.from(activeQuestionStore.keys()).slice(0, 2000);
     for (const id of ids) activeQuestionStore.delete(id);
   }
+
+  if (recentTemplateStore.size > 2000) {
+    const keys = Array.from(recentTemplateStore.keys()).slice(0, 300);
+    for (const key of keys) recentTemplateStore.delete(key);
+  }
+}
+
+function buildTemplateSignature(input: { domain: string; knowledgePointSlug: string; promptEn: string }): string {
+  const normalizedPrompt = input.promptEn
+    .toLowerCase()
+    .replace(/\d+(\.\d+)?/g, "#")
+    .replace(/\s+/g, " ")
+    .trim();
+  return `${input.domain}|${input.knowledgePointSlug}|${normalizedPrompt}`;
 }
 
 function nextProfile(profile: MasteryProfile, isCorrect: boolean, responseTimeMs: number): MasteryProfile {
@@ -305,10 +321,26 @@ export const masteryRouter = createTRPCRouter({
       pruneStore();
 
       const generationTag = resolveGenerationTag(input.tagName, input.attempts);
-      const generated = buildAdaptiveQuestion({
+      const recentKey = input.tagName.trim().toUpperCase().replace(/\s+/g, "_");
+      const recentSignatures = recentTemplateStore.get(recentKey) ?? [];
+
+      let generated = buildAdaptiveQuestion({
         tagName: generationTag,
         profile: input.profile,
       });
+      let signature = buildTemplateSignature(generated);
+
+      // Avoid showing very recent templates in the same challenge track.
+      for (let i = 0; i < 8 && recentSignatures.includes(signature); i++) {
+        generated = buildAdaptiveQuestion({
+          tagName: generationTag,
+          profile: input.profile,
+        });
+        signature = buildTemplateSignature(generated);
+      }
+
+      const updatedRecent = [...recentSignatures, signature].slice(-RECENT_TEMPLATE_WINDOW);
+      recentTemplateStore.set(recentKey, updatedRecent);
 
       const id = randomUUID();
       activeQuestionStore.set(id, {
@@ -331,6 +363,8 @@ export const masteryRouter = createTRPCRouter({
           level: generated.level,
           domain: generated.domain,
           knowledgePointSlug: generated.knowledgePointSlug,
+          funFactEn: generated.funFactEn,
+          funFactZh: generated.funFactZh,
         },
       };
     }),

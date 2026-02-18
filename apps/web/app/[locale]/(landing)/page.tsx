@@ -197,7 +197,7 @@ export default function LandingPage() {
           </h3>
           <p className="text-gray-400 mb-6">{t("common.tagline")}</p>
           <p className="text-gray-500 text-sm">
-            © 2024 GoodMathQuestions.com. Made with ❤️ for young mathematicians.
+            © 2026 GoodMathQuestions.com. Made by Eric ❤️ for young mathematicians.
           </p>
         </div>
       </footer>

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
+import { arc as d3Arc, line as d3Line, scaleLinear } from "d3";
 import {
   SceneBuilder,
   type AnimationConfig,
@@ -169,22 +170,56 @@ function NumberJourneyAnimation({
   const min = range[0];
   const max = range[1];
   const ticks = Math.min(24, Math.max(8, max - min + 1));
+  const xScale = useMemo(
+    () => scaleLinear().domain([min, max]).range([24, 396]),
+    [min, max]
+  );
+  const tickValues = useMemo(() => {
+    const count = Math.min(10, Math.max(4, max - min));
+    return Array.from({ length: count + 1 }, (_, i) =>
+      Math.round(min + ((max - min) * i) / count)
+    );
+  }, [min, max]);
 
   return (
     <div className="space-y-4">
-      <div className="relative rounded-2xl border border-primary-100 bg-primary-50/40 p-5">
-        <div className="h-1 bg-gray-200 rounded-full" />
-        <div className="mt-3 grid gap-2" style={{ gridTemplateColumns: `repeat(${ticks}, minmax(0, 1fr))` }}>
+      <div className="relative rounded-2xl border border-primary-100 bg-white p-4">
+        <svg viewBox="0 0 420 120" className="w-full">
+          <line x1={24} y1={50} x2={396} y2={50} stroke="#9ca3af" strokeWidth={3} strokeLinecap="round" />
+          {tickValues.map((v) => (
+            <g key={`tick-${v}`} transform={`translate(${xScale(v)},50)`}>
+              <line y1={-7} y2={7} stroke="#64748b" strokeWidth={1.5} />
+              <text y={24} textAnchor="middle" className="fill-slate-500 text-[10px]">
+                {v}
+              </text>
+            </g>
+          ))}
+
+          {highlights.map((v, idx) => (
+            <g key={`h-${v}-${idx}`} transform={`translate(${xScale(v)},50)`}>
+              <circle r={9} fill="#fde68a" stroke="#f59e0b" strokeWidth={2} />
+              <text y={3} textAnchor="middle" className="fill-amber-700 text-[9px] font-bold">
+                {v}
+              </text>
+            </g>
+          ))}
+
+          <g transform={`translate(${xScale(current)},50)`}>
+            <circle r={11} fill="#2563eb" />
+            <text y={4} textAnchor="middle" className="fill-white text-[10px] font-bold">
+              {current}
+            </text>
+          </g>
+        </svg>
+        <div className="mt-2 grid gap-2" style={{ gridTemplateColumns: `repeat(${ticks}, minmax(0, 1fr))` }}>
           {Array.from({ length: ticks }).map((_, i) => {
             const value = Math.round(min + ((max - min) * i) / (ticks - 1));
-            const active = highlights.includes(value);
-            const selected = value === current;
             return (
               <button
                 key={i}
                 type="button"
                 onClick={() => setCurrent(value)}
-                className={`rounded-md px-1 py-1 text-[11px] font-mono transition ${selected ? "bg-primary-500 text-white" : active ? "bg-fun-yellow/30 text-gray-700" : "text-gray-500 hover:bg-white"}`}
+                className={`rounded-md px-1 py-1 text-[11px] font-mono transition ${value === current ? "bg-primary-500 text-white" : "bg-gray-50 text-gray-600 hover:bg-gray-100"}`}
               >
                 {value}
               </button>
@@ -216,14 +251,49 @@ function TriangleAnimation({
   if (!revealSolution && displayAngles.length >= 3) {
     displayAngles[2] = "?";
   }
+  const points: Array<[number, number]> = [
+    [110, 26],
+    [30, 184],
+    [190, 184],
+  ];
+  const trianglePath =
+    d3Line<[number, number]>()
+      .x((d) => d[0])
+      .y((d) => d[1])([...points, points[0]]) ?? "";
+  const arcPath = d3Arc();
+  const arcWedges = [
+    { cx: 110, cy: 26, start: (62 * Math.PI) / 180, end: (118 * Math.PI) / 180, color: "#93c5fd" },
+    { cx: 30, cy: 184, start: (-38 * Math.PI) / 180, end: (0 * Math.PI) / 180, color: "#bfdbfe" },
+    { cx: 190, cy: 184, start: Math.PI, end: (218 * Math.PI) / 180, color: "#fbcfe8" },
+  ];
 
   return (
     <div className="flex flex-col items-center">
       <svg viewBox="0 0 220 220" className="w-64 h-64">
-        <polygon points="110,30 35,180 185,180" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="4" />
-        <text x="100" y="58" className="fill-blue-600 font-bold text-sm">{displayAngles[1]}{displayAngles[1] === "?" ? "" : "°"}</text>
-        <text x="48" y="172" className="fill-blue-600 font-bold text-sm">{displayAngles[0]}{displayAngles[0] === "?" ? "" : "°"}</text>
-        <text x="152" y="172" className="fill-pink-500 font-bold text-sm">{displayAngles[2]}{displayAngles[2] === "?" ? "" : "°"}</text>
+        <defs>
+          <pattern id="geo-grid" width="10" height="10" patternUnits="userSpaceOnUse">
+            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#e5e7eb" strokeWidth="0.8" />
+          </pattern>
+        </defs>
+        <rect x={0} y={0} width={220} height={220} fill="url(#geo-grid)" />
+        <path d={trianglePath} fill="#eff6ff" stroke="#2563eb" strokeWidth="4" />
+        {arcWedges.map((a, idx) => (
+          <g key={idx} transform={`translate(${a.cx},${a.cy})`}>
+            <path
+              d={arcPath({
+                innerRadius: 8,
+                outerRadius: 22,
+                startAngle: a.start,
+                endAngle: a.end,
+              }) ?? ""}
+              fill={a.color}
+              opacity={0.75}
+            />
+          </g>
+        ))}
+        <text x="102" y="60" className="fill-blue-700 font-bold text-sm">{displayAngles[1]}{displayAngles[1] === "?" ? "" : "°"}</text>
+        <text x="42" y="172" className="fill-blue-700 font-bold text-sm">{displayAngles[0]}{displayAngles[0] === "?" ? "" : "°"}</text>
+        <text x="154" y="172" className="fill-pink-600 font-bold text-sm">{displayAngles[2]}{displayAngles[2] === "?" ? "" : "°"}</text>
       </svg>
       <p className="text-xs text-gray-500">Sum of angles in a triangle = 180°</p>
     </div>
@@ -357,6 +427,68 @@ function MagicSquareAnimation({ scene }: { scene: AnimationScene }) {
   );
 }
 
+function ProfessionalNumberCombineDiagram({
+  numbers,
+  operation,
+}: {
+  numbers: number[];
+  operation: string;
+}) {
+  const isPerimeterRect =
+    operation === "add" &&
+    numbers.length === 4 &&
+    numbers[0] === numbers[2] &&
+    numbers[1] === numbers[3];
+  const isAreaRect = operation === "multiply" && numbers.length === 2;
+  const isVolumePrism = operation === "multiply" && numbers.length === 3;
+
+  if (!isPerimeterRect && !isAreaRect && !isVolumePrism) {
+    return null;
+  }
+
+  if (isPerimeterRect || isAreaRect) {
+    const a = numbers[0];
+    const b = numbers[1];
+    const xScale = scaleLinear().domain([0, Math.max(a, b)]).range([0, 170]);
+    const w = Math.max(56, xScale(a));
+    const h = Math.max(40, xScale(b));
+    return (
+      <div className="rounded-xl border border-primary-100 bg-white p-3">
+        <svg viewBox="0 0 260 170" className="w-full h-44">
+          <rect x={36} y={24} width={w} height={h} fill="#dbeafe" stroke="#2563eb" strokeWidth={3} rx={4} />
+          <line x1={36} y1={24 + h + 20} x2={36 + w} y2={24 + h + 20} stroke="#64748b" markerEnd="url(#arrow)" markerStart="url(#arrow)" />
+          <line x1={36 + w + 20} y1={24} x2={36 + w + 20} y2={24 + h} stroke="#64748b" markerEnd="url(#arrow)" markerStart="url(#arrow)" />
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 z" fill="#64748b" />
+            </marker>
+          </defs>
+          <text x={36 + w / 2} y={24 + h + 40} textAnchor="middle" className="fill-slate-700 text-[12px] font-semibold">{a}</text>
+          <text x={36 + w + 34} y={24 + h / 2 + 4} textAnchor="middle" className="fill-slate-700 text-[12px] font-semibold">{b}</text>
+          <text x={170} y={42} className="fill-slate-500 text-[12px]">
+            {isPerimeterRect ? "Perimeter model" : "Area model"}
+          </text>
+        </svg>
+      </div>
+    );
+  }
+
+  const [l, w, h] = numbers;
+  return (
+    <div className="rounded-xl border border-primary-100 bg-white p-3">
+      <svg viewBox="0 0 280 190" className="w-full h-44">
+        <polygon points="40,130 140,130 190,95 90,95" fill="#dbeafe" stroke="#1d4ed8" strokeWidth={2.5} />
+        <polygon points="140,130 140,60 190,25 190,95" fill="#bfdbfe" stroke="#1d4ed8" strokeWidth={2.5} />
+        <polygon points="40,130 40,60 140,60 140,130" fill="#eff6ff" stroke="#1d4ed8" strokeWidth={2.5} />
+        <text x={90} y={146} className="fill-slate-700 text-[12px] font-semibold">{l}</text>
+        <text x={156} y={112} className="fill-slate-700 text-[12px] font-semibold">{w}</text>
+        <text x={28} y={96} className="fill-slate-700 text-[12px] font-semibold">{h}</text>
+        <text x={208} y={42} className="fill-slate-500 text-[12px]">Volume prism model</text>
+      </svg>
+    </div>
+  );
+}
+
 function NumberCombineAnimation({
   scene,
   revealSolution,
@@ -374,6 +506,7 @@ function NumberCombineAnimation({
 
   return (
     <div className="space-y-4">
+      <ProfessionalNumberCombineDiagram numbers={numbers} operation={operation} />
       <div className="grid grid-cols-4 gap-2">
         {numbers.map((n, i) => (
           <motion.div

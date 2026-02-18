@@ -5,6 +5,97 @@ import { KNOWLEDGE_POINT_TAXONOMY } from "@gmq/math-engine";
 
 const prisma = new PrismaClient();
 
+type SeedQuestionLike = {
+  category: string;
+  titleEn: string;
+  contentEn: string;
+  animationConfig?: Record<string, unknown>;
+};
+
+function inferGeometryAnimationConfigFromText(q: SeedQuestionLike): Record<string, unknown> {
+  const text = `${q.titleEn} ${q.contentEn}`.toLowerCase();
+  const nums = (q.contentEn.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+
+  const isTriangleTopic =
+    text.includes("triangle") ||
+    text.includes("angle") ||
+    text.includes("hypotenuse") ||
+    text.includes("pythag") ||
+    text.includes("sin(") ||
+    text.includes("cos(") ||
+    text.includes("tan(");
+
+  if (isTriangleTopic) {
+    return { type: "triangle_angles", angles: [60, 60, 60] };
+  }
+
+  if (
+    text.includes("circle") ||
+    text.includes("radius") ||
+    text.includes("diameter") ||
+    text.includes("circumference")
+  ) {
+    const marker = nums.find((n) => n > 0) ?? 10;
+    return {
+      type: "number_journey",
+      range: [0, Math.max(20, Math.ceil(marker * 4))],
+      highlights: [marker],
+    };
+  }
+
+  if (
+    text.includes("rectangle") ||
+    text.includes("rectangular") ||
+    text.includes("garden") ||
+    text.includes("fence") ||
+    text.includes("perimeter") ||
+    text.includes("area")
+  ) {
+    const a = nums.find((n) => n > 0) ?? 8;
+    const b = nums.find((n, i) => i > 0 && n > 0) ?? 5;
+    return { type: "number_combine", numbers: [a, b, a, b], operation: "add" };
+  }
+
+  if (
+    text.includes("volume") ||
+    text.includes("box") ||
+    text.includes("tank") ||
+    text.includes("aquarium")
+  ) {
+    const dims = nums.filter((n) => n > 0).slice(0, 3);
+    return {
+      type: "number_combine",
+      numbers: dims.length === 3 ? dims : [5, 4, 3],
+      operation: "multiply",
+    };
+  }
+
+  if (
+    text.includes("midpoint") ||
+    text.includes("coordinate") ||
+    text.includes("distance") ||
+    text.includes("(")
+  ) {
+    const max = Math.max(10, ...nums.map((n) => Math.abs(n)));
+    return {
+      type: "number_journey",
+      range: [-max, max],
+      highlights: nums.slice(0, 4),
+    };
+  }
+
+  return { type: "number_journey", range: [0, 50], highlights: nums.slice(0, 3) };
+}
+
+function normalizeAnimationConfig(q: SeedQuestionLike): Record<string, unknown> {
+  if (q.category !== "GEOMETRY") {
+    return q.animationConfig ?? { type: "number_journey", range: [0, 20], highlights: [] };
+  }
+
+  // Geometry questions are normalized by text semantics to avoid mismatched shapes.
+  return inferGeometryAnimationConfigFromText(q);
+}
+
 async function main() {
   console.log("🌱 Seeding database...");
 
@@ -452,7 +543,7 @@ async function main() {
         { en: "Perimeter means the distance all the way around", zh: "周长就是绕一圈的距离" },
         { en: "A rectangle has 2 lengths and 2 widths", zh: "长方形有2条长和2条宽" },
       ],
-      animationConfig: { type: "triangle_angles", angles: [90, 90, 90] },
+      animationConfig: { type: "number_combine", numbers: [8, 5, 8, 5], operation: "add" },
       funFactEn: "The word 'perimeter' comes from Greek: 'peri' (around) + 'meter' (measure)!",
       funFactZh: "周长的英文perimeter来自希腊语：'peri'（周围）+ 'meter'（测量）！",
       isPublished: true,
@@ -1363,7 +1454,7 @@ async function main() {
       data: {
         ...q,
         hints: q.hints,
-        animationConfig: q.animationConfig,
+        animationConfig: normalizeAnimationConfig(q),
         tags: questionTags.length > 0 ? { create: questionTags } : undefined,
       },
     });
@@ -1500,7 +1591,7 @@ async function main() {
       classCode: "MATH-2024-ABC",
       teacherName: "Mrs. Smith",
       teacherEmail: "smith@school.edu",
-      school: "Maple Elementary",
+      school: "Donlon Elementary",
     },
   });
 
@@ -1510,7 +1601,7 @@ async function main() {
       classCode: "MATH-2024-XYZ",
       teacherName: "Mr. Chen",
       teacherEmail: "chen@school.edu",
-      school: "Oak Middle School",
+      school: "Hart Middle School",
     },
   });
 
@@ -1523,15 +1614,15 @@ async function main() {
     data: {
       username: "demo_student",
       password: hashedPassword,
-      displayName: "Demo Student",
+      displayName: "Eric",
       email: "demo@example.com",
       age: 10,
       parentEmail: "parent@example.com",
       authMethod: "PARENT_EMAIL",
       locale: "en",
-      xp: 150,
-      level: 2,
-      streak: 3,
+      xp: 99999,
+      level: 99,
+      streak: 999,
     },
   });
 
@@ -1568,7 +1659,7 @@ async function main() {
   });
 
   console.log("✅ Created demo users");
-  console.log("  - demo_student / demo123 (Level 2, 150 XP)");
+  console.log("  - eric_student / demo123 (Level 99, 9999 XP)");
   console.log("  - math_wizard / demo123 (Level 5, 500 XP)");
   console.log("  - xiao_ming / demo123 (Level 3, 320 XP)");
   console.log("\n🎉 Seeding complete!");

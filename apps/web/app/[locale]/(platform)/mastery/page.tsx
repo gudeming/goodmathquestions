@@ -167,6 +167,8 @@ export default function MasteryPage() {
     promptEn: string;
     promptZh: string;
     hints: Array<{ en: string; zh: string }>;
+    funFactEn?: string;
+    funFactZh?: string;
     level: number;
     domain: string;
     knowledgePointSlug: string;
@@ -193,6 +195,8 @@ export default function MasteryPage() {
         promptEn: data.question.promptEn,
         promptZh: data.question.promptZh,
         hints: data.question.hints,
+        funFactEn: data.question.funFactEn,
+        funFactZh: data.question.funFactZh,
         level: data.question.level,
         domain: data.question.domain,
         knowledgePointSlug: data.question.knowledgePointSlug,
@@ -427,6 +431,12 @@ export default function MasteryPage() {
           <p className="text-xl text-gray-800 font-body mb-4">
             {isZh ? activeQuestion.promptZh : activeQuestion.promptEn}
           </p>
+          {(activeQuestion.funFactEn || activeQuestion.funFactZh) && (
+            <div className="mb-4 rounded-bubble border border-fun-orange/40 bg-fun-orange/10 px-3 py-2 text-sm text-gray-700">
+              <span className="font-semibold mr-1">{isZh ? "趣味数学：" : "Fun fact:"}</span>
+              {isZh ? activeQuestion.funFactZh : activeQuestion.funFactEn}
+            </div>
+          )}
 
           <form onSubmit={onSubmit} className="space-y-3">
             <input
