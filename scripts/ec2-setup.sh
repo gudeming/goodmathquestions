@@ -6,6 +6,14 @@ exec > >(tee /var/log/gmq-setup.log) 2>&1
 
 APP_DIR=/opt/gmq
 APP_USER=ec2-user
+if [[ -z "${GMQ_PUBLIC_IP:-}" ]]; then
+  IMDS_TOKEN=$(curl -fsS --connect-timeout 2 -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 300" || true)
+  if [[ -n "${IMDS_TOKEN}" ]]; then
+    GMQ_PUBLIC_IP=$(curl -fsS --connect-timeout 2 -H "X-aws-ec2-metadata-token: ${IMDS_TOKEN}" "http://169.254.169.254/latest/meta-data/public-ipv4" || true)
+  else
+    GMQ_PUBLIC_IP=$(curl -fsS --connect-timeout 2 "http://169.254.169.254/latest/meta-data/public-ipv4" || true)
+  fi
+fi
 
 echo "=== [1/8] Swap 2GB (critical for t3.micro 1GB RAM) ==="
 if swapon --show=NAME | grep -q '^/swapfile$'; then
@@ -85,6 +93,9 @@ echo "=== [6/8] Environment ==="
 NEXTAUTH_SECRET=$(openssl rand -base64 32)
 SITE_URL=${GMQ_DOMAIN_NAME:+https://$GMQ_DOMAIN_NAME}
 SITE_URL=${SITE_URL:-http://$GMQ_PUBLIC_IP}
+if [[ -z "${SITE_URL}" || "${SITE_URL}" == "http://" ]]; then
+  SITE_URL="http://127.0.0.1"
+fi
 
 cat > "$APP_DIR/.env" << EOF
 DATABASE_URL=postgresql://gmq_admin:${DB_PASSWORD}@localhost:5432/goodmathquestions
