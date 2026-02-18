@@ -16,7 +16,7 @@ echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
 
 echo "=== [2/8] System packages ==="
 dnf update -y
-dnf install -y docker git nginx
+dnf install -y docker git nginx certbot python3-certbot-nginx
 
 echo "=== [3/8] Node.js 20 + PM2 ==="
 curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
@@ -56,7 +56,7 @@ git clone https://github.com/gudeming/goodmathquestions.git "$APP_DIR" || {
 
 echo "=== [6/8] Environment ==="
 NEXTAUTH_SECRET=$(openssl rand -base64 32)
-SITE_URL=${GMQ_DOMAIN_NAME:+http://$GMQ_DOMAIN_NAME}
+SITE_URL=${GMQ_DOMAIN_NAME:+https://$GMQ_DOMAIN_NAME}
 SITE_URL=${SITE_URL:-http://$GMQ_PUBLIC_IP}
 
 cat > "$APP_DIR/.env" << EOF
@@ -150,6 +150,55 @@ CONFEOF
 
 nginx -t
 systemctl enable --now nginx
+
+# HTTPS setup (domain required). Falls back to HTTP if certificate issuance fails.
+if [[ -n "${GMQ_DOMAIN_NAME:-}" ]]; then
+  echo "=== Enabling HTTPS for ${GMQ_DOMAIN_NAME} ==="
+
+  if certbot --nginx --non-interactive --agree-tos --register-unsafely-without-email -d "${GMQ_DOMAIN_NAME}"; then
+    cat > /etc/nginx/conf.d/gmq.conf << CONFEOF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name ${GMQ_DOMAIN_NAME};
+    return 301 https://\$host\$request_uri;
+}
+
+server {
+    listen 443 ssl http2 default_server;
+    listen [::]:443 ssl http2 default_server;
+    server_name ${GMQ_DOMAIN_NAME};
+    client_max_body_size 10m;
+
+    ssl_certificate /etc/letsencrypt/live/${GMQ_DOMAIN_NAME}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${GMQ_DOMAIN_NAME}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+CONFEOF
+
+    nginx -t
+    systemctl reload nginx
+
+    # Keep certs updated.
+    systemctl enable --now certbot-renew.timer || systemctl enable --now certbot.timer || true
+  else
+    echo "WARNING: HTTPS certificate issuance failed. Keeping HTTP-only nginx config."
+    SITE_URL="http://${GMQ_DOMAIN_NAME}"
+  fi
+fi
 
 echo "============================================"
 echo "  GMQ Setup Complete!"
