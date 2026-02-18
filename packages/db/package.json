@@ -10,6 +10,7 @@
     "db:push": "set -a; test -f ../../.env && . ../../.env; set +a; prisma db push",
     "db:seed": "set -a; test -f ../../.env && . ../../.env; set +a; tsx prisma/seed.ts",
     "db:seed:questions": "set -a; test -f ../../.env && . ../../.env; set +a; SEED_MODE=questions_only tsx prisma/seed.ts",
+    "db:seed:community": "set -a; test -f ../../.env && . ../../.env; set +a; SEED_MODE=questions_only SEED_COMMUNITY_BOOST=true SEED_RANDOM_USER_COUNT=50 SEED_RANDOM_COMMENT_COUNT=500 tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },
   "dependencies": {

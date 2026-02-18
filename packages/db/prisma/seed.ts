@@ -12,6 +12,188 @@ type SeedQuestionLike = {
   animationConfig?: Record<string, unknown>;
 };
 
+type CommunityBoostConfig = {
+  enabled: boolean;
+  randomUserCount: number;
+  randomCommentCount: number;
+};
+
+function parseBooleanFlag(value: string | undefined, fallback = false): boolean {
+  if (value === undefined) return fallback;
+  return ["1", "true", "yes", "on"].includes(value.trim().toLowerCase());
+}
+
+function parseIntWithBounds(
+  value: string | undefined,
+  fallback: number,
+  min: number,
+  max: number
+): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+  if (Number.isNaN(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+}
+
+function randomFrom<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function resolveCommunityBoostConfig(): CommunityBoostConfig {
+  const enabled = parseBooleanFlag(process.env.SEED_COMMUNITY_BOOST, false);
+  const randomUserCount = enabled
+    ? parseIntWithBounds(process.env.SEED_RANDOM_USER_COUNT, 50, 0, 200)
+    : 0;
+  const randomCommentCount = enabled
+    ? parseIntWithBounds(
+        process.env.SEED_RANDOM_COMMENT_COUNT,
+        Math.max(300, randomUserCount * 8),
+        0,
+        5000
+      )
+    : 0;
+
+  return { enabled, randomUserCount, randomCommentCount };
+}
+
+function randomCommentByLocale(locale: "en" | "zh"): string {
+  const commentsEn = [
+    "I solved this by drawing a quick table first. It made the pattern obvious.",
+    "Tiny trick: estimate first, then compute exactly. It helps catch silly mistakes.",
+    "I got stuck at first, then the second hint unlocked everything.",
+    "This one feels like a puzzle game level. Really fun.",
+    "My shortcut was to rewrite the numbers into friendlier chunks.",
+    "Challenge accepted. I tried two methods and both matched.",
+    "This question is surprisingly elegant once you spot the structure.",
+    "I explained it to my little brother and he got it too.",
+    "The visual animation helped me see why the answer works.",
+    "I love questions where the final step is super satisfying.",
+    "Pro tip: reverse-check your answer from the result backwards.",
+    "I used a number line and it became way easier.",
+    "At first glance it looked hard, but it is very logical.",
+    "I made an arithmetic mistake once, fixed it, and got it right.",
+    "This is the kind of question I want more of.",
+  ];
+  const commentsZh = [
+    "我先画了个小表格，规律一下就出来了。",
+    "先估算再精算，真的能避免很多低级错误。",
+    "一开始卡住了，看了第二个提示瞬间通了。",
+    "这题像闯关小游戏，越做越有意思。",
+    "我把数字拆开重组后，计算顺很多。",
+    "我用了两种方法验算，答案一致很安心。",
+    "看起来复杂，其实结构非常清晰。",
+    "我讲给弟弟听，他也能跟上思路。",
+    "动画真的有帮助，为什么这样算一眼就懂。",
+    "这种最后一步很漂亮的题我特别喜欢。",
+    "建议倒推检查一遍，准确率会高很多。",
+    "我用数轴做了一遍，思路立刻变清楚。",
+    "第一眼觉得难，做完发现逻辑很顺。",
+    "我第一次算错了，改完就对了。",
+    "希望社区里多一点这种有讨论价值的题。",
+  ];
+  return locale === "zh" ? randomFrom(commentsZh) : randomFrom(commentsEn);
+}
+
+async function seedCommunityBoost(config: CommunityBoostConfig) {
+  if (!config.enabled) return;
+
+  const questions = await prisma.question.findMany({
+    select: { id: true, category: true, difficulty: true },
+  });
+
+  if (questions.length === 0) {
+    console.log("ℹ️ Community boost skipped: no questions found.");
+    return;
+  }
+
+  const createdUsers: Array<{ id: string; locale: string }> = [];
+  const hashedPassword = await bcrypt.hash("demo123", 12);
+  const baseToken = Date.now().toString(36).slice(-6);
+  const firstNamesEn = ["Nova", "Liam", "Mia", "Aiden", "Zoe", "Leo", "Chloe", "Owen"];
+  const firstNamesZh = ["小雨", "乐乐", "安安", "子涵", "浩然", "依依", "晨晨", "星宇"];
+  const handleWords = ["math", "puzzle", "logic", "vector", "prime", "angle", "graph", "sum"];
+
+  for (let i = 0; i < config.randomUserCount; i++) {
+    const locale: "en" | "zh" = Math.random() < 0.35 ? "zh" : "en";
+    const displayName =
+      locale === "zh"
+        ? `${randomFrom(firstNamesZh)}${randomInt(1, 99)}`
+        : `${randomFrom(firstNamesEn)} ${randomFrom(["K", "L", "M", "N", "P", "R", "S", "T"])}.`;
+    const username = `seed${baseToken}${i.toString().padStart(2, "0")}${randomInt(10, 99)}`;
+    const age = randomInt(8, 16);
+    const xp = randomInt(20, 1800);
+    const level = Math.max(1, Math.floor(xp / 100) + 1);
+
+    const user = await prisma.user.create({
+      data: {
+        username,
+        password: hashedPassword,
+        displayName,
+        email: `${username}@seed.gmq.local`,
+        age,
+        parentEmail: `parent+${username}@seed.gmq.local`,
+        authMethod: "PARENT_EMAIL",
+        locale,
+        xp,
+        level,
+        streak: randomInt(0, 30),
+      },
+      select: { id: true, locale: true },
+    });
+
+    createdUsers.push(user);
+  }
+
+  if (createdUsers.length === 0 || config.randomCommentCount <= 0) {
+    console.log(
+      `✅ Community boost finished (users +${createdUsers.length}, comments +0)`
+    );
+    return;
+  }
+
+  const commentRows: Prisma.CommentCreateManyInput[] = [];
+  for (let i = 0; i < config.randomCommentCount; i++) {
+    const author = randomFrom(createdUsers);
+    const commentLocale: "en" | "zh" = author.locale === "zh" ? "zh" : "en";
+    const question = randomFrom(questions);
+    const createdAt = new Date(
+      Date.now() - randomInt(0, 1000 * 60 * 60 * 24 * 45)
+    );
+
+    const categoryHint =
+      question.category === "GEOMETRY"
+        ? commentLocale === "zh"
+          ? " 这题几何直觉很重要。"
+          : " Geometry intuition matters here."
+        : question.category === "PROBABILITY"
+          ? commentLocale === "zh"
+            ? " 概率题建议先数样本空间。"
+            : " For probability, counting the sample space first helps."
+          : "";
+
+    commentRows.push({
+      questionId: question.id,
+      userId: author.id,
+      content: `${randomCommentByLocale(commentLocale)}${categoryHint}`,
+      isApproved: true,
+      isFlagged: false,
+      createdAt,
+      updatedAt: createdAt,
+    });
+  }
+
+  await prisma.comment.createMany({
+    data: commentRows,
+  });
+
+  console.log(
+    `✅ Community boost finished (users +${createdUsers.length}, comments +${commentRows.length})`
+  );
+}
+
 function inferGeometryAnimationConfigFromText(q: SeedQuestionLike): Record<string, unknown> {
   const text = `${q.titleEn} ${q.contentEn}`.toLowerCase();
   const nums = (q.contentEn.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
@@ -99,8 +281,14 @@ function normalizeAnimationConfig(q: SeedQuestionLike): Record<string, unknown> 
 async function main() {
   const seedMode = (process.env.SEED_MODE ?? "full").toLowerCase();
   const questionsOnly = seedMode === "questions_only";
+  const communityBoostConfig = resolveCommunityBoostConfig();
 
   console.log(`🌱 Seeding database... (mode: ${questionsOnly ? "questions_only" : "full"})`);
+  if (communityBoostConfig.enabled) {
+    console.log(
+      `🎲 Community boost enabled (new users: ${communityBoostConfig.randomUserCount}, comments: ${communityBoostConfig.randomCommentCount})`
+    );
+  }
 
   if (!questionsOnly) {
     // Development full reset: make script repeatable
@@ -1534,6 +1722,7 @@ async function main() {
   console.log(`✅ Synced ${allQuestions.length} questions`);
 
   if (questionsOnly) {
+    await seedCommunityBoost(communityBoostConfig);
     console.log("🎯 Question bank sync complete (users and XP untouched).");
     return;
   }
@@ -1706,6 +1895,8 @@ async function main() {
   console.log("  - eric_student / demo123 (Level 99, 9999 XP)");
   console.log("  - math_wizard / demo123 (Level 5, 500 XP)");
   console.log("  - xiao_ming / demo123 (Level 3, 320 XP)");
+
+  await seedCommunityBoost(communityBoostConfig);
   console.log("\n🎉 Seeding complete!");
 }
 
