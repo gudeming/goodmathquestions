@@ -6,7 +6,7 @@ import { TRPCProvider } from "@/lib/trpc-provider";
 import { AuthProvider } from "@/lib/auth-provider";
 
 export const metadata = {
-  title: "Good Math Questions - Where Math Becomes an Adventure!",
+  title: "Eric's Good Math Questions - Where Math Becomes an Adventure!",
   description:
     "A fun, interactive math learning platform for kids aged 8-14. Solve puzzles, watch animated solutions, and compete with friends!",
   icons: { icon: "/favicon.ico" },
