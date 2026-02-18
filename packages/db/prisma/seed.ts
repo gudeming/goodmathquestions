@@ -18,6 +18,8 @@ type CommunityBoostConfig = {
   randomCommentCount: number;
 };
 
+const COMMUNITY_EMAIL_DOMAINS = ["@seed.gmq.local", "@community.gmq.local"];
+
 function parseBooleanFlag(value: string | undefined, fallback = false): boolean {
   if (value === undefined) return fallback;
   return ["1", "true", "yes", "on"].includes(value.trim().toLowerCase());
@@ -111,18 +113,71 @@ async function seedCommunityBoost(config: CommunityBoostConfig) {
 
   const createdUsers: Array<{ id: string; locale: string }> = [];
   const hashedPassword = await bcrypt.hash("demo123", 12);
-  const baseToken = Date.now().toString(36).slice(-6);
-  const firstNamesEn = ["Nova", "Liam", "Mia", "Aiden", "Zoe", "Leo", "Chloe", "Owen"];
-  const firstNamesZh = ["小雨", "乐乐", "安安", "子涵", "浩然", "依依", "晨晨", "星宇"];
-  const handleWords = ["math", "puzzle", "logic", "vector", "prime", "angle", "graph", "sum"];
+  const baseToken = Date.now().toString(36).slice(-5);
+  const firstNamesEn = [
+    "Liam",
+    "Olivia",
+    "Noah",
+    "Emma",
+    "Ethan",
+    "Ava",
+    "Lucas",
+    "Mia",
+    "Henry",
+    "Sofia",
+    "Jackson",
+    "Harper",
+  ];
+  const lastNamesEn = [
+    "Turner",
+    "Brooks",
+    "Hayes",
+    "Morgan",
+    "Bennett",
+    "Foster",
+    "Carter",
+    "Reed",
+    "Parker",
+    "Diaz",
+    "Chen",
+    "Wang",
+  ];
+  const zhDisplayNames = [
+    "李子涵",
+    "王浩然",
+    "张雨桐",
+    "陈思源",
+    "刘嘉宁",
+    "赵欣怡",
+    "黄宇辰",
+    "周一诺",
+    "吴梓萌",
+    "徐俊熙",
+  ];
+  const zhHandles = [
+    "li_zihan",
+    "wang_haoran",
+    "zhang_yutong",
+    "chen_siyuan",
+    "liu_jianing",
+    "zhao_xinyi",
+    "huang_yuchen",
+    "zhou_yinuo",
+    "wu_zimeng",
+    "xu_junxi",
+  ];
 
   for (let i = 0; i < config.randomUserCount; i++) {
     const locale: "en" | "zh" = Math.random() < 0.35 ? "zh" : "en";
+    const seq = `${i.toString().padStart(2, "0")}${randomInt(10, 99)}`;
     const displayName =
       locale === "zh"
-        ? `${randomFrom(firstNamesZh)}${randomInt(1, 99)}`
-        : `${randomFrom(firstNamesEn)} ${randomFrom(["K", "L", "M", "N", "P", "R", "S", "T"])}.`;
-    const username = `seed${baseToken}${i.toString().padStart(2, "0")}${randomInt(10, 99)}`;
+        ? randomFrom(zhDisplayNames)
+        : `${randomFrom(firstNamesEn)} ${randomFrom(lastNamesEn)}`;
+    const username =
+      locale === "zh"
+        ? `${randomFrom(zhHandles)}_${baseToken}${seq}`
+        : `${randomFrom(firstNamesEn).toLowerCase()}_${randomFrom(lastNamesEn).toLowerCase()}_${baseToken}${seq}`;
     const age = randomInt(8, 16);
     const xp = randomInt(20, 1800);
     const level = Math.max(1, Math.floor(xp / 100) + 1);
@@ -132,9 +187,9 @@ async function seedCommunityBoost(config: CommunityBoostConfig) {
         username,
         password: hashedPassword,
         displayName,
-        email: `${username}@seed.gmq.local`,
+        email: `${username}@community.gmq.local`,
         age,
-        parentEmail: `parent+${username}@seed.gmq.local`,
+        parentEmail: `parent+${username}@community.gmq.local`,
         authMethod: "PARENT_EMAIL",
         locale,
         xp,
@@ -192,6 +247,24 @@ async function seedCommunityBoost(config: CommunityBoostConfig) {
   console.log(
     `✅ Community boost finished (users +${createdUsers.length}, comments +${commentRows.length})`
   );
+}
+
+async function cleanupCommunityBoostUsers() {
+  const where: Prisma.UserWhereInput = {
+    OR: [
+      ...COMMUNITY_EMAIL_DOMAINS.map((domain) => ({ email: { endsWith: domain } })),
+      ...COMMUNITY_EMAIL_DOMAINS.map((domain) => ({ parentEmail: { endsWith: domain } })),
+    ],
+  };
+
+  const targetCount = await prisma.user.count({ where });
+  if (targetCount === 0) {
+    console.log("ℹ️ Community cleanup: no generated users found.");
+    return;
+  }
+
+  await prisma.user.deleteMany({ where });
+  console.log(`🧹 Community cleanup complete (users removed: ${targetCount}).`);
 }
 
 function inferGeometryAnimationConfigFromText(q: SeedQuestionLike): Record<string, unknown> {
@@ -281,9 +354,19 @@ function normalizeAnimationConfig(q: SeedQuestionLike): Record<string, unknown> 
 async function main() {
   const seedMode = (process.env.SEED_MODE ?? "full").toLowerCase();
   const questionsOnly = seedMode === "questions_only";
+  const cleanupOnly = seedMode === "community_cleanup";
+  const cleanupRequested = parseBooleanFlag(process.env.SEED_COMMUNITY_CLEANUP, false);
   const communityBoostConfig = resolveCommunityBoostConfig();
 
-  console.log(`🌱 Seeding database... (mode: ${questionsOnly ? "questions_only" : "full"})`);
+  const modeLabel = cleanupOnly ? "community_cleanup" : questionsOnly ? "questions_only" : "full";
+  console.log(`🌱 Seeding database... (mode: ${modeLabel})`);
+  if (cleanupRequested || cleanupOnly) {
+    await cleanupCommunityBoostUsers();
+    if (cleanupOnly) {
+      console.log("🎯 Community cleanup complete.");
+      return;
+    }
+  }
   if (communityBoostConfig.enabled) {
     console.log(
       `🎲 Community boost enabled (new users: ${communityBoostConfig.randomUserCount}, comments: ${communityBoostConfig.randomCommentCount})`
