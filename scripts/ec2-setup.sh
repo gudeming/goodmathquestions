@@ -34,17 +34,32 @@ echo "=== [4/8] Docker + PostgreSQL ==="
 systemctl enable --now docker
 usermod -aG docker $APP_USER
 
-DB_PASSWORD=$(openssl rand -base64 24 | tr -dc 'a-zA-Z0-9' | head -c 24)
+DB_PASSWORD=""
+if docker ps -a --filter "name=^/gmq-postgres$" --format '{{.Names}}' | grep -qx 'gmq-postgres'; then
+  echo "PostgreSQL container already exists, reusing it."
+  DB_PASSWORD=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' gmq-postgres | sed -n 's/^POSTGRES_PASSWORD=//p' | tail -n 1 || true)
+  docker start gmq-postgres >/dev/null 2>&1 || true
+fi
 
-docker run -d \
-  --name gmq-postgres \
-  --restart unless-stopped \
-  -e POSTGRES_USER=gmq_admin \
-  -e "POSTGRES_PASSWORD=${DB_PASSWORD}" \
-  -e POSTGRES_DB=goodmathquestions \
-  -v pgdata:/var/lib/postgresql/data \
-  -p 127.0.0.1:5432:5432 \
-  postgres:16-alpine
+if [[ -z "${DB_PASSWORD}" && -f "${APP_DIR}/.env" ]]; then
+  DB_PASSWORD=$(sed -n 's#^DATABASE_URL=postgresql://gmq_admin:\([^@]*\)@localhost:5432/goodmathquestions$#\1#p' "${APP_DIR}/.env" | tail -n 1 || true)
+fi
+
+if [[ -z "${DB_PASSWORD}" ]]; then
+  DB_PASSWORD=$(openssl rand -base64 24 | tr -dc 'a-zA-Z0-9' | head -c 24)
+fi
+
+if ! docker ps -a --filter "name=^/gmq-postgres$" --format '{{.Names}}' | grep -qx 'gmq-postgres'; then
+  docker run -d \
+    --name gmq-postgres \
+    --restart unless-stopped \
+    -e POSTGRES_USER=gmq_admin \
+    -e "POSTGRES_PASSWORD=${DB_PASSWORD}" \
+    -e POSTGRES_DB=goodmathquestions \
+    -v pgdata:/var/lib/postgresql/data \
+    -p 127.0.0.1:5432:5432 \
+    postgres:16-alpine
+fi
 
 echo "Waiting for PostgreSQL..."
 for i in $(seq 1 30); do
@@ -56,11 +71,15 @@ for i in $(seq 1 30); do
 done
 
 echo "=== [5/8] Clone application ==="
-git clone https://github.com/gudeming/goodmathquestions.git "$APP_DIR" || {
-  echo "ERROR: git clone failed."
-  echo "If repo is private, SSH in and clone manually, then run /opt/gmq/scripts/ec2-deploy.sh --init"
-  exit 1
-}
+if [[ -d "${APP_DIR}/.git" ]]; then
+  echo "Application repo already exists, skipping clone."
+else
+  git clone https://github.com/gudeming/goodmathquestions.git "$APP_DIR" || {
+    echo "ERROR: git clone failed."
+    echo "If repo is private, SSH in and clone manually, then run /opt/gmq/scripts/ec2-deploy.sh --init"
+    exit 1
+  }
+fi
 
 echo "=== [6/8] Environment ==="
 NEXTAUTH_SECRET=$(openssl rand -base64 32)
