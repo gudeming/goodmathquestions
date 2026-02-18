@@ -37,4 +37,5 @@ postgres_data/
 redis_data/
 infrastructure/node_modules/
 infrastructure/cdk.out/
+*.pkg
 *.md
