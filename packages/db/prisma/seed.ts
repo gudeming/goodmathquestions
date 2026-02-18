@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { buildUSK12QuestionBank } from "./us-k12-question-bank";
 import { KNOWLEDGE_POINT_TAXONOMY } from "@gmq/math-engine";
@@ -97,25 +97,32 @@ function normalizeAnimationConfig(q: SeedQuestionLike): Record<string, unknown> 
 }
 
 async function main() {
-  console.log("🌱 Seeding database...");
+  const seedMode = (process.env.SEED_MODE ?? "full").toLowerCase();
+  const questionsOnly = seedMode === "questions_only";
 
-  // Development seed reset: make script repeatable
-  await prisma.userKnowledgePointMastery.deleteMany();
-  await prisma.knowledgePoint.deleteMany();
-  await prisma.challengeParticipant.deleteMany();
-  await prisma.challenge.deleteMany();
-  await prisma.comment.deleteMany();
-  await prisma.submission.deleteMany();
-  await prisma.questionLike.deleteMany();
-  await prisma.tagsOnQuestions.deleteMany();
-  await prisma.question.deleteMany();
-  await prisma.userBadge.deleteMany();
-  await prisma.badge.deleteMany();
-  await prisma.session.deleteMany();
-  await prisma.account.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.classroom.deleteMany();
-  await prisma.tag.deleteMany();
+  console.log(`🌱 Seeding database... (mode: ${questionsOnly ? "questions_only" : "full"})`);
+
+  if (!questionsOnly) {
+    // Development full reset: make script repeatable
+    await prisma.userKnowledgePointMastery.deleteMany();
+    await prisma.knowledgePoint.deleteMany();
+    await prisma.challengeParticipant.deleteMany();
+    await prisma.challenge.deleteMany();
+    await prisma.comment.deleteMany();
+    await prisma.submission.deleteMany();
+    await prisma.questionLike.deleteMany();
+    await prisma.tagsOnQuestions.deleteMany();
+    await prisma.question.deleteMany();
+    await prisma.userBadge.deleteMany();
+    await prisma.badge.deleteMany();
+    await prisma.session.deleteMany();
+    await prisma.account.deleteMany();
+    await prisma.user.deleteMany();
+    await prisma.classroom.deleteMany();
+    await prisma.tag.deleteMany();
+  } else {
+    console.log("ℹ️ questions_only mode: preserving users, XP, submissions, classrooms, badges, and sessions.");
+  }
 
   // Create tags
   const tags = await Promise.all([
@@ -1450,14 +1457,46 @@ async function main() {
       tag: { connect: { nameEn: tag } },
     }));
 
-    await prisma.question.create({
-      data: {
-        ...q,
-        hints: q.hints,
-        animationConfig: normalizeAnimationConfig(q),
-        tags: questionTags.length > 0 ? { create: questionTags } : undefined,
-      },
-    });
+    const { tags: _ignoredTags, ...qBase } = q as typeof q & { tags?: string[] };
+    const questionData = {
+      ...qBase,
+      hints: qBase.hints as Prisma.InputJsonValue,
+      animationConfig: normalizeAnimationConfig(q) as Prisma.InputJsonValue,
+    };
+
+    if (questionsOnly) {
+      const existing = await prisma.question.findFirst({
+        where: { sortOrder: q.sortOrder },
+        select: { id: true },
+      });
+
+      if (existing) {
+        await prisma.question.update({
+          where: { id: existing.id },
+          data: {
+            ...questionData,
+            tags: {
+              deleteMany: {},
+              create: questionTags,
+            },
+          },
+        });
+      } else {
+        await prisma.question.create({
+          data: {
+            ...questionData,
+            tags: questionTags.length > 0 ? { create: questionTags } : undefined,
+          },
+        });
+      }
+    } else {
+      await prisma.question.create({
+        data: {
+          ...questionData,
+          tags: questionTags.length > 0 ? { create: questionTags } : undefined,
+        },
+      });
+    }
   }
 
   // Attach grade-level focus tags so students can directly pick Grade 4-8 challenge tracks.
@@ -1492,7 +1531,12 @@ async function main() {
     });
   }
 
-  console.log(`✅ Created ${allQuestions.length} questions`);
+  console.log(`✅ Synced ${allQuestions.length} questions`);
+
+  if (questionsOnly) {
+    console.log("🎯 Question bank sync complete (users and XP untouched).");
+    return;
+  }
 
   // Create sample badges
   const badges = [

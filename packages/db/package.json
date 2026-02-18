@@ -9,6 +9,7 @@
     "db:generate": "set -a; test -f ../../.env && . ../../.env; set +a; prisma generate",
     "db:push": "set -a; test -f ../../.env && . ../../.env; set +a; prisma db push",
     "db:seed": "set -a; test -f ../../.env && . ../../.env; set +a; tsx prisma/seed.ts",
+    "db:seed:questions": "set -a; test -f ../../.env && . ../../.env; set +a; SEED_MODE=questions_only tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },
   "dependencies": {
