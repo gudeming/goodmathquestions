@@ -5,13 +5,6 @@ import { locales, type Locale } from "@gmq/i18n";
 import { TRPCProvider } from "@/lib/trpc-provider";
 import { AuthProvider } from "@/lib/auth-provider";
 
-export const metadata = {
-  title: "Eric's Good Math Questions - Where Math Becomes an Adventure!",
-  description:
-    "A fun, interactive math learning platform for kids aged 8-14. Solve puzzles, watch animated solutions, and compete with friends!",
-  icons: { icon: "/favicon.ico" },
-};
-
 export default async function LocaleLayout({
   children,
   params: { locale },
