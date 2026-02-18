@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
+import { MathText } from "@/components/ui/MathText";
 
 const DIFFICULTY_COLORS: Record<string, string> = {
   EASY: "bg-fun-green text-white",
@@ -255,9 +256,11 @@ export default function QuestionsPage() {
                   </h3>
 
                   {/* Content Preview */}
-                  <p className="text-gray-600 text-sm flex-grow mb-4 line-clamp-2 font-body">
-                    {isZh ? question.contentZh : question.contentEn}
-                  </p>
+                  <MathText
+                    as="p"
+                    className="text-gray-600 text-sm flex-grow mb-4 line-clamp-2 font-body"
+                    text={isZh ? question.contentZh : question.contentEn}
+                  />
 
                   {/* Age Group Tag */}
                   <div className="mb-3">

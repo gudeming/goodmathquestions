@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { MathText } from "@/components/ui/MathText";
 
 interface Hint {
   en: string;
@@ -61,9 +62,7 @@ export function HintRevealer({ hints, isZh }: HintRevealerProps) {
               <span className="text-fun-purple font-bold text-sm mt-0.5">
                 #{i + 1}
               </span>
-              <p className="text-gray-700 font-body">
-                {isZh ? hint.zh : hint.en}
-              </p>
+              <MathText as="p" className="text-gray-700 font-body" text={isZh ? hint.zh : hint.en} />
             </motion.div>
           ))}
         </AnimatePresence>

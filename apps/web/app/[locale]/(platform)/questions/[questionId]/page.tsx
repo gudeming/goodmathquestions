@@ -11,6 +11,7 @@ import { CelebrationEffect } from "@/components/animations/CelebrationEffect";
 import { HintRevealer } from "@/components/questions/HintRevealer";
 import { DiscussionSection } from "@/components/questions/DiscussionSection";
 import { type AnimationConfig } from "@gmq/animation-engine";
+import { MathText } from "@/components/ui/MathText";
 
 const CATEGORY_ICONS: Record<string, string> = {
   ARITHMETIC: "🔢",
@@ -255,9 +256,11 @@ export default function QuestionPage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            <p className="text-xl font-body text-gray-800 leading-relaxed">
-              {isZh ? question.contentZh : question.contentEn}
-            </p>
+            <MathText
+              as="p"
+              className="text-xl font-body text-gray-800 leading-relaxed"
+              text={isZh ? question.contentZh : question.contentEn}
+            />
           </motion.div>
         </div>
 
@@ -379,7 +382,7 @@ export default function QuestionPage() {
                 <h3 className="font-heading font-bold text-lg text-fun-green mb-2">
                   ✅ {isZh ? "解题思路" : "Solution Explanation"}
                 </h3>
-                <p className="text-gray-700 font-body">{explanationText}</p>
+                <MathText as="p" className="text-gray-700 font-body" text={explanationText} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -398,9 +401,11 @@ export default function QuestionPage() {
               <h3 className="font-heading font-bold text-lg text-gray-800 mb-2">
                 💡 {t("funFact")}
               </h3>
-              <p className="text-gray-700 font-body">
-                {isZh ? question.funFactZh : question.funFactEn}
-              </p>
+              <MathText
+                as="p"
+                className="text-gray-700 font-body"
+                text={(isZh ? question.funFactZh : question.funFactEn) || ""}
+              />
             </motion.div>
           )}
         </div>
