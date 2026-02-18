@@ -7406,7 +7406,7 @@ const STORY_QUESTIONS_BATCH_15: Blueprint[] = [
     funFactEn:
       "Cutting a pizza into equal slices is a real-world application of central angles! Each of 8 slices has a 45° angle. Mathematicians have even proven the 'Pizza Theorem': if you make cuts at equal angles from any interior point, alternating slices always have equal total area. Fair sharing is baked into geometry!",
     funFactZh:
-      "将披萨切成等份是圆心角的实际应用！8等份时每片对应45°角。数学家甚至证明了"披萨定理"：从圆内任意一点以等角度切割，相间的扇形面积之和总是相等。公平分配被"烤"进了几何学！",
+      "将披萨切成等份是圆心角的实际应用！8等份时每片对应45°角。数学家甚至证明了\"披萨定理\"：从圆内任意一点以等角度切割，相间的扇形面积之和总是相等。公平分配被\"烤\"进了几何学！",
     standards: ["CCSS-5.NF.A1", "CCSS-5.NF.B3"],
   },
   {
@@ -7511,7 +7511,7 @@ const STORY_QUESTIONS_BATCH_15: Blueprint[] = [
     funFactEn:
       "Sushi has over 2,000 years of history in Japan! Professional sushi chefs (called 'itamae') train for 10+ years, spending the first 2–3 years just perfecting the rice. The perfect sushi rice must be at exactly body temperature (37°C) when served. A sushi chef's most prized skill isn't cutting fish — it's the precise math of seasoning rice!",
     funFactZh:
-      "寿司在日本有超过2000年的历史！专业寿司师傅（称为"板前"）需要培训10年以上，最初的2-3年只是专注于完善米饭。完美的寿司米饭上桌时必须恰好是体温（37°C）。寿司师傅最珍贵的技能不是切鱼——而是精确调味米饭的数学！",
+      "寿司在日本有超过2000年的历史！专业寿司师傅（称为\"板前\"）需要培训10年以上，最初的2-3年只是专注于完善米饭。完美的寿司米饭上桌时必须恰好是体温（37°C）。寿司师傅最珍贵的技能不是切鱼——而是精确调味米饭的数学！",
     standards: ["CCSS-6.RP.A1", "CCSS-6.RP.A3"],
   },
   {
