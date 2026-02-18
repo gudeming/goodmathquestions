@@ -61,49 +61,116 @@ function resolveCommunityBoostConfig(): CommunityBoostConfig {
   return { enabled, randomUserCount, randomCommentCount };
 }
 
-function randomCommentByLocale(locale: "en" | "zh"): string {
-  const commentsEn = [
-    "I solved this by drawing a quick table first. It made the pattern obvious.",
-    "Tiny trick: estimate first, then compute exactly. It helps catch silly mistakes.",
-    "I got stuck at first, then the second hint unlocked everything.",
-    "This one feels like a puzzle game level. Really fun.",
-    "My shortcut was to rewrite the numbers into friendlier chunks.",
-    "Challenge accepted. I tried two methods and both matched.",
-    "This question is surprisingly elegant once you spot the structure.",
-    "I explained it to my little brother and he got it too.",
-    "The visual animation helped me see why the answer works.",
-    "I love questions where the final step is super satisfying.",
-    "Pro tip: reverse-check your answer from the result backwards.",
-    "I used a number line and it became way easier.",
-    "At first glance it looked hard, but it is very logical.",
-    "I made an arithmetic mistake once, fixed it, and got it right.",
-    "This is the kind of question I want more of.",
+function buildTopicHint(
+  question: { category: string; difficulty: string; titleEn?: string; contentEn?: string },
+  locale: "en" | "zh"
+): string {
+  const text = `${question.titleEn ?? ""} ${question.contentEn ?? ""}`.toLowerCase();
+  const nums = (text.match(/\d+/g) ?? []).slice(0, 2);
+
+  const byCategoryEn: Record<string, string[]> = {
+    ARITHMETIC: ["mental math rhythm", "number splitting", "quick estimation"],
+    ALGEBRA: ["setting up the equation", "isolating the variable", "reverse-checking"],
+    GEOMETRY: ["angle relationships", "shape structure", "drawing a neat sketch"],
+    FRACTIONS: ["common denominators", "fraction simplification", "visual partitioning"],
+    NUMBER_THEORY: ["factor patterns", "divisibility rules", "prime structure"],
+    WORD_PROBLEMS: ["translating words into equations", "unit tracking", "step-by-step modeling"],
+    LOGIC: ["elimination logic", "case-by-case reasoning", "constraint checking"],
+    PROBABILITY: ["sample space counting", "outcome mapping", "careful case counting"],
+  };
+  const byCategoryZh: Record<string, string[]> = {
+    ARITHMETIC: ["心算节奏", "数字拆分", "先估后算"],
+    ALGEBRA: ["列方程", "移项与化简", "倒推验算"],
+    GEOMETRY: ["角度关系", "图形结构", "先画草图"],
+    FRACTIONS: ["通分思路", "约分技巧", "分块可视化"],
+    NUMBER_THEORY: ["因数规律", "整除规则", "质数结构"],
+    WORD_PROBLEMS: ["文字转方程", "单位一致性", "分步建模"],
+    LOGIC: ["排除法", "分类讨论", "条件约束检查"],
+    PROBABILITY: ["样本空间", "结果枚举", "分情况计数"],
+  };
+
+  const difficultyToneEn: Record<string, string> = {
+    EASY: "Great warm-up",
+    MEDIUM: "Nice mid-level challenge",
+    HARD: "This one is seriously competitive",
+    CHALLENGE: "Boss-level question",
+  };
+  const difficultyToneZh: Record<string, string> = {
+    EASY: "很好的热身题",
+    MEDIUM: "中等强度，刚刚好",
+    HARD: "这题有竞赛味道",
+    CHALLENGE: "这题是BOSS级别",
+  };
+
+  const defaultEn = ["core pattern spotting"];
+  const defaultZh = ["抓核心规律"];
+  const tech =
+    locale === "zh"
+      ? randomFrom(byCategoryZh[question.category] ?? defaultZh)
+      : randomFrom(byCategoryEn[question.category] ?? defaultEn);
+  const tone =
+    locale === "zh"
+      ? difficultyToneZh[question.difficulty] ?? "这题挺有意思"
+      : difficultyToneEn[question.difficulty] ?? "Interesting problem";
+  const numsText =
+    nums.length > 0
+      ? locale === "zh"
+        ? `，我先盯住数字 ${nums.join(" 和 ")} 再展开。`
+        : `, I focused on ${nums.join(" and ")} first.`
+      : locale === "zh"
+        ? "。"
+        : ".";
+
+  return locale === "zh"
+    ? `${tone}，关键在${tech}${numsText}`
+    : `${tone}; the key was ${tech}${numsText}`;
+}
+
+function buildEngagingComment(
+  question: { category: string; difficulty: string; titleEn?: string; contentEn?: string },
+  locale: "en" | "zh"
+): string {
+  const openersEn = [
+    "I used two methods and both landed on the same result",
+    "This looked hard at first, but the structure is super clean",
+    "I almost overcomplicated this one before spotting the shortcut",
+    "This is exactly the kind of problem that makes discussion fun",
+    "I retried it after a mistake and learned more on the second pass",
+    "I timed myself, then redid it slowly to verify every step",
   ];
-  const commentsZh = [
-    "我先画了个小表格，规律一下就出来了。",
-    "先估算再精算，真的能避免很多低级错误。",
-    "一开始卡住了，看了第二个提示瞬间通了。",
-    "这题像闯关小游戏，越做越有意思。",
-    "我把数字拆开重组后，计算顺很多。",
-    "我用了两种方法验算，答案一致很安心。",
-    "看起来复杂，其实结构非常清晰。",
-    "我讲给弟弟听，他也能跟上思路。",
-    "动画真的有帮助，为什么这样算一眼就懂。",
-    "这种最后一步很漂亮的题我特别喜欢。",
-    "建议倒推检查一遍，准确率会高很多。",
-    "我用数轴做了一遍，思路立刻变清楚。",
-    "第一眼觉得难，做完发现逻辑很顺。",
-    "我第一次算错了，改完就对了。",
-    "希望社区里多一点这种有讨论价值的题。",
+  const openersZh = [
+    "我用了两种方法，最后答案一致，特别踏实",
+    "第一眼觉得难，做完发现结构很清晰",
+    "我差点想复杂了，后来发现有捷径",
+    "这种题特别适合在评论区交流思路",
+    "我第一次做错，第二遍纠正后收获更大",
+    "我先计时做一遍，再慢速复盘一遍",
   ];
-  return locale === "zh" ? randomFrom(commentsZh) : randomFrom(commentsEn);
+  const callsEn = [
+    "What method did you use?",
+    "Anyone solved it with a completely different path?",
+    "Drop your fastest clean solution below.",
+    "Curious whether others went visual first or algebra first.",
+  ];
+  const callsZh = [
+    "你是怎么做的？",
+    "有人用了完全不同的路径吗？",
+    "欢迎晒一下你最快又最稳的解法。",
+    "大家是先画图还是先列式？",
+  ];
+
+  const topicHint = buildTopicHint(question, locale);
+  const opener = locale === "zh" ? randomFrom(openersZh) : randomFrom(openersEn);
+  const call = locale === "zh" ? randomFrom(callsZh) : randomFrom(callsEn);
+
+  return locale === "zh" ? `${opener}。${topicHint}${call}` : `${opener}. ${topicHint} ${call}`;
 }
 
 async function seedCommunityBoost(config: CommunityBoostConfig) {
   if (!config.enabled) return;
 
   const questions = await prisma.question.findMany({
-    select: { id: true, category: true, difficulty: true },
+    select: { id: true, category: true, difficulty: true, titleEn: true, contentEn: true },
   });
 
   if (questions.length === 0) {
@@ -210,6 +277,21 @@ async function seedCommunityBoost(config: CommunityBoostConfig) {
   }
 
   const commentRows: Prisma.CommentCreateManyInput[] = [];
+  const globalUsedComments = new Set<string>();
+  const perQuestionUsedComments = new Map<string, Set<string>>();
+  const variantTailsEn = [
+    "I am bookmarking this one.",
+    "This deserves more upvotes.",
+    "Would love a follow-up at the same level.",
+    "Great one for discussion practice.",
+  ];
+  const variantTailsZh = [
+    "这题我先收藏了。",
+    "这题值得更多点赞。",
+    "希望有同风格的下一题。",
+    "非常适合拿来讨论训练。",
+  ];
+
   for (let i = 0; i < config.randomCommentCount; i++) {
     const author = randomFrom(createdUsers);
     const commentLocale: "en" | "zh" = author.locale === "zh" ? "zh" : "en";
@@ -218,21 +300,41 @@ async function seedCommunityBoost(config: CommunityBoostConfig) {
       Date.now() - randomInt(0, 1000 * 60 * 60 * 24 * 45)
     );
 
-    const categoryHint =
-      question.category === "GEOMETRY"
-        ? commentLocale === "zh"
-          ? " 这题几何直觉很重要。"
-          : " Geometry intuition matters here."
-        : question.category === "PROBABILITY"
-          ? commentLocale === "zh"
-            ? " 概率题建议先数样本空间。"
-            : " For probability, counting the sample space first helps."
-          : "";
+    const usedForQuestion =
+      perQuestionUsedComments.get(question.id) ?? new Set<string>();
+    perQuestionUsedComments.set(question.id, usedForQuestion);
+
+    let content = "";
+    let attempts = 0;
+    while (attempts < 8) {
+      const base = buildEngagingComment(question, commentLocale);
+      const withVariant =
+        attempts === 0
+          ? base
+          : commentLocale === "zh"
+            ? `${base} ${randomFrom(variantTailsZh)}`
+            : `${base} ${randomFrom(variantTailsEn)}`;
+
+      if (!usedForQuestion.has(withVariant) && !globalUsedComments.has(withVariant)) {
+        content = withVariant;
+        break;
+      }
+      attempts += 1;
+    }
+
+    if (!content) {
+      content =
+        commentLocale === "zh"
+          ? `${buildEngagingComment(question, commentLocale)} 第${i + 1}次讨论打卡。`
+          : `${buildEngagingComment(question, commentLocale)} Discussion check-in #${i + 1}.`;
+    }
+    usedForQuestion.add(content);
+    globalUsedComments.add(content);
 
     commentRows.push({
       questionId: question.id,
       userId: author.id,
-      content: `${randomCommentByLocale(commentLocale)}${categoryHint}`,
+      content,
       isApproved: true,
       isFlagged: false,
       createdAt,
