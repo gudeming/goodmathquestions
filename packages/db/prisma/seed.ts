@@ -277,8 +277,15 @@ async function seedCommunityBoost(config: CommunityBoostConfig) {
   }
 
   const commentRows: Prisma.CommentCreateManyInput[] = [];
-  const globalUsedComments = new Set<string>();
+  const existingComments = await prisma.comment.findMany({
+    select: { content: true },
+  });
+  const globalUsedComments = new Set<string>(
+    existingComments.map((c) => c.content.trim()).filter(Boolean)
+  );
   const perQuestionUsedComments = new Map<string, Set<string>>();
+  const uniqueRunToken = Date.now().toString(36).slice(-6);
+  let uniqueSuffixCounter = 0;
   const variantTailsEn = [
     "I am bookmarking this one.",
     "This deserves more upvotes.",
@@ -306,7 +313,7 @@ async function seedCommunityBoost(config: CommunityBoostConfig) {
 
     let content = "";
     let attempts = 0;
-    while (attempts < 8) {
+    while (attempts < 24) {
       const base = buildEngagingComment(question, commentLocale);
       const withVariant =
         attempts === 0
@@ -323,10 +330,17 @@ async function seedCommunityBoost(config: CommunityBoostConfig) {
     }
 
     if (!content) {
-      content =
+      const fallback =
         commentLocale === "zh"
-          ? `${buildEngagingComment(question, commentLocale)} 第${i + 1}次讨论打卡。`
-          : `${buildEngagingComment(question, commentLocale)} Discussion check-in #${i + 1}.`;
+          ? `${buildEngagingComment(question, commentLocale)} 讨论标记#${uniqueRunToken}-${++uniqueSuffixCounter}。`
+          : `${buildEngagingComment(question, commentLocale)} Discussion marker #${uniqueRunToken}-${++uniqueSuffixCounter}.`;
+      content = fallback;
+      while (usedForQuestion.has(content) || globalUsedComments.has(content)) {
+        content =
+          commentLocale === "zh"
+            ? `${buildEngagingComment(question, commentLocale)} 讨论标记#${uniqueRunToken}-${++uniqueSuffixCounter}。`
+            : `${buildEngagingComment(question, commentLocale)} Discussion marker #${uniqueRunToken}-${++uniqueSuffixCounter}.`;
+      }
     }
     usedForQuestion.add(content);
     globalUsedComments.add(content);
