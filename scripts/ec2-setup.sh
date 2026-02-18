@@ -8,11 +8,19 @@ APP_DIR=/opt/gmq
 APP_USER=ec2-user
 
 echo "=== [1/8] Swap 2GB (critical for t3.micro 1GB RAM) ==="
-fallocate -l 2G /swapfile
-chmod 600 /swapfile
-mkswap /swapfile
-swapon /swapfile
-echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
+if swapon --show=NAME | grep -q '^/swapfile$'; then
+  echo "Swapfile already active, skipping creation."
+else
+  if [[ ! -f /swapfile ]]; then
+    fallocate -l 2G /swapfile
+    chmod 600 /swapfile
+    mkswap /swapfile
+  fi
+  swapon /swapfile || true
+fi
+if ! grep -q '^/swapfile swap swap defaults 0 0$' /etc/fstab; then
+  echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
+fi
 
 echo "=== [2/8] System packages ==="
 dnf update -y
