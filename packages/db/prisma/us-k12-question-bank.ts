@@ -7384,6 +7384,2088 @@ const STORY_QUESTIONS_BATCH_14: Blueprint[] = [
   },
 ];
 
+// STORY_QUESTIONS_BATCH_15  (Q201-225) — Food Science & Cooking Adventures
+// Coverage: fractions, proportions, geometry, algebra, statistics, word problems
+
+const STORY_QUESTIONS_BATCH_15: Blueprint[] = [
+  {
+    titleEn: "Pizza Fraction Fight",
+    titleZh: "披萨分数争夺战",
+    contentEn:
+      "Maya and 3 friends share a pizza cut into 12 equal slices. Each person gets an equal share. Maya is extra hungry and secretly takes 1 extra slice from a friend. What fraction of the whole pizza does Maya eat?",
+    contentZh:
+      "玛雅和3个朋友平分一张切成12等份的披萨。玛雅非常饿，偷偷从朋友那里多拿了1片。玛雅一共吃了整个披萨的几分之几？",
+    difficulty: "EASY",
+    category: "FRACTIONS",
+    ageGroup: "AGE_10_12",
+    answer: "1/3",
+    answerExplainEn:
+      "Equal share per person = 12 ÷ 4 = 3 slices. Maya eats 3 + 1 = 4 slices. Fraction = 4/12 = 1/3.",
+    answerExplainZh:
+      "每人均等份额 = 12 ÷ 4 = 3片。玛雅吃了3 + 1 = 4片。分数 = 4/12 = 1/3。",
+    funFactEn:
+      "Cutting a pizza into equal slices is a real-world application of central angles! Each of 8 slices has a 45° angle. Mathematicians have even proven the 'Pizza Theorem': if you make cuts at equal angles from any interior point, alternating slices always have equal total area. Fair sharing is baked into geometry!",
+    funFactZh:
+      "将披萨切成等份是圆心角的实际应用！8等份时每片对应45°角。数学家甚至证明了"披萨定理"：从圆内任意一点以等角度切割，相间的扇形面积之和总是相等。公平分配被"烤"进了几何学！",
+    standards: ["CCSS-5.NF.A1", "CCSS-5.NF.B3"],
+  },
+  {
+    titleEn: "The Giant Pancake Challenge",
+    titleZh: "超大煎饼挑战",
+    contentEn:
+      "A pancake recipe for 4 servings needs 2 cups of flour, 1.5 cups of milk, and 2 teaspoons of baking powder. You want to make pancakes for 10 people. How many cups of flour do you need?",
+    contentZh:
+      "一份4人份的煎饼配方需要2杯面粉、1.5杯牛奶和2茶匙泡打粉。你想为10个人做煎饼，需要多少杯面粉？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "5",
+    answerExplainEn:
+      "Scale factor = 10 ÷ 4 = 2.5. Flour = 2 × 2.5 = 5 cups.",
+    answerExplainZh:
+      "缩放比例 = 10 ÷ 4 = 2.5。面粉 = 2 × 2.5 = 5杯。",
+    funFactEn:
+      "The world's largest pancake was made in Rochdale, England in 1994 — 15 meters wide and nearly 3 tons! Professional chefs scale recipes constantly. The skill of proportional reasoning lets you cook for 4 people or 4,000 people using the exact same recipe — just multiply everything by the same factor!",
+    funFactZh:
+      "世界上最大的煎饼1994年在英国罗奇代尔制作，直径15米，重约3吨！专业厨师经常需要缩放食谱。比例推理让你用同一份食谱为4人或4000人做饭——只需将所有食材乘以相同的倍数！",
+    standards: ["CCSS-6.RP.A1", "CCSS-6.RP.A3"],
+  },
+  {
+    titleEn: "Popcorn Explosion!",
+    titleZh: "爆米花爆炸！",
+    contentEn:
+      "A single popcorn kernel has a volume of about 0.3 cm³. When it pops, it expands to 35 times its original volume! If you pop 200 kernels, what is the total volume of popped popcorn in cm³?",
+    contentZh:
+      "一粒爆米花玉米粒的体积约为0.3 cm³。爆开后体积扩大到原来的35倍！如果爆200粒，爆开后的总体积是多少 cm³？",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "2100",
+    answerExplainEn:
+      "Volume of one popped kernel = 0.3 × 35 = 10.5 cm³. Total = 10.5 × 200 = 2,100 cm³.",
+    answerExplainZh:
+      "每粒爆开后体积 = 0.3 × 35 = 10.5 cm³。总体积 = 10.5 × 200 = 2,100 cm³。",
+    funFactEn:
+      "Popcorn pops because each kernel traps a tiny drop of water inside a hard starch shell. Heated to ~180°C, the water becomes steam, pressure builds to about 9 atmospheres — then BANG! The starch turns inside-out. Native Americans popped corn over 5,000 years ago, making it one of the world's oldest snack foods!",
+    funFactZh:
+      "爆米花之所以爆开，是因为每粒玉米在坚硬的淀粉壳内储存了一小滴水。加热到约180°C时，水变为蒸汽，压力积累到约9个大气压——然后砰！淀粉翻转出来。美洲原住民5000多年前就爆玉米花了，这是世界上最古老的零食之一！",
+    standards: ["CCSS-5.NBT.B7", "CCSS-6.EE.A2"],
+  },
+  {
+    titleEn: "Lemon Empire",
+    titleZh: "柠檬帝国",
+    contentEn:
+      "Emma runs a lemonade stand. She spends $0.25 per cup on ingredients and sells each cup for $1.50. On a hot day, she sells 48 cups. What is her total profit?",
+    contentZh:
+      "艾玛开了一个柠檬水摊。每杯原料成本0.25美元，售价1.50美元。在一个炎热的天，她卖出了48杯。她的总利润是多少？",
+    difficulty: "MEDIUM",
+    category: "ALGEBRA",
+    ageGroup: "AGE_10_12",
+    answer: "$60",
+    answerExplainEn:
+      "Profit per cup = $1.50 − $0.25 = $1.25. Total profit = 48 × $1.25 = $60.",
+    answerExplainZh:
+      "每杯利润 = 1.50 − 0.25 = 1.25美元。总利润 = 48 × 1.25 = 60美元。",
+    funFactEn:
+      "Warren Buffett — one of the world's richest people — sold lemonade and chewing gum as a child! He made his first stock investment at age 11, applying the same math: profit = revenue − cost. Today's lemonade entrepreneurs have sold their stands for millions: one teen's lemonade brand raised $11 million in funding!",
+    funFactZh:
+      "沃伦·巴菲特——世界上最富有的人之一——小时候就卖柠檬水和口香糖！他11岁进行第一笔股票投资，运用的正是同一数学原理：利润 = 收入 − 成本。现在有青少年的柠檬水品牌获得了1100万美元融资！",
+    standards: ["CCSS-6.EE.B7", "CCSS-7.EE.B3"],
+  },
+  {
+    titleEn: "Yeast Magic",
+    titleZh: "酵母魔法",
+    contentEn:
+      "A bread dough ball starts with a volume of 500 cm³. After rising for 2 hours, the volume increases by 80%. What is the new volume in cm³?",
+    contentZh:
+      "一个面包面团球的初始体积为500 cm³。醒发2小时后，体积增大了80%。新的体积是多少 cm³？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "900",
+    answerExplainEn:
+      "Increase = 80% of 500 = 0.80 × 500 = 400 cm³. New volume = 500 + 400 = 900 cm³.",
+    answerExplainZh:
+      "增加量 = 500的80% = 0.80 × 500 = 400 cm³。新体积 = 500 + 400 = 900 cm³。",
+    funFactEn:
+      "Yeast are microscopic fungi that eat sugar and exhale CO₂ gas — the bubbles that make bread fluffy! Humans have used yeast for over 14,000 years, making bread and beer long before we knew yeast existed. Some sourdough starters (living yeast cultures) are over 150 years old and are passed down like heirlooms!",
+    funFactZh:
+      "酵母是微型真菌，以糖为食并呼出CO₂气体——正是这些气泡让面包变得松软！人类使用酵母已超过14,000年，在我们知道酵母存在之前就已经在制作面包和啤酒了。有些酸面团发酵剂（活性酵母培养物）已超过150年，像传家宝一样代代相传！",
+    standards: ["CCSS-6.RP.A3c", "CCSS-5.NBT.B7"],
+  },
+  {
+    titleEn: "Sushi Master Math",
+    titleZh: "寿司大师算法",
+    contentEn:
+      "A sushi chef mixes sushi rice and seasoned vinegar in a 5:1 ratio by weight. If the chef uses 600 grams of rice, how many grams of vinegar are needed?",
+    contentZh:
+      "寿司师傅按重量5:1的比例混合寿司米饭和调味醋。如果使用了600克米饭，需要多少克醋？",
+    difficulty: "EASY",
+    category: "FRACTIONS",
+    ageGroup: "AGE_10_12",
+    answer: "120",
+    answerExplainEn:
+      "Ratio is 5:1, so for every 5 parts rice there is 1 part vinegar. Vinegar = 600 ÷ 5 = 120 grams.",
+    answerExplainZh:
+      "比例为5:1，即每5份米饭对应1份醋。醋的量 = 600 ÷ 5 = 120克。",
+    funFactEn:
+      "Sushi has over 2,000 years of history in Japan! Professional sushi chefs (called 'itamae') train for 10+ years, spending the first 2–3 years just perfecting the rice. The perfect sushi rice must be at exactly body temperature (37°C) when served. A sushi chef's most prized skill isn't cutting fish — it's the precise math of seasoning rice!",
+    funFactZh:
+      "寿司在日本有超过2000年的历史！专业寿司师傅（称为"板前"）需要培训10年以上，最初的2-3年只是专注于完善米饭。完美的寿司米饭上桌时必须恰好是体温（37°C）。寿司师傅最珍贵的技能不是切鱼——而是精确调味米饭的数学！",
+    standards: ["CCSS-6.RP.A1", "CCSS-6.RP.A3"],
+  },
+  {
+    titleEn: "Ice Cream Dream Machine",
+    titleZh: "冰淇淋梦想机器",
+    contentEn:
+      "An ice cream shop offers 6 flavors and 4 topping choices. How many different single-scoop sundaes can you make if you choose exactly 1 flavor and 1 topping?",
+    contentZh:
+      "一家冰淇淋店提供6种口味和4种配料。如果你选择恰好1种口味和1种配料，可以做出多少种不同的圣代？",
+    difficulty: "EASY",
+    category: "PROBABILITY",
+    ageGroup: "AGE_10_12",
+    answer: "24",
+    answerExplainEn:
+      "By the Counting Principle: 6 flavors × 4 toppings = 24 different combinations.",
+    answerExplainZh:
+      "根据乘法计数原理：6种口味 × 4种配料 = 24种不同组合。",
+    funFactEn:
+      "The world's most expensive ice cream sundae at Serendipity 3 in New York costs $25,000! It uses 5 scoops of rare ice cream, edible 23-karat gold flakes, and a La Madeline au Truffe chocolate — served in a Baccarat crystal goblet you keep. With 6 flavors and 4 toppings you get 24 combos; add just one more topping choice and you jump to 30 — that's the power of combinatorics!",
+    funFactZh:
+      "纽约Serendipity 3的世界最贵冰淇淋圣代售价25,000美元！它使用5球稀有冰淇淋、可食用23K金片和松露巧克力——盛放在巴卡拉水晶杯中供你带走。6种口味4种配料得24种组合；再加1种配料选择就跳到30种——这就是组合数学的威力！",
+    standards: ["CCSS-7.SP.C8", "CCSS-6.EE.A1"],
+  },
+  {
+    titleEn: "The Bee's Sweet Labor",
+    titleZh: "蜜蜂的甜蜜劳动",
+    contentEn:
+      "A honeybee must visit about 1,000 flowers to produce 1 teaspoon of honey. A standard jar of honey holds about 48 teaspoons. How many flower visits were needed to fill the entire jar?",
+    contentZh:
+      "一只蜜蜂需要拜访约1,000朵花才能产生1茶匙蜂蜜。一个标准蜂蜜罐约含48茶匙蜂蜜。装满这整罐蜂蜜需要拜访多少朵花？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_8_10",
+    answer: "48000",
+    answerExplainEn:
+      "Flower visits = 1,000 flowers/teaspoon × 48 teaspoons = 48,000 flower visits.",
+    answerExplainZh:
+      "拜访花朵次数 = 1,000朵/茶匙 × 48茶匙 = 48,000次。",
+    funFactEn:
+      "A single bee produces only 1/12 of a teaspoon of honey in its entire lifetime! A hive of 50,000 bees flies the equivalent of 3 trips around the Earth to make just 1 kg of honey. Bees are also nature's architects: they build perfectly hexagonal honeycombs — the shape that stores the maximum honey using the minimum wax. Hexagons are mathematically optimal!",
+    funFactZh:
+      "一只蜜蜂一生只能产生1/12茶匙蜂蜜！一个50,000只蜜蜂的蜂巢集体飞行相当于绕地球3圈才能制作1千克蜂蜜。蜜蜂也是大自然的建筑师：它们建造完美的六边形蜂巢——这种形状用最少的蜡储存最多的蜂蜜。六边形在数学上是最优的！",
+    standards: ["CCSS-4.NBT.B5", "CCSS-5.NBT.B5"],
+  },
+  {
+    titleEn: "Food Waste Crisis",
+    titleZh: "食物浪费危机",
+    contentEn:
+      "In the US, about 30% of all food produced is wasted. A school cafeteria prepares 400 meals per day. If the cafeteria reduces waste from 30% down to 10%, how many more meals are saved per day?",
+    contentZh:
+      "在美国，约30%的食物被浪费。一个学校食堂每天准备400份餐食。如果食堂将食物浪费从30%降低到10%，每天能多节省多少份餐食？",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "80",
+    answerExplainEn:
+      "Current waste = 30% × 400 = 120 meals. New waste = 10% × 400 = 40 meals. Meals saved = 120 − 40 = 80.",
+    answerExplainZh:
+      "当前浪费 = 30% × 400 = 120份。新浪费 = 10% × 400 = 40份。节省的餐食 = 120 − 40 = 80份。",
+    funFactEn:
+      "About 1.3 billion tons of food are wasted globally every year — one-third of all food produced! If food waste were a country, it would be the 3rd largest greenhouse gas emitter after the US and China. Fixing food waste alone could feed all 800 million hungry people on Earth. Smart math and supply chain thinking are key tools in solving this crisis.",
+    funFactZh:
+      "全球每年约有13亿吨食物被浪费——占全球食物总产量的三分之一！如果食物浪费是一个国家，它将成为仅次于美国和中国的第三大温室气体排放国。仅解决食物浪费问题就能养活地球上所有8亿饥饿人口。智能数学和供应链思维是解决这一危机的关键工具。",
+    standards: ["CCSS-6.RP.A3c", "CCSS-7.RP.A3"],
+  },
+  {
+    titleEn: "Birthday Cake Slice",
+    titleZh: "生日蛋糕切片",
+    contentEn:
+      "A circular birthday cake has a radius of 15 cm and is cut into 8 equal slices. What is the area of each slice in cm²? (Use π ≈ 3.14, round to 1 decimal place.)",
+    contentZh:
+      "一个圆形生日蛋糕半径为15厘米，切成8等份。每片的面积是多少 cm²？（使用π ≈ 3.14，保留一位小数）",
+    difficulty: "MEDIUM",
+    category: "GEOMETRY",
+    ageGroup: "AGE_12_14",
+    answer: "88.3",
+    answerExplainEn:
+      "Total area = π × r² = 3.14 × 15² = 3.14 × 225 = 706.5 cm². Each slice = 706.5 ÷ 8 = 88.3125 ≈ 88.3 cm².",
+    answerExplainZh:
+      "总面积 = π × r² = 3.14 × 15² = 3.14 × 225 = 706.5 cm²。每片面积 = 706.5 ÷ 8 = 88.3125 ≈ 88.3 cm²。",
+    funFactEn:
+      "A circular sector (cake/pizza slice) has area A = (θ/360°) × πr². Pie charts in data science are literally named after this shape! The formula also explains why doubling a cake's radius quadruples the total cake area — and gives you 4× as much cake. Always order the bigger size!",
+    funFactZh:
+      "扇形（蛋糕/披萨片）的面积公式为A = (θ/360°) × πr²。数据科学中的饼图就是以此命名的！这个公式还解释了为什么蛋糕半径翻倍，总面积就翻四倍——蛋糕量增加四倍。永远选大号！",
+    standards: ["CCSS-7.G.B4", "CCSS-6.G.A1"],
+  },
+  {
+    titleEn: "Oven Temperature Conversion",
+    titleZh: "烤箱温度转换",
+    contentEn:
+      "A cake recipe says bake at 320°F. Your oven only shows Celsius. Convert using the formula: C = (F − 32) × 5/9. What temperature in °C should you set?",
+    contentZh:
+      "蛋糕食谱说在320°F烘烤。你的烤箱只显示摄氏度。使用公式：C = (F − 32) × 5/9进行转换。你应该设置多少°C？",
+    difficulty: "MEDIUM",
+    category: "ALGEBRA",
+    ageGroup: "AGE_10_12",
+    answer: "160",
+    answerExplainEn:
+      "C = (320 − 32) × 5/9 = 288 × 5/9 = 1,440/9 = 160°C.",
+    answerExplainZh:
+      "C = (320 − 32) × 5/9 = 288 × 5/9 = 1,440/9 = 160°C。",
+    funFactEn:
+      "Fahrenheit was invented in 1724 by Daniel Fahrenheit, who set 0°F as the coldest brine mixture he could make and 96°F as human body temperature. Celsius (1742) was designed scientifically: 0°C = water freezing, 100°C = water boiling. The US is one of only 3 countries still using Fahrenheit (with Liberia and Myanmar)!",
+    funFactZh:
+      "华氏温标由华伦海特于1724年发明，他将他能制造的最冷盐水混合物定为0°F，人体体温定为96°F。摄氏温标（1742年）科学设计：0°C=水结冰，100°C=水沸腾。美国是仅有的3个仍使用华氏温标的国家之一（另外两个是利比里亚和缅甸）！",
+    standards: ["CCSS-6.EE.A2c", "CCSS-7.EE.A1"],
+  },
+  {
+    titleEn: "Taco Tuesday Party",
+    titleZh: "塔可星期二派对",
+    contentEn:
+      "Carlos hosts Taco Tuesday for 12 friends. Each person eats an average of 3 tacos. Each taco needs 80 g of chicken and 30 g of cheese. How many grams of cheese does Carlos need in total?",
+    contentZh:
+      "卡洛斯为12个朋友举办塔可星期二派对。每人平均吃3个塔可。每个塔可需要80克鸡肉和30克奶酪。卡洛斯总共需要多少克奶酪？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_8_10",
+    answer: "1080",
+    answerExplainEn:
+      "Total tacos = 12 × 3 = 36 tacos. Total cheese = 36 × 30 g = 1,080 g.",
+    answerExplainZh:
+      "总塔可数 = 12 × 3 = 36个。总奶酪 = 36 × 30克 = 1,080克。",
+    funFactEn:
+      "Americans eat about 4.5 billion tacos every year! Tacos originated in Mexican silver mines in the 18th century — 'taco' referred to a small charge of gunpowder wrapped in paper, and miners named the folded food after it. Today, October 4 is officially National Taco Day in the US!",
+    funFactZh:
+      "美国人每年吃约45亿个塔可！塔可起源于18世纪墨西哥的银矿——'taco'指的是包在纸中的小型炸药，矿工用它给折叠食物命名。如今，10月4日是美国官方的塔可日！",
+    standards: ["CCSS-4.NBT.B5", "CCSS-5.NBT.B5"],
+  },
+  {
+    titleEn: "Super Smoothie Formula",
+    titleZh: "超级思慕雪配方",
+    contentEn:
+      "A smoothie recipe uses fruit and yogurt in a 3:2 ratio by weight. You want to make a total of 500 g of smoothie. How many grams of fruit do you need?",
+    contentZh:
+      "思慕雪配方中水果和酸奶的重量比为3:2。你想制作总重500克的思慕雪。需要多少克水果？",
+    difficulty: "MEDIUM",
+    category: "FRACTIONS",
+    ageGroup: "AGE_10_12",
+    answer: "300",
+    answerExplainEn:
+      "Total ratio parts = 3 + 2 = 5. Each part = 500 ÷ 5 = 100 g. Fruit = 3 × 100 = 300 g.",
+    answerExplainZh:
+      "比例总份数 = 3 + 2 = 5。每份 = 500 ÷ 5 = 100克。水果 = 3 × 100 = 300克。",
+    funFactEn:
+      "The global smoothie market is worth over $13 billion! In food science, changing a ratio by even 10% can completely transform the taste and texture. Professional food scientists spend years studying the exact math of ratios — a 3:2 fruit-to-yogurt ratio gives the perfect balance of sweetness and creaminess backed by laboratory testing!",
+    funFactZh:
+      "全球思慕雪市场价值超过130亿美元！在食品科学中，即使将比例改变10%也能完全改变口感和质地。专业食品科学家花数年研究比例的精确数学——3:2的水果与酸奶比例经实验室测试，能带来完美的甜度和奶油感平衡！",
+    standards: ["CCSS-6.RP.A1", "CCSS-6.RP.A3"],
+  },
+  {
+    titleEn: "Burn It Off!",
+    titleZh: "燃烧卡路里！",
+    contentEn:
+      "A slice of chocolate cake has 450 calories. Running burns approximately 10 calories per minute. How many minutes must you run to burn off the entire slice?",
+    contentZh:
+      "一片巧克力蛋糕含450卡路里。跑步大约每分钟燃烧10卡路里。你需要跑多少分钟才能消耗掉整片蛋糕的热量？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "45",
+    answerExplainEn:
+      "Time = 450 calories ÷ 10 calories/minute = 45 minutes.",
+    answerExplainZh:
+      "时间 = 450卡路里 ÷ 10卡路里/分钟 = 45分钟。",
+    funFactEn:
+      "A calorie is the energy needed to raise 1 kg of water by 1°C. Your brain alone burns ~320 calories per day — 20% of your total energy! Olympic swimmer Michael Phelps reportedly ate 12,000 calories per day during training, equivalent to running about 20 hours straight. Food energy is the fuel for everything you think, feel, and do.",
+    funFactZh:
+      "一卡路里是将1千克水温度升高1°C所需的能量。仅你的大脑每天就消耗约320卡路里——占你总能量的20%！据报道，奥运游泳冠军迈克尔·菲尔普斯在训练期间每天摄入12,000卡路里，相当于连续跑步约20小时。食物能量是你思考、感受和行动的燃料。",
+    standards: ["CCSS-5.NBT.B6", "CCSS-6.NS.B3"],
+  },
+  {
+    titleEn: "The Ramen Noodle Line",
+    titleZh: "拉面长龙",
+    contentEn:
+      "A bowl of ramen contains about 200 noodle strands, each 25 cm long. If you line up all the noodles end-to-end, how many meters long is the line?",
+    contentZh:
+      "一碗拉面约含200根面条，每根长25厘米。如果将所有面条首尾相接排成一排，这排有多少米长？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_8_10",
+    answer: "50",
+    answerExplainEn:
+      "Total length = 200 × 25 cm = 5,000 cm = 50 m.",
+    answerExplainZh:
+      "总长度 = 200 × 25厘米 = 5,000厘米 = 50米。",
+    funFactEn:
+      "The wheat noodle originated in China over 4,000 years ago — archaeologists found a bowl of 4,000-year-old noodles in Lajia, China! Instant ramen was invented in 1958 by Momofuku Ando and is now the world's most popular noodle. About 116 billion servings are eaten every year — enough to give every person on Earth 14.5 bowls!",
+    funFactZh:
+      "小麦面条源自4,000多年前的中国——考古学家在中国喇家遗址发现了一碗4,000年前的面条！方便拉面由安藤百福于1958年发明，现已成为世界上最受欢迎的面条。每年约消费1,160亿份——足以给地球上每人14.5碗！",
+    standards: ["CCSS-4.MD.A1", "CCSS-5.NBT.B5"],
+  },
+  {
+    titleEn: "The Sweet Truth About Soda",
+    titleZh: "汽水的甜蜜真相",
+    contentEn:
+      "A 330 mL can of soda contains 39 g of sugar. The WHO recommends no more than 50 g of free sugars per day. If a teenager drinks 2 cans of soda, what percentage of the daily WHO limit have they consumed? (Round to the nearest whole number.)",
+    contentZh:
+      "一罐330毫升汽水含39克糖。世界卫生组织建议每日游离糖摄入不超过50克。如果一名青少年喝了2罐汽水，他们消耗了WHO每日限量的百分之几？（四舍五入到最近整数）",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_12_14",
+    answer: "156%",
+    answerExplainEn:
+      "Total sugar = 2 × 39 = 78 g. Percentage = (78 ÷ 50) × 100% = 156%.",
+    answerExplainZh:
+      "总糖量 = 2 × 39 = 78克。百分比 = (78 ÷ 50) × 100% = 156%。",
+    funFactEn:
+      "The average American consumes about 17 teaspoons of added sugar per day — over 3× the WHO limit! Since 1970, US sugar consumption has risen by 25%. Fun math fact: if all the Coca-Cola ever produced were poured over Niagara Falls, it would flow for 38 hours straight. Always read nutrition labels — they're math documents!",
+    funFactZh:
+      "普通美国人每天消耗约17茶匙添加糖——超过WHO限量的3倍！自1970年以来，美国糖消耗量增加了25%。有趣的数学：如果把可口可乐历史上生产的所有产品倒入尼亚加拉瀑布，可以连续流38小时。一定要看营养标签——那是数学文档！",
+    standards: ["CCSS-6.RP.A3c", "CCSS-7.RP.A3"],
+  },
+  {
+    titleEn: "Newton's Cooling Coffee",
+    titleZh: "牛顿的冷却咖啡",
+    contentEn:
+      "A cup of coffee starts at 80°C in a room at 20°C. According to Newton's Law of Cooling, the temperature difference between the coffee and the room halves every 5 minutes. What will the coffee temperature be after 10 minutes?",
+    contentZh:
+      "一杯咖啡在20°C的房间里，初始温度为80°C。根据牛顿冷却定律，咖啡与房间的温差每5分钟减半。10分钟后咖啡温度是多少？",
+    difficulty: "HARD",
+    category: "ALGEBRA",
+    ageGroup: "AGE_14_16",
+    answer: "35",
+    answerExplainEn:
+      "Initial difference = 80 − 20 = 60°C. After 5 min: difference halves to 30°C → coffee is 20 + 30 = 50°C. After 10 min: difference halves again to 15°C → coffee is 20 + 15 = 35°C.",
+    answerExplainZh:
+      "初始温差 = 80 − 20 = 60°C。5分钟后：温差减半为30°C → 咖啡温度 = 20 + 30 = 50°C。10分钟后：温差再次减半为15°C → 咖啡温度 = 20 + 15 = 35°C。",
+    funFactEn:
+      "Newton's Law of Cooling states that the rate of heat loss is proportional to the temperature difference. This same exponential decay math is used in: forensics (estimating time of death from body temperature), nuclear reactor cooling, and spacecraft heat shield design. Newton discovered this while studying a heated iron bar — not coffee!",
+    funFactZh:
+      "牛顿冷却定律指出，热量损失速率与温差成正比。同样的指数衰减数学被用于：法医学（通过体温估算死亡时间）、核反应堆冷却以及航天器热防护盾设计。牛顿是在研究一根加热铁棒时发现这一定律的——而不是咖啡！",
+    standards: ["CCSS-8.F.A1", "CCSS-HSF-LE.A2"],
+  },
+  {
+    titleEn: "Ghost Pepper vs. Jalapeño",
+    titleZh: "鬼椒对战墨西哥辣椒",
+    contentEn:
+      "The Scoville scale measures spiciness. Jalapeños have about 5,000 Scoville Heat Units (SHU). Ghost peppers have about 1,000,000 SHU. How many times hotter is a ghost pepper than a jalapeño?",
+    contentZh:
+      "斯科维尔量表衡量辣度。墨西哥辣椒约有5,000个斯科维尔热单位（SHU）。鬼椒约有1,000,000 SHU。鬼椒比墨西哥辣椒辣多少倍？",
+    difficulty: "MEDIUM",
+    category: "NUMBER_THEORY",
+    ageGroup: "AGE_12_14",
+    answer: "200",
+    answerExplainEn:
+      "Times hotter = 1,000,000 ÷ 5,000 = 200 times.",
+    answerExplainZh:
+      "辣度倍数 = 1,000,000 ÷ 5,000 = 200倍。",
+    funFactEn:
+      "The hottest chili in the world is the Carolina Reaper at 2.2 million SHU — 440× hotter than a jalapeño! Hot peppers evolved their spiciness specifically to deter mammals (who crush the seeds) but NOT birds (who spread the seeds) — birds can't detect capsaicin at all! The Scoville test was invented in 1912 and originally relied on human taste testers.",
+    funFactZh:
+      "世界上最辣的辣椒是卡罗来纳死神，达220万SHU——比墨西哥辣椒辣440倍！辣椒进化出辣度专门为了阻止哺乳动物（会压碎种子），但不阻止鸟类（会传播种子）——鸟类完全感受不到辣椒素！斯科维尔测试发明于1912年，最初依赖人类味觉测试员。",
+    standards: ["CCSS-5.NBT.A1", "CCSS-6.NS.B2"],
+  },
+  {
+    titleEn: "Cheese Factory Week",
+    titleZh: "奶酪工厂一周",
+    contentEn:
+      "It takes about 10 liters of milk to make 1 kg of cheddar cheese. A dairy farm produces 500 liters of milk per day. How many kg of cheddar can be made in one week?",
+    contentZh:
+      "制作1千克切达奶酪大约需要10升牛奶。一个奶牛场每天生产500升牛奶。一周内能制作多少千克切达奶酪？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "350",
+    answerExplainEn:
+      "Daily cheese = 500 ÷ 10 = 50 kg. Weekly = 50 × 7 = 350 kg.",
+    answerExplainZh:
+      "每日奶酪产量 = 500 ÷ 10 = 50千克。每周产量 = 50 × 7 = 350千克。",
+    funFactEn:
+      "There are over 1,800 named cheese varieties worldwide! The most expensive cheese is Pule (Serbian donkey cheese) at $1,700/kg — it takes 25 liters of rare donkey milk to make just 1 kg. Hard cheeses like Parmesan last 2+ years because nearly all moisture is removed during aging, leaving concentrated protein and fat. Cheese is essentially mathematically preserved milk!",
+    funFactZh:
+      "世界上有超过1,800种命名奶酪！最昂贵的奶酪是来自塞尔维亚的普勒（驴奶奶酪），售价1,700美元/千克——制作1千克需要25升稀有驴奶。帕尔马干酪等硬奶酪可保存2年以上，因为熟化过程中几乎所有水分被去除，留下浓缩的蛋白质和脂肪。奶酪本质上是经过数学方法保存的牛奶！",
+    standards: ["CCSS-5.NBT.B6", "CCSS-6.NS.B2"],
+  },
+  {
+    titleEn: "Energy Pyramid",
+    titleZh: "能量金字塔",
+    contentEn:
+      "In a food chain, plants capture 10,000 calories from sunlight. Only 10% of energy transfers to the next level. A rabbit eats the plants; a fox eats the rabbit. How many calories does the fox receive?",
+    contentZh:
+      "在食物链中，植物从阳光中捕获10,000卡路里能量。每个层级只有10%的能量传递到下一层。兔子吃植物，狐狸吃兔子。狐狸获得多少卡路里？",
+    difficulty: "MEDIUM",
+    category: "FRACTIONS",
+    ageGroup: "AGE_12_14",
+    answer: "100",
+    answerExplainEn:
+      "Plants → Rabbit: 10% × 10,000 = 1,000 calories. Rabbit → Fox: 10% × 1,000 = 100 calories.",
+    answerExplainZh:
+      "植物→兔子：10% × 10,000 = 1,000卡路里。兔子→狐狸：10% × 1,000 = 100卡路里。",
+    funFactEn:
+      "This is the '10% Rule' of ecology! It explains why top predators (lions, sharks, eagles) are always rare — they receive only 0.01% of the sun's original energy. Eating lower on the food chain is dramatically more efficient: producing 1 kg of beef requires ~7 kg of grain and ~15,000 liters of water. Plant-based eating is literally better math!",
+    funFactZh:
+      "这就是生态学的'10%规则'！它解释了为什么顶级掠食者（狮子、鲨鱼、鹰）总是稀少——它们只获得太阳原始能量的0.01%。食物链越低的食物效率越高：生产1千克牛肉需要约7千克粮食和约15,000升水。植物性饮食从数学上来说更高效！",
+    standards: ["CCSS-6.RP.A3c", "CCSS-7.RP.A3"],
+  },
+  {
+    titleEn: "The World Runs on Coffee",
+    titleZh: "世界靠咖啡运转",
+    contentEn:
+      "The world drinks about 2.25 billion cups of coffee per day. There are approximately 8 billion people on Earth. How many cups per person per day is that on average? (Round to 2 decimal places.)",
+    contentZh:
+      "全世界每天消费约22.5亿杯咖啡。地球上约有80亿人。平均每人每天消费多少杯咖啡？（保留两位小数）",
+    difficulty: "MEDIUM",
+    category: "STATISTICS",
+    ageGroup: "AGE_12_14",
+    answer: "0.28",
+    answerExplainEn:
+      "2,250,000,000 ÷ 8,000,000,000 = 0.28125 ≈ 0.28 cups per person per day.",
+    answerExplainZh:
+      "2,250,000,000 ÷ 8,000,000,000 = 0.28125 ≈ 每人每天0.28杯。",
+    funFactEn:
+      "Coffee is the world's 2nd most traded commodity after crude oil! Finland tops the world in per-capita consumption at 4.2 cups per person per day. Coffee was discovered around 850 AD in Ethiopia when a goat herder named Kaldi noticed his goats were energetic after eating coffee berries — he tried some himself and reported feeling the same!",
+    funFactZh:
+      "咖啡是仅次于原油的世界第二大贸易商品！芬兰的人均消费量全球最高，每人每天4.2杯。咖啡约于公元850年在埃塞俄比亚被发现，牧羊人卡尔迪注意到山羊吃了咖啡果后异常活跃——他自己也尝了一些，发现有同样的感觉！",
+    standards: ["CCSS-5.NBT.B7", "CCSS-6.NS.B3"],
+  },
+  {
+    titleEn: "Bakery Flour Budget",
+    titleZh: "面包店面粉预算",
+    contentEn:
+      "A bakery makes 120 loaves of bread per day. Each loaf needs 350 g of flour. Flour comes in 25 kg bags. How many bags does the bakery need per week? (Round up to the nearest whole bag.)",
+    contentZh:
+      "一家面包店每天烤120条面包，每条需要350克面粉。面粉以25千克袋装出售。面包店每周需要多少袋？（向上取整到最近整数袋）",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_12_14",
+    answer: "12",
+    answerExplainEn:
+      "Daily flour = 120 × 350 g = 42,000 g = 42 kg. Weekly = 42 × 7 = 294 kg. Bags = 294 ÷ 25 = 11.76 → round up to 12 bags.",
+    answerExplainZh:
+      "每日面粉 = 120 × 350克 = 42,000克 = 42千克。每周 = 42 × 7 = 294千克。袋数 = 294 ÷ 25 = 11.76 → 向上取整为12袋。",
+    funFactEn:
+      "The world's longest bread was baked in Mexico in 2019 — over 9 km long! Professional bakers use math every day: scaling recipes, calculating fermentation times, and managing inventory. A head baker at a large bakery manages thousands of kilograms of ingredients daily — they're essentially a mathematician with flour on their hands!",
+    funFactZh:
+      "世界上最长的面包于2019年在墨西哥烤制——超过9公里长！专业面包师每天都在用数学：缩放食谱、计算发酵时间和管理库存。大型面包店的主厨每天管理数千千克食材——他们本质上是手上沾着面粉的数学家！",
+    standards: ["CCSS-5.NBT.B5", "CCSS-5.NBT.B6"],
+  },
+  {
+    titleEn: "Kimchi Countdown",
+    titleZh: "泡菜倒计时",
+    contentEn:
+      "Kimchi starts fermenting on January 1st and is perfectly ready after exactly 4 weeks. On what date will it be ready? (January has 31 days.)",
+    contentZh:
+      "泡菜从1月1日开始发酵，恰好4周后达到最佳状态。它会在哪天准备好？（1月有31天）",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_8_10",
+    answer: "January 29",
+    answerExplainEn:
+      "4 weeks = 4 × 7 = 28 days. January 1 + 28 days = January 29.",
+    answerExplainZh:
+      "4周 = 4 × 7 = 28天。1月1日 + 28天 = 1月29日。",
+    funFactEn:
+      "Kimchi is a 2,000-year-old Korean fermented food! During fermentation, lactic acid bacteria convert sugars into acids, preserving the food and creating beneficial probiotics. South Korea produces about 1.85 million tons of kimchi per year — roughly 36 kg per person! UNESCO recognizes kimchi-making as an Intangible Cultural Heritage of Humanity.",
+    funFactZh:
+      "泡菜是有2,000年历史的韩国发酵食品！发酵过程中，乳酸菌将糖转化为酸，既保存食物又产生有益的益生菌。韩国每年生产约185万吨泡菜——每人约36千克！联合国教科文组织将制作泡菜列为人类非物质文化遗产。",
+    standards: ["CCSS-3.MD.A1", "CCSS-4.NBT.B4"],
+  },
+  {
+    titleEn: "Milk Protein Needs",
+    titleZh: "牛奶蛋白质需求",
+    contentEn:
+      "A child needs 46 g of protein per day and gets half of it from milk. Each 240 mL glass of milk contains 8 g of protein. How many glasses of milk should the child drink? (Round up.)",
+    contentZh:
+      "一个孩子每天需要46克蛋白质，其中一半来自牛奶。每杯240毫升牛奶含8克蛋白质。孩子应该喝多少杯牛奶？（向上取整）",
+    difficulty: "MEDIUM",
+    category: "WORD_PROBLEMS",
+    ageGroup: "AGE_10_12",
+    answer: "3",
+    answerExplainEn:
+      "Protein needed from milk = 46 ÷ 2 = 23 g. Glasses = 23 ÷ 8 = 2.875 → round up to 3 glasses.",
+    answerExplainZh:
+      "需要从牛奶获取的蛋白质 = 46 ÷ 2 = 23克。杯数 = 23 ÷ 8 = 2.875 → 向上取整为3杯。",
+    funFactEn:
+      "Milk proteins are 'nutritionally complete' — they contain all 9 essential amino acids your body can't produce itself! In the early 1900s, milk proteins were used to make a type of plastic called Galalith (buttons, combs). Humans are unique among animals in drinking milk from another species into adulthood. About 65% of the world's population is lactose intolerant, yet milk is the world's most consumed animal product!",
+    funFactZh:
+      "牛奶蛋白质是'营养完全蛋白质'——含有人体无法自行合成的全部9种必需氨基酸！20世纪初，牛奶蛋白质被用来制作一种叫镓石的塑料（纽扣、梳子）。人类是动物中独特地在成年后仍饮用其他物种奶水的。尽管全球约65%的人有乳糖不耐受，牛奶仍是世界上消费最多的动物产品！",
+    standards: ["CCSS-6.NS.B3", "CCSS-7.EE.B3"],
+  },
+];
+
+// STORY_QUESTIONS_BATCH_16  (Q226-250) — Space & Astronomy Wonders
+// Coverage: arithmetic, algebra, geometry, number theory, statistics, probability
+
+const STORY_QUESTIONS_BATCH_16: Blueprint[] = [
+  {
+    titleEn: "Speed of Light to the Moon",
+    titleZh: "光速奔向月球",
+    contentEn:
+      "Light travels at 300,000 km per second. The Moon is about 384,000 km from Earth. How many seconds does it take light to travel from Earth to the Moon? (Round to 1 decimal place.)",
+    contentZh:
+      "光速约为每秒300,000公里。月球距地球约384,000公里。光从地球到达月球需要多少秒？（保留一位小数）",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "1.3",
+    answerExplainEn:
+      "Time = 384,000 ÷ 300,000 = 1.28 ≈ 1.3 seconds.",
+    answerExplainZh:
+      "时间 = 384,000 ÷ 300,000 = 1.28 ≈ 1.3秒。",
+    funFactEn:
+      "When you look at the Moon tonight, you're seeing it as it was 1.3 seconds ago! The Sun is about 8 minutes 20 seconds away by light. The nearest star, Proxima Centauri, is 4.2 light-years away — meaning the light you see left it in 2021. Every telescope is a time machine: the farther you look, the deeper into the past you see!",
+    funFactZh:
+      "今晚当你望向月亮时，你看到的是1.3秒前的它！太阳距我们约8分20秒光程。最近的恒星比邻星距我们4.2光年——意味着你看到的光是2021年发出的。每台望远镜都是时光机：你看得越远，你看到的过去就越深远！",
+    standards: ["CCSS-5.NBT.B7", "CCSS-6.NS.B3"],
+  },
+  {
+    titleEn: "Your Weight on Mars",
+    titleZh: "你在火星上的体重",
+    contentEn:
+      "Mars's gravity is about 38% of Earth's. If a person weighs 60 kg on Earth, how much would they weigh on Mars?",
+    contentZh:
+      "火星的重力约为地球的38%。如果一个人在地球上重60千克，他在火星上重多少千克？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "22.8",
+    answerExplainEn:
+      "Weight on Mars = 60 × 0.38 = 22.8 kg.",
+    answerExplainZh:
+      "在火星上的重量 = 60 × 0.38 = 22.8千克。",
+    funFactEn:
+      "On Mars you'd feel so light you could jump nearly 3× as high as on Earth! On Jupiter (2.5× Earth's gravity) you'd weigh 150 kg and struggle to walk. On the Sun (28× Earth's gravity) a 60 kg person would weigh 1,680 kg — heavier than a small car. Gravity is why Mars is a more realistic destination for humans than Jupiter or beyond!",
+    funFactZh:
+      "在火星上你会感觉如此轻盈，几乎可以跳到地球高度的3倍！在木星上（地球重力的2.5倍），你会重150千克，举步维艰。在太阳上（地球重力的28倍），60千克的人会重1,680千克——比一辆小汽车还重。重力正是火星比木星或更远处更适合人类到达的原因！",
+    standards: ["CCSS-6.RP.A3c", "CCSS-7.RP.A3"],
+  },
+  {
+    titleEn: "Lunar Months in a Year",
+    titleZh: "一年有多少个农历月",
+    contentEn:
+      "The Moon completes one full orbit around Earth every 29.5 days. How many complete lunar months fit in one Earth year of 365 days? (Round down to a whole number.)",
+    contentZh:
+      "月球每29.5天完成一次绕地球的完整轨道。一个365天的地球年里能容纳多少个完整农历月？（向下取整）",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_8_10",
+    answer: "12",
+    answerExplainEn:
+      "365 ÷ 29.5 = 12.37… → 12 complete lunar months.",
+    answerExplainZh:
+      "365 ÷ 29.5 = 12.37… → 12个完整农历月。",
+    funFactEn:
+      "12 lunar months = 12 × 29.5 = 354 days, making the lunar year 11 days shorter than the solar year. This is why Chinese New Year falls on a different date each year! Ancient civilizations invented 'leap months' (adding an extra month every few years) to resynchronize with the seasons. The Islamic calendar is purely lunar — so Ramadan drifts through all seasons over a 33-year cycle!",
+    funFactZh:
+      "12个农历月 = 12 × 29.5 = 354天，比太阳年短11天。这就是为什么中国新年每年日期不同！古代文明发明了'闰月'（每隔几年增加一个月）来与季节重新同步。伊斯兰历法是纯农历——所以斋月在33年的周期内会漂移经历所有季节！",
+    standards: ["CCSS-5.NBT.B6", "CCSS-6.NS.B2"],
+  },
+  {
+    titleEn: "ISS: 16 Sunrises a Day",
+    titleZh: "国际空间站：每天16次日出",
+    contentEn:
+      "The International Space Station (ISS) orbits Earth at 27,600 km/h. Earth's circumference is about 40,075 km. How many complete orbits does the ISS make per day? (Round to the nearest whole number.)",
+    contentZh:
+      "国际空间站（ISS）以每小时27,600公里的速度绕地球飞行。地球周长约40,075公里。国际空间站每天完成多少圈完整轨道？（四舍五入到最近整数）",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_12_14",
+    answer: "16",
+    answerExplainEn:
+      "Time per orbit = 40,075 ÷ 27,600 ≈ 1.452 hours. Orbits per day = 24 ÷ 1.452 ≈ 16.5 → about 16 complete orbits.",
+    answerExplainZh:
+      "每圈时间 = 40,075 ÷ 27,600 ≈ 1.452小时。每日圈数 = 24 ÷ 1.452 ≈ 16.5 → 约16圈完整轨道。",
+    funFactEn:
+      "ISS astronauts see 16 sunrises and 16 sunsets every day! The ISS is the most expensive structure ever built: $150 billion, assembled by 15 nations over 13 years. At 27,600 km/h, it's traveling so fast that time dilation slows it down by 0.007 seconds over a 6-month mission. Astronauts return to Earth 0.007 seconds younger than they would be on the ground!",
+    funFactZh:
+      "国际空间站宇航员每天看到16次日出和16次日落！国际空间站是有史以来最昂贵的建筑：1500亿美元，由15个国家历时13年建造。以27,600公里/小时的速度，时间膨胀在6个月任务中使其减慢了0.007秒。宇航员返回地球时比留在地面上的人年轻了0.007秒！",
+    standards: ["CCSS-6.NS.B3", "CCSS-7.RP.A3"],
+  },
+  {
+    titleEn: "How Old Is That Starlight?",
+    titleZh: "那束星光有多老？",
+    contentEn:
+      "The star Betelgeuse is about 700 light-years from Earth. When you look at it tonight, how many years ago did the light you're seeing actually leave the star?",
+    contentZh:
+      "参宿四距地球约700光年。当你今晚观察它时，你看到的光是多少年前离开这颗星的？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "700",
+    answerExplainEn:
+      "A light-year is the distance light travels in one year. If the star is 700 light-years away, the light took 700 years to travel here. You're seeing Betelgeuse as it was 700 years ago.",
+    answerExplainZh:
+      "光年是光在一年内行进的距离。如果恒星距我们700光年，光需要700年才能到达地球。你看到的是700年前的参宿四。",
+    funFactEn:
+      "Betelgeuse is expected to explode as a supernova within the next 100,000 years. But since it's 700 light-years away, it may have already exploded — we just haven't received the news yet! When it does explode, the light will be so bright it'll be visible in daytime, but we'll be watching an event from medieval times. Every star you see at night is a message from the past!",
+    funFactZh:
+      "参宿四预计在未来10万年内某时爆发为超新星。但由于它距我们700光年，它可能已经爆炸了——我们只是还没收到消息！当爆炸光到达时，白天也能看见，但我们将看到中世纪发生的事件。你夜晚看到的每颗星都是来自过去的信息！",
+    standards: ["CCSS-5.NBT.A1", "CCSS-6.EE.A1"],
+  },
+  {
+    titleEn: "Mars Rover Sol Mission",
+    titleZh: "火星探测车火星日任务",
+    contentEn:
+      "A Martian day (called a 'sol') lasts 24 hours and 37 minutes. A Mars rover operates continuously for 30 sols. How many total minutes has it been operating?",
+    contentZh:
+      "火星上的一天（称为'火星日'）持续24小时37分钟。一辆火星探测车连续运行30个火星日。它一共运行了多少分钟？",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_12_14",
+    answer: "44310",
+    answerExplainEn:
+      "Minutes per sol = 24 × 60 + 37 = 1,440 + 37 = 1,477 minutes. Total = 30 × 1,477 = 44,310 minutes.",
+    answerExplainZh:
+      "每火星日分钟数 = 24 × 60 + 37 = 1,440 + 37 = 1,477分钟。总计 = 30 × 1,477 = 44,310分钟。",
+    funFactEn:
+      "NASA's Opportunity rover was designed for a 90-sol mission but operated for over 5,000 sols (nearly 15 Earth years)! Engineers at NASA must convert between Earth time and Martian time constantly. Because a sol is 37 minutes longer than an Earth day, after just 40 sols the Martian clock is a full day ahead of Earth's — like permanent jet lag!",
+    funFactZh:
+      "NASA的机遇号探测车原计划执行90个火星日的任务，却运行了超过5,000个火星日（近15个地球年）！NASA工程师必须不断在地球时间和火星时间之间转换。由于一个火星日比地球日长37分钟，仅过40个火星日后，火星时钟就比地球提前了整整一天——就像永久时差！",
+    standards: ["CCSS-5.NBT.B5", "CCSS-6.NS.B3"],
+  },
+  {
+    titleEn: "Milky Way Star Power",
+    titleZh: "银河系恒星数量",
+    contentEn:
+      "Scientists estimate the Milky Way contains about 10¹¹ (100 billion) stars. The observable universe has about 2 × 10¹² galaxies. Roughly how many stars are in the observable universe? Express your answer as a power of 10.",
+    contentZh:
+      "科学家估计银河系含约10¹¹（1000亿）颗恒星。可观测宇宙中约有2 × 10¹²个星系。可观测宇宙中大约有多少颗恒星？用10的幂次方表示。",
+    difficulty: "HARD",
+    category: "NUMBER_THEORY",
+    ageGroup: "AGE_14_16",
+    answer: "2 × 10²³",
+    answerExplainEn:
+      "Total stars = (stars per galaxy) × (number of galaxies) = 10¹¹ × 2 × 10¹² = 2 × 10²³.",
+    answerExplainZh:
+      "恒星总数 = 每个星系恒星数 × 星系数量 = 10¹¹ × 2 × 10¹² = 2 × 10²³。",
+    funFactEn:
+      "2 × 10²³ is roughly 200 sextillion stars — more than all the grains of sand on every beach and desert on Earth! Yet only about 9,096 stars are visible to the naked eye on a perfectly clear night. The rest of the universe's 200 sextillion stars are either too dim, too far, or hidden by dust. We can barely see a tiny fraction of what exists!",
+    funFactZh:
+      "2 × 10²³大约是200垓颗恒星——比地球上所有海滩和沙漠的沙粒加起来还多！然而在完全晴朗的夜晚，肉眼只能看到约9,096颗恒星。宇宙中其余200垓颗恒星要么太暗、太远，要么被尘埃遮挡。我们只能看到实际存在的极小一部分！",
+    standards: ["CCSS-5.NBT.A2", "CCSS-6.EE.A1"],
+  },
+  {
+    titleEn: "Telescope Magnification",
+    titleZh: "望远镜放大率",
+    contentEn:
+      "A telescope has a focal length of 1,200 mm and uses an eyepiece with a focal length of 25 mm. What is the magnification? (Magnification = telescope focal length ÷ eyepiece focal length.)",
+    contentZh:
+      "一台望远镜的焦距为1,200毫米，使用焦距25毫米的目镜。放大率是多少？（放大率 = 望远镜焦距 ÷ 目镜焦距）",
+    difficulty: "MEDIUM",
+    category: "FRACTIONS",
+    ageGroup: "AGE_12_14",
+    answer: "48",
+    answerExplainEn:
+      "Magnification = 1,200 ÷ 25 = 48×.",
+    answerExplainZh:
+      "放大率 = 1,200 ÷ 25 = 48倍。",
+    funFactEn:
+      "Galileo's first telescope in 1609 magnified only 3× — yet it was enough to discover Jupiter's moons and revolutionize astronomy! The Hubble Space Telescope uses mirrors instead of lenses and can detect objects 13.4 billion light-years away. The James Webb Space Telescope (2022) is 100× more powerful than Hubble — each upgrade in optical math reveals an entire new universe!",
+    funFactZh:
+      "伽利略1609年的第一台望远镜只有3倍放大率——但足以发现木星的卫星并彻底改变天文学！哈勃太空望远镜使用反射镜代替镜头，可以探测134亿光年外的天体。詹姆斯·韦伯太空望远镜（2022年）比哈勃强大100倍——光学数学的每一次升级都揭示了一个全新的宇宙！",
+    standards: ["CCSS-5.NBT.B6", "CCSS-6.NS.B2"],
+  },
+  {
+    titleEn: "Escape Velocity Challenge",
+    titleZh: "逃逸速度挑战",
+    contentEn:
+      "Earth's escape velocity is 11.2 km/s. The Moon's escape velocity is 2.4 km/s. A rocket launched from Earth needs how many times more speed than one launched from the Moon to escape gravity? (Round to 1 decimal place.)",
+    contentZh:
+      "地球逃逸速度为11.2公里/秒。月球逃逸速度为2.4公里/秒。从地球发射的火箭需要比从月球发射的多几倍的速度才能逃脱重力？（保留一位小数）",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_12_14",
+    answer: "4.7",
+    answerExplainEn:
+      "Ratio = 11.2 ÷ 2.4 = 4.666... ≈ 4.7 times.",
+    answerExplainZh:
+      "倍数 = 11.2 ÷ 2.4 = 4.666... ≈ 4.7倍。",
+    funFactEn:
+      "Because escaping Earth's gravity requires so much speed, 90% of a rocket's weight at launch is just fuel! This is why scientists want to mine resources on the Moon — rockets launched from the Moon use 4.7× less energy. SpaceX's Starship is designed to refuel in orbit to reduce the fuel mass problem. Escape velocity math literally shapes the future of space exploration!",
+    funFactZh:
+      "由于逃脱地球重力需要如此高的速度，火箭发射时重量的90%仅仅是燃料！这就是为什么科学家想在月球上开采资源——从月球发射的火箭所需能量少4.7倍。SpaceX的星舰设计为在轨道上补充燃料来解决燃料质量问题。逃逸速度数学实际上塑造了太空探索的未来！",
+    standards: ["CCSS-5.NBT.B7", "CCSS-7.RP.A2"],
+  },
+  {
+    titleEn: "Solar Panels on Mars",
+    titleZh: "火星上的太阳能板",
+    contentEn:
+      "On Earth, solar panels receive about 1,000 W/m² of sunlight. Mars is 1.52× farther from the Sun, so it receives only 1/1.52² of Earth's solar energy. How many W/m² does Mars receive? (Round to the nearest whole number.)",
+    contentZh:
+      "在地球上，太阳能板接收约1,000 W/m²的阳光。火星距太阳的距离是地球的1.52倍，因此只接收地球太阳能的1/1.52²。火星接收多少W/m²？（四舍五入到最近整数）",
+    difficulty: "HARD",
+    category: "ALGEBRA",
+    ageGroup: "AGE_14_16",
+    answer: "433",
+    answerExplainEn:
+      "1.52² = 2.3104. Solar energy on Mars = 1,000 ÷ 2.3104 ≈ 432.8 ≈ 433 W/m².",
+    answerExplainZh:
+      "1.52² = 2.3104。火星太阳能 = 1,000 ÷ 2.3104 ≈ 432.8 ≈ 433 W/m²。",
+    funFactEn:
+      "The Inverse Square Law governs how energy (light, gravity, sound) weakens with distance: at 2× the distance you get ¼ the intensity. This law is fundamental to astronomy — it's how we measure star brightness and calculate planetary energy budgets. NASA's Perseverance rover uses this exact math to size its solar panels and plan its power supply!",
+    funFactZh:
+      "平方反比定律支配着能量（光、重力、声音）随距离减弱的方式：距离加倍，强度变为四分之一。这个定律是天文学的基础——我们用它来测量恒星亮度和计算行星能量收支。NASA的毅力号探测车用这个精确的数学来确定太阳能板尺寸并规划电源供应！",
+    standards: ["CCSS-8.EE.A1", "CCSS-HSF-LE.A1"],
+  },
+  {
+    titleEn: "Moon Size vs. Earth",
+    titleZh: "月球与地球大小对比",
+    contentEn:
+      "Earth's diameter is about 12,742 km. The Moon's diameter is about 3,474 km. What fraction of Earth's diameter is the Moon's diameter? (Simplify your answer.)",
+    contentZh:
+      "地球直径约12,742公里。月球直径约3,474公里。月球直径是地球直径的几分之几？（化为最简分数）",
+    difficulty: "MEDIUM",
+    category: "FRACTIONS",
+    ageGroup: "AGE_10_12",
+    answer: "approximately 1/4",
+    answerExplainEn:
+      "3,474 ÷ 12,742 ≈ 0.2727 ≈ 3/11, but this is approximately 1/4 (since 12,742/4 ≈ 3,186). The ratio is approximately 27%, which we can express as roughly 1/4.",
+    answerExplainZh:
+      "3,474 ÷ 12,742 ≈ 0.2727 ≈ 27%，大约是1/4（因为12,742/4 ≈ 3,186）。月球直径约为地球的四分之一。",
+    funFactEn:
+      "Our Moon is unusually large compared to its planet — most moons are tiny compared to their planets! The Moon is so big it creates significant tides, which billions of years ago slowed Earth's rotation from 6-hour days to 24-hour days. The Moon is also slowly drifting away from Earth at 3.8 cm per year — in about 600 million years, solar eclipses won't be possible anymore!",
+    funFactZh:
+      "我们的月球相对于它的行星来说异常大——大多数卫星相对于其行星都很小！月球之大造成了显著的潮汐，数十亿年前将地球自转从6小时一天减慢到24小时一天。月球也以每年3.8厘米的速度慢慢远离地球——大约6亿年后，日全食将不再可能发生！",
+    standards: ["CCSS-6.RP.A1", "CCSS-7.NS.A3"],
+  },
+  {
+    titleEn: "Halley's Comet Returns",
+    titleZh: "哈雷彗星回归",
+    contentEn:
+      "Halley's Comet orbits the Sun every 75–76 years. It last appeared in 1986. In what year will it next appear, and how old will a child born in 2018 be when they first see it?",
+    contentZh:
+      "哈雷彗星每75-76年绕太阳一周。它最近一次出现是在1986年。它下次出现是哪年？2018年出生的孩子第一次看到它时多少岁？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "2061; 43 years old",
+    answerExplainEn:
+      "Next appearance ≈ 1986 + 75 = 2061. Age of child born 2018 = 2061 − 2018 = 43 years old.",
+    answerExplainZh:
+      "下次出现 ≈ 1986 + 75 = 2061年。2018年出生的孩子年龄 = 2061 − 2018 = 43岁。",
+    funFactEn:
+      "Halley's Comet has been recorded by humans for over 2,000 years! It appeared in 1066 just before the Battle of Hastings and was seen as a bad omen. Edmund Halley (1705) used Newton's laws of gravity and calculus to predict its return — the first time a comet's orbit was mathematically proven periodic. He died before seeing it return in 1758, but his math was right!",
+    funFactZh:
+      "人类记录哈雷彗星已超过2,000年！它于1066年黑斯廷斯战役前出现，被视为不祥之兆。埃德蒙·哈雷（1705年）利用牛顿的重力定律和微积分预测了它的回归——这是第一次数学证明彗星轨道是周期性的。他在1758年回归前去世了，但他的数学计算是正确的！",
+    standards: ["CCSS-5.NBT.B4", "CCSS-6.EE.B7"],
+  },
+  {
+    titleEn: "Jupiter's Giant Family",
+    titleZh: "木星的大家庭",
+    contentEn:
+      "Jupiter has 95 known moons. The 4 largest moons (Io, Europa, Ganymede, Callisto) were discovered in 1610 and have diameters of 3,643 km, 3,122 km, 5,268 km, and 4,821 km. What is the mean diameter of these 4 moons?",
+    contentZh:
+      "木星有95颗已知卫星。4颗最大的卫星（木卫一、木卫二、木卫三、木卫四）于1610年被发现，直径分别为3,643、3,122、5,268和4,821公里。这4颗卫星的平均直径是多少？",
+    difficulty: "MEDIUM",
+    category: "STATISTICS",
+    ageGroup: "AGE_10_12",
+    answer: "4213.5",
+    answerExplainEn:
+      "Mean = (3,643 + 3,122 + 5,268 + 4,821) ÷ 4 = 16,854 ÷ 4 = 4,213.5 km.",
+    answerExplainZh:
+      "平均值 = (3,643 + 3,122 + 5,268 + 4,821) ÷ 4 = 16,854 ÷ 4 = 4,213.5公里。",
+    funFactEn:
+      "Galileo discovered Jupiter's 4 largest moons in 1610 with a telescope he built himself — this was the first proof that not everything orbits Earth! Ganymede is the largest moon in the Solar System, bigger than the planet Mercury. Europa has a liquid water ocean under its ice crust and is considered one of the best places to search for alien life!",
+    funFactZh:
+      "伽利略1610年用自制望远镜发现了木星的4颗最大卫星——这是第一个证明并非所有天体都绕地球运行的证据！木卫三是太阳系最大的卫星，比水星还大。木卫二的冰壳下有液态水海洋，被认为是寻找地外生命的最佳地点之一！",
+    standards: ["CCSS-6.SP.B5c", "CCSS-5.NBT.B6"],
+  },
+  {
+    titleEn: "Cosmic Space Junk",
+    titleZh: "宇宙太空垃圾",
+    contentEn:
+      "There are about 27,000 pieces of tracked space debris orbiting Earth. If debris is evenly spread around Earth's orbital shell (surface area ≈ 2 × 10⁹ km²), how many pieces of debris exist per km²? Express as a decimal.",
+    contentZh:
+      "大约有27,000块被追踪的太空碎片在绕地球轨道飞行。如果碎片均匀分布在地球轨道空间（表面积约2 × 10⁹ km²），每平方公里有多少块碎片？用小数表示。",
+    difficulty: "HARD",
+    category: "STATISTICS",
+    ageGroup: "AGE_14_16",
+    answer: "0.0000135",
+    answerExplainEn:
+      "Density = 27,000 ÷ (2 × 10⁹) = 27,000 ÷ 2,000,000,000 = 0.0000135 pieces per km².",
+    answerExplainZh:
+      "密度 = 27,000 ÷ (2 × 10⁹) = 27,000 ÷ 2,000,000,000 = 0.0000135块/平方公里。",
+    funFactEn:
+      "Space debris includes everything from old satellites to flecks of paint travelling at 28,000 km/h — where even a 1 cm piece hits with the energy of a hand grenade! The Kessler Syndrome describes a nightmare scenario: one collision creates more debris, which creates more collisions, until low Earth orbit becomes unusable. Managing space debris is one of the great mathematical challenges of our century!",
+    funFactZh:
+      "太空碎片包括从废旧卫星到油漆碎片，以每小时28,000公里的速度飞行——即使是1厘米的碎片撞击力也相当于一颗手榴弹！凯斯勒综合症描述了一个噩梦场景：一次碰撞产生更多碎片，更多碎片导致更多碰撞，直到近地轨道无法使用。管理太空碎片是我们这个世纪最大的数学挑战之一！",
+    standards: ["CCSS-5.NBT.A2", "CCSS-6.NS.B3"],
+  },
+  {
+    titleEn: "Pluto's Demotion Vote",
+    titleZh: "冥王星的'降级'投票",
+    contentEn:
+      "In 2006, the International Astronomical Union voted to reclassify Pluto. Out of 10,000 astronomers eligible to vote, only 424 actually voted. Of those, 237 voted to reclassify Pluto. What percentage of all eligible astronomers voted to demote Pluto? (Round to 1 decimal place.)",
+    contentZh:
+      "2006年，国际天文学联合会投票重新分类冥王星。在10,000名有投票资格的天文学家中，只有424人实际投票。其中237人投票重新分类冥王星。有多大比例的有资格天文学家投票'降级'冥王星？（保留一位小数）",
+    difficulty: "MEDIUM",
+    category: "STATISTICS",
+    ageGroup: "AGE_12_14",
+    answer: "2.4%",
+    answerExplainEn:
+      "Percentage = (237 ÷ 10,000) × 100% = 2.37% ≈ 2.4%.",
+    answerExplainZh:
+      "百分比 = (237 ÷ 10,000) × 100% = 2.37% ≈ 2.4%。",
+    funFactEn:
+      "Only 2.4% of eligible astronomers voted to reclassify Pluto — yet their decision affected millions of textbooks worldwide! The IAU's definition of 'planet' requires a body to have 'cleared its orbital neighborhood.' Pluto fails this test because it shares its orbit with Kuiper Belt Objects. Many astronomers still argue the vote was too small to be definitive. Pluto remains controversial — science is democracy meets mathematics!",
+    funFactZh:
+      "只有2.4%的有资格天文学家投票重新分类冥王星——但他们的决定影响了全球数百万本教科书！国际天文联合会对'行星'的定义要求天体必须'清除其轨道附近的其他天体'。冥王星未能满足这一条件，因为它与柯伊伯带天体共享轨道。许多天文学家仍认为投票人数太少，结论不具决定性。冥王星至今仍有争议——科学是民主与数学的结合！",
+    standards: ["CCSS-6.RP.A3c", "CCSS-7.SP.A1"],
+  },
+  {
+    titleEn: "SpaceX Reusable Rocket Savings",
+    titleZh: "SpaceX可重复使用火箭节省的费用",
+    contentEn:
+      "A traditional rocket costs $150 million to launch and is discarded. A reusable SpaceX Falcon 9 costs $62 million per launch. If SpaceX launches 40 missions in a year, how much money is saved compared to using traditional rockets?",
+    contentZh:
+      "传统火箭每次发射成本1.5亿美元，发射后丢弃。可重复使用的SpaceX猎鹰9号每次发射成本6,200万美元。如果SpaceX一年执行40次发射任务，与使用传统火箭相比节省了多少钱？",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_12_14",
+    answer: "$3.52 billion",
+    answerExplainEn:
+      "Savings per launch = $150M − $62M = $88M. Total savings = 40 × $88M = $3,520M = $3.52 billion.",
+    answerExplainZh:
+      "每次发射节省 = 1.5亿 − 6,200万 = 8,800万美元。总节省 = 40 × 8,800万 = 35.2亿美元。",
+    funFactEn:
+      "SpaceX's reusable rockets have revolutionized space economics! The Falcon 9's first stage can land itself vertically and be reflown up to 20+ times. Before SpaceX, launching 1 kg to orbit cost ~$54,000. SpaceX reduced that to ~$2,700/kg — a 95% reduction. Elon Musk's goal of a self-sustaining Mars city requires getting that cost below $100/kg. Math is the key to reaching Mars!",
+    funFactZh:
+      "SpaceX的可重复使用火箭彻底改变了航天经济学！猎鹰9号的第一级可以垂直自主降落，并可被反复使用超过20次。在SpaceX之前，将1千克货物送入轨道的成本约54,000美元。SpaceX将其降低到约2,700美元/千克——降低了95%。埃隆·马斯克建立自给自足火星城市的目标要求将成本降低到100美元/千克以下。数学是抵达火星的关键！",
+    standards: ["CCSS-5.NBT.B5", "CCSS-7.EE.B3"],
+  },
+  {
+    titleEn: "Asteroid Collision Odds",
+    titleZh: "小行星碰撞概率",
+    contentEn:
+      "Astronomers track 2,300 'potentially hazardous asteroids.' Scientists estimate that any specific asteroid has a 1 in 1,000 chance of hitting Earth in the next 100 years. If these risks are independent, what is the probability (in %) that at least one asteroid hits Earth? (Use P = 1 − (999/1000)^2300, estimate (999/1000)^2300 ≈ 0.10.)",
+    contentZh:
+      "天文学家追踪2,300颗'潜在危险小行星'。科学家估计任何特定小行星在未来100年内撞击地球的概率为1/1,000。假设这些风险相互独立，至少一颗小行星撞击地球的概率是多少？（使用P = 1 − (999/1000)^2300，估计(999/1000)^2300 ≈ 0.10）",
+    difficulty: "CHALLENGE",
+    category: "PROBABILITY",
+    ageGroup: "AGE_16_18",
+    answer: "approximately 90%",
+    answerExplainEn:
+      "P(at least one hit) = 1 − P(none hit) = 1 − (999/1000)^2300 ≈ 1 − 0.10 = 0.90 = 90%.",
+    answerExplainZh:
+      "P(至少一颗撞击) = 1 − P(都不撞击) = 1 − (999/1000)^2300 ≈ 1 − 0.10 = 0.90 = 90%。",
+    funFactEn:
+      "This is the 'birthday paradox' applied to asteroids! Even with tiny individual probabilities, many independent trials add up. NASA's Planetary Defense Coordination Office monitors near-Earth objects 24/7. The DART mission (2022) successfully deflected an asteroid by crashing a spacecraft into it — humanity's first planetary defense test. The math of probability is Earth's shield!",
+    funFactZh:
+      "这是应用于小行星的'生日悖论'！即使个别概率极小，许多独立试验加起来也会产生很大的影响。NASA的行星防御协调办公室全天候监测近地天体。DART任务（2022年）通过将航天器撞入小行星成功改变了其轨道——这是人类首次行星防御测试。概率数学是地球的盾牌！",
+    standards: ["CCSS-HSS-CP.B8", "CCSS-HSS-CP.A1"],
+  },
+  {
+    titleEn: "Time Dilation at Speed",
+    titleZh: "速度造成的时间膨胀",
+    contentEn:
+      "According to special relativity, a clock moving at 90% of the speed of light ticks at 1/γ times Earth's rate, where γ = 1/√(1 − v²/c²). At v = 0.9c, γ ≈ 2.29. If 10 years pass on Earth, how many years pass for the traveler? (Round to 1 decimal place.)",
+    contentZh:
+      "根据狭义相对论，以光速90%运动的时钟走动速率为地球时钟的1/γ，其中γ = 1/√(1 − v²/c²)。当v = 0.9c时，γ ≈ 2.29。如果地球上过了10年，旅行者经历了多少年？（保留一位小数）",
+    difficulty: "CHALLENGE",
+    category: "ALGEBRA",
+    ageGroup: "AGE_16_18",
+    answer: "4.4",
+    answerExplainEn:
+      "Traveler's time = Earth time ÷ γ = 10 ÷ 2.29 ≈ 4.37 ≈ 4.4 years.",
+    answerExplainZh:
+      "旅行者的时间 = 地球时间 ÷ γ = 10 ÷ 2.29 ≈ 4.37 ≈ 4.4年。",
+    funFactEn:
+      "Time dilation is not science fiction — it's measured daily! GPS satellites orbit at 14,000 km/h, making their clocks tick 7 microseconds/day slower due to velocity (and 45 microseconds/day faster due to weaker gravity). Without correcting both effects, GPS would drift by 11 km per day! Einstein's relativity math is built into every smartphone's GPS chip.",
+    funFactZh:
+      "时间膨胀不是科幻小说——它每天都在被测量！GPS卫星以每小时14,000公里的速度飞行，使其时钟因速度而每天慢7微秒（因较弱的重力而每天快45微秒）。不校正这两种效应，GPS每天会漂移11公里！爱因斯坦的相对论数学内置于每部智能手机的GPS芯片中。",
+    standards: ["CCSS-HSA-SSE.B3", "CCSS-HSF-LE.A1"],
+  },
+  {
+    titleEn: "Space Station Water Recycling",
+    titleZh: "空间站水循环",
+    contentEn:
+      "The ISS Water Recovery System recycles 93% of wastewater (including sweat and urine) back into drinking water. If astronauts produce 3.6 liters of wastewater per person per day, and there are 6 astronauts, how many liters of water are recovered per day?",
+    contentZh:
+      "国际空间站水回收系统将93%的废水（包括汗液和尿液）循环为饮用水。如果每名宇航员每天产生3.6升废水，共有6名宇航员，每天回收多少升水？",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_12_14",
+    answer: "20.088",
+    answerExplainEn:
+      "Total wastewater = 6 × 3.6 = 21.6 liters. Recovered = 93% × 21.6 = 0.93 × 21.6 = 20.088 liters.",
+    answerExplainZh:
+      "总废水 = 6 × 3.6 = 21.6升。回收量 = 93% × 21.6 = 0.93 × 21.6 = 20.088升。",
+    funFactEn:
+      "NASA's water recycling technology is so advanced that, as astronaut Don Pettit famously said, 'Yesterday's coffee is tomorrow's coffee!' The same recycling math is now being applied to developing countries' water systems on Earth. ISS research has led to over 1,800 spin-off technologies — recycling and filtration math developed for space literally saves lives on Earth!",
+    funFactZh:
+      "NASA的水循环技术非常先进，正如宇航员唐·佩蒂特的名言：'昨天的咖啡就是明天的咖啡！'同样的循环数学现在被应用于地球上发展中国家的水系统。国际空间站的研究已催生了超过1,800项衍生技术——为太空开发的循环和过滤数学实际上在地球上拯救了生命！",
+    standards: ["CCSS-6.RP.A3c", "CCSS-7.RP.A3"],
+  },
+  {
+    titleEn: "Black Hole Event Horizon",
+    titleZh: "黑洞事件视界",
+    contentEn:
+      "The Schwarzschild radius (event horizon) of a black hole is r = 2GM/c², where G = 6.67×10⁻¹¹, c = 3×10⁸ m/s, and M is mass. For a black hole with M = 2×10³⁰ kg (1 solar mass), what is r in meters? (Use: r = 2 × 6.67×10⁻¹¹ × 2×10³⁰ ÷ (3×10⁸)².)",
+    contentZh:
+      "黑洞的史瓦西半径（事件视界）为r = 2GM/c²，G = 6.67×10⁻¹¹，c = 3×10⁸ m/s，M为质量。对于质量M = 2×10³⁰ kg（1个太阳质量）的黑洞，r等于多少米？",
+    difficulty: "CHALLENGE",
+    category: "ALGEBRA",
+    ageGroup: "AGE_16_18",
+    answer: "2964",
+    answerExplainEn:
+      "r = 2 × 6.67×10⁻¹¹ × 2×10³⁰ ÷ (9×10¹⁶) = (2.668×10²⁰) ÷ (9×10¹⁶) = 2,964 m ≈ 2,964 m.",
+    answerExplainZh:
+      "r = 2 × 6.67×10⁻¹¹ × 2×10³⁰ ÷ (9×10¹⁶) = (2.668×10²⁰) ÷ (9×10¹⁶) ≈ 2,964米。",
+    funFactEn:
+      "If our Sun became a black hole, its event horizon would be about 3 km across — smaller than a city! The Earth compacted to a black hole would be the size of a marble. Despite the Hollywood image, black holes don't 'suck' anything in — they're just incredibly dense. The supermassive black hole M87* (first ever photographed in 2019) is 6.5 billion times the Sun's mass, with an event horizon larger than our entire Solar System!",
+    funFactZh:
+      "如果我们的太阳变成黑洞，其事件视界直径约3公里——比一座城市还小！地球压缩成黑洞只有一颗弹珠大小。尽管好莱坞的形象如此，黑洞并不'吸入'任何东西——它们只是密度极高。2019年首次被拍摄到的超大质量黑洞M87*的质量是太阳的65亿倍，其事件视界比我们整个太阳系还大！",
+    standards: ["CCSS-8.EE.A3", "CCSS-HSA-SSE.B3"],
+  },
+  {
+    titleEn: "Cosmic Microwave Background",
+    titleZh: "宇宙微波背景辐射",
+    contentEn:
+      "The Cosmic Microwave Background (CMB) temperature is 2.725 K. Room temperature is about 293 K. How many times warmer is room temperature than the CMB? (Round to the nearest whole number.)",
+    contentZh:
+      "宇宙微波背景辐射（CMB）温度为2.725K。室温约为293K。室温比CMB温暖多少倍？（四舍五入到最近整数）",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_12_14",
+    answer: "108",
+    answerExplainEn:
+      "Ratio = 293 ÷ 2.725 ≈ 107.5 ≈ 108 times.",
+    answerExplainZh:
+      "比值 = 293 ÷ 2.725 ≈ 107.5 ≈ 108倍。",
+    funFactEn:
+      "The CMB is the 'afterglow' of the Big Bang, emitted 380,000 years after the universe was born — about 13.8 billion years ago. It was accidentally discovered in 1964 by Arno Penzias and Robert Wilson, who thought the 'noise' in their antenna was pigeon droppings! They won the Nobel Prize for what turned out to be the oldest light in the universe. At just 2.725 K, space is barely above absolute zero!",
+    funFactZh:
+      "CMB是宇宙大爆炸的'余辉'，在宇宙诞生后38万年发出——大约138亿年前。1964年由阿诺·彭齐亚斯和罗伯特·威尔逊意外发现，他们最初以为天线中的'噪声'是鸽子粪！他们因发现宇宙中最古老的光而获得诺贝尔奖。在仅2.725K的温度下，太空几乎处于绝对零度以上！",
+    standards: ["CCSS-5.NBT.B7", "CCSS-6.NS.B3"],
+  },
+  {
+    titleEn: "Voyager 1 Distance",
+    titleZh: "旅行者1号的距离",
+    contentEn:
+      "Voyager 1 (launched 1977) travels at about 17 km/s away from Earth. In 2024, it was about 24 billion km from Earth. How many years ago was it launched if it traveled at a constant 17 km/s? (1 year ≈ 3.15 × 10⁷ seconds. Round to nearest year.)",
+    contentZh:
+      "旅行者1号（1977年发射）以约17公里/秒的速度远离地球。2024年它距地球约240亿公里。如果它以恒定的17公里/秒行进，它是多少年前发射的？（1年≈3.15×10⁷秒，四舍五入到最近整年）",
+    difficulty: "HARD",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_14_16",
+    answer: "47",
+    answerExplainEn:
+      "Distance = 24 × 10⁹ km = 2.4 × 10¹⁰ km. Time (seconds) = 2.4 × 10¹⁰ ÷ 17 ≈ 1.41 × 10⁹ s. Time (years) = 1.41 × 10⁹ ÷ 3.15 × 10⁷ ≈ 44.8 ≈ 47 years (from 1977 to 2024).",
+    answerExplainZh:
+      "距离 = 240亿公里 = 2.4 × 10¹⁰公里。时间（秒）= 2.4 × 10¹⁰ ÷ 17 ≈ 1.41 × 10⁹秒。时间（年）= 1.41 × 10⁹ ÷ 3.15 × 10⁷ ≈ 44.8 ≈ 47年（1977到2024）。",
+    funFactEn:
+      "Voyager 1 is the most distant human-made object ever, now in interstellar space! It carries a Golden Record with greetings in 55 languages, music, and images from Earth — a message in a bottle to the cosmos. At 17 km/s it would take about 73,000 years to reach the nearest star. NASA still communicates with it, though signals take 22+ hours to arrive each way!",
+    funFactZh:
+      "旅行者1号是有史以来离地球最远的人造天体，现已进入星际空间！它携带着金唱片，上面有55种语言的问候、音乐和地球图像——一封给宇宙的漂流瓶。以17公里/秒的速度，抵达最近恒星需要约73,000年。NASA仍在与它通信，尽管信号每个方向需要22多小时！",
+    standards: ["CCSS-5.NBT.A2", "CCSS-6.EE.A1"],
+  },
+  {
+    titleEn: "Space Food Calorie Budget",
+    titleZh: "太空食品卡路里预算",
+    contentEn:
+      "Astronauts on the ISS need about 3,000 calories per day. Space food is packaged at 6 calories per gram. If an astronaut goes on a 180-day mission, how many kilograms of food must be packed? (Round to nearest whole number.)",
+    contentZh:
+      "国际空间站的宇航员每天需要约3,000卡路里。太空食品以每克6卡路里的密度包装。如果宇航员执行180天的任务，需要携带多少千克食物？（四舍五入到最近整数）",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_12_14",
+    answer: "90",
+    answerExplainEn:
+      "Daily food mass = 3,000 cal ÷ 6 cal/g = 500 g. Total = 500 × 180 = 90,000 g = 90 kg.",
+    answerExplainZh:
+      "每日食物质量 = 3,000卡路里 ÷ 6卡路里/克 = 500克。总计 = 500 × 180 = 90,000克 = 90千克。",
+    funFactEn:
+      "Space food has come a long way! Early astronauts squeezed food from tubes like toothpaste. Now ISS astronauts enjoy over 200 menu items including shrimp cocktail, chocolate cake, and even pizza. Salt and pepper only come in liquid form — loose grains would float into instruments and astronauts' eyes. Every gram launched to space costs about $2,700, making every meal a pricey mathematical calculation!",
+    funFactZh:
+      "太空食品发展了很长一段路！早期宇航员像牙膏一样从管子里挤食物。现在国际空间站宇航员享有超过200种菜单，包括虾鸡尾酒、巧克力蛋糕甚至披萨。盐和胡椒只以液态形式存在——散粒会漂进仪器和宇航员眼睛里。每克送往太空的物品成本约2,700美元，使每餐都成为昂贵的数学计算！",
+    standards: ["CCSS-5.NBT.B5", "CCSS-6.NS.B3"],
+  },
+  {
+    titleEn: "Lunar Eclipse Frequency",
+    titleZh: "月食频率",
+    contentEn:
+      "On average, there are about 3 lunar eclipses per year. If you pick a random night to look at the sky, what is the approximate probability (in %) of seeing a lunar eclipse? (A lunar eclipse lasts about 3 hours. Assume each eclipse can be seen for one night.)",
+    contentZh:
+      "平均每年约发生3次月食。如果你随机选择一个夜晚观天，看到月食的近似概率是多少？（月食持续约3小时，假设每次月食可以在一整晚看到）",
+    difficulty: "MEDIUM",
+    category: "PROBABILITY",
+    ageGroup: "AGE_12_14",
+    answer: "approximately 0.8%",
+    answerExplainEn:
+      "Probability = 3 eclipses × 1 night/eclipse ÷ 365 nights/year = 3/365 ≈ 0.82% ≈ 0.8%.",
+    answerExplainZh:
+      "概率 = 3次月食 × 1晚/次 ÷ 365晚/年 = 3/365 ≈ 0.82% ≈ 0.8%。",
+    funFactEn:
+      "A lunar eclipse occurs when Earth passes between the Sun and Moon, casting its shadow on the Moon — turning it deep red (the 'Blood Moon'). Unlike solar eclipses, lunar eclipses are visible from the entire night side of Earth simultaneously! Ancient peoples thought the red Moon was an omen — now we know it's just Earth's atmosphere bending red sunlight onto the Moon. Science turns omens into math!",
+    funFactZh:
+      "月食发生在地球经过太阳和月球之间，将阴影投射到月球上——将其变为深红色（'血月'）。与日食不同，月食可以同时被地球整个夜面的人们看到！古人认为红月是凶兆——现在我们知道那只是地球大气层将红色阳光折射到月球上。科学将凶兆变成了数学！",
+    standards: ["CCSS-6.RP.A3c", "CCSS-7.SP.C5"],
+  },
+  {
+    titleEn: "Saturn's Ring Width",
+    titleZh: "土星环的宽度",
+    contentEn:
+      "Saturn's main ring system spans about 282,000 km in diameter. Saturn's own diameter is 116,460 km. How many times wider is the ring system than Saturn itself? (Round to 1 decimal place.)",
+    contentZh:
+      "土星主环系统的直径约282,000公里。土星本身的直径约116,460公里。环系统的宽度是土星本身的多少倍？（保留一位小数）",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "2.4",
+    answerExplainEn:
+      "Ratio = 282,000 ÷ 116,460 ≈ 2.42 ≈ 2.4 times.",
+    answerExplainZh:
+      "比值 = 282,000 ÷ 116,460 ≈ 2.42 ≈ 2.4倍。",
+    funFactEn:
+      "Saturn's rings are spectacular — but incredibly thin! The rings span 282,000 km wide but are only 10–100 meters thick. If you scaled the rings to the size of a sheet of paper, they'd be 1,000× thinner than the paper! The rings are made of ice and rock, from dust-sized to house-sized chunks. They're relatively young (100–400 million years) and may disappear within 100 million more years!",
+    funFactZh:
+      "土星环壮观无比——但极其薄！环的跨度282,000公里，但厚度只有10-100米。如果将环缩放到一张纸的大小，它们会比纸薄1,000倍！环由冰和岩石组成，从尘埃大小到房屋大小的碎块都有。它们相对年轻（1亿-4亿年），可能在再过1亿年内消失！",
+    standards: ["CCSS-5.NBT.B7", "CCSS-6.NS.B3"],
+  },
+];
+
+// STORY_QUESTIONS_BATCH_17  (Q251-275) — Amazing Animals & Wildlife
+// Coverage: arithmetic, algebra, geometry, fractions, statistics, probability, logic
+
+const STORY_QUESTIONS_BATCH_17: Blueprint[] = [
+  {
+    titleEn: "Cheetah Sprint Math",
+    titleZh: "猎豹冲刺数学",
+    contentEn:
+      "A cheetah can accelerate from 0 to 100 km/h in just 3 seconds — faster than most sports cars! If a cheetah runs at 100 km/h, how many meters does it travel in 5 seconds?",
+    contentZh:
+      "猎豹能在短短3秒内从0加速到100公里/小时——比大多数跑车还快！如果猎豹以100公里/小时奔跑，它在5秒内行进多少米？",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "138.9",
+    answerExplainEn:
+      "100 km/h = 100,000 m ÷ 3,600 s ≈ 27.78 m/s. In 5 seconds: 27.78 × 5 ≈ 138.9 m.",
+    answerExplainZh:
+      "100公里/小时 = 100,000米 ÷ 3,600秒 ≈ 27.78米/秒。5秒内：27.78 × 5 ≈ 138.9米。",
+    funFactEn:
+      "The cheetah is Earth's fastest land animal, but can only sprint for about 20–30 seconds before overheating. Its spine flexes like a spring, adding extra stride length. However, the fastest animal on Earth overall is the peregrine falcon in a dive at 389 km/h — nearly 4× a cheetah's top speed! Speed math helps biologists understand predator-prey dynamics.",
+    funFactZh:
+      "猎豹是地球上速度最快的陆地动物，但只能冲刺约20-30秒就会过热。它的脊柱像弹簧一样弯曲，增加了额外的步幅。然而，地球上整体最快的动物是俯冲时速389公里的游隼——几乎是猎豹最高速度的4倍！速度数学帮助生物学家理解捕食者与猎物的动态关系。",
+    standards: ["CCSS-6.RP.A3b", "CCSS-7.RP.A1"],
+  },
+  {
+    titleEn: "The Ant Colony",
+    titleZh: "蚂蚁王国",
+    contentEn:
+      "A leafcutter ant colony has about 8 million ants. Each ant weighs about 2 mg (0.002 g). What is the total mass of all the ants in the colony in grams?",
+    contentZh:
+      "一个切叶蚁群约有800万只蚂蚁。每只蚂蚁重约2毫克（0.002克）。这个蚁群所有蚂蚁的总质量是多少克？",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "16000",
+    answerExplainEn:
+      "Total mass = 8,000,000 × 0.002 g = 16,000 g.",
+    answerExplainZh:
+      "总质量 = 8,000,000 × 0.002克 = 16,000克。",
+    funFactEn:
+      "16 kg of ants! The combined mass of all ants on Earth is estimated to rival (or even exceed) the mass of all humans. Ants are incredible engineers: leafcutter ants build underground cities with ventilation systems, waste disposal, and fungus farms. Some ant species practice mathematics — they count their steps using an internal odometer to navigate back home!",
+    funFactZh:
+      "16千克的蚂蚁！据估计，地球上所有蚂蚁的总质量可与所有人类的总质量相媲美（甚至超过）。蚂蚁是令人难以置信的工程师：切叶蚁建造带有通风系统、废物处理和真菌农场的地下城市。某些蚂蚁物种甚至会使用数学——它们利用内置里程计数步数来导航回家！",
+    standards: ["CCSS-5.NBT.B7", "CCSS-6.EE.A2"],
+  },
+  {
+    titleEn: "Blue Whale Heartbeat",
+    titleZh: "蓝鲸的心跳",
+    contentEn:
+      "A blue whale's heart beats only 2 times per minute at rest. A human heart beats 70 times per minute. How many times more per day does a human heart beat than a blue whale's heart?",
+    contentZh:
+      "蓝鲸在休息时心脏每分钟只跳动2次。人类心脏每分钟跳动70次。人类心脏每天比蓝鲸心脏多跳动多少次？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "97920",
+    answerExplainEn:
+      "Human beats/day = 70 × 60 × 24 = 100,800. Whale beats/day = 2 × 60 × 24 = 2,880. Difference = 100,800 − 2,880 = 97,920.",
+    answerExplainZh:
+      "人类每日心跳 = 70 × 60 × 24 = 100,800次。鲸鱼每日心跳 = 2 × 60 × 24 = 2,880次。差值 = 100,800 − 2,880 = 97,920次。",
+    funFactEn:
+      "A blue whale's heart is the size of a small car and weighs about 180 kg! Its heartbeat is so loud it can be detected 3 km away. During a dive, the heart slows to just 2 beats/min; while sprinting to feed, it speeds up to 37 beats/min. Generally, larger animals have slower heart rates — a mouse's heart beats 600 times per minute and lives only 2 years, while a bowhead whale (55 beats/min) can live 200 years!",
+    funFactZh:
+      "蓝鲸的心脏有一辆小汽车那么大，重约180千克！它的心跳声如此之大，可以在3公里外被探测到。潜水时心跳减慢到每分钟仅2次；冲刺觅食时加快到每分钟37次。通常，体型越大的动物心跳越慢——老鼠的心脏每分钟跳动600次，只能活2年，而弓头鲸（每分钟55次）可以活200年！",
+    standards: ["CCSS-4.NBT.B5", "CCSS-5.NBT.B5"],
+  },
+  {
+    titleEn: "Monarch Butterfly Migration",
+    titleZh: "帝王蝶迁徙",
+    contentEn:
+      "Monarch butterflies migrate about 4,500 km from Canada to Mexico. They fly an average of 80 km per day. How many days does the migration take? (Round to the nearest whole number.)",
+    contentZh:
+      "帝王蝶从加拿大迁徙约4,500公里到墨西哥。它们每天飞行约80公里。迁徙需要多少天？（四舍五入到最近整数）",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "56",
+    answerExplainEn:
+      "Days = 4,500 ÷ 80 = 56.25 ≈ 56 days.",
+    answerExplainZh:
+      "天数 = 4,500 ÷ 80 = 56.25 ≈ 56天。",
+    funFactEn:
+      "The most extraordinary part? No single butterfly makes the round trip! It takes 3–5 generations to complete one migration cycle. The butterflies that arrive in Mexico have never been there before, yet navigate precisely to the same forest their great-great-grandparents left. Scientists believe they use the Sun's position, Earth's magnetic field, and even polarized light to navigate — all involving geometry and physics!",
+    funFactZh:
+      "最神奇的是什么？没有任何一只蝴蝶能完成往返旅程！完成一个迁徙周期需要3-5代蝴蝶。抵达墨西哥的蝴蝶从未去过那里，却能精确导航到曾祖父母离开的同一片森林。科学家认为它们利用太阳位置、地球磁场甚至偏振光导航——所有这些都涉及几何和物理！",
+    standards: ["CCSS-5.NBT.B6", "CCSS-6.NS.B2"],
+  },
+  {
+    titleEn: "The Octopus Arm Puzzle",
+    titleZh: "章鱼臂之谜",
+    contentEn:
+      "An octopus has 8 arms. Scientists say 6 of the arms are used for moving (crawling) and the other 2 are mainly used for handling food. What fraction of an octopus's arms are used primarily for feeding?",
+    contentZh:
+      "章鱼有8条腕。科学家说其中6条用于移动（爬行），另外2条主要用于处理食物。章鱼腕中有几分之几主要用于进食？",
+    difficulty: "EASY",
+    category: "FRACTIONS",
+    ageGroup: "AGE_8_10",
+    answer: "1/4",
+    answerExplainEn:
+      "Fraction = 2/8 = 1/4.",
+    answerExplainZh:
+      "分数 = 2/8 = 1/4。",
+    funFactEn:
+      "Octopuses have 3 hearts, blue blood, and can change color in milliseconds! Each arm has its own mini-brain with 2/3 of the octopus's total neurons. An arm can act independently even after being detached. Octopuses are the only invertebrates known to use tools — they carry coconut shells as portable shelters. Their intelligence rivals that of dogs and cats!",
+    funFactZh:
+      "章鱼有3颗心脏、蓝色血液，可以在毫秒内改变颜色！每条腕都有自己的小大脑，拥有章鱼全部神经元的2/3。腕甚至在被切断后也可以独立行动。章鱼是已知唯一会使用工具的无脊椎动物——它们携带椰子壳作为便携式庇护所。它们的智力可与猫狗媲美！",
+    standards: ["CCSS-3.NF.A1", "CCSS-4.NF.A1"],
+  },
+  {
+    titleEn: "Spider Web Geometry",
+    titleZh: "蜘蛛网几何学",
+    contentEn:
+      "An orb-weaver spider creates a circular web with a radius of 30 cm. The web has 24 equally-spaced radial threads (spokes). What is the angle in degrees between each pair of neighboring radial threads?",
+    contentZh:
+      "一只圆网蜘蛛编织了一张半径为30厘米的圆形蜘蛛网。蜘蛛网有24根等间距的放射状丝（辐条）。每对相邻放射状丝之间的角度是多少度？",
+    difficulty: "MEDIUM",
+    category: "GEOMETRY",
+    ageGroup: "AGE_12_14",
+    answer: "15",
+    answerExplainEn:
+      "A full circle = 360°. Angle between each spoke = 360° ÷ 24 = 15°.",
+    answerExplainZh:
+      "整圆 = 360°。每根辐条之间的角度 = 360° ÷ 24 = 15°。",
+    funFactEn:
+      "Spider silk is pound-for-pound 5× stronger than steel and can stretch 40% before breaking! Spiders build their webs using advanced geometry: radial threads for structure, spiral threads coated in sticky droplets for catching prey. Scientists have discovered that spider webs vibrate at specific frequencies — spiders can identify prey, mates, or threats just from the vibration patterns. Nature invented signal processing before humans did!",
+    funFactZh:
+      "蜘蛛丝按重量计算比钢强5倍，可以延伸40%才断裂！蜘蛛使用高级几何建造蜘蛛网：放射状的丝提供结构，涂有粘性液滴的螺旋丝用于捕捉猎物。科学家发现蜘蛛网以特定频率振动——蜘蛛仅从振动模式就能识别猎物、伴侣或威胁。大自然在人类之前就发明了信号处理！",
+    standards: ["CCSS-7.G.B5", "CCSS-4.G.A1"],
+  },
+  {
+    titleEn: "Salmon's Upstream Journey",
+    titleZh: "三文鱼的逆流之旅",
+    contentEn:
+      "A salmon swims upstream at 3 km/h against a current of 1 km/h. At this net speed of 2 km/h, how many hours will it take to travel 36 km to its spawning grounds?",
+    contentZh:
+      "一条三文鱼以3公里/小时的速度逆流而上，水流速度为1公里/小时。以2公里/小时的净速度，游36公里到达产卵地需要多少小时？",
+    difficulty: "EASY",
+    category: "ALGEBRA",
+    ageGroup: "AGE_10_12",
+    answer: "18",
+    answerExplainEn:
+      "Net speed = 3 − 1 = 2 km/h. Time = 36 ÷ 2 = 18 hours.",
+    answerExplainZh:
+      "净速度 = 3 − 1 = 2公里/小时。时间 = 36 ÷ 2 = 18小时。",
+    funFactEn:
+      "Salmon are born in freshwater rivers, migrate to the ocean, grow for years, then return to the exact same river where they were born to reproduce — navigating using Earth's magnetic field and the chemical 'scent' of their home river! After spawning, Pacific salmon die, and their bodies fertilize the surrounding forest. A single salmon can nourish over 130 other species. They're literally the delivery drivers of forest nutrients!",
+    funFactZh:
+      "三文鱼在淡水河中出生，迁移到海洋，生长数年后，返回它们出生的同一条河产卵——利用地球磁场和家乡河流的化学'气味'导航！太平洋鲑鱼产卵后死亡，其身体为周围的森林施肥。一条鲑鱼可以滋养超过130种其他物种。它们实际上是森林营养物质的快递员！",
+    standards: ["CCSS-6.EE.B7", "CCSS-7.EE.B4"],
+  },
+  {
+    titleEn: "Tiger Population Crisis",
+    titleZh: "老虎种群危机",
+    contentEn:
+      "In 1900, the global wild tiger population was about 100,000. Today there are approximately 4,000 wild tigers. By what percentage has the tiger population declined? (Round to the nearest whole number.)",
+    contentZh:
+      "1900年全球野生老虎种群约有100,000只。今天大约有4,000只野生老虎。老虎种群下降了多少百分比？（四舍五入到最近整数）",
+    difficulty: "MEDIUM",
+    category: "STATISTICS",
+    ageGroup: "AGE_12_14",
+    answer: "96%",
+    answerExplainEn:
+      "Decline = (100,000 − 4,000) ÷ 100,000 × 100% = 96,000/100,000 × 100% = 96%.",
+    answerExplainZh:
+      "下降 = (100,000 − 4,000) ÷ 100,000 × 100% = 96%。",
+    funFactEn:
+      "96% of all wild tigers gone in just 120 years! Three tiger subspecies have already gone extinct. The good news: conservation math works too — India went from 1,411 tigers in 2006 to over 3,700 in 2022 through Project Tiger. One country's effort contributed over 70% of the world's remaining wild tigers. Mathematical modeling of habitat and migration corridors is central to wildlife conservation today.",
+    funFactZh:
+      "120年内野生老虎减少了96%！已有3个老虎亚种灭绝。好消息是：保护数学同样有效——印度通过老虎项目从2006年的1,411只增加到2022年的超过3,700只。一个国家的努力贡献了全球70%以上的野生老虎。栖息地和迁徙走廊的数学建模是当今野生动物保护的核心。",
+    standards: ["CCSS-6.RP.A3c", "CCSS-7.RP.A3"],
+  },
+  {
+    titleEn: "Arctic Tern World Record",
+    titleZh: "北极燕鸥世界纪录",
+    contentEn:
+      "The Arctic tern makes the longest migration of any animal — about 70,000 km round-trip each year from the Arctic to Antarctica and back. If a tern lives 30 years and starts migrating at age 1, how many total km does it migrate in its lifetime?",
+    contentZh:
+      "北极燕鸥每年从北极到南极再返回，进行约70,000公里的往返迁徙——是所有动物中最长的迁徙。如果一只燕鸥活了30年，并从1岁开始迁徙，它一生中总共迁徙了多少公里？",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_12_14",
+    answer: "2030000",
+    answerExplainEn:
+      "Migrations = 30 − 1 = 29 years of migration. Total = 29 × 70,000 = 2,030,000 km.",
+    answerExplainZh:
+      "迁徙次数 = 30 − 1 = 29年的迁徙。总计 = 29 × 70,000 = 2,030,000公里。",
+    funFactEn:
+      "2,030,000 km — that's equivalent to flying to the Moon and back nearly 3 times, or circling Earth 50 times! Arctic terns see more sunlight in their lifetime than any other living creature — they travel between the two polar regions where summers have near-24-hour daylight. A small 100 g bird outflies every other species on Earth. Nature is the ultimate long-haul flight engineer!",
+    funFactZh:
+      "2,030,000公里——相当于飞到月球再返回近3次，或绕地球50圈！北极燕鸥一生中看到的阳光比任何其他生物都多——它们在两个极地地区之间旅行，那里的夏天有近24小时的光照。一只100克的小鸟飞行距离超过地球上所有其他物种。大自然是终极长途飞行工程师！",
+    standards: ["CCSS-5.NBT.B5", "CCSS-4.NBT.B4"],
+  },
+  {
+    titleEn: "Hummingbird Wing Math",
+    titleZh: "蜂鸟翅膀数学",
+    contentEn:
+      "A Ruby-throated Hummingbird flaps its wings about 53 times per second. How many times does it flap its wings in one minute?",
+    contentZh:
+      "一只红喉蜂鸟每秒拍打翅膀约53次。它一分钟拍打翅膀多少次？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_8_10",
+    answer: "3180",
+    answerExplainEn:
+      "Wing flaps per minute = 53 × 60 = 3,180 times.",
+    answerExplainZh:
+      "每分钟扇翅次数 = 53 × 60 = 3,180次。",
+    funFactEn:
+      "To power those 3,180 wing flaps per minute, hummingbirds have a heart rate of up to 1,260 beats/minute and eat 1.5× their body weight in nectar each day! They are the only birds that can fly backwards, and they hover with perfect precision using tiny brain algorithms for balance. Their metabolism is so fast that if they don't eat for 30 minutes, they go into torpor — a sleep-like state where their heart rate drops 96%!",
+    funFactZh:
+      "为了支持每分钟3,180次的振翅，蜂鸟的心率高达每分钟1,260次，每天吸食相当于自身体重1.5倍的花蜜！它们是唯一能向后飞行的鸟类，利用大脑中的平衡算法以完美精度悬停。它们的新陈代谢速度如此之快，如果30分钟不进食，就会进入休眠状态——一种类似睡眠的状态，心率下降96%！",
+    standards: ["CCSS-4.NBT.B5", "CCSS-5.NBT.B5"],
+  },
+  {
+    titleEn: "Eagle Eye Ratio",
+    titleZh: "老鹰眼睛比率",
+    contentEn:
+      "A bald eagle can see a rabbit from 3.2 km away. Humans can only see the same rabbit from about 0.5 km. How many times sharper is an eagle's vision than a human's? (Round to nearest whole number.)",
+    contentZh:
+      "白头鹰可以从3.2公里外看到一只兔子。人类只能从约0.5公里外看到同一只兔子。老鹰的视力比人类锐利多少倍？（四舍五入到最近整数）",
+    difficulty: "EASY",
+    category: "FRACTIONS",
+    ageGroup: "AGE_10_12",
+    answer: "6",
+    answerExplainEn:
+      "Ratio = 3.2 ÷ 0.5 = 6.4 ≈ 6 times.",
+    answerExplainZh:
+      "比值 = 3.2 ÷ 0.5 = 6.4 ≈ 6倍。",
+    funFactEn:
+      "Eagles achieve this with 2 foveas (points of sharp focus) in each eye versus our 1, and 5× more photo-receptor cells. They can also see ultraviolet light, which makes mouse urine trails glow — they can literally follow a glowing trail to find prey! Birds of prey have the largest eye-to-head ratio of any animal. If humans had proportionally eagle-sized eyes, each eye would be the size of a tennis ball!",
+    funFactZh:
+      "老鹰每只眼睛有2个中央凹（清晰焦点）而我们只有1个，以及多5倍的光感受器细胞。它们还能看到紫外线，使老鼠的尿液痕迹发光——它们可以沿发光的踪迹追踪猎物！猛禽的眼睛与头部比例是所有动物中最大的。如果人类的眼睛按比例与鹰同等大小，每只眼睛会有网球那么大！",
+    standards: ["CCSS-5.NBT.B7", "CCSS-6.NS.B3"],
+  },
+  {
+    titleEn: "Penguin Huddle Temperature",
+    titleZh: "企鹅抱团取暖",
+    contentEn:
+      "Emperor penguins huddle to survive -40°C Antarctic blizzards. The center of the huddle reaches +37°C due to body heat from 5,000 penguins. What is the temperature difference between the center of the huddle and the outside air?",
+    contentZh:
+      "帝企鹅通过抱团在-40°C的南极暴风雪中生存。由于5,000只企鹅的体热，企鹅群中心温度达到+37°C。企鹅群中心与外部空气的温差是多少？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "77",
+    answerExplainEn:
+      "Temperature difference = 37°C − (−40°C) = 37 + 40 = 77°C.",
+    answerExplainZh:
+      "温差 = 37°C − (−40°C) = 37 + 40 = 77°C。",
+    funFactEn:
+      "Emperor penguin huddles are nature's most efficient heating system — creating a 77°C thermal gradient across just a few meters! The penguins take turns being in the warm center versus the cold outside edge in a perfectly organized rotation. Scientists modeled this behavior mathematically and found it follows fluid dynamics equations — the huddle moves like a slow liquid, automatically distributing warmth equally to all!",
+    funFactZh:
+      "帝企鹅的抱团是自然界最高效的加热系统——在短短几米内创造了77°C的温度梯度！企鹅轮流站在温暖的中心和寒冷的外缘，组织有序地轮换。科学家对这种行为进行了数学建模，发现它遵循流体动力学方程——企鹅群像慢速液体一样移动，自动将温暖平均分配给所有成员！",
+    standards: ["CCSS-5.NBT.B7", "CCSS-6.NS.C5"],
+  },
+  {
+    titleEn: "Dolphin Pod Communication",
+    titleZh: "海豚群体通讯",
+    contentEn:
+      "Sound travels through water at about 1,500 m/s. A dolphin sends an echolocation click that bounces off a fish and returns in 0.04 seconds. How far away is the fish? (Distance = speed × time ÷ 2, because sound travels to the fish AND back.)",
+    contentZh:
+      "声音在水中的传播速度约为1,500米/秒。一只海豚发出回声定位的咔嗒声，信号从鱼身上反弹回来，历时0.04秒。这条鱼距海豚多远？（距离 = 速度 × 时间 ÷ 2，因为声音往返都要传播）",
+    difficulty: "HARD",
+    category: "ALGEBRA",
+    ageGroup: "AGE_14_16",
+    answer: "30",
+    answerExplainEn:
+      "Distance = 1,500 × 0.04 ÷ 2 = 60 ÷ 2 = 30 meters.",
+    answerExplainZh:
+      "距离 = 1,500 × 0.04 ÷ 2 = 60 ÷ 2 = 30米。",
+    funFactEn:
+      "Dolphins use echolocation with incredible precision — they can detect a ball bearing the size of a pea from 15 meters away! This same math (Time of Flight = 2d/v) is used in medical ultrasound, submarine sonar, self-driving car LIDAR, and parking sensors. Dolphins essentially invented sonar millions of years before humans. Every time you use an ultrasound machine, you're borrowing dolphin math!",
+    funFactZh:
+      "海豚使用回声定位，精度令人难以置信——它们可以从15米外探测到豌豆大小的钢球！同样的数学（飞行时间 = 2d/v）被用于医学超声波、潜艇声纳、自动驾驶汽车的激光雷达和停车传感器。海豚在人类发明声纳数百万年前就实现了这一功能。每次使用超声波机器，你都在借用海豚的数学！",
+    standards: ["CCSS-6.EE.B7", "CCSS-7.EE.B4"],
+  },
+  {
+    titleEn: "Termite Tower",
+    titleZh: "白蚁塔楼",
+    contentEn:
+      "African termites build mounds up to 9 meters tall. A termite is about 5 mm (0.005 m) long. If you scaled the termite up to human height (1.7 m), how tall would the termite mound be proportionally?",
+    contentZh:
+      "非洲白蚁建造最高可达9米的蚁丘。一只白蚁身长约5毫米（0.005米）。如果将白蚁按比例放大到人的高度（1.7米），蚁丘按比例应该有多高？",
+    difficulty: "HARD",
+    category: "ALGEBRA",
+    ageGroup: "AGE_14_16",
+    answer: "3060",
+    answerExplainEn:
+      "Scale factor = 1.7 m ÷ 0.005 m = 340. Scaled mound height = 9 × 340 = 3,060 m.",
+    answerExplainZh:
+      "缩放比例 = 1.7米 ÷ 0.005米 = 340。按比例放大的蚁丘高度 = 9 × 340 = 3,060米。",
+    funFactEn:
+      "A proportional termite mound for a human would be 3,060 meters tall — nearly 3× the height of Mount Fuji! Termite mounds have built-in air conditioning: the design creates convection currents that maintain a constant 31°C inside, even when outside temperatures swing from 3°C to 42°C. Architects now use termite mound geometry to design energy-efficient buildings — the Eastgate Centre in Zimbabwe was inspired by termites!",
+    funFactZh:
+      "按比例放大到人类尺度的白蚁丘高达3,060米——接近富士山高度的3倍！白蚁丘内置空调：设计产生对流气流，即使外部温度在3°C到42°C之间波动，内部也能保持恒定的31°C。建筑师现在用白蚁丘几何设计节能建筑——津巴布韦的东门购物中心就受到了白蚁的启发！",
+    standards: ["CCSS-7.RP.A2", "CCSS-6.RP.A3b"],
+  },
+  {
+    titleEn: "Elephant Memory Test",
+    titleZh: "大象记忆测试",
+    contentEn:
+      "Researchers marked 3 water holes on a map, labeled A, B, and C. Hole A dried up 5 years ago, Hole B has water now, and Hole C dried up last month. An elephant herd avoided A and C and went straight to B. If the herd had randomly chosen one of the 3 water holes, what was the probability of accidentally choosing the right one?",
+    contentZh:
+      "研究人员在地图上标注了3个水坑，分别是A、B和C。A坑5年前干涸，B坑现在有水，C坑上个月干涸。一群大象绕过了A和C，直奔B。如果象群随机选择3个水坑之一，偶然选对的概率是多少？",
+    difficulty: "EASY",
+    category: "PROBABILITY",
+    ageGroup: "AGE_10_12",
+    answer: "1/3",
+    answerExplainEn:
+      "Probability of randomly choosing the correct hole = 1 out of 3 = 1/3.",
+    answerExplainZh:
+      "随机选中正确水坑的概率 = 3个中的1个 = 1/3。",
+    funFactEn:
+      "Elephants have memories that span decades! Matriarch elephants remember drought-era water sources, migration routes, and even human faces from 12+ years ago. Their temporal lobe (memory center) is relatively larger than any other mammal's. During the 1993 Kenyan drought, elephant herds walked 500+ km to water remembered only by the oldest females — that memory literally saved the herd!",
+    funFactZh:
+      "大象有跨越数十年的记忆！雌性族长大象记得干旱时期的水源、迁徙路线，甚至12年以上前见过的人脸。它们的颞叶（记忆中心）相对来说比任何其他哺乳动物都大。在1993年肯尼亚干旱期间，象群步行500多公里寻找只有最年老雌象才记得的水源——这段记忆实际上拯救了象群！",
+    standards: ["CCSS-7.SP.C5", "CCSS-6.SP.A1"],
+  },
+  {
+    titleEn: "Great White Shark Teeth",
+    titleZh: "大白鲨的牙齿",
+    contentEn:
+      "A great white shark has about 300 teeth arranged in 5 rows. It loses and replaces its teeth every 8–10 days. If a shark replaces all 300 teeth every 9 days, how many teeth does it go through in one year (365 days)? (Round down.)",
+    contentZh:
+      "一条大白鲨有约300颗牙齿，排列成5排。它每8-10天脱落并替换一次牙齿。如果鲨鱼每9天替换全部300颗牙，一年（365天）内它用掉了多少颗牙？（向下取整）",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "12000",
+    answerExplainEn:
+      "Full replacement cycles in 365 days = ⌊365 ÷ 9⌋ = 40 complete cycles (40 × 9 = 360 days). Teeth used = 40 × 300 = 12,000 teeth.",
+    answerExplainZh:
+      "365天内完整替换周期数 = ⌊365 ÷ 9⌋ = 40次（40 × 9 = 360天）。用掉的牙齿 = 40 × 300 = 12,000颗。",
+    funFactEn:
+      "A great white shark produces up to 50,000 teeth in its lifetime! Unlike humans who get only 2 sets, sharks have a conveyor belt of replacement teeth always growing behind the front row. Sharks never stop producing teeth. Fossil shark teeth are common beach finds — a single shark can lose thousands of teeth over its lifetime, all of which fossilize. Shark teeth are one of Earth's most abundant fossils!",
+    funFactZh:
+      "一条大白鲨一生中最多可产生50,000颗牙齿！不像人类只有2套牙齿，鲨鱼有一条不停运转的替换牙齿传送带，始终在前排后面生长。鲨鱼从不停止产生牙齿。化石鲨鱼牙齿是海滩上常见的发现——一条鲨鱼一生中可能失去数千颗牙齿，全部都会变成化石。鲨鱼牙齿是地球上最丰富的化石之一！",
+    standards: ["CCSS-5.NBT.B6", "CCSS-6.NS.B2"],
+  },
+  {
+    titleEn: "Polar Bear Swim",
+    titleZh: "北极熊游泳",
+    contentEn:
+      "Polar bears are powerful swimmers and can swim at about 9.6 km/h in Arctic waters. A polar bear needs to swim to an ice floe 38.4 km away. How many hours will it take?",
+    contentZh:
+      "北极熊是强壮的游泳者，可以在北极水域以约9.6公里/小时的速度游泳。一只北极熊需要游到38.4公里外的一块浮冰上。需要多少小时？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "4",
+    answerExplainEn:
+      "Time = 38.4 ÷ 9.6 = 4 hours.",
+    answerExplainZh:
+      "时间 = 38.4 ÷ 9.6 = 4小时。",
+    funFactEn:
+      "Polar bears have been tracked swimming continuously for 9+ days, covering over 687 km! Their fur isn't actually white — each hair is hollow and transparent, scattering light to appear white. Their skin is black to absorb heat. As Arctic sea ice declines by 13% per decade, polar bears must swim increasingly longer distances between ice floes. Climate math directly determines polar bear survival!",
+    funFactZh:
+      "北极熊曾被追踪连续游泳9天以上，覆盖超过687公里！它们的毛皮实际上不是白色的——每根毛发是中空透明的，散射光线呈现出白色。它们的皮肤是黑色的以吸收热量。随着北极海冰以每十年13%的速度消退，北极熊必须在浮冰之间游越来越长的距离。气候数学直接决定北极熊的生存！",
+    standards: ["CCSS-5.NBT.B7", "CCSS-6.NS.B3"],
+  },
+  {
+    titleEn: "Bat Echolocation Timing",
+    titleZh: "蝙蝠回声定位计时",
+    contentEn:
+      "A bat emits ultrasonic pulses and can detect echoes returning in as little as 0.002 seconds. Sound travels at 340 m/s in air. What is the minimum distance from a bat to an object it can detect? (Distance = speed × time ÷ 2.)",
+    contentZh:
+      "蝙蝠发出超声波脉冲，能够探测到最短0.002秒后返回的回声。声音在空气中以340米/秒传播。蝙蝠能探测到的物体的最小距离是多少？（距离 = 速度 × 时间 ÷ 2）",
+    difficulty: "HARD",
+    category: "ALGEBRA",
+    ageGroup: "AGE_14_16",
+    answer: "0.34",
+    answerExplainEn:
+      "Distance = 340 × 0.002 ÷ 2 = 0.68 ÷ 2 = 0.34 meters.",
+    answerExplainZh:
+      "距离 = 340 × 0.002 ÷ 2 = 0.68 ÷ 2 = 0.34米。",
+    funFactEn:
+      "Bats can detect objects as small as a human hair in complete darkness! Some bats emit 200 ultrasonic pulses per second during hunting. The technology for radar, sonar, and medical ultrasound was all developed after scientists studied bats in the 1930s. Today, engineers designing autonomous vehicles are still learning from bat echolocation algorithms — the best obstacle detection systems are inspired by bats!",
+    funFactZh:
+      "蝙蝠可以在完全黑暗中探测到头发丝那么细的物体！有些蝙蝠在捕猎时每秒发出200次超声波脉冲。雷达、声纳和医学超声波技术都是在1930年代科学家研究蝙蝠之后发展起来的。今天，设计自动驾驶汽车的工程师仍在学习蝙蝠的回声定位算法——最好的障碍物探测系统都受到了蝙蝠的启发！",
+    standards: ["CCSS-6.EE.B7", "CCSS-7.EE.B4"],
+  },
+  {
+    titleEn: "Wolf Pack Territory",
+    titleZh: "狼群领地",
+    contentEn:
+      "A wolf pack claims a rectangular territory that is 80 km long and 45 km wide. What is the total area of their territory in km²?",
+    contentZh:
+      "一个狼群占据了一块长80公里、宽45公里的矩形领地。他们的领地总面积是多少平方公里？",
+    difficulty: "EASY",
+    category: "GEOMETRY",
+    ageGroup: "AGE_10_12",
+    answer: "3600",
+    answerExplainEn:
+      "Area = length × width = 80 × 45 = 3,600 km².",
+    answerExplainZh:
+      "面积 = 长 × 宽 = 80 × 45 = 3,600平方公里。",
+    funFactEn:
+      "Wolf territories range from 80 to 1,500 km² — about the size of a small country! Wolves mark their entire border with scent markings, essentially doing perimeter calculation by instinct. The reintroduction of wolves to Yellowstone in 1995 changed the entire ecosystem — they controlled deer populations, allowing rivers to stop eroding (deer had overgrazing river banks). This is called a 'trophic cascade' — math modeling predicted it before it happened!",
+    funFactZh:
+      "狼群领地范围从80到1,500平方公里——约相当于一个小国家的面积！狼用气味标记整个边界，本质上是在凭本能计算周长。1995年将狼重新引入黄石公园改变了整个生态系统——它们控制了鹿的数量，使河流不再侵蚀（鹿曾过度放牧河岸）。这被称为'营养级联'——数学建模在它发生之前就预测到了！",
+    standards: ["CCSS-3.MD.C7", "CCSS-4.MD.A3"],
+  },
+  {
+    titleEn: "Dinosaur Scale-Up Problem",
+    titleZh: "恐龙比例放大问题",
+    contentEn:
+      "A Velociraptor was only about 50 cm tall and 2 m long — closer to a turkey than a monster! The T-Rex was 4 m tall and 12 m long. If you scale up a Velociraptor proportionally to the T-Rex's height, how long would it be in meters?",
+    contentZh:
+      "迅猛龙仅约50厘米高、2米长——更像一只火鸡而非怪兽！霸王龙高4米、长12米。如果按照霸王龙的高度将迅猛龙等比例放大，它的长度会是多少米？",
+    difficulty: "MEDIUM",
+    category: "ALGEBRA",
+    ageGroup: "AGE_12_14",
+    answer: "16",
+    answerExplainEn:
+      "Scale factor = 4 m ÷ 0.5 m = 8. Scaled length = 2 × 8 = 16 m.",
+    answerExplainZh:
+      "缩放比例 = 4米 ÷ 0.5米 = 8。放大后的长度 = 2 × 8 = 16米。",
+    funFactEn:
+      "Hollywood's Velociraptors (Jurassic Park) are 8× too big! The real Velociraptor was about the size of a turkey, had feathers, and probably hunted alone rather than in coordinated packs. T-Rex had arms too short to reach its own mouth — it could barely scratch its chin! Modern birds are living dinosaurs: chickens are more closely related to T-Rex than T-Rex is to Stegosaurus. Scale matters in evolution!",
+    funFactZh:
+      "好莱坞的迅猛龙（侏罗纪公园）大了8倍！真实的迅猛龙约有火鸡大小，有羽毛，可能单独猎食而非成群协调行动。霸王龙的手臂太短，甚至够不到自己的嘴巴——几乎无法挠到下巴！现代鸟类是活着的恐龙：鸡与霸王龙的亲缘关系比霸王龙与剑龙更近。在进化中，比例很重要！",
+    standards: ["CCSS-7.RP.A2", "CCSS-6.RP.A3b"],
+  },
+  {
+    titleEn: "Bee Hexagon Efficiency",
+    titleZh: "蜜蜂六边形效率",
+    contentEn:
+      "A regular hexagon with a side length of 1 cm has an area of approximately 2.6 cm². A square with side 1 cm has an area of 1 cm². If you're tiling a flat surface without gaps, what percentage more area does a hexagon cover compared to a same-perimeter square? (Hexagon perimeter = 6 cm = same as square perimeter of 1.5 cm × 4 sides. Area of square with perimeter 6 = side 1.5, area = 2.25 cm².)",
+    contentZh:
+      "边长为1厘米的正六边形面积约为2.6 cm²。如果用相同周长的正方形（周长6厘米，即边长1.5厘米，面积2.25 cm²）铺设表面，六边形比正方形多覆盖多少百分比的面积？",
+    difficulty: "CHALLENGE",
+    category: "GEOMETRY",
+    ageGroup: "AGE_14_16",
+    answer: "approximately 15.6%",
+    answerExplainEn:
+      "Hexagon area = 2.6 cm². Same-perimeter square area = 2.25 cm². Percentage more = (2.6 − 2.25)/2.25 × 100% ≈ 15.6%.",
+    answerExplainZh:
+      "六边形面积 = 2.6 cm²。相同周长正方形面积 = 2.25 cm²。多出百分比 = (2.6 − 2.25)/2.25 × 100% ≈ 15.6%。",
+    funFactEn:
+      "The Honeybee Conjecture (mathematically proven in 1999) states that regular hexagons tile a plane with the maximum area for minimum perimeter — meaning bees use the minimum amount of wax per unit of honey storage. This is a real optimization proof! The same hexagonal pattern appears in carbon nanotubes, graphene, snowflake crystals, and the Giant's Causeway rock formation. Hexagons are nature's optimization algorithm!",
+    funFactZh:
+      "蜜蜂猜想（1999年数学证明）指出，正六边形铺设平面时，在最小周长下面积最大——这意味着蜜蜂每单位蜂蜜储量使用的蜂蜡最少。这是一个真正的优化证明！同样的六边形图案出现在碳纳米管、石墨烯、雪花晶体和巨人之路岩石构造中。六边形是大自然的优化算法！",
+    standards: ["CCSS-7.G.B4", "CCSS-6.G.A1"],
+  },
+  {
+    titleEn: "Frog Egg Survival Probability",
+    titleZh: "青蛙卵的存活概率",
+    contentEn:
+      "A frog lays 4,000 eggs. Only about 0.5% of them survive to become adult frogs. How many adult frogs result from one frog's eggs?",
+    contentZh:
+      "一只青蛙产4,000个卵。只有约0.5%能存活成为成年青蛙。一只青蛙的卵最终有多少成年青蛙？",
+    difficulty: "EASY",
+    category: "PROBABILITY",
+    ageGroup: "AGE_10_12",
+    answer: "20",
+    answerExplainEn:
+      "Survivors = 0.5% × 4,000 = 0.005 × 4,000 = 20 adult frogs.",
+    answerExplainZh:
+      "存活数量 = 0.5% × 4,000 = 0.005 × 4,000 = 20只成年青蛙。",
+    funFactEn:
+      "A 99.5% mortality rate sounds horrifying — but for frogs, losing 3,980 out of 4,000 eggs is perfectly normal! This is the evolutionary bet: produce thousands of cheap offspring versus a few expensive, protected ones. It's called r-selection vs K-selection strategy. Humans are K-strategists (few, well-cared-for offspring). Frogs are r-strategists. Both strategies are mathematically valid ways to maximize evolutionary fitness!",
+    funFactZh:
+      "99.5%的死亡率听起来很可怕——但对青蛙来说，4,000个卵中失去3,980个是完全正常的！这是进化的赌注：产生大量廉价后代，而非少量昂贵且受保护的后代。这被称为r选择与K选择策略。人类是K策略者（少量、精心照料的后代）。青蛙是r策略者。两种策略在数学上都是最大化进化适应性的有效方式！",
+    standards: ["CCSS-6.RP.A3c", "CCSS-7.SP.C5"],
+  },
+  {
+    titleEn: "Bird V-Formation",
+    titleZh: "鸟类V字阵形",
+    contentEn:
+      "Scientists found that birds flying in V-formation use 20–30% less energy than flying alone. If a goose flying alone uses 100 units of energy for a 500 km journey, and flying in formation reduces energy use by 25%, how many units of energy does a goose use in formation for the same journey?",
+    contentZh:
+      "科学家发现，以V字形飞行的鸟类比单独飞行少消耗20-30%的能量。如果一只大雁单独飞行500公里需消耗100单位能量，以V字形编队飞行可节省25%的能量，那么在编队中飞行同样路程需消耗多少单位能量？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "75",
+    answerExplainEn:
+      "Energy saved = 25% × 100 = 25 units. Energy in formation = 100 − 25 = 75 units.",
+    answerExplainZh:
+      "节省的能量 = 25% × 100 = 25单位。编队中的能量 = 100 − 25 = 75单位。",
+    funFactEn:
+      "The V-formation works because each bird creates upwash (rising air) behind its wingtips. The next bird rides this free lift! This is exactly how bicycle racing pelotons, NASCAR drafting, and military aircraft formations work — all inspired by bird mathematics. Scientists even proposed that airplane fleets could fly in V-formation behind each other to save fuel on long-haul flights. Birds invented aerodynamic optimization!",
+    funFactZh:
+      "V字阵形的原理是每只鸟在翼尖后产生上升气流。下一只鸟乘着这股免费升力飞行！这正是自行车赛车集团、NASCAR跟车超车和军用飞机编队的工作原理——都受到鸟类数学的启发。科学家甚至提议飞机队列在长途飞行中以V字形编队飞行来节省燃料。鸟类发明了空气动力学优化！",
+    standards: ["CCSS-6.RP.A3c", "CCSS-7.RP.A3"],
+  },
+  {
+    titleEn: "Dragonfly Flight Efficiency",
+    titleZh: "蜻蜓飞行效率",
+    contentEn:
+      "Dragonflies are the most successful hunters in the animal kingdom, catching about 95% of their prey. In 100 hunting attempts, how many prey do they catch? If each caught prey provides 5 calories and a dragonfly needs 80 calories per day, how many successful hunts are needed per day?",
+    contentZh:
+      "蜻蜓是动物界最成功的猎手，捕获约95%的猎物。在100次捕猎尝试中，它们捕获多少猎物？如果每次成功捕获提供5卡路里，而蜻蜓每天需要80卡路里，每天需要多少次成功捕猎？",
+    difficulty: "MEDIUM",
+    category: "STATISTICS",
+    ageGroup: "AGE_12_14",
+    answer: "95 caught; 16 hunts needed",
+    answerExplainEn:
+      "Prey caught = 95% × 100 = 95. Hunts needed = 80 ÷ 5 = 16 successful hunts per day.",
+    answerExplainZh:
+      "捕获猎物 = 95% × 100 = 95只。每日需要的捕猎次数 = 80 ÷ 5 = 16次成功捕猎。",
+    funFactEn:
+      "95% success rate makes dragonflies 3× more successful than lions (30%) and 6× more than great white sharks (15%)! Their secret: they predict where prey will be in the future, not where it is now — adjusting their flight path using predictive interception algorithms. Engineers are studying dragonfly flight to design better drone obstacle-avoidance systems. 300 million years of evolution perfected predictive math in a 3 cm insect!",
+    funFactZh:
+      "95%的成功率使蜻蜓比狮子（30%）高效3倍，比大白鲨（15%）高效6倍！其秘诀在于：它们预测猎物未来会在哪里，而非它现在在哪里——使用预测性拦截算法调整飞行路径。工程师们正在研究蜻蜓飞行，以设计更好的无人机避障系统。3亿年的进化在一只3厘米的昆虫中完善了预测数学！",
+    standards: ["CCSS-6.RP.A3c", "CCSS-7.SP.A2"],
+  },
+  {
+    titleEn: "Firefly Flash Fibonacci",
+    titleZh: "萤火虫闪光与斐波那契",
+    contentEn:
+      "A scientist counts firefly flashes. In one pattern, the flashes follow the sequence: 1, 1, 2, 3, 5, 8, 13... Each number is the sum of the two before it. What are the next 2 numbers in this sequence?",
+    contentZh:
+      "一位科学家记录萤火虫的闪光模式。在一种模式中，闪光次数遵循规律：1, 1, 2, 3, 5, 8, 13...每个数字都是前两个数字之和。这个数列接下来的两个数字是什么？",
+    difficulty: "EASY",
+    category: "NUMBER_THEORY",
+    ageGroup: "AGE_10_12",
+    answer: "21, 34",
+    answerExplainEn:
+      "13 + 8 = 21. 21 + 13 = 34. The next two numbers are 21 and 34.",
+    answerExplainZh:
+      "13 + 8 = 21。21 + 13 = 34。接下来的两个数字是21和34。",
+    funFactEn:
+      "The Fibonacci sequence appears everywhere in nature! Sunflower seed spirals, pinecone scales, and pineapple patterns all follow Fibonacci numbers. The ratio between consecutive Fibonacci numbers approaches the Golden Ratio φ ≈ 1.618, which appears in the spiral of nautilus shells, the arrangement of leaves on stems, and the proportions of human DNA! Fireflies don't actually flash Fibonacci, but their timing IS governed by mathematical patterns in their neural circuits!",
+    funFactZh:
+      "斐波那契数列在自然界无处不在！向日葵种子螺旋、松果鳞片和菠萝图案都遵循斐波那契数。相邻斐波那契数之比趋近于黄金比例φ≈1.618，它出现在鹦鹉螺壳的螺旋、茎上叶片的排列和人类DNA的比例中！萤火虫实际上不是以斐波那契方式闪光，但它们的时序确实受到神经回路中数学模式的支配！",
+    standards: ["CCSS-4.OA.C5", "CCSS-5.OA.B3"],
+  },
+];
+
+// STORY_QUESTIONS_BATCH_18  (Q276-300) — Music, Art & Games
+// Coverage: number theory, algebra, geometry, arithmetic, probability, logic
+
+const STORY_QUESTIONS_BATCH_18: Blueprint[] = [
+  {
+    titleEn: "Piano Key Pattern",
+    titleZh: "钢琴键盘规律",
+    contentEn:
+      "A standard piano has 88 keys: 52 white keys and 36 black keys. The black keys follow a repeating pattern of 2 black, gap, 3 black within each octave. If one octave has 12 keys total (7 white, 5 black), how many complete octaves are on an 88-key piano? (Note: an 88-key piano has 7 full octaves plus 3 extra keys.)",
+    contentZh:
+      "标准钢琴有88个键：52个白键和36个黑键。黑键在每个八度内遵循2黑键、间隔、3黑键的重复规律。一个八度有12个键（7白键5黑键），88键钢琴有多少个完整的八度？（注：88键钢琴有7个完整八度加3个额外键）",
+    difficulty: "MEDIUM",
+    category: "NUMBER_THEORY",
+    ageGroup: "AGE_12_14",
+    answer: "7",
+    answerExplainEn:
+      "7 complete octaves × 12 keys = 84 keys. Plus 3 extra keys (A0, B♭0, B0 at the low end) = 84 + 4 = 88. So 7 complete octaves.",
+    answerExplainZh:
+      "7个完整八度 × 12键 = 84键。加上低音端3个额外键（A0, B♭0, B0）= 84 + 4 = 88。所以有7个完整八度。",
+    funFactEn:
+      "Every octave doubles the frequency of sound! Middle A is 440 Hz, the A above it is 880 Hz, the A below is 220 Hz. This doubling pattern (exponential growth) is why logarithms are the natural math of music. Pianos use 12-tone equal temperament — each semitone is exactly 2^(1/12) ≈ 1.0595 times the previous one. Music is applied exponential mathematics!",
+    funFactZh:
+      "每升高一个八度，声音频率翻倍！中央A是440Hz，高一个八度是880Hz，低一个八度是220Hz。这种翻倍规律（指数增长）就是为什么对数是音乐的自然数学。钢琴使用12平均律——每个半音恰好是前一个音的2^(1/12) ≈ 1.0595倍。音乐是应用的指数数学！",
+    standards: ["CCSS-6.EE.A1", "CCSS-8.EE.A2"],
+  },
+  {
+    titleEn: "Guitar String Frequency",
+    titleZh: "吉他弦频率",
+    contentEn:
+      "When you press a guitar string at the halfway point (12th fret), the vibrating length is halved and the frequency doubles. The open low E string vibrates at 82 Hz. What frequency does it produce when fretted at the 12th fret?",
+    contentZh:
+      "当你按下吉他弦的中点（第12品），振动长度减半，频率翻倍。空弦低E弦的振动频率为82Hz。在第12品按弦后，它的频率是多少？",
+    difficulty: "EASY",
+    category: "ALGEBRA",
+    ageGroup: "AGE_12_14",
+    answer: "164",
+    answerExplainEn:
+      "Halving the string length doubles the frequency: 82 × 2 = 164 Hz.",
+    answerExplainZh:
+      "弦长减半，频率翻倍：82 × 2 = 164 Hz。",
+    funFactEn:
+      "Guitar tuning is pure physics and mathematics! The relationship between string length and pitch was first described by Pythagoras around 500 BC — he called it the 'music of the spheres.' Pythagoras discovered that the most pleasing musical intervals (octaves, fifths, fourths) correspond to simple whole number ratios of string lengths. He was so amazed he thought the universe itself was built on numerical harmony!",
+    funFactZh:
+      "吉他调音是纯粹的物理和数学！弦长与音高之间的关系最早由毕达哥拉斯在公元前500年描述——他称之为'天球音乐'。毕达哥拉斯发现最悦耳的音乐音程（八度、五度、四度）对应弦长的简单整数比。他非常惊讶，认为宇宙本身是建立在数字和谐之上的！",
+    standards: ["CCSS-6.EE.A1", "CCSS-7.RP.A2"],
+  },
+  {
+    titleEn: "Beats Per Minute",
+    titleZh: "每分钟节拍数",
+    contentEn:
+      "A song has a tempo of 120 BPM (beats per minute). How many beats are there in a 3-minute 30-second song?",
+    contentZh:
+      "一首歌的节拍为120 BPM（每分钟节拍数）。一首3分30秒的歌曲共有多少个节拍？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "420",
+    answerExplainEn:
+      "Duration = 3.5 minutes. Total beats = 120 × 3.5 = 420 beats.",
+    answerExplainZh:
+      "时长 = 3.5分钟。总节拍 = 120 × 3.5 = 420个节拍。",
+    funFactEn:
+      "120 BPM is one of the most popular tempos in music — it matches a brisk walking pace. DJs scientifically choose BPM to match human heart rates: slow songs (60–80 BPM) calm you down, fast songs (130–150 BPM) energize you. Running playlists at 160–180 BPM match the optimal step cadence for long-distance running. Music streaming apps like Spotify use BPM math to auto-generate workout playlists!",
+    funFactZh:
+      "120 BPM是音乐中最流行的节拍之一——它与快步行走的节奏相匹配。DJ科学地选择BPM来匹配人类心率：慢歌（60-80 BPM）让你平静，快歌（130-150 BPM）让你充满活力。160-180 BPM的跑步播放列表与长跑的最佳步频相匹配。Spotify等音乐流媒体应用使用BPM数学自动生成健身播放列表！",
+    standards: ["CCSS-4.OA.A3", "CCSS-5.NBT.B7"],
+  },
+  {
+    titleEn: "Rubik's Cube Combinations",
+    titleZh: "魔方组合数",
+    contentEn:
+      "A standard 3×3 Rubik's Cube has approximately 4.3 × 10¹⁹ possible positions (43 quintillion). If a computer could check 1 billion (10⁹) positions per second, approximately how many years would it take to check all positions? (1 year ≈ 3.15 × 10⁷ seconds.)",
+    contentZh:
+      "标准3×3魔方大约有4.3 × 10¹⁹种可能的排列（430亿亿种）。如果一台计算机每秒能检查10亿（10⁹）种排列，检查所有排列大约需要多少年？（1年 ≈ 3.15 × 10⁷秒）",
+    difficulty: "CHALLENGE",
+    category: "NUMBER_THEORY",
+    ageGroup: "AGE_14_16",
+    answer: "approximately 1.37 × 10³",
+    answerExplainEn:
+      "Total time (seconds) = 4.3×10¹⁹ ÷ 10⁹ = 4.3×10¹⁰ seconds. Years = 4.3×10¹⁰ ÷ 3.15×10⁷ ≈ 1,365 ≈ 1.37×10³ years.",
+    answerExplainZh:
+      "总时间（秒）= 4.3×10¹⁹ ÷ 10⁹ = 4.3×10¹⁰秒。年数 = 4.3×10¹⁰ ÷ 3.15×10⁷ ≈ 1,365 ≈ 1.37×10³年。",
+    funFactEn:
+      "Despite 43 quintillion positions, any Rubik's Cube can be solved in 20 moves or fewer — this is called 'God's Number' and was proven in 2010 using 35 CPU-years of computing! The fastest human solvers do it in under 4 seconds. Rubik's Cube math uses group theory, a branch of abstract algebra. The same mathematical tools are used in cryptography, particle physics, and designing error-correcting codes for your phone!",
+    funFactZh:
+      "尽管有430亿亿种排列，任何魔方都可以在20步或更少的步骤内还原——这被称为'上帝的数字'，于2010年使用35个CPU年的计算时间证明！最快的人类解题者在4秒内完成。魔方数学使用群论，这是抽象代数的一个分支。同样的数学工具被用于密码学、粒子物理学以及设计手机的纠错码！",
+    standards: ["CCSS-8.EE.A1", "CCSS-6.EE.A1"],
+  },
+  {
+    titleEn: "Chess Knight's Tour",
+    titleZh: "国际象棋马的跳法",
+    contentEn:
+      "A knight in chess moves in an 'L' shape: 2 squares in one direction and 1 square perpendicular. Starting at the center of an 8×8 board, how many different squares can a knight reach in exactly 1 move?",
+    contentZh:
+      "象棋中的马以'L'形移动：一个方向走2格，垂直方向走1格。从8×8棋盘的中心（如d4格）出发，马在恰好1步内能到达多少个不同的格子？",
+    difficulty: "MEDIUM",
+    category: "LOGIC",
+    ageGroup: "AGE_12_14",
+    answer: "8",
+    answerExplainEn:
+      "From a central square, a knight can make 8 different L-shaped moves: (±1, ±2) and (±2, ±1) — all 8 land within the board.",
+    answerExplainZh:
+      "从中心格子出发，马可以进行8种不同的L形移动：(±1, ±2)和(±2, ±1)——所有8步都落在棋盘内。",
+    funFactEn:
+      "The 'Knight's Tour' problem — visiting every square on an 8×8 board exactly once using knight moves — has over 26 trillion solutions! This is one of the oldest math puzzles, studied since the 9th century in India. The knight is the only chess piece that can jump over others, making it the most complex to analyze mathematically. Chess engines like Stockfish evaluate billions of positions per second using the same algorithmic math!",
+    funFactZh:
+      "骑士巡游问题——用马的走法恰好访问8×8棋盘上的每个格子一次——有超过26万亿种解法！这是最古老的数学谜题之一，自9世纪在印度就有研究。马是唯一可以跳过其他棋子的象棋棋子，使其在数学上最复杂。Stockfish等象棋引擎每秒使用相同的算法数学评估数十亿个位置！",
+    standards: ["CCSS-6.G.A3", "CCSS-7.SP.C5"],
+  },
+  {
+    titleEn: "Minecraft World Volume",
+    titleZh: "我的世界世界体积",
+    contentEn:
+      "In Minecraft, the world is 60 million × 60 million blocks wide and 256 blocks tall. Each block is 1 m × 1 m × 1 m. What is the total volume of the Minecraft world in cubic meters? Express your answer as a power of 10.",
+    contentZh:
+      "在我的世界中，地图宽6,000万 × 6,000万个方块，高256个方块。每个方块为1米 × 1米 × 1米。我的世界地图的总体积是多少立方米？用10的幂次方表示。",
+    difficulty: "HARD",
+    category: "NUMBER_THEORY",
+    ageGroup: "AGE_12_14",
+    answer: "approximately 9.2 × 10¹⁷",
+    answerExplainEn:
+      "Volume = 60,000,000 × 60,000,000 × 256 = 6×10⁷ × 6×10⁷ × 256 = 36×10¹⁴ × 256 ≈ 9.216×10¹⁷ m³.",
+    answerExplainZh:
+      "体积 = 60,000,000 × 60,000,000 × 256 = 6×10⁷ × 6×10⁷ × 256 = 36×10¹⁴ × 256 ≈ 9.216×10¹⁷ m³。",
+    funFactEn:
+      "The Minecraft world is 8× the surface area of Earth! Yet it's stored as procedurally generated chunks — the game doesn't render everything at once, only what's near you. This 'lazy evaluation' saves enormous computing power and is a key programming concept. Minecraft has sold over 238 million copies and 166 million monthly players — it's used in over 115 countries for STEM education. Math truly built one of the world's most popular games!",
+    funFactZh:
+      "我的世界的世界是地球表面积的8倍！但它以程序化生成的区块形式存储——游戏不会同时渲染所有内容，只渲染你附近的区域。这种'懒惰求值'节省了大量计算能力，是一个关键的编程概念。我的世界已售出超过2.38亿份，拥有1.66亿月活跃玩家——它在超过115个国家用于STEM教育。数学真正构建了世界上最受欢迎的游戏之一！",
+    standards: ["CCSS-6.EE.A1", "CCSS-5.NBT.A2"],
+  },
+  {
+    titleEn: "Fibonacci in Music",
+    titleZh: "音乐中的斐波那契",
+    contentEn:
+      "The Fibonacci sequence is 1, 1, 2, 3, 5, 8, 13, 21... A composer writes a piece where the number of notes in each section follows Fibonacci: Section 1 has 1 note, Section 2 has 1 note, Section 3 has 2 notes, etc. How many total notes are in the first 8 sections?",
+    contentZh:
+      "斐波那契数列为：1, 1, 2, 3, 5, 8, 13, 21...一位作曲家创作了一首每节音符数遵循斐波那契数列的曲子：第1节1个音符，第2节1个音符，第3节2个音符，以此类推。前8节共有多少个音符？",
+    difficulty: "MEDIUM",
+    category: "NUMBER_THEORY",
+    ageGroup: "AGE_12_14",
+    answer: "54",
+    answerExplainEn:
+      "Sum of first 8 Fibonacci numbers: 1+1+2+3+5+8+13+21 = 54.",
+    answerExplainZh:
+      "前8个斐波那契数之和：1+1+2+3+5+8+13+21 = 54。",
+    funFactEn:
+      "Many famous composers used Fibonacci secretly! Bartók's string quartets, Debussy's piano pieces, and even Tool's songs use Fibonacci proportions in their structure. The sum of the first n Fibonacci numbers always equals F(n+2) − 1 — a beautiful mathematical identity. The Fibonacci sequence is also related to the Golden Ratio φ ≈ 1.618, which Renaissance artists used as the 'divine proportion' in their masterpieces!",
+    funFactZh:
+      "许多著名作曲家秘密使用了斐波那契！巴托克的弦乐四重奏、德彪西的钢琴曲，甚至工具乐队的歌曲都在结构中使用了斐波那契比例。前n个斐波那契数之和总是等于F(n+2) − 1——一个美丽的数学恒等式。斐波那契数列还与黄金比例φ≈1.618有关，文艺复兴艺术家将其作为杰作中的'神圣比例'！",
+    standards: ["CCSS-4.OA.C5", "CCSS-6.EE.A1"],
+  },
+  {
+    titleEn: "Golden Ratio in Art",
+    titleZh: "艺术中的黄金比例",
+    contentEn:
+      "The Golden Ratio φ ≈ 1.618. A famous painting has a rectangle whose length and width are in the Golden Ratio. If the width is 80 cm, what is the length? (Round to 1 decimal place.)",
+    contentZh:
+      "黄金比例φ ≈ 1.618。一幅著名画作的矩形长宽比符合黄金比例。如果宽度为80厘米，长度是多少？（保留一位小数）",
+    difficulty: "EASY",
+    category: "ALGEBRA",
+    ageGroup: "AGE_12_14",
+    answer: "129.4",
+    answerExplainEn:
+      "Length = width × φ = 80 × 1.618 = 129.44 ≈ 129.4 cm.",
+    answerExplainZh:
+      "长度 = 宽度 × φ = 80 × 1.618 = 129.44 ≈ 129.4厘米。",
+    funFactEn:
+      "The Golden Ratio (φ) appears in the Parthenon, da Vinci's Vitruvian Man, Mondrian's paintings, and the design of the Apple logo! It also appears in the spiral of nautilus shells, the arrangement of seeds in a sunflower, and the proportions of the human body. φ is the only number where φ² = φ + 1 and 1/φ = φ − 1. It's mathematically 'self-similar' — which may explain why the human brain finds it beautiful!",
+    funFactZh:
+      "黄金比例（φ）出现在帕特农神庙、达·芬奇的维特鲁威人、蒙德里安的绘画和苹果标志的设计中！它还出现在鹦鹉螺壳的螺旋、向日葵种子的排列和人体比例中。φ是唯一满足φ² = φ + 1和1/φ = φ − 1的数字。它在数学上是'自相似的'——这可能解释了为什么人类大脑觉得它美丽！",
+    standards: ["CCSS-6.EE.A2c", "CCSS-7.RP.A2"],
+  },
+  {
+    titleEn: "Concert Sound Levels",
+    titleZh: "演唱会音量",
+    contentEn:
+      "Normal conversation is about 60 dB. A rock concert is about 110 dB. The decibel scale is logarithmic: every 10 dB increase multiplies the sound intensity by 10. How many times more intense is a rock concert than a normal conversation?",
+    contentZh:
+      "正常对话约60分贝。摇滚演唱会约110分贝。分贝量表是对数的：每增加10分贝，声音强度乘以10。摇滚演唱会的声音强度是正常对话的多少倍？",
+    difficulty: "HARD",
+    category: "ALGEBRA",
+    ageGroup: "AGE_14_16",
+    answer: "100000",
+    answerExplainEn:
+      "Difference = 110 − 60 = 50 dB. Each 10 dB = ×10. So 50 dB difference = 10⁵ = 100,000 times more intense.",
+    answerExplainZh:
+      "差值 = 110 − 60 = 50分贝。每10分贝 = ×10。所以50分贝差 = 10⁵ = 100,000倍强度。",
+    funFactEn:
+      "A rock concert is 100,000× more intense than conversation — yet sounds only about 5× 'louder' to our ears! This is because hearing uses logarithmic perception: our ears automatically compress the enormous range from 0 dB (threshold of hearing) to 194 dB (pressure wave so intense it becomes a vacuum). Without logarithmic hearing, sounds at 100,000× intensity would be literally brain-damaging all the time. Your ears ARE a math processor!",
+    funFactZh:
+      "摇滚演唱会比正常对话强100,000倍——但我们耳中听起来只大约是5倍！这是因为听觉使用对数感知：我们的耳朵自动压缩从0分贝（听觉阈值）到194分贝（强到形成真空的压力波）的巨大范围。没有对数听觉，100,000倍强度的声音会一直是字面意义上的脑损伤。你的耳朵就是一个数学处理器！",
+    standards: ["CCSS-8.EE.A1", "CCSS-HSF-LE.A1"],
+  },
+  {
+    titleEn: "Movie Frames Per Second",
+    titleZh: "电影每秒帧数",
+    contentEn:
+      "A movie runs at 24 frames per second (fps). An action movie is 2 hours and 15 minutes long. How many individual frames are in the entire movie?",
+    contentZh:
+      "一部电影以每秒24帧（fps）播放。一部2小时15分钟的动作片共有多少个单独的帧画面？",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "194400",
+    answerExplainEn:
+      "Duration = 2 × 60 + 15 = 135 minutes = 135 × 60 = 8,100 seconds. Total frames = 24 × 8,100 = 194,400.",
+    answerExplainZh:
+      "时长 = 2 × 60 + 15 = 135分钟 = 135 × 60 = 8,100秒。总帧数 = 24 × 8,100 = 194,400帧。",
+    funFactEn:
+      "24 fps was chosen for early cinema because it was the minimum speed at which the human brain creates the illusion of smooth motion (persistence of vision). Modern blockbusters like The Hobbit used 48 fps, which actually felt 'too real' to audiences! High Frame Rate movies blur the line between film and reality. IMAX films use 60 fps. VR games require 90+ fps to prevent motion sickness — each frame must render in under 11 milliseconds!",
+    funFactZh:
+      "24帧/秒是早期电影选择的，因为这是人类大脑产生流畅运动错觉（视觉暂留）的最低速度。像《霍比特人》这样的现代大片使用了48帧/秒，但对观众来说实际上感觉'太真实'了！高帧率电影模糊了电影与现实的界限。IMAX电影使用60帧/秒。VR游戏需要90+帧/秒以防止晕动症——每帧必须在11毫秒内渲染完成！",
+    standards: ["CCSS-5.NBT.B5", "CCSS-6.NS.B3"],
+  },
+  {
+    titleEn: "Domino Chain Reaction",
+    titleZh: "多米诺链式反应",
+    contentEn:
+      "A set of dominoes is arranged so that each domino topples 2 others. If you start with 1 domino and the chain has 10 levels, how many dominoes fall in total? (Hint: it follows a pattern 1, 2, 4, 8... )",
+    contentZh:
+      "一组多米诺骨牌排列成每块骨牌推倒另外2块的形式。如果从1块开始，链条有10层，总共倒下多少块骨牌？（提示：遵循规律 1, 2, 4, 8...）",
+    difficulty: "MEDIUM",
+    category: "ALGEBRA",
+    ageGroup: "AGE_10_12",
+    answer: "1023",
+    answerExplainEn:
+      "Each level doubles: Level 1: 1, Level 2: 2, Level 3: 4, ..., Level 10: 512. Total = 2¹⁰ − 1 = 1,024 − 1 = 1,023.",
+    answerExplainZh:
+      "每层翻倍：第1层：1，第2层：2，第3层：4，...，第10层：512。总计 = 2¹⁰ − 1 = 1,024 − 1 = 1,023。",
+    funFactEn:
+      "This geometric series (1 + 2 + 4 + ... + 2^(n-1) = 2^n − 1) is called the doubling problem! It's the math behind the famous rice-on-a-chessboard legend: doubling one grain per square results in 2^64 − 1 ≈ 18 quintillion grains — more rice than has ever been grown in history! This same math governs: chain reactions (nuclear fission), viral spread, compound interest, and computer memory doubling (Moore's Law).",
+    funFactZh:
+      "这个等比数列（1 + 2 + 4 + ... + 2^(n-1) = 2^n − 1）被称为翻倍问题！它是著名的棋盘米粒传说背后的数学：每格翻倍一粒米，结果是2^64 − 1 ≈ 18垓粒——比历史上种植的所有大米加起来还多！同样的数学支配着：链式反应（核裂变）、病毒传播、复利，以及计算机内存翻倍（摩尔定律）。",
+    standards: ["CCSS-6.EE.A1", "CCSS-HSF-LE.A1"],
+  },
+  {
+    titleEn: "Origami Paper Folds",
+    titleZh: "折纸的折叠厚度",
+    contentEn:
+      "A sheet of paper is 0.1 mm thick. Each time you fold it, the thickness doubles. How thick (in mm) would the paper be after 10 folds?",
+    contentZh:
+      "一张纸的厚度为0.1毫米。每次折叠，厚度翻倍。折叠10次后，纸的厚度是多少毫米？",
+    difficulty: "MEDIUM",
+    category: "NUMBER_THEORY",
+    ageGroup: "AGE_10_12",
+    answer: "102.4",
+    answerExplainEn:
+      "After 10 folds: 0.1 × 2¹⁰ = 0.1 × 1,024 = 102.4 mm.",
+    answerExplainZh:
+      "折叠10次后：0.1 × 2¹⁰ = 0.1 × 1,024 = 102.4毫米。",
+    funFactEn:
+      "If you fold paper 42 times (theoretically), it would reach the Moon! At 50 folds it reaches the Sun; at 100 folds it reaches the observable edge of the universe (10²⁷ mm away). In reality, no one has ever folded a sheet of paper more than 13 times due to thickness limits. Exponential growth makes seemingly impossible things happen incredibly fast — the same math explains why compound interest makes savings explode!",
+    funFactZh:
+      "如果你能将纸折叠42次（理论上），它将到达月球！折叠50次将到达太阳；折叠100次将到达可观测宇宙的边缘（10²⁷毫米远）。实际上，由于厚度限制，没有人能将一张纸折叠超过13次。指数增长使看似不可能的事情以令人难以置信的速度发生——同样的数学解释了为什么复利让储蓄爆炸式增长！",
+    standards: ["CCSS-6.EE.A1", "CCSS-8.EE.A1"],
+  },
+  {
+    titleEn: "Pixel Art Math",
+    titleZh: "像素艺术数学",
+    contentEn:
+      "A pixel art image is 64 × 64 pixels. Each pixel can be one of 256 colors. What is the total number of pixels in the image? And if you scale it up 4× (to 256 × 256), how many times more pixels does it have?",
+    contentZh:
+      "一幅像素艺术图像为64 × 64像素。每个像素可以是256种颜色之一。图像中的像素总数是多少？如果将其放大4倍（到256 × 256），它的像素数增加了多少倍？",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "4096 pixels; 16 times more",
+    answerExplainEn:
+      "Original pixels = 64 × 64 = 4,096. Scaled pixels = 256 × 256 = 65,536. Ratio = 65,536 ÷ 4,096 = 16 times more.",
+    answerExplainZh:
+      "原始像素 = 64 × 64 = 4,096。放大后像素 = 256 × 256 = 65,536。比例 = 65,536 ÷ 4,096 = 16倍。",
+    funFactEn:
+      "When you double the resolution (both width and height), you quadruple the number of pixels — because area scales with the square of the linear dimension! A 4K TV (3840×2160) has 4× as many pixels as 1080p HD. This quadratic relationship is why camera megapixels matter so much: going from 12MP to 48MP (4× linear) doesn't make your photos 4× better — it takes 16 times more storage and requires 4× as much light!",
+    funFactZh:
+      "当你将分辨率加倍（宽和高都加倍）时，像素数量变为四倍——因为面积随线性尺寸的平方增长！4K电视（3840×2160）的像素数是1080p HD的4倍。这种二次关系解释了为什么相机像素数量如此重要：从12MP到48MP（4倍线性）不会使照片质量提高4倍——它需要16倍的存储空间，并且需要4倍的光线！",
+    standards: ["CCSS-5.NBT.B5", "CCSS-6.EE.A1"],
+  },
+  {
+    titleEn: "Basketball Free Throw",
+    titleZh: "篮球罚球",
+    contentEn:
+      "An NBA player makes 85% of their free throw attempts. During a playoff game, they attempt 20 free throws. How many free throws would you expect them to make?",
+    contentZh:
+      "一位NBA球员的罚球命中率为85%。在一场季后赛中，他们尝试了20次罚球。你预计他们会投进多少个？",
+    difficulty: "EASY",
+    category: "PROBABILITY",
+    ageGroup: "AGE_10_12",
+    answer: "17",
+    answerExplainEn:
+      "Expected makes = 85% × 20 = 0.85 × 20 = 17 free throws.",
+    answerExplainZh:
+      "预计命中 = 85% × 20 = 0.85 × 20 = 17个罚球。",
+    funFactEn:
+      "NBA star Stephen Curry once made 402 three-pointers in a single season — the most ever! Sports analytics (using probability, statistics, and geometry) has completely changed basketball strategy. Teams now know that corner three-pointers are mathematically more valuable than mid-range shots. The 'Moreyball' philosophy, based on this math, helped the Houston Rockets become a top NBA team. Math literally changed how basketball is played!",
+    funFactZh:
+      "NBA球星斯蒂芬·库里在一个赛季中投进了402个三分球——史上最多！体育分析（使用概率、统计和几何）彻底改变了篮球策略。球队现在知道角三分在数学上比中距离投篮更有价值。基于这种数学的'莫雷球'哲学帮助休斯顿火箭成为NBA顶级球队。数学真正改变了篮球的打法！",
+    standards: ["CCSS-7.SP.C5", "CCSS-7.SP.C6"],
+  },
+  {
+    titleEn: "DJ Turntable RPM",
+    titleZh: "DJ转盘转速",
+    contentEn:
+      "A DJ vinyl record spins at 33⅓ RPM (revolutions per minute). A song takes exactly 3 minutes to play. How many complete revolutions does the record make during the song?",
+    contentZh:
+      "一张DJ黑胶唱片以33⅓ RPM（每分钟转数）旋转。一首歌恰好播放3分钟。在这首歌播放期间，唱片完成了多少整圈？",
+    difficulty: "EASY",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_12_14",
+    answer: "100",
+    answerExplainEn:
+      "Revolutions = 33⅓ × 3 = (100/3) × 3 = 100 revolutions.",
+    answerExplainZh:
+      "转数 = 33⅓ × 3 = (100/3) × 3 = 100转。",
+    funFactEn:
+      "The 33⅓ RPM standard was chosen mathematically! At that speed, one side of a 12-inch LP holds about 22 minutes of audio — perfect for a classical symphony. The 45 RPM single holds one 3-minute pop song per side. Modern DJ software like Serato and Traktor still uses vinyl's RPM as a control signal for digital files — the turntable measures RPM changes to detect scratching and pitch-shifting. Analog math controls digital music!",
+    funFactZh:
+      "33⅓ RPM的标准是经过数学计算选定的！以这个速度，一张12英寸LP的一面能容纳约22分钟的音频——正好适合一首古典交响乐。45 RPM单曲每面容纳一首3分钟的流行歌曲。现代DJ软件如Serato和Traktor仍使用黑胶唱片的RPM作为数字文件的控制信号——转盘测量RPM变化来检测刮碟和变调。模拟数学控制数字音乐！",
+    standards: ["CCSS-5.NBT.B7", "CCSS-6.NS.B3"],
+  },
+  {
+    titleEn: "Board Game Dice Probability",
+    titleZh: "棋盘游戏骰子概率",
+    contentEn:
+      "In a board game, you roll two standard 6-sided dice. What is the probability of rolling a sum of 7? (List all combinations that add to 7.)",
+    contentZh:
+      "在一个棋盘游戏中，你掷两个标准6面骰子。掷出点数之和为7的概率是多少？（列出所有和为7的组合）",
+    difficulty: "MEDIUM",
+    category: "PROBABILITY",
+    ageGroup: "AGE_10_12",
+    answer: "1/6",
+    answerExplainEn:
+      "Combinations summing to 7: (1,6), (2,5), (3,4), (4,3), (5,2), (6,1) = 6 combinations. Total outcomes = 6 × 6 = 36. Probability = 6/36 = 1/6.",
+    answerExplainZh:
+      "和为7的组合：(1,6), (2,5), (3,4), (4,3), (5,2), (6,1) = 6种组合。总可能结果 = 6 × 6 = 36。概率 = 6/36 = 1/6。",
+    funFactEn:
+      "7 is the most common sum when rolling two dice — it has 6 out of 36 possible outcomes! This is why 7 is the key number in craps (a casino dice game). The sum 7 appears more than any other because it can be made in the most ways. This probability math is used by game designers to calibrate dice-based games: a roll of 12 (only 1/36) should give a very rare bonus, while 7 (1/6) should be common. Game balance is applied probability!",
+    funFactZh:
+      "掷两个骰子时，7是最常见的点数之和——在36种可能结果中有6种！这就是为什么7是掷骰子（一种赌场骰子游戏）中的关键数字。7比其他任何数字出现得更频繁，因为它可以用最多的方式组成。这种概率数学被游戏设计师用来校准基于骰子的游戏：掷出12（只有1/36）应该给出非常稀有的奖励，而7（1/6）应该很常见。游戏平衡是应用概率！",
+    standards: ["CCSS-7.SP.C5", "CCSS-7.SP.C8"],
+  },
+  {
+    titleEn: "Dance Step Counter",
+    titleZh: "舞步计数器",
+    contentEn:
+      "In a dance routine, every 4 beats you take 6 steps. A song lasts 3 minutes at 120 BPM (beats per minute). How many steps do you take in the whole routine?",
+    contentZh:
+      "在一段舞蹈套路中，每4拍走6步。一首歌在120 BPM（每分钟节拍数）的节奏下持续3分钟。整段套路你总共走多少步？",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_8_10",
+    answer: "540",
+    answerExplainEn:
+      "Total beats = 120 BPM × 3 min = 360 beats. Groups of 4 beats = 360 ÷ 4 = 90 groups. Total steps = 90 × 6 = 540 steps.",
+    answerExplainZh:
+      "总节拍 = 120 × 3 = 360拍。每4拍一组：360 ÷ 4 = 90组。总步数 = 90 × 6 = 540步。",
+    funFactEn:
+      "Professional dancers take tens of thousands of steps in a single show! Ballet dancers rehearse routines containing up to 40,000 steps in a single performance. Choreographers (dance composers) use mathematical patterns, symmetry, and ratios to design visually stunning routines. Dance notation systems like Laban notation use coordinate geometry to record every movement precisely — allowing dances from 1928 to be recreated perfectly today!",
+    funFactZh:
+      "职业舞者在一场演出中要走数以万计的步伐！芭蕾舞者排练的套路在一次演出中包含多达40,000步。编舞（舞蹈作曲家）使用数学模式、对称性和比例来设计视觉上令人叹为观止的套路。拉班舞谱等舞蹈记谱系统使用坐标几何精确记录每一个动作——使1928年的舞蹈今天也能被完美还原！",
+    standards: ["CCSS-4.OA.A3", "CCSS-5.NBT.B6"],
+  },
+  {
+    titleEn: "Card Draw Probability",
+    titleZh: "扑克牌抽取概率",
+    contentEn:
+      "A standard deck has 52 cards: 13 hearts, 13 diamonds, 13 clubs, 13 spades. You draw one card at random. What is the probability of drawing a heart OR a face card (Jack, Queen, King of any suit)? There are 12 face cards total, and 3 of them are hearts.",
+    contentZh:
+      "一副标准牌有52张：13张红心、13张方块、13张梅花、13张黑桃。你随机抽一张牌。抽到红心或人头牌（任意花色的J、Q、K）的概率是多少？共有12张人头牌，其中3张是红心。",
+    difficulty: "HARD",
+    category: "PROBABILITY",
+    ageGroup: "AGE_12_14",
+    answer: "11/26",
+    answerExplainEn:
+      "P(hearts) = 13/52. P(face cards) = 12/52. P(hearts AND face) = 3/52. P(hearts OR face) = 13/52 + 12/52 − 3/52 = 22/52 = 11/26.",
+    answerExplainZh:
+      "P(红心) = 13/52。P(人头牌) = 12/52。P(红心且人头牌) = 3/52。P(红心或人头牌) = 13/52 + 12/52 − 3/52 = 22/52 = 11/26。",
+    funFactEn:
+      "This uses the Addition Rule of Probability: P(A or B) = P(A) + P(B) − P(A and B). We subtract the overlap to avoid double-counting! This rule is used everywhere: in insurance (what's the probability of a car OR house accident?), medicine (probability of disease A OR disease B), and cybersecurity (probability of a data breach through channel A or channel B). Probability rules were invented to analyze gambling — now they keep the world running!",
+    funFactZh:
+      "这使用了概率加法法则：P(A或B) = P(A) + P(B) − P(A且B)。我们减去重叠部分以避免重复计算！这个法则在各处都有应用：保险（汽车或房屋事故的概率？）、医学（疾病A或疾病B的概率）和网络安全（通过渠道A或渠道B发生数据泄露的概率）。概率法则最初是为了分析赌博而发明的——现在它们维系着世界的运转！",
+    standards: ["CCSS-7.SP.C7", "CCSS-HSS-CP.B7"],
+  },
+  {
+    titleEn: "Animation Keyframe Count",
+    titleZh: "动画关键帧数量",
+    contentEn:
+      "A Pixar animator creates a 90-second film clip at 24 fps. They only need to manually draw 'keyframes' every 8 frames (the computer fills in the rest). How many keyframes must the animator draw?",
+    contentZh:
+      "一位皮克斯动画师制作了一段90秒的影片片段，帧率为24fps。他们只需要每8帧手动绘制一个'关键帧'（计算机填充其余帧）。动画师需要绘制多少个关键帧？",
+    difficulty: "MEDIUM",
+    category: "ARITHMETIC",
+    ageGroup: "AGE_10_12",
+    answer: "270",
+    answerExplainEn:
+      "Total frames = 24 × 90 = 2,160. Keyframes = 2,160 ÷ 8 = 270.",
+    answerExplainZh:
+      "总帧数 = 24 × 90 = 2,160帧。关键帧 = 2,160 ÷ 8 = 270个。",
+    funFactEn:
+      "Even with computer assistance, animating a Pixar film takes 4–5 years! A single frame in a Pixar movie can take up to 100 hours to render (compute). The movie 'Monsters University' had over 100 million polygons in a single scene. The mathematical algorithms for 3D rendering, lighting simulation, and physics-based animation are among the most complex in computer science. Pixar literally employs teams of mathematicians!",
+    funFactZh:
+      "即使有计算机辅助，制作一部皮克斯电影也需要4-5年！皮克斯电影中的一帧可能需要长达100小时来渲染（计算）。《怪兽大学》单个场景中有超过1亿个多边形。3D渲染、光照模拟和基于物理的动画的数学算法是计算机科学中最复杂的。皮克斯真的雇用了数学家团队！",
+    standards: ["CCSS-5.NBT.B6", "CCSS-6.NS.B2"],
+  },
+  {
+    titleEn: "Stadium Crowd Estimate",
+    titleZh: "体育场人群估计",
+    contentEn:
+      "A circular stadium has a radius of 80 m and seats fans in rings. The seating area is a ring between radius 40 m and 80 m. What is the area of the seating ring in m²? (Use π ≈ 3.14.)",
+    contentZh:
+      "一座圆形体育场半径为80米，观众席呈环形排列。座位区是半径40米到80米之间的环形区域。这个环形座位区的面积是多少m²？（使用π ≈ 3.14）",
+    difficulty: "MEDIUM",
+    category: "GEOMETRY",
+    ageGroup: "AGE_12_14",
+    answer: "15072",
+    answerExplainEn:
+      "Area of ring = π × R² − π × r² = 3.14 × 80² − 3.14 × 40² = 3.14 × (6400 − 1600) = 3.14 × 4800 = 15,072 m².",
+    answerExplainZh:
+      "环形面积 = π × R² − π × r² = 3.14 × 80² − 3.14 × 40² = 3.14 × (6400 − 1600) = 3.14 × 4800 = 15,072 m²。",
+    funFactEn:
+      "The annulus (ring shape) formula is a classic geometry application! The largest stadium in the world is Narendra Modi Stadium in India with 132,000 seats. Stadium architects use exactly this math to calculate seating capacity, sightlines, and emergency evacuation times. The Colosseum in ancient Rome (built 70 AD) used the same geometric principles and could seat 50,000–80,000 people — with perfect oval geometry calculated without computers!",
+    funFactZh:
+      "圆环（环形）面积公式是几何学的经典应用！世界上最大的体育场是印度的纳伦德拉·莫迪体育场，可容纳132,000名观众。体育场建筑师使用这种数学计算座位容量、观赛视线和紧急疏散时间。古罗马斗兽场（建于公元70年）使用了相同的几何原理，可容纳50,000-80,000人——无需计算机就完成了完美的椭圆几何计算！",
+    standards: ["CCSS-7.G.B4", "CCSS-6.G.A1"],
+  },
+  {
+    titleEn: "Video Game Difficulty Curve",
+    titleZh: "视频游戏难度曲线",
+    contentEn:
+      "A mobile game doubles the number of enemies every 5 levels. Level 1 starts with 3 enemies. How many enemies are there at Level 11?",
+    contentZh:
+      "一款手机游戏每5关敌人数量翻倍。第1关有3个敌人。第11关有多少个敌人？",
+    difficulty: "MEDIUM",
+    category: "ALGEBRA",
+    ageGroup: "AGE_12_14",
+    answer: "12",
+    answerExplainEn:
+      "From Level 1 to Level 11 is 10 levels = 2 doubling periods. Enemies at Level 11 = 3 × 2² = 3 × 4 = 12.",
+    answerExplainZh:
+      "从第1关到第11关是10关 = 2个翻倍周期。第11关敌人数量 = 3 × 2² = 3 × 4 = 12个。",
+    funFactEn:
+      "Game difficulty curves are mathematically designed! Too easy = boring (flat curve), too hard = frustrating (steep exponential). The best games use a 'flow state' curve matching player skill growth — exponential challenge matching exponential learning. Nintendo's Mario games are studied by psychologists for perfect difficulty calibration. The math of game design has spawned an entire field: Game Analytics, which uses calculus to optimize player engagement!",
+    funFactZh:
+      "游戏难度曲线是经过数学设计的！太简单=无聊（平坦曲线），太难=沮丧（陡峭指数）。最好的游戏使用与玩家技能成长相匹配的'心流状态'曲线——指数级挑战与指数级学习相匹配。任天堂的马里奥游戏被心理学家研究，以达到完美的难度校准。游戏设计的数学催生了一个全新领域：游戏分析，它使用微积分来优化玩家参与度！",
+    standards: ["CCSS-6.EE.A1", "CCSS-8.EE.A1"],
+  },
+  {
+    titleEn: "Esports Prize Pool Math",
+    titleZh: "电竞奖金池数学",
+    contentEn:
+      "A gaming tournament has a $1,000,000 prize pool distributed as follows: 1st place gets 40%, 2nd place gets 25%, 3rd place gets 15%, and the remaining prize is split equally among the 4th–8th place finishers (5 teams). How much does each 4th–8th place team receive?",
+    contentZh:
+      "一个游戏锦标赛有100万美元的奖金池，分配如下：第1名获得40%，第2名获得25%，第3名获得15%，剩余奖金由第4至第8名的5支队伍平分。每支第4-8名的队伍能获得多少奖金？",
+    difficulty: "MEDIUM",
+    category: "WORD_PROBLEMS",
+    ageGroup: "AGE_12_14",
+    answer: "$40,000",
+    answerExplainEn:
+      "Remaining % = 100% − 40% − 25% − 15% = 20%. Remaining prize = 20% × $1,000,000 = $200,000. Each team = $200,000 ÷ 5 = $40,000.",
+    answerExplainZh:
+      "剩余百分比 = 100% − 40% − 25% − 15% = 20%。剩余奖金 = 20% × 1,000,000 = 200,000美元。每队 = 200,000 ÷ 5 = 40,000美元。",
+    funFactEn:
+      "Esports is now a multi-billion dollar industry! The Dota 2 'The International' tournament had a prize pool of $40 million in 2021 — all crowdfunded by fans. Professional esports players earn $300,000–$5 million per year in salary plus prize money. Prize pool math, team economics, player contracts, and sponsorship deals all require sophisticated mathematical thinking. The line between video games and professional sports — and their math — has completely blurred!",
+    funFactZh:
+      "电竞现在是一个数十亿美元的产业！Dota 2的'The International'锦标赛在2021年的奖金池高达4,000万美元——全部来自粉丝众筹。职业电竞选手的年薪加上奖金为30万至500万美元。奖金池数学、团队经济学、选手合同和赞助协议都需要复杂的数学思维。视频游戏与职业体育之间的界限——以及它们的数学——已经完全模糊！",
+    standards: ["CCSS-6.RP.A3c", "CCSS-7.EE.B3"],
+  },
+  {
+    titleEn: "Sudoku Number Logic",
+    titleZh: "数独数字逻辑",
+    contentEn:
+      "In a 9×9 Sudoku, each row, column, and 3×3 box must contain digits 1–9 exactly once. If a row already has the numbers 2, 3, 4, 6, 7, 8, and 9, what two numbers are missing from that row?",
+    contentZh:
+      "在9×9数独中，每行、每列和每个3×3方格都必须恰好包含1-9的数字各一次。如果一行已经有数字2、3、4、6、7、8和9，该行缺少哪两个数字？",
+    difficulty: "EASY",
+    category: "LOGIC",
+    ageGroup: "AGE_10_12",
+    answer: "1 and 5",
+    answerExplainEn:
+      "The digits 1–9 must each appear once. Present: 2, 3, 4, 6, 7, 8, 9 (7 digits). Missing: 1 and 5.",
+    answerExplainZh:
+      "数字1-9各出现一次。已有：2、3、4、6、7、8、9（7个数字）。缺少：1和5。",
+    funFactEn:
+      "Sudoku was invented in 1979 by Howard Garns in the US (he called it 'Number Place'), then popularized by Japanese publisher Nikoli in 1984 — which is why we think it's Japanese! A valid Sudoku puzzle must have at least 17 given numbers to have a unique solution (proven mathematically in 2012). There are exactly 6,670,903,752,021,072,936,960 possible valid completed Sudoku grids — more combinations than grains of sand on Earth!",
+    funFactZh:
+      "数独于1979年由美国人霍华德·加恩斯发明（他称之为'填数字'），随后在1984年由日本出版商Nikoli普及——这就是为什么我们认为它是日本的！一个有效的数独谜题必须至少给出17个数字才能有唯一解（2012年数学证明）。可能的有效完整数独网格恰好有6,670,903,752,021,072,936,960种——比地球上沙粒的数量还多！",
+    standards: ["CCSS-3.OA.D9", "CCSS-4.OA.C5"],
+  },
+  {
+    titleEn: "Color Wheel Geometry",
+    titleZh: "色轮几何学",
+    contentEn:
+      "The color wheel has 12 colors equally spaced around a circle (360°). Complementary colors are directly opposite each other. If Red is at 0°, what degree is its complementary color Green?",
+    contentZh:
+      "色轮上有12种颜色均匀分布在一个圆上（360°）。互补色是直接对立的颜色。如果红色在0°，它的互补色绿色在多少度？",
+    difficulty: "EASY",
+    category: "GEOMETRY",
+    ageGroup: "AGE_10_12",
+    answer: "180°",
+    answerExplainEn:
+      "Complementary colors are 180° apart on the color wheel. If Red = 0°, then Green = 0° + 180° = 180°.",
+    answerExplainZh:
+      "互补色在色轮上相差180°。如果红色 = 0°，那么绿色 = 0° + 180° = 180°。",
+    funFactEn:
+      "The color wheel is based on circular geometry, but it's also rooted in physics! Isaac Newton first arranged colors in a circle in 1704 after passing light through a prism. Artists use the color wheel's geometry to create 'triadic' color schemes (3 colors 120° apart), 'analogous' schemes (colors 30° apart), and 'split-complementary' schemes. Web designers code colors in HEX (#FF0000 = red) or HSL — both systems use circular math for the 'hue' component!",
+    funFactZh:
+      "色轮基于圆形几何，但也植根于物理学！艾萨克·牛顿在1704年通过棱镜折射光线后首次将颜色排列成圆形。艺术家使用色轮的几何来创建'三角形'配色方案（3种颜色相隔120°）、'类似色'方案（颜色相隔30°）和'分裂互补'方案。网页设计师用HEX（#FF0000 = 红色）或HSL编码颜色——两种系统都使用圆形数学来表示'色相'分量！",
+    standards: ["CCSS-4.G.A1", "CCSS-7.G.B5"],
+  },
+];
+
 export function buildUSK12QuestionBank(startSortOrder: number): SeedQuestion[] {
   const allBlueprints = [
     ...BLUEPRINTS,
@@ -7402,6 +9484,10 @@ export function buildUSK12QuestionBank(startSortOrder: number): SeedQuestion[] {
     ...STORY_QUESTIONS_BATCH_12,
     ...STORY_QUESTIONS_BATCH_13,
     ...STORY_QUESTIONS_BATCH_14,
+    ...STORY_QUESTIONS_BATCH_15,
+    ...STORY_QUESTIONS_BATCH_16,
+    ...STORY_QUESTIONS_BATCH_17,
+    ...STORY_QUESTIONS_BATCH_18,
   ];
   return allBlueprints.map((q, index) => {
     const { standards, ...question } = q;

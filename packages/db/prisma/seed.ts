@@ -66,7 +66,6 @@ function buildTopicHint(
   locale: "en" | "zh"
 ): string {
   const text = `${question.titleEn ?? ""} ${question.contentEn ?? ""}`.toLowerCase();
-  const nums = (text.match(/\d+/g) ?? []).slice(0, 2);
 
   const byCategoryEn: Record<string, string[]> = {
     ARITHMETIC: ["mental math rhythm", "number splitting", "quick estimation"],
@@ -112,18 +111,18 @@ function buildTopicHint(
     locale === "zh"
       ? difficultyToneZh[question.difficulty] ?? "这题挺有意思"
       : difficultyToneEn[question.difficulty] ?? "Interesting problem";
-  const numsText =
-    nums.length > 0
-      ? locale === "zh"
-        ? `，我先盯住数字 ${nums.join(" 和 ")} 再展开。`
-        : `, I focused on ${nums.join(" and ")} first.`
-      : locale === "zh"
-        ? "。"
-        : ".";
+  const strategyTail =
+    locale === "zh"
+      ? randomFrom(["，我先理清条件关系再推进。", "，我先抓住已知与未知的连接。", "，我先把步骤拆小再求解。"])
+      : randomFrom([
+          ", I mapped knowns to unknowns first.",
+          ", I broke the steps into small chunks first.",
+          ", I clarified the constraints before computing.",
+        ]);
 
   return locale === "zh"
-    ? `${tone}，关键在${tech}${numsText}`
-    : `${tone}; the key was ${tech}${numsText}`;
+    ? `${tone}，关键在${tech}${strategyTail}`
+    : `${tone}; the key was ${tech}${strategyTail}`;
 }
 
 function buildEngagingComment(
