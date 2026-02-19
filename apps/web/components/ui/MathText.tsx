@@ -25,7 +25,8 @@ export function MathText({ text, className, as: Tag = "span" }: MathTextProps) {
     content
       // Some stored content may double-escape LaTeX commands like \\int or \\,.
       .replace(/\\\\(?=[A-Za-z])/g, "\\")
-      .replace(/\\\\(?=[,;:!%])/g, "\\");
+      .replace(/\\\\(?=[,;:!%])/g, "\\")
+      .replace(/\\\\(?=\$)/g, "\\");
 
   // Some persisted content may contain double-escaped delimiters (e.g. "\\(").
   // Normalize them so both \(...\) and \\(...\\) render consistently.
