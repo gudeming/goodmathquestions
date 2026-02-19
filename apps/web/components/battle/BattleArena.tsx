@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import { useSession } from "next-auth/react";
 import { PlayerHPBar } from "./PlayerHPBar";
@@ -129,6 +130,7 @@ function CounterPanel({
 // ─── Main Arena ────────────────────────────────────────────────────────────
 export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
   const t = useTranslations("battle");
+  const router = useRouter();
   const { data: session } = useSession();
   const myUserId = (session?.user as { id?: string })?.id ?? "";
 
@@ -158,6 +160,7 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
   const forfeitMutation = trpc.battle.forfeit.useMutation();
 
   // ─── Early Leave Warning ─────────────────────────────────────────────────────
+  const [pendingNavUrl, setPendingNavUrl] = useState<string | null>(null);
   const [showAwayModal, setShowAwayModal] = useState(false);
   const [awayTimeElapsed, setAwayTimeElapsed] = useState(0);
   const [leaveCountdown, setLeaveCountdown] = useState(60);
@@ -236,6 +239,23 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // In-app navigation interception — capture-phase click on any <a> that leaves the battle
+  useEffect(() => {
+    const handleLinkClick = (e: MouseEvent) => {
+      if (!isActiveBattleRef.current) return;
+      const anchor = (e.target as Element).closest("a[href]") as HTMLAnchorElement | null;
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      // Only intercept internal links that navigate away from this battle page
+      if (!href || !href.startsWith("/") || href.includes("/battle/")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingNavUrl(href);
+    };
+    document.addEventListener("click", handleLinkClick, true);
+    return () => document.removeEventListener("click", handleLinkClick, true);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Show resolution overlay on lastRoundSummary change (round transition)
   useEffect(() => {
     if (!gameState) return;
@@ -285,7 +305,7 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
     return (
       <ResultsScreen
         isWinner={isWinner}
-        xpChange={isWinner ? 1000 : -1000}
+        xpChange={gameState.me?.xpChange ?? (isWinner ? 1000 : -1000)}
         rounds={gameState.currentRound}
         opponentName={gameState.opponent?.displayName ?? "Opponent"}
         myFinalHp={gameState.me?.hp ?? 0}
@@ -587,6 +607,70 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
                   className="bg-white/8 border border-white/15 text-white/50 font-bold py-3 px-4 rounded-2xl font-heading text-sm hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 transition-colors"
                 >
                   Leave
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── Navigation Leave Confirm Modal ──────────────────────────────────── */}
+      <AnimatePresence>
+        {pendingNavUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.85, y: 24 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.85, y: 24 }}
+              transition={{ type: "spring", stiffness: 320, damping: 24 }}
+              className="bg-slate-800 border border-orange-500/40 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
+            >
+              <div className="text-center mb-4">
+                <div className="text-5xl mb-2">🚪</div>
+                <h2 className="text-orange-400 font-heading font-bold text-xl">
+                  Leave the Battle?
+                </h2>
+                <p className="text-white/50 text-sm mt-1">
+                  Navigating away counts as a forfeit
+                </p>
+              </div>
+
+              <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4 mb-5 text-center">
+                <p className="text-white/60 text-xs mb-1">Your Entry Fee</p>
+                <p className="text-yellow-400 font-bold text-2xl font-heading">
+                  {entryFee.toLocaleString()} XP
+                </p>
+                <p className="text-orange-400 text-xs mt-2 font-heading">
+                  will be transferred to your opponent
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setPendingNavUrl(null)}
+                  className="bg-gradient-to-br from-green-500 to-emerald-600 text-white font-bold py-3 px-4 rounded-2xl font-heading text-sm shadow-lg"
+                >
+                  ✅ Stay &amp; Fight!
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => {
+                    const url = pendingNavUrl;
+                    setPendingNavUrl(null);
+                    forfeitMutateRef.current({ battleId });
+                    router.push(url);
+                  }}
+                  className="bg-white/8 border border-white/15 text-white/50 font-bold py-3 px-4 rounded-2xl font-heading text-sm hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 transition-colors"
+                >
+                  Leave &amp; Forfeit
                 </motion.button>
               </div>
             </motion.div>

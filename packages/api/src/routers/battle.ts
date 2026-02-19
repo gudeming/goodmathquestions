@@ -101,6 +101,10 @@ async function finalizeBattle(
       const loserDeduction = Math.min(stake, Math.max(0, loser?.xp ?? 0));
       const winnerGain = loserDeduction;
 
+      // Write the actual XP delta back into Redis state so the client can display real values
+      state.participants[winnerId]!.xpChange = winnerGain;
+      state.participants[loserId]!.xpChange = -loserDeduction;
+
       await Promise.all([
         db.user.update({
           where: { id: winnerId },
@@ -174,6 +178,7 @@ type GameStateSnapshot = {
     hasActed: boolean;
     attackPowerUsed: number;
     xpStaked: number;
+    xpChange: number | null;
   } | null;
   opponent: {
     displayName: string;
@@ -241,6 +246,7 @@ function buildSnapshot(state: BattleRedisState, myUserId: string): GameStateSnap
           hasActed: me.hasActed,
           attackPowerUsed: me.attackPowerUsed ?? 0,
           xpStaked: me.xpStaked,
+          xpChange: me.xpChange ?? null,
         }
       : null,
     opponent: opponent

@@ -33,6 +33,7 @@ export interface BattleParticipantState {
   attackPowerUsed: number; // power committed to the current attack (for display)
   lastSeenAt: number;      // epoch ms — for abandon detection
   xpStaked: number;        // snapshot of entry fee at join time
+  xpChange?: number;       // set after battle ends: actual XP won (+) or lost (-)
 }
 
 export interface BattleQuestionState {
