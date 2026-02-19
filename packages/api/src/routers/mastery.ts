@@ -317,13 +317,96 @@ export const masteryRouter = createTRPCRouter({
         attempts: z.number().int().min(0).max(10000).default(0),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       pruneStore();
 
       const generationTag = resolveGenerationTag(input.tagName, input.attempts);
       const recentKey = input.tagName.trim().toUpperCase().replace(/\s+/g, "_");
       const recentSignatures = recentTemplateStore.get(recentKey) ?? [];
 
+      // ── Try question bank first ──────────────────────────────────────────
+      const VALID_CATEGORIES = new Set([
+        "ARITHMETIC", "ALGEBRA", "GEOMETRY", "FRACTIONS", "NUMBER_THEORY",
+        "WORD_PROBLEMS", "PROBABILITY", "TRIGONOMETRY", "CALCULUS", "STATISTICS",
+      ]);
+      const LEVEL_DIFFICULTIES: Record<number, string[]> = {
+        1: ["EASY"],
+        2: ["EASY", "MEDIUM"],
+        3: ["MEDIUM"],
+        4: ["MEDIUM", "HARD"],
+        5: ["HARD", "CHALLENGE"],
+      };
+      const domainForDB = generationTag.toUpperCase();
+      const difficulties = LEVEL_DIFFICULTIES[input.profile.level] ?? ["MEDIUM"];
+
+      if (VALID_CATEGORIES.has(domainForDB)) {
+        const dbCandidates = await ctx.db.question.findMany({
+          where: {
+            isPublished: true,
+            category: domainForDB as any,
+            difficulty: { in: difficulties as any[] },
+          },
+          select: {
+            id: true,
+            contentEn: true,
+            contentZh: true,
+            answer: true,
+            answerExplainEn: true,
+            answerExplainZh: true,
+            hints: true,
+            funFactEn: true,
+            funFactZh: true,
+          },
+          take: 30,
+        });
+
+        if (dbCandidates.length > 0) {
+          const freshCandidates = dbCandidates.filter(
+            (q) => !recentSignatures.includes(`db:${q.id}`)
+          );
+          const pool = freshCandidates.length > 0 ? freshCandidates : dbCandidates;
+          const picked = pickRandom(pool);
+
+          const updatedRecent = [...recentSignatures, `db:${picked.id}`].slice(-RECENT_TEMPLATE_WINDOW);
+          recentTemplateStore.set(recentKey, updatedRecent);
+
+          const kp =
+            KNOWLEDGE_POINT_TAXONOMY.find((k) => k.domain === domainForDB) ??
+            KNOWLEDGE_POINT_TAXONOMY[0]!;
+          const hints = (Array.isArray(picked.hints) ? picked.hints : []) as Array<{
+            en: string;
+            zh: string;
+          }>;
+
+          const id = randomUUID();
+          activeQuestionStore.set(id, {
+            answer: picked.answer,
+            explanationEn: picked.answerExplainEn ?? "",
+            explanationZh: picked.answerExplainZh ?? "",
+            hints,
+            createdAt: Date.now(),
+            level: input.profile.level,
+            domain: domainForDB,
+            knowledgePointSlug: kp.slug,
+          });
+
+          return {
+            questionId: id,
+            question: {
+              promptEn: picked.contentEn,
+              promptZh: picked.contentZh,
+              hints,
+              level: input.profile.level,
+              domain: domainForDB,
+              knowledgePointSlug: kp.slug,
+              funFactEn: picked.funFactEn ?? undefined,
+              funFactZh: picked.funFactZh ?? undefined,
+            },
+          };
+        }
+      }
+
+      // ── Fallback: adaptive template generation ───────────────────────────
       let generated = buildAdaptiveQuestion({
         tagName: generationTag,
         profile: input.profile,

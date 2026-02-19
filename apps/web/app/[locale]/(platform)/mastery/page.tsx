@@ -497,30 +497,18 @@ export default function MasteryPage() {
               {/* Domain cards */}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 {Object.entries(DOMAIN_META).map(([domain, meta]) => {
-                  const domainTags = coreTagsByDomain.byDomain.get(domain) ?? [];
-                  // Use first matching tag; fallback to any tag containing domain keyword
-                  const primaryTag = domainTags[0];
-                  const hasTag = !!primaryTag;
                   return (
                     <motion.button
                       key={domain}
-                      whileHover={hasTag ? { scale: 1.05, y: -3 } : {}}
-                      whileTap={hasTag ? { scale: 0.97 } : {}}
-                      onClick={() => hasTag && selectAndStart(primaryTag.nameEn)}
-                      disabled={!hasTag}
-                      className={`p-4 rounded-2xl border-2 text-center transition-all ${
-                        hasTag
-                          ? `${meta.border} ${meta.bg} hover:${meta.activeBg} cursor-pointer`
-                          : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-50"
-                      }`}
+                      whileHover={{ scale: 1.05, y: -3 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => selectAndStart(domain)}
+                      className={`p-4 rounded-2xl border-2 text-center transition-all cursor-pointer ${meta.border} ${meta.bg}`}
                     >
                       <div className="text-3xl mb-2">{meta.emoji}</div>
-                      <div className={`text-sm font-bold ${hasTag ? meta.text : "text-gray-400"}`}>
+                      <div className={`text-sm font-bold ${meta.text}`}>
                         {isZh ? meta.nameZh : meta.nameEn}
                       </div>
-                      {primaryTag && (
-                        <div className="text-xs opacity-50 mt-0.5">{primaryTag._count.questions} Q</div>
-                      )}
                     </motion.button>
                   );
                 })}
