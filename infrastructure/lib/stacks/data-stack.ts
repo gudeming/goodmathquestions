@@ -38,7 +38,7 @@ export class DataStack extends cdk.Stack {
       securityGroups: [dbSg],
       databaseName: "goodmathquestions",
       engine: rds.DatabaseInstanceEngine.postgres({
-        version: rds.PostgresEngineVersion.VER_16_3,
+        version: rds.PostgresEngineVersion.VER_16_6,
       }),
       // Free-tier friendly sizing
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
