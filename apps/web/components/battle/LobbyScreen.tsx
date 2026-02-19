@@ -24,6 +24,7 @@ export function LobbyScreen() {
   const [waitingInviteCode, setWaitingInviteCode] = useState<string | null>(null);
   const [myCharacter, setMyCharacter] = useState<CharacterType | null>(null);
   const [showCharacterSelect, setShowCharacterSelect] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   // Load saved character on mount
   useEffect(() => {
@@ -40,6 +41,7 @@ export function LobbyScreen() {
 
   const createMutation = trpc.battle.create.useMutation({
     onSuccess(data) {
+      setCreateError(null);
       if (data.status === "ACTIVE") {
         router.push(`/${locale !== "en" ? locale + "/" : ""}ohmygame/battle/${data.battleId}`);
       } else {
@@ -47,6 +49,9 @@ export function LobbyScreen() {
         setWaitingInviteCode(data.inviteCode);
         setMode("waiting");
       }
+    },
+    onError(err) {
+      setCreateError(err.message);
     },
   });
 
@@ -137,11 +142,22 @@ export function LobbyScreen() {
         )}
       </motion.div>
 
+      {/* Error banner */}
+      {createError && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-500/15 border border-red-500/40 rounded-2xl p-4 text-center"
+        >
+          <p className="text-red-400 font-heading text-sm">⚠️ {createError}</p>
+        </motion.div>
+      )}
+
       {/* Actions */}
       <div className="grid gap-4">
         {/* Random Match */}
         <motion.button
-          onClick={() => createMutation.mutate({ mode: "RANDOM" })}
+          onClick={() => { setCreateError(null); createMutation.mutate({ mode: "RANDOM" }); }}
           disabled={!hasEnoughXp || createMutation.isPending}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -154,7 +170,7 @@ export function LobbyScreen() {
         <div className="bg-white/10 border border-white/20 rounded-2xl p-5 space-y-3">
           <h3 className="text-white font-heading font-bold">{t("challengeFriend")}</h3>
           <motion.button
-            onClick={() => createMutation.mutate({ mode: "INVITE" })}
+            onClick={() => { setCreateError(null); createMutation.mutate({ mode: "INVITE" }); }}
             disabled={!hasEnoughXp || createMutation.isPending}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}

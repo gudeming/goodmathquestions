@@ -406,16 +406,18 @@ export const battleRouter = createTRPCRouter({
         select: { xp: true, displayName: true, avatarUrl: true },
       });
 
-      // FIX: rate limiting — one WAITING battle per user at a time
+      // If user already has a WAITING battle, resume it instead of throwing
       const existingWaiting = await ctx.db.battle.findFirst({
         where: { status: "WAITING", participants: { some: { userId } } },
-        select: { id: true },
+        select: { id: true, inviteCode: true },
       });
       if (existingWaiting) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "You already have a battle waiting. Cancel it first.",
-        });
+        return {
+          battleId: existingWaiting.id,
+          inviteCode: existingWaiting.inviteCode,
+          status: "WAITING" as const,
+          waitingForOpponent: true,
+        };
       }
 
       // Soft check before atomic deduction (avoids consuming a queue slot unnecessarily)
