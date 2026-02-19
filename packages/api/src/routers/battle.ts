@@ -173,6 +173,7 @@ type GameStateSnapshot = {
     hasAnswered: boolean;
     hasActed: boolean;
     attackPowerUsed: number;
+    xpStaked: number;
   } | null;
   opponent: {
     displayName: string;
@@ -239,6 +240,7 @@ function buildSnapshot(state: BattleRedisState, myUserId: string): GameStateSnap
           hasAnswered: me.hasAnswered,
           hasActed: me.hasActed,
           attackPowerUsed: me.attackPowerUsed ?? 0,
+          xpStaked: me.xpStaked,
         }
       : null,
     opponent: opponent

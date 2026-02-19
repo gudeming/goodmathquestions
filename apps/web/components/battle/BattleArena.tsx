@@ -157,6 +157,86 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
   const submitCounterMutation = trpc.battle.submitCounter.useMutation();
   const forfeitMutation = trpc.battle.forfeit.useMutation();
 
+  // ─── Early Leave Warning ─────────────────────────────────────────────────────
+  const [showAwayModal, setShowAwayModal] = useState(false);
+  const [awayTimeElapsed, setAwayTimeElapsed] = useState(0);
+  const [leaveCountdown, setLeaveCountdown] = useState(60);
+  const awaySinceRef = useRef<number | null>(null);
+  const leaveCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const isActiveBattle = gameState?.status === "ACTIVE";
+  const entryFee = gameState?.me?.xpStaked ?? 0;
+  const ABANDON_SECONDS = 60;
+
+  // Cleanup countdown on unmount
+  useEffect(() => {
+    return () => {
+      if (leaveCountdownRef.current) clearInterval(leaveCountdownRef.current);
+    };
+  }, []);
+
+  // Dismiss modal when battle ends
+  useEffect(() => {
+    if (gameState?.status === "FINISHED" || gameState?.status === "ABANDONED") {
+      setShowAwayModal(false);
+      if (leaveCountdownRef.current) {
+        clearInterval(leaveCountdownRef.current);
+        leaveCountdownRef.current = null;
+      }
+    }
+  }, [gameState?.status]);
+
+  // beforeunload: native browser warning on refresh/close during active battle
+  useEffect(() => {
+    if (!isActiveBattle) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isActiveBattle]);
+
+  // visibilitychange: show warning modal when player returns after switching tabs
+  useEffect(() => {
+    if (!isActiveBattle) return;
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        awaySinceRef.current = Date.now();
+      } else {
+        if (awaySinceRef.current !== null) {
+          const elapsed = Math.floor((Date.now() - awaySinceRef.current) / 1000);
+          awaySinceRef.current = null;
+          setAwayTimeElapsed(elapsed);
+          const remaining = Math.max(0, ABANDON_SECONDS - elapsed);
+          setLeaveCountdown(remaining);
+          setShowAwayModal(true);
+
+          if (leaveCountdownRef.current) clearInterval(leaveCountdownRef.current);
+          leaveCountdownRef.current = setInterval(() => {
+            setLeaveCountdown((prev) => {
+              if (prev <= 1) {
+                clearInterval(leaveCountdownRef.current!);
+                leaveCountdownRef.current = null;
+                forfeitMutation.mutate({ battleId });
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (leaveCountdownRef.current) {
+        clearInterval(leaveCountdownRef.current);
+        leaveCountdownRef.current = null;
+      }
+    };
+  }, [isActiveBattle, battleId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Show resolution overlay on lastRoundSummary change (round transition)
   useEffect(() => {
     if (!gameState) return;
@@ -374,7 +454,15 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
 
         {/* Forfeit */}
         {gameState.status === "ACTIVE" && (
-          <div className="text-center pt-2">
+          <div className="text-center pt-2 space-y-2">
+            {/* Persistent leave warning */}
+            <p className="text-white/25 text-[11px] font-heading">
+              ⚠️ Switching tabs or refreshing will forfeit your{" "}
+              <span className="text-yellow-500/50 font-bold">
+                {entryFee.toLocaleString()} XP
+              </span>{" "}
+              entry fee
+            </p>
             <button
               onClick={() => {
                 if (confirm(t("forfeitConfirm"))) {
@@ -395,6 +483,118 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
         myUserId={myUserId}
         visible={showResolution}
       />
+
+      {/* ─── Early Leave Warning Modal ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {showAwayModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.85, y: 24 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.85, y: 24 }}
+              transition={{ type: "spring", stiffness: 320, damping: 24 }}
+              className="bg-slate-800 border border-red-500/40 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
+            >
+              {/* Header */}
+              <div className="text-center mb-4">
+                <motion.div
+                  animate={{ scale: [1, 1.15, 1] }}
+                  transition={{ duration: 0.7, repeat: Infinity }}
+                  className="text-5xl mb-2"
+                >
+                  ⚠️
+                </motion.div>
+                <h2 className="text-red-400 font-heading font-bold text-xl">
+                  You Left the Battle!
+                </h2>
+                <p className="text-white/50 text-sm mt-1">
+                  You were away for{" "}
+                  <span className="text-orange-400 font-bold">{awayTimeElapsed}s</span>
+                </p>
+              </div>
+
+              {/* Entry fee at risk */}
+              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 mb-4 text-center">
+                <p className="text-white/60 text-xs mb-1">Entry Fee at stake</p>
+                <p className="text-yellow-400 font-bold text-2xl font-heading">
+                  {entryFee.toLocaleString()} XP
+                </p>
+                <p className="text-red-400 text-xs mt-2 font-heading">
+                  Will be forfeited to your opponent!
+                </p>
+              </div>
+
+              {/* Countdown */}
+              <div className="text-center mb-5">
+                {leaveCountdown > 0 ? (
+                  <>
+                    <p className="text-white/40 text-xs mb-1 font-heading">
+                      Auto-forfeit in
+                    </p>
+                    <motion.p
+                      key={leaveCountdown}
+                      initial={{ scale: 1.4, opacity: 0.5 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className={`text-5xl font-bold font-heading ${
+                        leaveCountdown <= 10 ? "text-red-400" : "text-orange-400"
+                      }`}
+                    >
+                      {leaveCountdown}
+                    </motion.p>
+                    <p className="text-white/30 text-xs mt-1 font-heading">seconds</p>
+                  </>
+                ) : (
+                  <motion.p
+                    animate={{ opacity: [1, 0.5, 1] }}
+                    transition={{ duration: 0.5, repeat: Infinity }}
+                    className="text-red-400 font-heading font-bold text-lg"
+                  >
+                    Forfeiting...
+                  </motion.p>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => {
+                    setShowAwayModal(false);
+                    if (leaveCountdownRef.current) {
+                      clearInterval(leaveCountdownRef.current);
+                      leaveCountdownRef.current = null;
+                    }
+                  }}
+                  className="bg-gradient-to-br from-green-500 to-emerald-600 text-white font-bold py-3 px-4 rounded-2xl font-heading text-sm shadow-lg"
+                >
+                  ✅ Stay &amp; Fight!
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => {
+                    if (leaveCountdownRef.current) {
+                      clearInterval(leaveCountdownRef.current);
+                      leaveCountdownRef.current = null;
+                    }
+                    setShowAwayModal(false);
+                    forfeitMutation.mutate({ battleId });
+                  }}
+                  className="bg-white/8 border border-white/15 text-white/50 font-bold py-3 px-4 rounded-2xl font-heading text-sm hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 transition-colors"
+                >
+                  Leave
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
