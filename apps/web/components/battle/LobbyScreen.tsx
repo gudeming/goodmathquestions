@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useRouter, useParams } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import { WaitingScreen } from "./WaitingScreen";
+import { CharacterSelectScreen } from "./CharacterSelectScreen";
+import { CHARACTER_INFO, CharacterType } from "./BattleStage";
+
+const STORAGE_KEY = "ohmygame_character";
 
 export function LobbyScreen() {
   const t = useTranslations("battle");
@@ -18,6 +22,18 @@ export function LobbyScreen() {
   const [mode, setMode] = useState<"idle" | "waiting">("idle");
   const [waitingBattleId, setWaitingBattleId] = useState<string | null>(null);
   const [waitingInviteCode, setWaitingInviteCode] = useState<string | null>(null);
+  const [myCharacter, setMyCharacter] = useState<CharacterType | null>(null);
+  const [showCharacterSelect, setShowCharacterSelect] = useState(false);
+
+  // Load saved character on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY) as CharacterType | null;
+    if (saved && saved in CHARACTER_INFO) {
+      setMyCharacter(saved);
+    } else {
+      setShowCharacterSelect(true);
+    }
+  }, []);
 
   const { data: me } = trpc.user.me.useQuery();
   const { data: history } = trpc.battle.getHistory.useQuery({ limit: 5 });
@@ -42,6 +58,16 @@ export function LobbyScreen() {
 
   const hasEnoughXp = (me?.xp ?? 0) >= 1000;
 
+  const handleCharacterSelect = (character: CharacterType) => {
+    setMyCharacter(character);
+    localStorage.setItem(STORAGE_KEY, character);
+    setShowCharacterSelect(false);
+  };
+
+  if (showCharacterSelect) {
+    return <CharacterSelectScreen onSelect={handleCharacterSelect} />;
+  }
+
   if (mode === "waiting" && waitingBattleId) {
     return (
       <WaitingScreen
@@ -65,6 +91,16 @@ export function LobbyScreen() {
           ⚔️ OhMyGame
         </h1>
         <p className="text-white/60 mt-2">{t("subtitle")}</p>
+        {myCharacter && (
+          <button
+            onClick={() => setShowCharacterSelect(true)}
+            className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-sm text-white/80 font-heading transition-colors"
+          >
+            <span className="text-base">{CHARACTER_INFO[myCharacter].emoji}</span>
+            <span>{CHARACTER_INFO[myCharacter].name}</span>
+            <span className="text-white/40 text-xs">Change</span>
+          </button>
+        )}
       </motion.div>
 
       {/* User XP banner */}

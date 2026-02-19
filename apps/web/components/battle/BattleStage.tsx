@@ -14,6 +14,16 @@ export type BattleActionType =
   | "FAILED_ATTACK"
   | null;
 
+export type CharacterType = "mage" | "hollow_knight" | "hornet" | "bendy" | "tanjiro";
+
+export const CHARACTER_INFO: Record<CharacterType, { name: string; tagline: string; emoji: string }> = {
+  mage:          { name: "Math Mage",     tagline: "Cast spells of knowledge!",     emoji: "🧙" },
+  hollow_knight: { name: "Hollow Knight", tagline: "The Pale Warrior strikes!",     emoji: "⚔️" },
+  hornet:        { name: "Hornet",        tagline: "Swift as the silk needle!",     emoji: "🪡" },
+  bendy:         { name: "Bendy",         tagline: "Ink-powered cartoon demon!",    emoji: "🎩" },
+  tanjiro:       { name: "Tanjiro",       tagline: "Total Concentration Math!",     emoji: "🗡️" },
+};
+
 type FighterState = "idle" | "charging" | "attacking" | "blocking" | "hit";
 
 type ProjectileKind = "lightning" | "fireball" | "beam" | null;
@@ -179,6 +189,435 @@ function MageSprite({
       )}
     </svg>
   );
+}
+
+// ─── Hollow Knight Sprite ─────────────────────────────────────────────────────
+function HollowKnightSprite({
+  facingLeft, state, hpRatio, isMe,
+}: { facingLeft: boolean; state: FighterState; hpRatio: number; isMe: boolean }) {
+  const playerColor = isMe ? "#4F46E5" : "#DC2626";
+  const angry = state === "attacking" || state === "charging";
+  const stunned = state === "hit";
+  const blocking = state === "blocking";
+  const tired = !stunned && hpRatio < 0.3;
+  return (
+    <svg width="60" height="78" viewBox="0 0 60 78"
+      style={{ transform: facingLeft ? "scaleX(-1)" : undefined, overflow: "visible", display: "block" }}>
+      {/* Horns */}
+      <path d="M24,28 Q19,17 22,8" fill="none" stroke="#111" strokeWidth="3.5" strokeLinecap="round"/>
+      <path d="M36,28 Q41,17 38,8" fill="none" stroke="#111" strokeWidth="3.5" strokeLinecap="round"/>
+      <circle cx="22" cy="8" r="2" fill="#1a1a1a"/>
+      <circle cx="38" cy="8" r="2" fill="#1a1a1a"/>
+      {/* Head */}
+      <ellipse cx="30" cy="37" rx="13" ry="12" fill="#111"/>
+      {/* Eyes */}
+      {stunned ? (
+        <>
+          <line x1="21" y1="33" x2="27" y2="39" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="27" y1="33" x2="21" y2="39" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="33" y1="33" x2="39" y2="39" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="39" y1="33" x2="33" y2="39" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+          <text x="14" y="27" fontSize="8" fill="#FCD34D">★</text>
+          <text x="40" y="26" fontSize="8" fill="#FCD34D">★</text>
+        </>
+      ) : blocking ? (
+        <>
+          <ellipse cx="23" cy="36" rx="3.5" ry="2.5" fill="white" opacity="0.85"/>
+          <ellipse cx="37" cy="36" rx="3.5" ry="2.5" fill="white" opacity="0.85"/>
+          <path d="M20,31 L26,33" stroke="#555" strokeWidth="1.5" strokeLinecap="round"/>
+          <path d="M34,33 L40,31" stroke="#555" strokeWidth="1.5" strokeLinecap="round"/>
+        </>
+      ) : angry ? (
+        <>
+          <ellipse cx="23" cy="36" rx="4" ry="3" fill="white" opacity="0.95"/>
+          <ellipse cx="37" cy="36" rx="4" ry="3" fill="white" opacity="0.95"/>
+          <ellipse cx="23" cy="36" rx="2" ry="1.5" fill="#BEF9F9"/>
+          <ellipse cx="37" cy="36" rx="2" ry="1.5" fill="#BEF9F9"/>
+        </>
+      ) : tired ? (
+        <>
+          <ellipse cx="23" cy="37" rx="3.5" ry="2" fill="white" opacity="0.6"/>
+          <ellipse cx="37" cy="37" rx="3.5" ry="2" fill="white" opacity="0.6"/>
+          <ellipse cx="41" cy="31" rx="2.5" ry="3.5" fill="#7DD3FC" opacity="0.6"/>
+        </>
+      ) : (
+        <>
+          <ellipse cx="23" cy="35" rx="3.5" ry="4.5" fill="white" opacity="0.92"/>
+          <ellipse cx="37" cy="35" rx="3.5" ry="4.5" fill="white" opacity="0.92"/>
+          <ellipse cx="23" cy="36" rx="2" ry="2.5" fill="#DBEAFE" opacity="0.6"/>
+          <ellipse cx="37" cy="36" rx="2" ry="2.5" fill="#DBEAFE" opacity="0.6"/>
+        </>
+      )}
+      {/* Neck */}
+      <rect x="26" y="48" width="8" height="5" rx="2" fill="#1a1a1a"/>
+      {/* Body/Cloak */}
+      <path d="M15,52 Q12,68 16,78 Q30,82 44,78 Q48,68 45,52 Z" fill="#1a1a1a"/>
+      <path d="M17,56 Q30,59 43,56" fill="none" stroke="#0d0d0d" strokeWidth="1.5" strokeLinecap="round"/>
+      {/* Left arm */}
+      <path d="M18,56 Q8,62 5,68" fill="none" stroke="#1a1a1a" strokeWidth="6" strokeLinecap="round"/>
+      <circle cx="5" cy="69" r="4" fill="#222"/>
+      {/* Right arm holding Nail */}
+      <path d={angry ? "M42,54 Q52,50 56,46" : "M42,56 Q52,56 56,60"}
+        fill="none" stroke="#1a1a1a" strokeWidth="6" strokeLinecap="round"/>
+      <circle cx="56" cy={angry ? "46" : "60"} r="4" fill="#222"/>
+      {/* Nail blade */}
+      <line x1="56" y1={angry ? "46" : "60"} x2={angry ? "64" : "62"} y2={angry ? "27" : "43"}
+        stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round"/>
+      {/* Crossguard */}
+      <line x1={angry ? "59" : "57"} y1={angry ? "37" : "52"} x2={angry ? "68" : "66"} y2={angry ? "37" : "52"}
+        stroke="#4B5563" strokeWidth="2.5" strokeLinecap="round"/>
+      <circle cx={angry ? "64" : "62"} cy={angry ? "26" : "42"} r="1.8" fill="#D1D5DB"/>
+      {/* Nail glow when attacking */}
+      {angry && (<><circle cx="64" cy="26" r="9" fill={playerColor} opacity="0.3"/><circle cx="64" cy="26" r="15" fill={playerColor} opacity="0.12"/></>)}
+      {/* Shield when blocking */}
+      {blocking && (
+        <g>
+          <path d="M44,51 L65,51 Q67,67 55,77 Q43,67 44,51 Z" fill="#1a1a1a"/>
+          <path d="M46,53 L63,53 Q65,67 55,75 Q45,67 46,53 Z" fill="none" stroke="#374151" strokeWidth="1.5"/>
+          <ellipse cx="55" cy="63" r="5" fill={playerColor} opacity="0.5"/>
+          <ellipse cx="55" cy="63" r="2.5" fill="white" opacity="0.4"/>
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// ─── Hornet (Silksong) Sprite ─────────────────────────────────────────────────
+function HornetSprite({
+  facingLeft, state, hpRatio, isMe,
+}: { facingLeft: boolean; state: FighterState; hpRatio: number; isMe: boolean }) {
+  const playerColor = isMe ? "#4F46E5" : "#DC2626";
+  const angry = state === "attacking" || state === "charging";
+  const stunned = state === "hit";
+  const blocking = state === "blocking";
+  const tired = !stunned && hpRatio < 0.3;
+  return (
+    <svg width="60" height="78" viewBox="0 0 60 78"
+      style={{ transform: facingLeft ? "scaleX(-1)" : undefined, overflow: "visible", display: "block" }}>
+      {/* Antenna */}
+      <path d="M28,24 Q26,15 29,9" fill="none" stroke="#2d2d2d" strokeWidth="2.5" strokeLinecap="round"/>
+      <circle cx="29" cy="8" r="2.5" fill="#2d2d2d"/>
+      {/* Head */}
+      <ellipse cx="30" cy="34" rx="12" ry="11" fill="#2d2d2d"/>
+      {/* Face mask */}
+      <ellipse cx="30" cy="35" rx="7.5" ry="8" fill="#3a3a3a"/>
+      {/* Eyes */}
+      {stunned ? (
+        <>
+          <line x1="24" y1="31" x2="28" y2="37" stroke="#E0E0E0" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="28" y1="31" x2="24" y2="37" stroke="#E0E0E0" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="32" y1="31" x2="36" y2="37" stroke="#E0E0E0" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="36" y1="31" x2="32" y2="37" stroke="#E0E0E0" strokeWidth="2" strokeLinecap="round"/>
+          <text x="14" y="26" fontSize="7" fill="#FCD34D">★</text>
+          <text x="40" y="25" fontSize="7" fill="#FCD34D">★</text>
+        </>
+      ) : blocking ? (
+        <>
+          <path d="M24,34 Q27,31 30,34" fill="none" stroke="#E0E0E0" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M30,34 Q33,31 36,34" fill="none" stroke="#E0E0E0" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M22,29 L28,31" stroke="#aaa" strokeWidth="1.5" strokeLinecap="round"/>
+          <path d="M32,31 L38,29" stroke="#aaa" strokeWidth="1.5" strokeLinecap="round"/>
+        </>
+      ) : angry ? (
+        <>
+          <circle cx="26" cy="34" r="2.5" fill="#E0E0E0"/>
+          <circle cx="34" cy="34" r="2.5" fill="#E0E0E0"/>
+          <circle cx="26" cy="34" r="1.2" fill="#1a1a1a"/>
+          <circle cx="34" cy="34" r="1.2" fill="#1a1a1a"/>
+          <path d="M23,29 L27,31" stroke="#aaa" strokeWidth="1.5" strokeLinecap="round"/>
+          <path d="M33,31 L37,29" stroke="#aaa" strokeWidth="1.5" strokeLinecap="round"/>
+        </>
+      ) : tired ? (
+        <>
+          <circle cx="26" cy="34" r="2.5" fill="#E0E0E0" opacity="0.6"/>
+          <circle cx="34" cy="34" r="2.5" fill="#E0E0E0" opacity="0.6"/>
+          <path d="M23,32 Q26,35 29,32" fill="rgba(60,60,60,0.7)"/>
+          <path d="M31,32 Q34,35 37,32" fill="rgba(60,60,60,0.7)"/>
+        </>
+      ) : (
+        <>
+          <circle cx="26" cy="34" r="2.5" fill="#E0E0E0"/>
+          <circle cx="34" cy="34" r="2.5" fill="#E0E0E0"/>
+          <circle cx="26.5" cy="33.5" r="1" fill="#1a1a1a"/>
+          <circle cx="34.5" cy="33.5" r="1" fill="#1a1a1a"/>
+        </>
+      )}
+      {/* Red silk scarf */}
+      <path d="M22,44 Q17,49 14,54" fill="none" stroke="#DC2626" strokeWidth="3" strokeLinecap="round"/>
+      <path d="M25,44 Q21,51 18,56" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round"/>
+      {/* Neck */}
+      <rect x="26" y="44" width="8" height="5" rx="2" fill="#2d2d2d"/>
+      {/* Body */}
+      <path d="M20,48 Q18,65 21,78 Q30,81 39,78 Q42,65 40,48 Z" fill="#2d2d2d"/>
+      <path d="M22,52 Q30,55 38,52" fill="none" stroke="#1a1a1a" strokeWidth="1.5" strokeLinecap="round"/>
+      {/* Left arm */}
+      <path d="M21,52 Q11,58 8,64" fill="none" stroke="#2d2d2d" strokeWidth="5" strokeLinecap="round"/>
+      <circle cx="8" cy="65" r="3.5" fill="#333"/>
+      {/* Right arm + needle */}
+      <path d={angry ? "M39,50 Q49,46 52,42" : "M39,52 Q49,52 52,56"}
+        fill="none" stroke="#2d2d2d" strokeWidth="5" strokeLinecap="round"/>
+      <circle cx="52" cy={angry ? "42" : "56"} r="3.5" fill="#333"/>
+      {/* Needle */}
+      <line x1="52" y1={angry ? "42" : "56"} x2={angry ? "67" : "65"} y2={angry ? "24" : "40"}
+        stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx={angry ? "67" : "65"} cy={angry ? "23" : "39"} r="1.5" fill="#9CA3AF"/>
+      {/* Needle glow */}
+      {angry && (<><circle cx="67" cy="23" r="7" fill={playerColor} opacity="0.35"/><circle cx="67" cy="23" r="12" fill={playerColor} opacity="0.12"/></>)}
+      {/* Shield (silk web) */}
+      {blocking && (
+        <g>
+          <path d="M44,50 L64,50 Q66,65 55,75 Q44,65 44,50 Z" fill="#2d2d2d"/>
+          <path d="M44,50 L64,50 Q66,65 55,75 Q44,65 44,50 Z" fill="none" stroke="#DC2626" strokeWidth="1.5"/>
+          <line x1="55" y1="50" x2="55" y2="75" stroke="#DC2626" strokeWidth="1" opacity="0.5"/>
+          <line x1="44" y1="62" x2="66" y2="62" stroke="#DC2626" strokeWidth="1" opacity="0.5"/>
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// ─── Bendy Sprite ─────────────────────────────────────────────────────────────
+function BendySprite({
+  facingLeft, state, hpRatio, isMe,
+}: { facingLeft: boolean; state: FighterState; hpRatio: number; isMe: boolean }) {
+  const playerColor = isMe ? "#4F46E5" : "#DC2626";
+  const angry = state === "attacking" || state === "charging";
+  const stunned = state === "hit";
+  const blocking = state === "blocking";
+  const tired = !stunned && hpRatio < 0.3;
+  return (
+    <svg width="60" height="78" viewBox="0 0 60 78"
+      style={{ transform: facingLeft ? "scaleX(-1)" : undefined, overflow: "visible", display: "block" }}>
+      {/* Top hat */}
+      <rect x="19" y="6" width="22" height="21" rx="3" fill="#0a0a0a"/>
+      <rect x="14" y="25" width="32" height="4" rx="2" fill="#111"/>
+      {/* Hat band */}
+      <rect x="19" y="21" width="22" height="4" rx="1" fill="#1a1a1a"/>
+      {/* Small devil horns */}
+      <path d="M21,7 Q18,2 21,1" fill="none" stroke="#1a1a1a" strokeWidth="3" strokeLinecap="round"/>
+      <path d="M39,7 Q42,2 39,1" fill="none" stroke="#1a1a1a" strokeWidth="3" strokeLinecap="round"/>
+      {/* Head */}
+      <circle cx="30" cy="41" r="14" fill="#111"/>
+      {/* Pie-cut eyes */}
+      {stunned ? (
+        <>
+          <line x1="22" y1="37" x2="28" y2="43" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="28" y1="37" x2="22" y2="43" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="32" y1="37" x2="38" y2="43" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="38" y1="37" x2="32" y2="43" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+          <text x="14" y="31" fontSize="8" fill="#FCD34D">★</text>
+          <text x="40" y="30" fontSize="8" fill="#FCD34D">★</text>
+        </>
+      ) : blocking ? (
+        <>
+          <path d="M19,40 L25,38 L21,36 Z" fill="white" opacity="0.8"/>
+          <path d="M41,40 L35,38 L39,36 Z" fill="white" opacity="0.8"/>
+        </>
+      ) : angry ? (
+        <>
+          <path d="M17,42 L26,39 L19,35 Z" fill="white"/>
+          <path d="M43,42 L34,39 L41,35 Z" fill="white"/>
+          <path d="M20,35 L17,42 L26,39 Z" fill="white" opacity="0.5"/>
+          <path d="M40,35 L43,42 L34,39 Z" fill="white" opacity="0.5"/>
+        </>
+      ) : tired ? (
+        <>
+          <path d="M18,43 L26,41 L19,38 Z" fill="white" opacity="0.6"/>
+          <path d="M42,43 L34,41 L41,38 Z" fill="white" opacity="0.6"/>
+        </>
+      ) : (
+        <>
+          <path d="M18,41 L26,38 L20,35 Z" fill="white"/>
+          <path d="M42,41 L34,38 L40,35 Z" fill="white"/>
+        </>
+      )}
+      {/* Bendy's smile */}
+      {!stunned && <path d="M24,46 Q30,51 36,46" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"/>}
+      {/* Bowtie */}
+      <polygon points="24,57 30,53 36,57 30,61" fill="#111" stroke="#2a2a2a" strokeWidth="0.8"/>
+      <circle cx="30" cy="57" r="2" fill="#1a1a1a"/>
+      {/* Body */}
+      <ellipse cx="30" cy="70" rx="12" ry="9" fill="#111"/>
+      {/* Ink drip */}
+      <path d="M23,78 Q23,85 24,89" fill="none" stroke="#111" strokeWidth="3" strokeLinecap="round" opacity="0.8"/>
+      <circle cx="24" cy="90" r="2.5" fill="#111" opacity="0.8"/>
+      {/* Left arm - rubber hose */}
+      <path d="M19,63 Q9,69 6,75" fill="none" stroke="#111" strokeWidth="7" strokeLinecap="round"/>
+      <circle cx="6" cy="76" r="4.5" fill="#0d0d0d"/>
+      {/* Right arm */}
+      <path d={angry ? "M41,61 Q51,57 55,53" : "M41,63 Q51,63 55,67"}
+        fill="none" stroke="#111" strokeWidth="7" strokeLinecap="round"/>
+      <circle cx="55" cy={angry ? "53" : "67"} r="4.5" fill="#0d0d0d"/>
+      {/* Ink splatter when attacking */}
+      {angry && (
+        <>
+          <circle cx="55" cy="53" r="9" fill={playerColor} opacity="0.3"/>
+          <circle cx="55" cy="53" r="15" fill={playerColor} opacity="0.12"/>
+          <circle cx="68" cy="52" r="2.5" fill="#111" opacity="0.75"/>
+          <circle cx="62" cy="40" r="2.5" fill="#111" opacity="0.75"/>
+          <circle cx="70" cy="45" r="2" fill="#111" opacity="0.6"/>
+          <circle cx="65" cy="59" r="2" fill="#111" opacity="0.6"/>
+        </>
+      )}
+      {/* Shield */}
+      {blocking && (
+        <g>
+          <path d="M44,57 L64,57 Q66,72 55,81 Q44,72 44,57 Z" fill="#111"/>
+          <path d="M46,59 L62,59 Q64,72 55,79 Q46,72 46,59 Z" fill="none" stroke="#222" strokeWidth="1.5"/>
+          <circle cx="55" cy="69" r="5" fill={playerColor} opacity="0.4"/>
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// ─── Tanjiro Sprite ───────────────────────────────────────────────────────────
+function TanjiroSprite({
+  facingLeft, state, hpRatio, isMe,
+}: { facingLeft: boolean; state: FighterState; hpRatio: number; isMe: boolean }) {
+  const playerColor = isMe ? "#4F46E5" : "#DC2626";
+  const skin = "#FFDAB9";
+  const angry = state === "attacking" || state === "charging";
+  const stunned = state === "hit";
+  const blocking = state === "blocking";
+  const tired = !stunned && hpRatio < 0.3;
+  return (
+    <svg width="60" height="78" viewBox="0 0 60 78"
+      style={{ transform: facingLeft ? "scaleX(-1)" : undefined, overflow: "visible", display: "block" }}>
+      {/* Hair - dark spiky */}
+      <ellipse cx="30" cy="32" rx="13" ry="10" fill="#1a1a1a"/>
+      <path d="M18,30 Q15,22 19,18" fill="none" stroke="#1a1a1a" strokeWidth="4" strokeLinecap="round"/>
+      <path d="M30,22 Q28,14 31,11" fill="none" stroke="#1a1a1a" strokeWidth="3.5" strokeLinecap="round"/>
+      <path d="M40,27 Q44,20 42,16" fill="none" stroke="#1a1a1a" strokeWidth="3.5" strokeLinecap="round"/>
+      {/* Face */}
+      <ellipse cx="30" cy="39" rx="12" ry="10" fill={skin}/>
+      {/* Forehead scar */}
+      <path d="M26,31 Q30,28 34,31" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round"/>
+      {/* Eyes */}
+      {stunned ? (
+        <>
+          <line x1="22" y1="36" x2="27" y2="41" stroke="#444" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="27" y1="36" x2="22" y2="41" stroke="#444" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="33" y1="36" x2="38" y2="41" stroke="#444" strokeWidth="2.5" strokeLinecap="round"/>
+          <line x1="38" y1="36" x2="33" y2="41" stroke="#444" strokeWidth="2.5" strokeLinecap="round"/>
+          <text x="14" y="28" fontSize="8" fill="#FCD34D">★</text>
+          <text x="40" y="27" fontSize="8" fill="#FCD34D">★</text>
+        </>
+      ) : blocking ? (
+        <>
+          <path d="M22,39 Q25,36 28,39" fill="none" stroke="#1a1a2e" strokeWidth="2.5" strokeLinecap="round"/>
+          <path d="M32,39 Q35,36 38,39" fill="none" stroke="#1a1a2e" strokeWidth="2.5" strokeLinecap="round"/>
+          <path d="M21,35 L27,36" stroke="#333" strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M33,36 L39,35" stroke="#333" strokeWidth="1.8" strokeLinecap="round"/>
+        </>
+      ) : angry ? (
+        <>
+          <circle cx="25" cy="39" r="3" fill="#8B0000"/>
+          <circle cx="35" cy="39" r="3" fill="#8B0000"/>
+          <circle cx="25.7" cy="38.3" r="1" fill="white" opacity="0.6"/>
+          <circle cx="35.7" cy="38.3" r="1" fill="white" opacity="0.6"/>
+          <path d="M21,35 L27,37" stroke="#333" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M33,37 L39,35" stroke="#333" strokeWidth="2" strokeLinecap="round"/>
+          {/* Water breathing marks on cheeks */}
+          <path d="M18,40 Q20,38 22,40" fill="none" stroke="#60A5FA" strokeWidth="1.2" opacity="0.8"/>
+          <path d="M38,40 Q40,38 42,40" fill="none" stroke="#60A5FA" strokeWidth="1.2" opacity="0.8"/>
+        </>
+      ) : tired ? (
+        <>
+          <circle cx="25" cy="39" r="3" fill="#1a1a2e"/>
+          <circle cx="35" cy="39" r="3" fill="#1a1a2e"/>
+          <path d="M22,37 Q25,40 28,37" fill="rgba(190,160,140,0.6)"/>
+          <path d="M32,37 Q35,40 38,37" fill="rgba(190,160,140,0.6)"/>
+          <ellipse cx="41" cy="34" rx="2.5" ry="3.5" fill="#7DD3FC" opacity="0.8"/>
+        </>
+      ) : (
+        <>
+          <circle cx="25" cy="39" r="3" fill="#1a1a2e"/>
+          <circle cx="35" cy="39" r="3" fill="#1a1a2e"/>
+          <circle cx="25.7" cy="38.3" r="1" fill="white" opacity="0.8"/>
+          <circle cx="35.7" cy="38.3" r="1" fill="white" opacity="0.8"/>
+          <path d="M22,35 Q25,33.5 28,35" fill="none" stroke="#888" strokeWidth="1.3" strokeLinecap="round"/>
+          <path d="M32,35 Q35,33.5 38,35" fill="none" stroke="#888" strokeWidth="1.3" strokeLinecap="round"/>
+        </>
+      )}
+      {/* Mouth */}
+      {!stunned && <path d="M26,45 Q30,48 34,45" fill="none" stroke="#333" strokeWidth="1.5" strokeLinecap="round"/>}
+      {/* Neck */}
+      <rect x="26" y="48" width="8" height="5" rx="2" fill={skin}/>
+      {/* Checkered haori - green base */}
+      <path d="M15,52 Q13,68 16,78 Q30,82 44,78 Q47,68 45,52 Z" fill="#166534"/>
+      {/* Checker lines */}
+      <line x1="22" y1="52" x2="22" y2="78" stroke="#111" strokeWidth="2" opacity="0.6"/>
+      <line x1="30" y1="52" x2="30" y2="78" stroke="#111" strokeWidth="2" opacity="0.6"/>
+      <line x1="38" y1="52" x2="38" y2="78" stroke="#111" strokeWidth="2" opacity="0.6"/>
+      <path d="M15,60 Q30,62 45,60" stroke="#111" strokeWidth="2" opacity="0.6" fill="none"/>
+      <path d="M16,68 Q30,70 44,68" stroke="#111" strokeWidth="2" opacity="0.6" fill="none"/>
+      {/* Black squares on alternating cells */}
+      <rect x="15" y="52" width="7" height="8" fill="#111" opacity="0.45"/>
+      <rect x="22" y="60" width="8" height="8" fill="#111" opacity="0.45"/>
+      <rect x="30" y="52" width="8" height="8" fill="#111" opacity="0.45"/>
+      <rect x="38" y="60" width="7" height="8" fill="#111" opacity="0.45"/>
+      {/* Belt */}
+      <path d="M17,62 Q30,64 43,62" fill="none" stroke="#92400E" strokeWidth="2.5" strokeLinecap="round"/>
+      {/* Left arm */}
+      <path d="M17,56 Q7,62 5,68" fill="none" stroke="#166534" strokeWidth="7" strokeLinecap="round"/>
+      <circle cx="5" cy="69" r="5" fill={skin}/>
+      {/* Right arm + Nichirin blade */}
+      <path d={angry ? "M43,54 Q53,50 57,46" : "M43,56 Q53,56 57,60"}
+        fill="none" stroke="#166534" strokeWidth="7" strokeLinecap="round"/>
+      <circle cx="57" cy={angry ? "46" : "60"} r="5" fill={skin}/>
+      {/* Nichirin blade */}
+      <line x1="57" y1={angry ? "46" : "60"} x2={angry ? "65" : "63"} y2={angry ? "26" : "42"}
+        stroke="#7F1D1D" strokeWidth="3" strokeLinecap="round"/>
+      <line x1="57" y1={angry ? "46" : "60"} x2={angry ? "65" : "63"} y2={angry ? "26" : "42"}
+        stroke="#FCA5A5" strokeWidth="1" strokeLinecap="round" opacity="0.5"/>
+      {/* Blade guard */}
+      <line x1={angry ? "60" : "58"} y1={angry ? "36" : "51"} x2={angry ? "69" : "67"} y2={angry ? "36" : "51"}
+        stroke="#78350F" strokeWidth="3" strokeLinecap="round"/>
+      {/* Blade glow when attacking */}
+      {angry && (
+        <>
+          <circle cx="65" cy="26" r="9" fill={playerColor} opacity="0.3"/>
+          <circle cx="65" cy="26" r="15" fill={playerColor} opacity="0.12"/>
+          {/* Water breathing water wisps */}
+          <path d="M60,34 Q68,28 65,22" fill="none" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round" opacity="0.7"/>
+          <path d="M62,30 Q70,26 68,20" fill="none" stroke="#BAE6FD" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+        </>
+      )}
+      {/* Shield */}
+      {blocking && (
+        <g>
+          <path d="M44,53 L65,53 Q67,69 55,79 Q43,69 44,53 Z" fill="#166534"/>
+          <path d="M46,55 L63,55 Q65,69 55,77 Q45,69 46,55 Z" fill="none" stroke="#15803D" strokeWidth="1.5"/>
+          <circle cx="55" cy="66" r="5" fill={playerColor} opacity="0.5"/>
+          <circle cx="55" cy="66" r="2.5" fill="white" opacity="0.4"/>
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// ─── Fighter Sprite Router ────────────────────────────────────────────────────
+export function FighterSprite({
+  character = "mage",
+  facingLeft,
+  state,
+  hpRatio,
+  isMe,
+}: {
+  character?: CharacterType;
+  facingLeft: boolean;
+  state: FighterState;
+  hpRatio: number;
+  isMe: boolean;
+}) {
+  switch (character) {
+    case "hollow_knight": return <HollowKnightSprite facingLeft={facingLeft} state={state} hpRatio={hpRatio} isMe={isMe}/>;
+    case "hornet":        return <HornetSprite       facingLeft={facingLeft} state={state} hpRatio={hpRatio} isMe={isMe}/>;
+    case "bendy":         return <BendySprite         facingLeft={facingLeft} state={state} hpRatio={hpRatio} isMe={isMe}/>;
+    case "tanjiro":       return <TanjiroSprite       facingLeft={facingLeft} state={state} hpRatio={hpRatio} isMe={isMe}/>;
+    default:              return <MageSprite           facingLeft={facingLeft} state={state} hpRatio={hpRatio} isMe={isMe}/>;
+  }
 }
 
 // ─── Idle Bob Wrapper ─────────────────────────────────────────────────────────
@@ -411,6 +850,8 @@ interface BattleStageProps {
   myHpRatio: number;
   opponentHpRatio: number;
   showingResolution: boolean;
+  myCharacter?: CharacterType;
+  opponentCharacter?: CharacterType;
 }
 
 function getChargeKind(action: BattleActionType): "light" | "heavy" | null {
@@ -434,6 +875,8 @@ export function BattleStage({
   myHpRatio,
   opponentHpRatio,
   showingResolution,
+  myCharacter = "mage",
+  opponentCharacter = "mage",
 }: BattleStageProps) {
   const [myState, setMyState] = useState<FighterState>("idle");
   const [oppState, setOppState] = useState<FighterState>("idle");
@@ -647,7 +1090,8 @@ export function BattleStage({
             {myShield && <ShieldBubble key="my-shield" isMe={true} />}
           </AnimatePresence>
           <IdleWrapper paused={myState !== "idle"}>
-            <MageSprite
+            <FighterSprite
+              character={myCharacter}
               facingLeft={false}
               state={myState}
               hpRatio={myHpRatio}
@@ -682,7 +1126,8 @@ export function BattleStage({
             {oppShield && <ShieldBubble key="opp-shield" isMe={false} />}
           </AnimatePresence>
           <IdleWrapper paused={oppState !== "idle"}>
-            <MageSprite
+            <FighterSprite
+              character={opponentCharacter}
               facingLeft={true}
               state={oppState}
               hpRatio={opponentHpRatio}

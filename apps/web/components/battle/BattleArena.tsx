@@ -11,7 +11,7 @@ import { QuestionCard } from "./QuestionCard";
 import { ActionPanel } from "./ActionPanel";
 import { ResolutionOverlay } from "./ResolutionOverlay";
 import { ResultsScreen } from "./ResultsScreen";
-import { BattleStage, type BattleActionType } from "./BattleStage";
+import { BattleStage, type BattleActionType, type CharacterType } from "./BattleStage";
 
 interface BattleArenaProps {
   battleId: string;
@@ -133,6 +133,11 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const myUserId = (session?.user as { id?: string })?.id ?? "";
+
+  const [myCharacter] = useState<CharacterType>(() => {
+    if (typeof window === "undefined") return "mage";
+    return (localStorage.getItem("ohmygame_character") as CharacterType) || "mage";
+  });
 
   const [lastResult, setLastResult] = useState<{
     isCorrect: boolean;
@@ -390,6 +395,7 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
           myHpRatio={(me?.hp ?? 5000) / 5000}
           opponentHpRatio={(opponent?.hp ?? 5000) / 5000}
           showingResolution={showResolution}
+          myCharacter={myCharacter}
         />
 
         {/* Phase-specific UI */}
