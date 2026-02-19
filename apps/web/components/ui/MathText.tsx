@@ -17,6 +17,10 @@ interface MathTextProps {
 export function MathText({ text, className, as: Tag = "span" }: MathTextProps) {
   if (!text) return null;
 
+  const normalizePlainText = (content: string) =>
+    // Treat escaped dollar in plain text as a literal currency symbol.
+    content.replace(/\\\$/g, "$");
+
   const normalizeMathContent = (content: string) =>
     content
       // Some stored content may double-escape LaTeX commands like \\int or \\,.
@@ -30,7 +34,7 @@ export function MathText({ text, className, as: Tag = "span" }: MathTextProps) {
 
   // Fast path when no known math delimiters exist.
   if (!normalizedText.includes("$") && !normalizedText.includes("\\(") && !normalizedText.includes("\\[")) {
-    return <Tag className={className}>{normalizedText}</Tag>;
+    return <Tag className={className}>{normalizePlainText(normalizedText)}</Tag>;
   }
 
   const parts: Array<{ type: "text" | "inline" | "display"; content: string }> = [];
@@ -42,7 +46,10 @@ export function MathText({ text, className, as: Tag = "span" }: MathTextProps) {
     const tokenStart = match.index ?? 0;
 
     if (tokenStart > lastIndex) {
-      parts.push({ type: "text", content: normalizedText.slice(lastIndex, tokenStart) });
+      parts.push({
+        type: "text",
+        content: normalizePlainText(normalizedText.slice(lastIndex, tokenStart)),
+      });
     }
 
     if (token.startsWith("$$")) {
@@ -59,7 +66,7 @@ export function MathText({ text, className, as: Tag = "span" }: MathTextProps) {
   }
 
   if (lastIndex < normalizedText.length) {
-    parts.push({ type: "text", content: normalizedText.slice(lastIndex) });
+    parts.push({ type: "text", content: normalizePlainText(normalizedText.slice(lastIndex)) });
   }
 
   return (
