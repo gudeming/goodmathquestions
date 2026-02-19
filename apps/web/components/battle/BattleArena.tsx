@@ -10,6 +10,7 @@ import { QuestionCard } from "./QuestionCard";
 import { ActionPanel } from "./ActionPanel";
 import { ResolutionOverlay } from "./ResolutionOverlay";
 import { ResultsScreen } from "./ResultsScreen";
+import { BattleStage, type BattleActionType } from "./BattleStage";
 
 interface BattleArenaProps {
   battleId: string;
@@ -137,6 +138,7 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
     correctAnswer: string | null;
   } | null>(null);
   const [showResolution, setShowResolution] = useState(false);
+  const [chosenAction, setChosenAction] = useState<BattleActionType>(null);
   const prevPhaseRef = useRef<string | null>(null);
   const prevRoundRef = useRef<number>(-1);
 
@@ -179,6 +181,7 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
       prevRound !== gameState.currentRound
     ) {
       setLastResult(null);
+      setChosenAction(null);
     }
 
     prevPhaseRef.current = gameState.phase;
@@ -218,6 +221,11 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
   const opponent = gameState.opponent;
   const lastRoundDamageToMe =
     gameState.lastRoundSummary?.participants[myUserId]?.damageReceived ?? 0;
+
+  // Actions from last round summary (used by BattleStage animation)
+  const myLastAction = (gameState.lastRoundSummary?.participants[myUserId]?.action ?? null) as BattleActionType;
+  const opponentLastAction = (Object.entries(gameState.lastRoundSummary?.participants ?? {})
+    .find(([id]) => id !== myUserId)?.[1]?.action ?? null) as BattleActionType;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900">
@@ -276,6 +284,16 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
           )}
         </div>
 
+        {/* Battle Stage — fighters with action-driven animations */}
+        <BattleStage
+          phase={gameState.phase}
+          myAction={showResolution ? myLastAction : chosenAction}
+          opponentAction={showResolution ? opponentLastAction : null}
+          myHpRatio={(me?.hp ?? 5000) / 5000}
+          opponentHpRatio={(opponent?.hp ?? 5000) / 5000}
+          showingResolution={showResolution}
+        />
+
         {/* Phase-specific UI */}
         <AnimatePresence mode="wait">
           {/* ANSWERING */}
@@ -307,9 +325,10 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
               key="action"
               battleXp={me?.battleXp ?? 0}
               hasActed={me?.hasActed ?? false}
-              onAction={(action) =>
-                submitActionMutation.mutate({ battleId, action })
-              }
+              onAction={(action) => {
+                setChosenAction(action as BattleActionType);
+                submitActionMutation.mutate({ battleId, action });
+              }}
               isSubmitting={submitActionMutation.isPending}
             />
           )}
