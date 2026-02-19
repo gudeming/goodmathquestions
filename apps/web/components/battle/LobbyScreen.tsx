@@ -36,8 +36,24 @@ export function LobbyScreen() {
     }
   }, []);
 
-  const { data: me } = trpc.user.me.useQuery();
-  const { data: history } = trpc.battle.getHistory.useQuery({ limit: 5 });
+  const { data: me, refetch: refetchMe } = trpc.user.me.useQuery();
+  const { data: history, refetch: refetchHistory } = trpc.battle.getHistory.useQuery({ limit: 5 });
+
+  // Auto-cancel any stale WAITING battle when landing on the lobby
+  const autoCancel = trpc.battle.cancelWaiting.useMutation({
+    onSuccess() {
+      // Re-sync XP balance after the refund
+      void refetchMe();
+      void refetchHistory();
+    },
+  });
+  useEffect(() => {
+    if (!history) return;
+    const stale = history.items.find((item) => item.status === "WAITING");
+    if (stale) {
+      autoCancel.mutate({ battleId: stale.battleId });
+    }
+  }, [history]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const createMutation = trpc.battle.create.useMutation({
     onSuccess(data) {

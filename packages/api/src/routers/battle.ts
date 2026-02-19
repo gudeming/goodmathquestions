@@ -406,18 +406,31 @@ export const battleRouter = createTRPCRouter({
         select: { xp: true, displayName: true, avatarUrl: true },
       });
 
-      // If user already has a WAITING battle, resume it instead of throwing
+      // If user has a stale WAITING battle, cancel it and start fresh
       const existingWaiting = await ctx.db.battle.findFirst({
         where: { status: "WAITING", participants: { some: { userId } } },
-        select: { id: true, inviteCode: true },
+        select: { id: true },
       });
       if (existingWaiting) {
-        return {
-          battleId: existingWaiting.id,
-          inviteCode: existingWaiting.inviteCode,
-          status: "WAITING" as const,
-          waitingForOpponent: true,
-        };
+        const deleted = await ctx.db.battle.deleteMany({
+          where: { id: existingWaiting.id, status: "WAITING" },
+        });
+        if (deleted.count > 0) {
+          // Refund the stale entry fee so user only pays once for the new battle
+          await ctx.db.user
+            .update({ where: { id: userId }, data: { xp: { increment: ENTRY_FEE_XP } } })
+            .catch(() => null);
+          await redis.zrem(RANDOM_ZQUEUE_KEY, existingWaiting.id).catch(() => null);
+          // Fall through: create a fresh battle below
+        } else {
+          // Race: battle was just matched while we were checking — redirect user to it
+          return {
+            battleId: existingWaiting.id,
+            inviteCode: null as string | null,
+            status: "ACTIVE" as const,
+            waitingForOpponent: false,
+          };
+        }
       }
 
       // Soft check before atomic deduction (avoids consuming a queue slot unnecessarily)
