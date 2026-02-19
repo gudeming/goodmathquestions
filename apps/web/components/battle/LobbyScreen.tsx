@@ -11,9 +11,15 @@ import { CHARACTER_INFO, CharacterType } from "./BattleStage";
 
 const STORAGE_KEY = "ohmygame_character";
 
+const PLAYER_COUNT_OPTIONS = [
+  { count: 2, label: "1v1", emoji: "⚔️", desc: "Classic duel" },
+  { count: 3, label: "3 Players", emoji: "🔥", desc: "Triple threat" },
+  { count: 4, label: "4 Players", emoji: "💥", desc: "Squad battle" },
+  { count: 6, label: "6 Players", emoji: "🌪️", desc: "All-out war" },
+];
+
 export function LobbyScreen() {
   const t = useTranslations("battle");
-  const tCommon = useTranslations("common");
   const router = useRouter();
   const params = useParams();
   const locale = (params?.locale as string) ?? "en";
@@ -22,11 +28,11 @@ export function LobbyScreen() {
   const [mode, setMode] = useState<"idle" | "waiting">("idle");
   const [waitingBattleId, setWaitingBattleId] = useState<string | null>(null);
   const [waitingInviteCode, setWaitingInviteCode] = useState<string | null>(null);
+  const [maxPlayers, setMaxPlayers] = useState(2);
   const [myCharacter, setMyCharacter] = useState<CharacterType | null>(null);
   const [showCharacterSelect, setShowCharacterSelect] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  // Load saved character on mount
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY) as CharacterType | null;
     if (saved && saved in CHARACTER_INFO) {
@@ -39,10 +45,9 @@ export function LobbyScreen() {
   const { data: me, refetch: refetchMe } = trpc.user.me.useQuery();
   const { data: history, refetch: refetchHistory } = trpc.battle.getHistory.useQuery({ limit: 5 });
 
-  // Auto-cancel any stale WAITING battle when landing on the lobby
+  // Auto-cancel stale WAITING battle
   const autoCancel = trpc.battle.cancelWaiting.useMutation({
     onSuccess() {
-      // Re-sync XP balance after the refund
       void refetchMe();
       void refetchHistory();
     },
@@ -73,7 +78,14 @@ export function LobbyScreen() {
 
   const joinMutation = trpc.battle.join.useMutation({
     onSuccess(data) {
-      router.push(`/${locale !== "en" ? locale + "/" : ""}ohmygame/battle/${data.battleId}`);
+      if (data.status === "ACTIVE") {
+        router.push(`/${locale !== "en" ? locale + "/" : ""}ohmygame/battle/${data.battleId}`);
+      } else {
+        // Still waiting for more players
+        setWaitingBattleId(data.battleId);
+        setWaitingInviteCode(null);
+        setMode("waiting");
+      }
     },
   });
 
@@ -85,6 +97,11 @@ export function LobbyScreen() {
     setShowCharacterSelect(false);
   };
 
+  // Derived prize info
+  const startingHP = maxPlayers * 1000;
+  const entryFee = 1000;
+  const winnerBonus = maxPlayers * 1000;
+
   if (showCharacterSelect) {
     return <CharacterSelectScreen onSelect={handleCharacterSelect} />;
   }
@@ -94,14 +111,23 @@ export function LobbyScreen() {
       <WaitingScreen
         battleId={waitingBattleId}
         inviteCode={waitingInviteCode}
-        onCancelled={() => { setMode("idle"); setWaitingBattleId(null); setWaitingInviteCode(null); }}
-        onMatchFound={(battleId) => router.push(`/${locale !== "en" ? locale + "/" : ""}ohmygame/battle/${battleId}`)}
+        maxPlayers={maxPlayers}
+        onCancelled={() => {
+          setMode("idle");
+          setWaitingBattleId(null);
+          setWaitingInviteCode(null);
+        }}
+        onMatchFound={(battleId) =>
+          router.push(
+            `/${locale !== "en" ? locale + "/" : ""}ohmygame/battle/${battleId}`
+          )
+        }
       />
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4 space-y-8">
+    <div className="max-w-2xl mx-auto py-8 px-4 space-y-6">
       {/* Title */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -145,17 +171,61 @@ export function LobbyScreen() {
         </motion.div>
       )}
 
-      {/* Entry fee notice */}
+      {/* Player count selector */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className={`rounded-2xl p-4 border text-center ${hasEnoughXp ? "bg-green-500/10 border-green-500/30" : "bg-red-500/10 border-red-500/30"}`}
+        transition={{ delay: 0.1 }}
+        className="bg-white/8 border border-white/15 rounded-2xl p-4 space-y-3"
       >
-        <p className="text-white font-bold">⚡ {t("entryFee")}: 1,000 XP per battle</p>
-        {!hasEnoughXp && (
-          <p className="text-red-400 text-sm mt-1">{t("notEnoughXp")}</p>
-        )}
+        <h3 className="text-white/70 font-heading text-sm uppercase tracking-wider text-center">
+          ⚙️ Battle Size
+        </h3>
+        <div className="grid grid-cols-4 gap-2">
+          {PLAYER_COUNT_OPTIONS.map((opt) => (
+            <motion.button
+              key={opt.count}
+              onClick={() => setMaxPlayers(opt.count)}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              className={`py-3 rounded-xl border font-heading text-center transition-all ${
+                maxPlayers === opt.count
+                  ? "bg-gradient-to-b from-orange-500 to-red-600 border-orange-400 text-white shadow-lg"
+                  : "bg-white/5 border-white/15 text-white/60 hover:bg-white/10"
+              }`}
+            >
+              <p className="text-xl">{opt.emoji}</p>
+              <p className="text-xs font-bold mt-1">{opt.label}</p>
+              <p className="text-[10px] opacity-60 mt-0.5">{opt.desc}</p>
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Battle stats for chosen player count */}
+        <div className="grid grid-cols-3 gap-2 mt-2">
+          <div className="bg-white/5 rounded-xl p-2 text-center">
+            <p className="text-[10px] text-white/40 font-heading uppercase">Starting HP</p>
+            <p className="text-green-400 font-bold text-sm font-heading">
+              {startingHP.toLocaleString()}
+            </p>
+          </div>
+          <div className="bg-white/5 rounded-xl p-2 text-center">
+            <p className="text-[10px] text-white/40 font-heading uppercase">Entry Fee</p>
+            <p className="text-yellow-400 font-bold text-sm font-heading">
+              {entryFee.toLocaleString()} XP
+            </p>
+          </div>
+          <div className="bg-white/5 rounded-xl p-2 text-center">
+            <p className="text-[10px] text-white/40 font-heading uppercase">Winner Bonus</p>
+            <p className="text-purple-400 font-bold text-sm font-heading">
+              +{winnerBonus.toLocaleString()} XP
+            </p>
+          </div>
+        </div>
+
+        <p className="text-center text-white/30 text-[11px] font-heading">
+          Kill an opponent → earn their 1,000 XP entry fee!
+        </p>
       </motion.div>
 
       {/* Error banner */}
@@ -169,33 +239,58 @@ export function LobbyScreen() {
         </motion.div>
       )}
 
+      {/* Insufficient XP warning */}
+      {!hasEnoughXp && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-red-500/10 border border-red-500/30 rounded-2xl p-3 text-center"
+        >
+          <p className="text-red-400 text-sm">{t("notEnoughXp")}</p>
+        </motion.div>
+      )}
+
       {/* Actions */}
       <div className="grid gap-4">
         {/* Random Match */}
         <motion.button
-          onClick={() => { setCreateError(null); createMutation.mutate({ mode: "RANDOM" }); }}
+          onClick={() => {
+            setCreateError(null);
+            createMutation.mutate({ mode: "RANDOM", maxPlayers });
+          }}
           disabled={!hasEnoughXp || createMutation.isPending}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="w-full py-5 bg-gradient-to-r from-orange-500 via-red-500 to-fun-pink text-white font-bold text-xl rounded-2xl font-heading shadow-xl disabled:opacity-40"
         >
-          {createMutation.isPending ? "Finding opponent..." : t("randomMatch")}
+          {createMutation.isPending
+            ? maxPlayers === 2
+              ? "Finding opponent..."
+              : `Waiting for ${maxPlayers} players...`
+            : maxPlayers === 2
+            ? t("randomMatch")
+            : `🔥 Find ${maxPlayers}-Player Battle`}
         </motion.button>
 
         {/* Invite a friend */}
         <div className="bg-white/10 border border-white/20 rounded-2xl p-5 space-y-3">
           <h3 className="text-white font-heading font-bold">{t("challengeFriend")}</h3>
           <motion.button
-            onClick={() => { setCreateError(null); createMutation.mutate({ mode: "INVITE" }); }}
+            onClick={() => {
+              setCreateError(null);
+              createMutation.mutate({ mode: "INVITE", maxPlayers });
+            }}
             disabled={!hasEnoughXp || createMutation.isPending}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="w-full py-3 bg-gradient-to-r from-primary-500 to-fun-purple text-white font-bold rounded-xl font-heading disabled:opacity-40"
           >
-            Create Invite Link
+            {maxPlayers === 2
+              ? "Create Invite Link"
+              : `Create ${maxPlayers}-Player Lobby`}
           </motion.button>
 
-          {/* Or join with code */}
+          {/* Join with code */}
           <div className="flex gap-2 mt-2">
             <input
               type="text"
@@ -229,7 +324,9 @@ export function LobbyScreen() {
           transition={{ delay: 0.4 }}
           className="space-y-3"
         >
-          <h3 className="text-white/60 font-heading uppercase text-sm tracking-wider">{t("history")}</h3>
+          <h3 className="text-white/60 font-heading uppercase text-sm tracking-wider">
+            {t("history")}
+          </h3>
           {history.items.map((item) => (
             <div
               key={item.battleId}
@@ -239,14 +336,24 @@ export function LobbyScreen() {
                 <span className="text-2xl">{item.isWinner ? "🏆" : "💪"}</span>
                 <div>
                   <p className="text-white font-bold text-sm">vs {item.opponentName}</p>
-                  <p className="text-white/40 text-xs">{item.rounds} rounds</p>
+                  <p className="text-white/40 text-xs">
+                    {item.rounds} rounds
+                    {(item.maxPlayers ?? 2) > 2 && ` · ${item.maxPlayers}P`}
+                  </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className={`font-bold font-heading ${item.isWinner ? "text-yellow-400" : "text-red-400"}`}>
-                  {item.isWinner ? "+" : ""}{item.xpChange?.toLocaleString()} XP
+                <p
+                  className={`font-bold font-heading ${
+                    item.isWinner ? "text-yellow-400" : "text-red-400"
+                  }`}
+                >
+                  {item.isWinner ? "+" : ""}
+                  {item.xpChange?.toLocaleString()} XP
                 </p>
-                <p className="text-white/40 text-xs">{item.isWinner ? "Victory" : "Defeat"}</p>
+                <p className="text-white/40 text-xs">
+                  {item.isWinner ? "Victory" : "Defeat"}
+                </p>
               </div>
             </div>
           ))}

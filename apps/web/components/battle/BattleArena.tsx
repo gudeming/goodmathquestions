@@ -8,7 +8,7 @@ import { trpc } from "@/lib/trpc";
 import { useSession } from "next-auth/react";
 import { PlayerHPBar } from "./PlayerHPBar";
 import { QuestionCard } from "./QuestionCard";
-import { ActionPanel } from "./ActionPanel";
+import { ActionPanel, type OpponentTarget } from "./ActionPanel";
 import { ResolutionOverlay } from "./ResolutionOverlay";
 import { ResultsScreen } from "./ResultsScreen";
 import { BattleStage, type BattleActionType, type CharacterType } from "./BattleStage";
@@ -18,7 +18,7 @@ interface BattleArenaProps {
   onPlayAgain: () => void;
 }
 
-// ─── Counter Choice Panel ──────────────────────────────────────────────────
+// ─── Counter Choice Panel (2-player only) ──────────────────────────────────
 interface CounterPanelProps {
   isDefender: boolean;
   defenderRemainingPower: number;
@@ -61,12 +61,9 @@ function CounterPanel({
       animate={{ opacity: 1, scale: 1 }}
       className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-yellow-400/40"
     >
-      {/* Header */}
       <div className="text-center mb-4">
         <p className="text-3xl mb-1">🛡️💥</p>
-        <p className="text-yellow-300 font-heading font-bold text-lg">
-          Attack Absorbed!
-        </p>
+        <p className="text-yellow-300 font-heading font-bold text-lg">Attack Absorbed!</p>
         <p className="text-white/70 text-sm mt-1">
           You have{" "}
           <span className="text-yellow-300 font-bold">
@@ -77,7 +74,6 @@ function CounterPanel({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {/* COUNTER */}
         <motion.button
           onClick={() => onChoice("COUNTER")}
           disabled={isSubmitting}
@@ -85,22 +81,14 @@ function CounterPanel({
           whileTap={{ scale: 0.96 }}
           className="relative overflow-hidden bg-gradient-to-br from-purple-500 to-violet-600 text-white font-bold py-5 px-3 rounded-2xl disabled:opacity-50 font-heading text-center shadow-lg"
         >
-          <motion.div
-            className="absolute inset-0 bg-white/10"
-            animate={{ opacity: [0, 0.2, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          />
           <p className="text-2xl mb-1">⚡️</p>
           <p className="text-sm font-bold">Counter-Strike</p>
           <p className="text-xs opacity-90 mt-1 font-bold text-yellow-300">
             {counterDamage.toLocaleString()} HP dmg
           </p>
-          <p className="text-[10px] opacity-70 mt-1">
-            Guaranteed — bypasses defense
-          </p>
+          <p className="text-[10px] opacity-70 mt-1">Guaranteed — bypasses defense</p>
         </motion.button>
 
-        {/* ACTIVE ATTACK */}
         <motion.button
           onClick={() => onChoice("ACTIVE_ATTACK")}
           disabled={isSubmitting}
@@ -108,22 +96,107 @@ function CounterPanel({
           whileTap={{ scale: 0.96 }}
           className="relative overflow-hidden bg-gradient-to-br from-red-500 to-orange-500 text-white font-bold py-5 px-3 rounded-2xl disabled:opacity-50 font-heading text-center shadow-lg"
         >
-          <motion.div
-            className="absolute inset-0 bg-white/10"
-            animate={{ opacity: [0, 0.2, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
-          />
           <p className="text-2xl mb-1">🔥</p>
           <p className="text-sm font-bold">Full Assault</p>
           <p className="text-xs opacity-90 mt-1 font-bold text-yellow-300">
             {activeAttackDamage.toLocaleString()} HP dmg
           </p>
-          <p className="text-[10px] opacity-70 mt-1">
-            (remaining − opponent) × 3
-          </p>
+          <p className="text-[10px] opacity-70 mt-1">(remaining − opponent) × 3</p>
         </motion.button>
       </div>
     </motion.div>
+  );
+}
+
+// ─── Multi-player opponents strip ────────────────────────────────────────────
+function OpponentsStrip({
+  opponents,
+  maxHp,
+  myUserId,
+  lastSummary,
+}: {
+  opponents: { userId: string; displayName: string; avatarUrl: string | null; hp: number; isEliminated: boolean }[];
+  maxHp: number;
+  myUserId: string;
+  lastSummary: { participants: Record<string, { damageReceived: number }> } | null;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {opponents.map((op) => {
+        const dmg = lastSummary?.participants[op.userId]?.damageReceived ?? 0;
+        return (
+          <div
+            key={op.userId}
+            className={`relative bg-white/5 border rounded-xl p-3 ${
+              op.isEliminated
+                ? "border-red-900/40 opacity-50"
+                : "border-white/10"
+            }`}
+          >
+            {op.isEliminated && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40">
+                <span className="text-red-400 font-heading font-bold text-sm">💀 KO</span>
+              </div>
+            )}
+            <PlayerHPBar
+              displayName={op.displayName}
+              avatarUrl={op.avatarUrl}
+              hp={op.hp}
+              maxHp={maxHp}
+              damageReceived={dmg}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Kill feed ────────────────────────────────────────────────────────────────
+function KillFeed({
+  kills,
+  participants,
+  myUserId,
+}: {
+  kills: { killedUserId: string; killerUserId: string | null; xpStaked: number }[];
+  participants: Record<string, { displayName: string }>;
+  myUserId: string;
+}) {
+  const recent = kills.slice(-3).reverse();
+  if (recent.length === 0) return null;
+
+  return (
+    <div className="space-y-1">
+      {recent.map((kill, i) => {
+        const killerName =
+          kill.killerUserId === myUserId
+            ? "You"
+            : (participants[kill.killerUserId ?? ""]?.displayName ?? "???");
+        const victimName =
+          kill.killedUserId === myUserId
+            ? "you"
+            : (participants[kill.killedUserId]?.displayName ?? "???");
+        const isMe = kill.killerUserId === myUserId;
+
+        return (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className={`text-xs font-heading px-3 py-1.5 rounded-lg ${
+              isMe
+                ? "bg-yellow-500/20 border border-yellow-500/30 text-yellow-300"
+                : "bg-red-500/10 border border-red-500/20 text-white/60"
+            }`}
+          >
+            ⚔️ <strong>{killerName}</strong> eliminated <strong>{victimName}</strong>
+            {isMe && (
+              <span className="ml-1 text-yellow-400">+{kill.xpStaked} XP</span>
+            )}
+          </motion.div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -159,12 +232,11 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
       setLastResult(data);
     },
   });
-
   const submitActionMutation = trpc.battle.submitAction.useMutation();
   const submitCounterMutation = trpc.battle.submitCounter.useMutation();
   const forfeitMutation = trpc.battle.forfeit.useMutation();
 
-  // ─── Early Leave Warning ─────────────────────────────────────────────────────
+  // ─── Early Leave Detection ────────────────────────────────────────────────
   const [pendingNavUrl, setPendingNavUrl] = useState<string | null>(null);
   const [showAwayModal, setShowAwayModal] = useState(false);
   const [awayTimeElapsed, setAwayTimeElapsed] = useState(0);
@@ -176,13 +248,11 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
   const entryFee = gameState?.me?.xpStaked ?? 0;
   const ABANDON_SECONDS = 60;
 
-  // Keep always-current refs so listeners registered once on mount never go stale
   const isActiveBattleRef = useRef(false);
   isActiveBattleRef.current = isActiveBattle;
   const forfeitMutateRef = useRef(forfeitMutation.mutate);
   forfeitMutateRef.current = forfeitMutation.mutate;
 
-  // Dismiss modal when battle ends
   useEffect(() => {
     if (gameState?.status === "FINISHED" || gameState?.status === "ABANDONED") {
       setShowAwayModal(false);
@@ -193,7 +263,6 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
     }
   }, [gameState?.status]);
 
-  // beforeunload: native browser warning on refresh/close — registered once on mount
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!isActiveBattleRef.current) return;
@@ -203,8 +272,6 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
-  // visibilitychange: show warning modal when player returns after switching tabs
-  // Registered once on mount; reads live values through refs to avoid stale closures
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!isActiveBattleRef.current) return;
@@ -244,14 +311,12 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // In-app navigation interception — capture-phase click on any <a> that leaves the battle
   useEffect(() => {
     const handleLinkClick = (e: MouseEvent) => {
       if (!isActiveBattleRef.current) return;
       const anchor = (e.target as Element).closest("a[href]") as HTMLAnchorElement | null;
       if (!anchor) return;
       const href = anchor.getAttribute("href");
-      // Only intercept internal links that navigate away from this battle page
       if (!href || !href.startsWith("/") || href.includes("/battle/")) return;
       e.preventDefault();
       e.stopPropagation();
@@ -261,7 +326,7 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
     return () => document.removeEventListener("click", handleLinkClick, true);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Show resolution overlay on lastRoundSummary change (round transition)
+  // Show resolution overlay on round transition
   useEffect(() => {
     if (!gameState) return;
     const prevRound = prevRoundRef.current;
@@ -279,10 +344,7 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
       return () => clearTimeout(timer);
     }
 
-    if (
-      gameState.phase === "ANSWERING" &&
-      prevRound !== gameState.currentRound
-    ) {
+    if (gameState.phase === "ANSWERING" && prevRound !== gameState.currentRound) {
       setLastResult(null);
       setChosenAction(null);
     }
@@ -305,30 +367,55 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
     );
   }
 
+  const maxPlayers = gameState.maxPlayers ?? 2;
+  const maxHp = maxPlayers * 1000;
+  const isMultiplayer = maxPlayers > 2;
+
   if (gameState.status === "FINISHED" || gameState.status === "ABANDONED") {
     const isWinner = gameState.winnerId === myUserId;
+    const firstOpponent = gameState.opponents[0];
+    const opponentName = isMultiplayer
+      ? `${gameState.opponents.length} opponents`
+      : (firstOpponent?.displayName ?? "Opponent");
+
     return (
       <ResultsScreen
         isWinner={isWinner}
         xpChange={gameState.me?.xpChange ?? (isWinner ? 1000 : -1000)}
         rounds={gameState.currentRound}
-        opponentName={gameState.opponent?.displayName ?? "Opponent"}
+        opponentName={opponentName}
         myFinalHp={gameState.me?.hp ?? 0}
-        opponentFinalHp={gameState.opponent?.hp ?? 0}
+        opponentFinalHp={firstOpponent?.hp ?? 0}
         onPlayAgain={onPlayAgain}
       />
     );
   }
 
   const me = gameState.me;
-  const opponent = gameState.opponent;
+  const opponents = gameState.opponents;
+  // For 2-player stage animations
+  const firstOpponent = opponents[0] ?? null;
   const lastRoundDamageToMe =
     gameState.lastRoundSummary?.participants[myUserId]?.damageReceived ?? 0;
-
-  // Actions from last round summary (used by BattleStage animation)
   const myLastAction = (gameState.lastRoundSummary?.participants[myUserId]?.action ?? null) as BattleActionType;
   const opponentLastAction = (Object.entries(gameState.lastRoundSummary?.participants ?? {})
     .find(([id]) => id !== myUserId)?.[1]?.action ?? null) as BattleActionType;
+
+  // Opponents as targets for ActionPanel
+  const opponentTargets: OpponentTarget[] = opponents
+    .filter((o) => !o.isEliminated)
+    .map((o) => ({
+      userId: o.userId,
+      displayName: o.displayName,
+      hp: o.hp,
+      isEliminated: o.isEliminated,
+    }));
+
+  // Build participant display map for kill feed
+  const allParticipantsDisplay: Record<string, { displayName: string }> = { [myUserId]: { displayName: "You" } };
+  for (const op of opponents) {
+    allParticipantsDisplay[op.userId] = { displayName: op.displayName };
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900">
@@ -362,41 +449,85 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
         >
           <span className="inline-block bg-white/10 border border-white/20 text-white font-heading font-bold px-6 py-2 rounded-full text-lg">
             {t("roundOf")} {gameState.currentRound + 1}
+            {isMultiplayer && (
+              <span className="ml-2 text-sm text-white/50">
+                {opponents.filter((o) => !o.isEliminated).length + (me?.isEliminated ? 0 : 1)} alive
+              </span>
+            )}
           </span>
         </motion.div>
 
-        {/* HP Bars */}
-        <div className="flex items-start justify-between gap-4 px-2">
-          {me && (
-            <PlayerHPBar
-              displayName="You"
-              hp={me.hp}
-              isMe
-              hasAnswered={me.hasAnswered}
-              damageReceived={lastRoundDamageToMe}
-            />
-          )}
-          <div className="text-white text-3xl font-bold self-center">⚔️</div>
-          {opponent && (
-            <PlayerHPBar
-              displayName={opponent.displayName}
-              avatarUrl={opponent.avatarUrl}
-              hp={opponent.hp}
-              hasAnswered={opponent.hasAnswered}
-            />
-          )}
-        </div>
+        {/* HP section */}
+        {isMultiplayer ? (
+          <div className="space-y-3">
+            {/* My HP */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+              <PlayerHPBar
+                displayName="You"
+                hp={me?.hp ?? 0}
+                maxHp={maxHp}
+                isMe
+                hasAnswered={me?.hasAnswered ?? false}
+                damageReceived={lastRoundDamageToMe}
+              />
+            </div>
+            {/* Opponents grid */}
+            {opponents.length > 0 && (
+              <OpponentsStrip
+                opponents={opponents}
+                maxHp={maxHp}
+                myUserId={myUserId}
+                lastSummary={gameState.lastRoundSummary}
+              />
+            )}
+          </div>
+        ) : (
+          /* Classic 2-player side-by-side */
+          <div className="flex items-start justify-between gap-4 px-2">
+            {me && (
+              <PlayerHPBar
+                displayName="You"
+                hp={me.hp}
+                maxHp={maxHp}
+                isMe
+                hasAnswered={me.hasAnswered}
+                damageReceived={lastRoundDamageToMe}
+              />
+            )}
+            <div className="text-white text-3xl font-bold self-center">⚔️</div>
+            {firstOpponent && (
+              <PlayerHPBar
+                displayName={firstOpponent.displayName}
+                avatarUrl={firstOpponent.avatarUrl}
+                hp={firstOpponent.hp}
+                maxHp={maxHp}
+                hasAnswered={firstOpponent.hasAnswered}
+              />
+            )}
+          </div>
+        )}
 
-        {/* Battle Stage — fighters with action-driven animations */}
-        <BattleStage
-          phase={gameState.phase}
-          myAction={showResolution ? myLastAction : chosenAction}
-          opponentAction={showResolution ? opponentLastAction : null}
-          myHpRatio={(me?.hp ?? 5000) / 5000}
-          opponentHpRatio={(opponent?.hp ?? 5000) / 5000}
-          showingResolution={showResolution}
-          myCharacter={myCharacter}
-        />
+        {/* Kill feed (multi-player) */}
+        {isMultiplayer && gameState.kills.length > 0 && (
+          <KillFeed
+            kills={gameState.kills}
+            participants={allParticipantsDisplay}
+            myUserId={myUserId}
+          />
+        )}
+
+        {/* Battle Stage — only for 2-player (character animations) */}
+        {!isMultiplayer && (
+          <BattleStage
+            phase={gameState.phase}
+            myAction={showResolution ? myLastAction : chosenAction}
+            opponentAction={showResolution ? opponentLastAction : null}
+            myHpRatio={(me?.hp ?? maxHp) / maxHp}
+            opponentHpRatio={(firstOpponent?.hp ?? maxHp) / maxHp}
+            showingResolution={showResolution}
+            myCharacter={myCharacter}
+          />
+        )}
 
         {/* Phase-specific UI */}
         <AnimatePresence mode="wait">
@@ -412,11 +543,7 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
               roundTimeRemaining={gameState.roundTimeRemaining}
               hasAnswered={me?.hasAnswered ?? false}
               onSubmit={(answer, timeMs) =>
-                submitAnswerMutation.mutate({
-                  battleId,
-                  answer,
-                  responseTimeMs: timeMs,
-                })
+                submitAnswerMutation.mutate({ battleId, answer, responseTimeMs: timeMs })
               }
               isSubmitting={submitAnswerMutation.isPending}
               lastResult={lastResult}
@@ -424,40 +551,50 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
           )}
 
           {/* ACTING */}
-          {gameState.phase === "ACTING" && (
+          {gameState.phase === "ACTING" && !me?.isEliminated && (
             <ActionPanel
               key="action"
               battleXp={me?.battleXp ?? 0}
               hasActed={me?.hasActed ?? false}
-              onAction={(action) => {
+              onAction={(action, targetUserId) => {
                 setChosenAction(action as BattleActionType);
-                submitActionMutation.mutate({ battleId, action });
+                submitActionMutation.mutate({ battleId, action, targetUserId });
               }}
               isSubmitting={submitActionMutation.isPending}
+              opponents={opponentTargets}
             />
           )}
 
-          {/* COUNTER_CHOICE */}
+          {/* Eliminated during ACTING */}
+          {gameState.phase === "ACTING" && me?.isEliminated && (
+            <motion.div
+              key="eliminated"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center text-white/60 font-heading py-8"
+            >
+              <div className="text-5xl mb-3">💀</div>
+              <p className="text-red-400 font-bold text-lg">You were eliminated!</p>
+              <p className="text-white/40 text-sm mt-2">Watching the battle unfold...</p>
+            </motion.div>
+          )}
+
+          {/* COUNTER_CHOICE (2-player only) */}
           {gameState.phase === "COUNTER_CHOICE" && gameState.counterChoice && (
             <CounterPanel
               key="counter"
               isDefender={gameState.counterChoice.isDefender}
-              defenderRemainingPower={
-                gameState.counterChoice.defenderRemainingPower
-              }
+              defenderRemainingPower={gameState.counterChoice.defenderRemainingPower}
               attackerCurrentPower={gameState.counterChoice.attackerCurrentPower}
               counterDamage={gameState.counterChoice.counterDamage}
               activeAttackDamage={gameState.counterChoice.activeAttackDamage}
-              onChoice={(action) =>
-                submitCounterMutation.mutate({ battleId, action })
-              }
+              onChoice={(action) => submitCounterMutation.mutate({ battleId, action })}
               isSubmitting={submitCounterMutation.isPending}
             />
           )}
 
-          {/* RESOLVING / generic waiting */}
-          {(gameState.phase === "RESOLVING" ||
-            gameState.phase === "FINISHED") && (
+          {/* Resolving / generic waiting */}
+          {(gameState.phase === "RESOLVING" || gameState.phase === "FINISHED") && (
             <motion.div
               key="resolving"
               initial={{ opacity: 0 }}
@@ -479,7 +616,6 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
         {/* Forfeit */}
         {gameState.status === "ACTIVE" && (
           <div className="text-center pt-2 space-y-2">
-            {/* Persistent leave warning */}
             <p className="text-white/25 text-[11px] font-heading">
               ⚠️ Switching tabs or refreshing will forfeit your{" "}
               <span className="text-yellow-500/50 font-bold">
@@ -508,7 +644,7 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
         visible={showResolution}
       />
 
-      {/* ─── Early Leave Warning Modal ─────────────────────────────────────── */}
+      {/* ─── Away Warning Modal ─────────────────────────────────────────────────── */}
       <AnimatePresence>
         {showAwayModal && (
           <motion.div
@@ -524,7 +660,6 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
               transition={{ type: "spring", stiffness: 320, damping: 24 }}
               className="bg-slate-800 border border-red-500/40 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
             >
-              {/* Header */}
               <div className="text-center mb-4">
                 <motion.div
                   animate={{ scale: [1, 1.15, 1] }}
@@ -542,24 +677,22 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
                 </p>
               </div>
 
-              {/* Entry fee at risk */}
               <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 mb-4 text-center">
                 <p className="text-white/60 text-xs mb-1">Entry Fee at stake</p>
                 <p className="text-yellow-400 font-bold text-2xl font-heading">
                   {entryFee.toLocaleString()} XP
                 </p>
                 <p className="text-red-400 text-xs mt-2 font-heading">
-                  Will be forfeited to your opponent!
+                  {isMultiplayer
+                    ? "You will be eliminated from the battle!"
+                    : "Will be forfeited to your opponent!"}
                 </p>
               </div>
 
-              {/* Countdown */}
               <div className="text-center mb-5">
                 {leaveCountdown > 0 ? (
                   <>
-                    <p className="text-white/40 text-xs mb-1 font-heading">
-                      Auto-forfeit in
-                    </p>
+                    <p className="text-white/40 text-xs mb-1 font-heading">Auto-forfeit in</p>
                     <motion.p
                       key={leaveCountdown}
                       initial={{ scale: 1.4, opacity: 0.5 }}
@@ -583,7 +716,6 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
                 )}
               </div>
 
-              {/* Action buttons */}
               <div className="grid grid-cols-2 gap-3">
                 <motion.button
                   whileHover={{ scale: 1.04 }}
@@ -620,7 +752,7 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
         )}
       </AnimatePresence>
 
-      {/* ─── Navigation Leave Confirm Modal ──────────────────────────────────── */}
+      {/* ─── Navigation Leave Confirm Modal ─────────────────────────────────────── */}
       <AnimatePresence>
         {pendingNavUrl && (
           <motion.div
@@ -652,7 +784,9 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
                   {entryFee.toLocaleString()} XP
                 </p>
                 <p className="text-orange-400 text-xs mt-2 font-heading">
-                  will be transferred to your opponent
+                  {isMultiplayer
+                    ? "You will be eliminated and lose your entry fee"
+                    : "will be transferred to your opponent"}
                 </p>
               </div>
 

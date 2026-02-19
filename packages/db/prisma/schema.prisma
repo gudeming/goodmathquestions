@@ -371,6 +371,7 @@ model Battle {
   status          BattleStatus @default(WAITING)
   inviteCode      String?      @unique // null = random queue
   xpStake         Int          @default(1000) // fixed entry fee per player
+  maxPlayers      Int          @default(2)    // 2–6; host selects at creation
   questionPool    Json         @default("[]") // pre-selected questionIds for this battle
   currentRound    Int          @default(0) // counter for display only
   roundTimeoutSec Int          @default(30)
@@ -387,17 +388,19 @@ model Battle {
 }
 
 model BattleParticipant {
-  id         String   @id @default(cuid())
-  battleId   String
-  userId     String
-  hp         Int      @default(5000) // starting HP; game ends when this hits 0
-  battleXp   Int      @default(0) // accumulated in-battle power (attack/shield fuel)
-  totalScore Int      @default(0) // total correct × difficulty weight
-  xpStaked   Int      @default(1000) // snapshot of entry fee at join time
-  isReady    Boolean  @default(false)
-  isWinner   Boolean?
-  xpChange   Int      @default(0) // net account XP change at game end
-  lastSeenAt DateTime @default(now()) // updated on each poll; used for abandon detection
+  id              String   @id @default(cuid())
+  battleId        String
+  userId          String
+  hp              Int      @default(2000) // starting HP = maxPlayers × 1000; set at join time
+  battleXp        Int      @default(0) // accumulated in-battle power (attack/shield fuel)
+  totalScore      Int      @default(0) // total correct × difficulty weight
+  xpStaked        Int      @default(1000) // snapshot of entry fee at join time
+  isReady         Boolean  @default(false)
+  isWinner        Boolean?
+  isEliminated    Boolean  @default(false) // knocked to 0 HP during battle
+  killedByUserId  String?               // userId of the player who dealt the killing blow
+  xpChange        Int      @default(0) // net account XP change at game end
+  lastSeenAt      DateTime @default(now()) // updated on each poll; used for abandon detection
 
   battle Battle @relation(fields: [battleId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

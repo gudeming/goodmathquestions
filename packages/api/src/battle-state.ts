@@ -7,7 +7,7 @@ import { redis } from "./redis";
 export type BattlePhase =
   | "ANSWERING"
   | "ACTING"
-  | "COUNTER_CHOICE" // defender picks counter or active-attack after absorbing an attack
+  | "COUNTER_CHOICE" // 2-player only: defender picks counter after absorbing an attack
   | "RESOLVING"
   | "FINISHED";
 
@@ -21,20 +21,28 @@ export type ActionChosen =
   | "FAILED_ATTACK" // display-only label in summaries
   | "NONE";
 
+export interface KillRecord {
+  killedUserId: string;
+  killerUserId: string | null; // null = environment kill (timeout/forfeit)
+  xpStaked: number;            // the victim's entry fee that goes to the killer
+}
+
 export interface BattleParticipantState {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
   hp: number;
-  battleXp: number;      // accumulated power — persists between rounds until spent
+  battleXp: number;          // accumulated power — persists between rounds until spent
   hasAnswered: boolean;
   hasActed: boolean;
   actionChosen: ActionChosen;
-  attackPowerUsed: number; // power committed to the current attack (for display)
-  lastSeenAt: number;      // epoch ms — for abandon detection
-  xpStaked: number;        // snapshot of entry fee at join time
-  xpChange?: number;       // set after battle ends: actual XP won (+) or lost (-)
-  lastAnswerCorrect: boolean | null; // FIX: actual answer correctness for summary display
+  attackPowerUsed: number;   // power committed to the current attack (for display)
+  targetUserId?: string;     // multi-player: who this player is targeting in ACTING phase
+  isEliminated: boolean;     // true when HP hits 0 (stays in participants for history)
+  lastSeenAt: number;        // epoch ms — for abandon detection
+  xpStaked: number;          // snapshot of entry fee at join time
+  xpChange?: number;         // set after battle ends: actual XP won (+) or lost (-)
+  lastAnswerCorrect: boolean | null;
 }
 
 export interface BattleQuestionState {
@@ -50,8 +58,8 @@ export interface BattleQuestionState {
 export interface PendingCounter {
   defenderId: string;
   attackerId: string;
-  defenderRemainingPower: number; // power remaining after absorbing the attack
-  startedAt: number;              // epoch ms — for timeout detection
+  defenderRemainingPower: number;
+  startedAt: number;
 }
 
 export interface BattleRedisState {
@@ -61,14 +69,16 @@ export interface BattleRedisState {
   currentRound: number;
   roundStartedAt: number; // epoch ms
   roundTimeoutSec: number;
+  maxPlayers: number;     // 2–6; determines starting HP and winner bonus
   participants: Record<string, BattleParticipantState>; // keyed by userId
   currentQuestion: Omit<BattleQuestionState, "answer"> | null;
   lastRoundSummary: RoundSummary | null;
-  pendingCounter: PendingCounter | null; // set when an attack is absorbed by a defender
+  pendingCounter: PendingCounter | null; // 2-player only
+  kills: KillRecord[];                   // multi-player kill tracking
   winnerId: string | null;
   countdownStartedAt: number | null;
-  usedQuestionIds: string[];  // FIX: DB question ids seen in this battle (for deduplication)
-  waitingExpiresAt: number | null; // FIX: epoch ms when a WAITING battle auto-expires
+  usedQuestionIds: string[];
+  waitingExpiresAt: number | null;
 }
 
 export interface RoundSummary {
@@ -82,22 +92,31 @@ export interface RoundSummary {
       damageDealt: number;
       damageReceived: number;
       hpAfter: number;
+      isEliminated?: boolean; // NEW: whether this player was eliminated this round
+      killedBy?: string;      // NEW: userId of killer if eliminated
     }
   >;
+  newKills?: KillRecord[]; // kills that happened in this round
 }
 
 // ============================================================
 // CONSTANTS
 // ============================================================
 
-export const BATTLE_STATE_TTL = 7200; // 2 hours
+export const BATTLE_STATE_TTL = 7200;          // 2 hours
 export const ENTRY_FEE_XP = 1000;
-export const STARTING_HP = 5000;
+export const HP_PER_PLAYER = 1000;             // starting HP = maxPlayers × HP_PER_PLAYER
+export const WINNER_BONUS_XP_PER_PLAYER = 1000; // system bonus = maxPlayers × this
 export const ABANDON_TIMEOUT_MS = 60_000;
-export const COUNTER_TIMEOUT_MS = 15_000; // 15s to choose counter action
-export const QUEUE_ENTRY_TTL_MS = 300_000; // 5 minutes in RANDOM queue
+export const COUNTER_TIMEOUT_MS = 15_000;
+export const QUEUE_ENTRY_TTL_MS = 300_000;     // 5 min in RANDOM queue
 
-// Battle XP per correct answer (accumulates as defense / attack resource)
+/** Compute starting HP for a battle with the given player count */
+export function startingHp(maxPlayers: number): number {
+  return Math.max(2, Math.min(6, maxPlayers)) * HP_PER_PLAYER;
+}
+
+// Battle XP per correct answer
 const DIFFICULTY_BASE: Record<string, number> = {
   EASY: 300,
   MEDIUM: 600,
@@ -106,7 +125,7 @@ const DIFFICULTY_BASE: Record<string, number> = {
 };
 
 // What fraction of battleXp each attack choice commits
-const ATTACK_PERCENT: Record<string, number> = {
+export const ATTACK_PERCENT: Record<string, number> = {
   ATTACK_50: 0.5,
   ATTACK_80: 0.8,
   ATTACK_100: 1.0,
@@ -130,30 +149,32 @@ export function calcBattleXp(
 }
 
 // ============================================================
-// ROUND RESOLUTION — ACTING phase
+// HELPERS
 // ============================================================
 
-function isAttackAction(action: ActionChosen | string): boolean {
+export function isAttackAction(action: ActionChosen | string): boolean {
   return action === "ATTACK_50" || action === "ATTACK_80" || action === "ATTACK_100";
 }
 
+export function isAbandoned(participant: BattleParticipantState): boolean {
+  return Date.now() - participant.lastSeenAt > ABANDON_TIMEOUT_MS;
+}
+
+/** Returns alive (non-eliminated) participants */
+export function alivePlayers(
+  state: BattleRedisState
+): BattleParticipantState[] {
+  return Object.values(state.participants).filter((p) => !p.isEliminated);
+}
+
+// ============================================================
+// ROUND RESOLUTION — 2-player (ACTING phase)
+// ============================================================
+
 /**
  * Resolve combat when both players have chosen their ACTING-phase action.
- *
- * New mechanics
- * ─────────────
- * • battleXp persists between rounds (not reset each round)
- * • Attack choices: ATTACK_50 / ATTACK_80 / ATTACK_100 commit that % of current power
- * • HOLD: keeps all power as passive defense, no direct damage this exchange
- * • If attacker's committed power > defender's accumulated power:
- *     HP damage = (committed - defender) × 3; both sides spend their power
- * • If attacker's committed power ≤ defender's accumulated power:
- *     Attacker loses committed power; defender retains (defender − committed)
- *     → pendingCounter is returned; state.phase should be set to COUNTER_CHOICE
- * • If both attack: higher committed wins; both spend committed power
- * • If both HOLD: no damage, XP accumulates
- *
- * Returns hasPendingCounter = true when the round is NOT yet fully resolved.
+ * Used exclusively for 2-player (maxPlayers === 2) battles where
+ * COUNTER_CHOICE mechanics are available.
  */
 export function resolveRound(state: BattleRedisState): {
   summary: RoundSummary | null;
@@ -181,12 +202,11 @@ export function resolveRound(state: BattleRedisState): {
   a.attackPowerUsed = aCommit;
   b.attackPowerUsed = bCommit;
 
-  let aDamageDealt = 0; // HP damage A inflicts on B
-  let bDamageDealt = 0; // HP damage B inflicts on A
+  let aDamageDealt = 0;
+  let bDamageDealt = 0;
   let pendingCounter: PendingCounter | null = null;
 
   if (aAttacking && bAttacking) {
-    // Both commit power — higher wins
     a.battleXp -= aCommit;
     b.battleXp -= bCommit;
     if (aCommit > bCommit) {
@@ -194,9 +214,7 @@ export function resolveRound(state: BattleRedisState): {
     } else if (bCommit > aCommit) {
       bDamageDealt = (bCommit - aCommit) * 3;
     }
-    // equal → no HP damage, both still spent their power
   } else if (aAttacking) {
-    // A attacks, B's battleXp is their passive defense
     a.battleXp -= aCommit;
     if (aCommit > b.battleXp) {
       aDamageDealt = (aCommit - b.battleXp) * 3;
@@ -212,7 +230,6 @@ export function resolveRound(state: BattleRedisState): {
       };
     }
   } else if (bAttacking) {
-    // B attacks, A's battleXp is their passive defense
     b.battleXp -= bCommit;
     if (bCommit > a.battleXp) {
       bDamageDealt = (bCommit - a.battleXp) * 3;
@@ -228,13 +245,10 @@ export function resolveRound(state: BattleRedisState): {
       };
     }
   }
-  // Both HOLD → no action, XP keeps accumulating
 
-  // Apply HP damage
   a.hp = Math.max(0, a.hp - bDamageDealt);
   b.hp = Math.max(0, b.hp - aDamageDealt);
 
-  // Reset action flags (answers reset only when the next question starts)
   a.hasActed = false;
   a.actionChosen = "NONE";
   b.hasActed = false;
@@ -242,7 +256,6 @@ export function resolveRound(state: BattleRedisState): {
 
   state.pendingCounter = pendingCounter;
 
-  // Win check
   const aAlive = a.hp > 0;
   const bAlive = b.hp > 0;
   let finished = false;
@@ -250,6 +263,8 @@ export function resolveRound(state: BattleRedisState): {
 
   if (!aAlive || !bAlive) {
     finished = true;
+    if (!aAlive) a.isEliminated = true;
+    if (!bAlive) b.isEliminated = true;
     if (aAlive && !bAlive) winnerId = a.userId;
     else if (bAlive && !aAlive) winnerId = b.userId;
     else winnerId = a.attackPowerUsed >= b.attackPowerUsed ? a.userId : b.userId;
@@ -258,55 +273,221 @@ export function resolveRound(state: BattleRedisState): {
   }
 
   if (!pendingCounter) {
-    // Full round complete — build summary using lastAnswerCorrect (FIX: was always true before)
     const summary: RoundSummary = {
       round: state.currentRound,
       participants: {
         [a.userId]: {
-          isCorrect: a.lastAnswerCorrect ?? false, // FIX: use actual correctness
+          isCorrect: a.lastAnswerCorrect ?? false,
           battleXpGained: aCommit,
           action: a.attackPowerUsed > 0 ? a.actionChosen || "ATTACK_100" : "HOLD",
           damageDealt: aDamageDealt,
           damageReceived: bDamageDealt,
           hpAfter: a.hp,
+          isEliminated: a.isEliminated,
         },
         [b.userId]: {
-          isCorrect: b.lastAnswerCorrect ?? false, // FIX: use actual correctness
+          isCorrect: b.lastAnswerCorrect ?? false,
           battleXpGained: bCommit,
           action: b.attackPowerUsed > 0 ? b.actionChosen || "ATTACK_100" : "HOLD",
           damageDealt: bDamageDealt,
           damageReceived: aDamageDealt,
           hpAfter: b.hp,
+          isEliminated: b.isEliminated,
         },
       },
     };
     state.lastRoundSummary = summary;
     a.hasAnswered = false;
     a.attackPowerUsed = 0;
-    a.lastAnswerCorrect = null; // FIX: reset for next round
+    a.lastAnswerCorrect = null;
     b.hasAnswered = false;
     b.attackPowerUsed = 0;
-    b.lastAnswerCorrect = null; // FIX: reset for next round
+    b.lastAnswerCorrect = null;
     state.currentRound += 1;
     return { summary, finished, winnerId, hasPendingCounter: false };
   } else {
-    // Counter choice pending — save partial result but don't advance round yet
     return { summary: null, finished, winnerId, hasPendingCounter: true };
   }
 }
 
 // ============================================================
-// COUNTER RESOLUTION — COUNTER_CHOICE phase
+// ROUND RESOLUTION — multi-player (N ≥ 3 players, ACTING phase)
+// ============================================================
+
+/**
+ * Resolve combat for 3–6 player battles.
+ *
+ * Each alive player has chosen:
+ *   actionChosen: ATTACK_50/80/100 or HOLD
+ *   targetUserId: which opponent to attack (auto-assigned if missing)
+ *
+ * Mechanics:
+ *   - Attacks processed in decreasing commit order per target
+ *   - Each attack: committed power vs target's current battleXp
+ *     • committed > target.battleXp → damage = (committed − defense) × 3; target.battleXp = 0
+ *     • committed ≤ target.battleXp → target absorbs (keeps remaining); NO counter in multi-player
+ *   - Multiple players can target the same opponent (attacks resolved sequentially)
+ *   - Player eliminated when hp ≤ 0; kill reward goes to the attacker who dealt the killing blow
+ *   - Game ends when ≤ 1 survivor remains
+ */
+export function resolveMultiplayerRound(state: BattleRedisState): {
+  summary: RoundSummary;
+  finished: boolean;
+  winnerId: string | null;
+} {
+  const allP = Object.values(state.participants);
+  const alive = allP.filter((p) => !p.isEliminated);
+
+  // Group attacks by target
+  const incomingAttacks: Record<
+    string,
+    Array<{ commit: number; attackerId: string }>
+  > = {};
+
+  for (const attacker of alive) {
+    if (!isAttackAction(attacker.actionChosen)) {
+      attacker.attackPowerUsed = 0;
+      continue;
+    }
+
+    // Resolve / validate target
+    let targetId = attacker.targetUserId;
+    const targetValid =
+      targetId &&
+      targetId !== attacker.userId &&
+      state.participants[targetId] &&
+      !state.participants[targetId]!.isEliminated;
+
+    if (!targetValid) {
+      // Auto-target: pick first alive opponent
+      const fallback = alive.find((p) => p.userId !== attacker.userId);
+      targetId = fallback?.userId;
+    }
+    if (!targetId) {
+      attacker.attackPowerUsed = 0;
+      continue;
+    }
+
+    const pct = ATTACK_PERCENT[attacker.actionChosen] ?? 1;
+    const committed = Math.floor(attacker.battleXp * pct);
+    attacker.battleXp -= committed;
+    attacker.attackPowerUsed = committed;
+    attacker.targetUserId = targetId; // normalize
+
+    if (!incomingAttacks[targetId]) incomingAttacks[targetId] = [];
+    incomingAttacks[targetId].push({ commit: committed, attackerId: attacker.userId });
+  }
+
+  // Track damage for summary
+  const damageDealtMap: Record<string, number> = {};
+  const damageReceivedMap: Record<string, number> = {};
+  const roundKills: KillRecord[] = [];
+
+  for (const [targetId, attacks] of Object.entries(incomingAttacks)) {
+    const target = state.participants[targetId]!;
+    // Sort: strongest first — more impactful hits land while target still has defense
+    const sorted = [...attacks].sort((a, b) => b.commit - a.commit);
+
+    for (const { commit, attackerId } of sorted) {
+      if (target.isEliminated) break; // already dead from an earlier hit this round
+
+      if (commit > target.battleXp) {
+        const damage = (commit - target.battleXp) * 3;
+        target.battleXp = 0;
+        target.hp = Math.max(0, target.hp - damage);
+
+        damageDealtMap[attackerId] = (damageDealtMap[attackerId] ?? 0) + damage;
+        damageReceivedMap[targetId] = (damageReceivedMap[targetId] ?? 0) + damage;
+
+        if (target.hp <= 0) {
+          target.isEliminated = true;
+          roundKills.push({
+            killedUserId: targetId,
+            killerUserId: attackerId,
+            xpStaked: target.xpStaked,
+          });
+        }
+      } else {
+        // Attack absorbed — attacker already spent power, target keeps the difference
+        target.battleXp -= commit;
+        // No counter-attack in multi-player
+      }
+    }
+  }
+
+  // Append new kills
+  state.kills = [...(state.kills ?? []), ...roundKills];
+
+  // Win check (before resetting flags)
+  const survivors = allP.filter((p) => !p.isEliminated);
+  let finished = false;
+  let winnerId: string | null = null;
+
+  if (survivors.length <= 1) {
+    finished = true;
+    if (survivors.length === 1) {
+      winnerId = survivors[0]!.userId;
+    } else {
+      // Simultaneous elimination — highest attack power this round wins
+      winnerId =
+        allP.reduce((best, p) =>
+          (p.attackPowerUsed ?? 0) >= (best?.attackPowerUsed ?? 0) ? p : best
+        ).userId ?? null;
+      if (winnerId) state.participants[winnerId]!.isEliminated = false; // survivor
+    }
+    state.status = "FINISHED";
+    state.winnerId = winnerId;
+  }
+
+  // Build round summary
+  const summary: RoundSummary = {
+    round: state.currentRound,
+    participants: Object.fromEntries(
+      allP.map((p) => [
+        p.userId,
+        {
+          isCorrect: p.lastAnswerCorrect ?? false,
+          battleXpGained: p.attackPowerUsed ?? 0,
+          action:
+            p.attackPowerUsed > 0
+              ? p.actionChosen || "ATTACK_100"
+              : "HOLD",
+          damageDealt: damageDealtMap[p.userId] ?? 0,
+          damageReceived: damageReceivedMap[p.userId] ?? 0,
+          hpAfter: p.hp,
+          isEliminated: p.isEliminated,
+          killedBy:
+            roundKills.find((k) => k.killedUserId === p.userId)
+              ?.killerUserId ?? undefined,
+        },
+      ])
+    ),
+    newKills: roundKills.length > 0 ? roundKills : undefined,
+  };
+  state.lastRoundSummary = summary;
+  state.pendingCounter = null;
+
+  // Reset per-round flags for all players (alive or not — dead ones won't act anyway)
+  for (const p of allP) {
+    p.hasActed = false;
+    p.hasAnswered = false;
+    p.actionChosen = "NONE";
+    p.attackPowerUsed = 0;
+    p.lastAnswerCorrect = null;
+    p.targetUserId = undefined;
+  }
+  state.currentRound += 1;
+
+  return { summary, finished, winnerId };
+}
+
+// ============================================================
+// COUNTER RESOLUTION — 2-player COUNTER_CHOICE phase
 // ============================================================
 
 /**
  * Resolve the defender's counter-attack choice after absorbing an attack.
- *
- * COUNTER       → guaranteed damage = defenderRemainingPower × 2 (bypasses offense)
- * ACTIVE_ATTACK → damage = (defenderRemainingPower − attackerCurrentPower) × 3
- *                 (can be 0 if attacker has rebuilt power somehow, min 0)
- *
- * Defender always spends their remaining power regardless of choice.
+ * Only used in 2-player battles.
  */
 export function resolveCounter(
   state: BattleRedisState,
@@ -318,15 +499,16 @@ export function resolveCounter(
 
   let damageToAttacker: number;
   if (counterAction === "COUNTER") {
-    // Guaranteed — ignores attacker's remaining power
     damageToAttacker = pc.defenderRemainingPower * 2;
   } else {
-    // Active attack: (defender remaining − attacker current) × 3, min 0
-    damageToAttacker = Math.max(0, (pc.defenderRemainingPower - attacker.battleXp) * 3);
+    damageToAttacker = Math.max(
+      0,
+      (pc.defenderRemainingPower - attacker.battleXp) * 3
+    );
   }
 
   attacker.hp = Math.max(0, attacker.hp - damageToAttacker);
-  defender.battleXp = 0; // counter/active-attack spends the remaining power
+  defender.battleXp = 0;
 
   const summary: RoundSummary = {
     round: state.currentRound,
@@ -353,17 +535,15 @@ export function resolveCounter(
   state.lastRoundSummary = summary;
   state.pendingCounter = null;
 
-  // Reset both players for next round
   for (const p of Object.values(state.participants)) {
     p.hasAnswered = false;
     p.hasActed = false;
     p.actionChosen = "NONE";
     p.attackPowerUsed = 0;
-    p.lastAnswerCorrect = null; // FIX: reset for next round
+    p.lastAnswerCorrect = null;
   }
   state.currentRound += 1;
 
-  // Win check
   const [p1, p2] = Object.values(state.participants) as [
     BattleParticipantState,
     BattleParticipantState
@@ -375,9 +555,11 @@ export function resolveCounter(
 
   if (!p1Alive || !p2Alive) {
     finished = true;
+    if (!p1Alive) p1.isEliminated = true;
+    if (!p2Alive) p2.isEliminated = true;
     if (p1Alive && !p2Alive) winnerId = p1.userId;
     else if (p2Alive && !p1Alive) winnerId = p2.userId;
-    else winnerId = pc.defenderId; // both dead → defender wins (dealt final blow)
+    else winnerId = pc.defenderId;
     state.status = "FINISHED";
     state.winnerId = winnerId;
   }
@@ -415,8 +597,11 @@ export async function readBattleState(
     // Backward-compat: ensure new fields exist for states created before this migration
     state.usedQuestionIds ??= [];
     state.waitingExpiresAt ??= null;
+    state.maxPlayers ??= 2;
+    state.kills ??= [];
     for (const p of Object.values(state.participants)) {
       p.lastAnswerCorrect ??= null;
+      p.isEliminated ??= false;
     }
     return state;
   } catch {
@@ -451,12 +636,12 @@ export async function acquireRoundLock(
     );
     return result === "OK";
   } catch {
-    return false; // FIX: fail closed — do not process if Redis is unavailable
+    return false;
   }
 }
 
 /**
- * Per-battle mutex to serialize concurrent player mutations (submitAnswer, submitAction).
+ * Per-battle mutex to serialize concurrent player mutations.
  * Returns a release function. TTL of 5s ensures auto-release if server crashes.
  */
 export async function acquireBattleMutex(
@@ -478,12 +663,11 @@ export async function acquireBattleMutex(
         };
       }
     } catch {
-      // Redis error — fail open (no mutex) to avoid total lock-up
       return null;
     }
     await new Promise<void>((r) => setTimeout(r, 50 + Math.random() * 50));
   }
-  return null; // Could not acquire — caller proceeds without lock (degraded)
+  return null;
 }
 
 export async function storeRoundQuestion(
@@ -517,7 +701,7 @@ export async function getRoundQuestion(
 }
 
 /**
- * FIX: expanded from 1,440 to ~1 billion combinations (32^6).
+ * Expanded invite code space: ~1 billion combinations (32^6).
  * Excludes visually confusing chars (I, O, 0, 1).
  */
 export function generateInviteCode(): string {
@@ -527,8 +711,4 @@ export function generateInviteCode(): string {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
   return code;
-}
-
-export function isAbandoned(participant: BattleParticipantState): boolean {
-  return Date.now() - participant.lastSeenAt > ABANDON_TIMEOUT_MS;
 }

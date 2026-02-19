@@ -13,21 +13,28 @@ import {
   getRoundQuestion,
   generateInviteCode,
   resolveRound,
+  resolveMultiplayerRound,
   resolveCounter,
   calcBattleXp,
   isAbandoned,
+  alivePlayers,
   ENTRY_FEE_XP,
-  STARTING_HP,
+  WINNER_BONUS_XP_PER_PLAYER,
   COUNTER_TIMEOUT_MS,
   QUEUE_ENTRY_TTL_MS,
+  startingHp,
   type BattleRedisState,
   type BattleParticipantState,
   type BattleQuestionState,
 } from "../battle-state";
 import { redis } from "../redis";
 
-// FIX: use a Sorted Set so each entry has its own TTL (score = expiresAt timestamp)
-const RANDOM_ZQUEUE_KEY = "battle:matchmaking:zqueue";
+// Sorted-Set queue key per player count
+function queueKey(maxPlayers: number): string {
+  return maxPlayers === 2
+    ? "battle:matchmaking:zqueue"          // keeps backward compat with old key
+    : `battle:matchmaking:zqueue:${maxPlayers}`;
+}
 
 const DOMAINS = [
   "ARITHMETIC", "ALGEBRA", "GEOMETRY", "FRACTIONS", "WORD_PROBLEMS",
@@ -35,7 +42,6 @@ const DOMAINS = [
 
 // ============================================================
 // HELPER: select a question for a battle round
-// FIX: accepts excludeDbIds for deduplication; uses ORDER BY RANDOM() for efficiency
 // ============================================================
 async function selectBattleQuestion(
   db: PrismaClient,
@@ -50,7 +56,6 @@ async function selectBattleQuestion(
         ? { isPublished: true, id: { notIn: excludeDbIds } }
         : { isPublished: true };
 
-      // FIX: ORDER BY RANDOM() via single query instead of count + skip (two queries)
       const count = await db.question.count({ where });
       if (count > 0) {
         const skip = Math.floor(Math.random() * count);
@@ -63,7 +68,7 @@ async function selectBattleQuestion(
             difficulty: q.difficulty,
             category: q.category,
             answer: q.answer,
-            dbId: q.id, // FIX: track DB id for deduplication
+            dbId: q.id,
           };
         }
       }
@@ -82,21 +87,30 @@ async function selectBattleQuestion(
     difficulty: generated.level >= 4 ? "HARD" : generated.level >= 3 ? "MEDIUM" : "EASY",
     category: domain,
     answer: generated.answer,
-    // no dbId for adaptive questions
   };
 }
 
 // ============================================================
-// HELPER: transfer XP and mark battle finished in DB
-// FIX: winner gets back both stakes (both were pre-deducted at join)
+// HELPER: finalize battle — awards kill XP + winner bonus
 // ============================================================
+/**
+ * XP economy:
+ *   • Entry fee pre-deducted at join (1000 XP per player).
+ *   • Kill reward: killer receives victim.xpStaked from system (+1000).
+ *   • Final winner: receives own stake back + system bonus (maxPlayers × 1000).
+ *   • Eliminated players: already paid; get no XP back unless they earned kill rewards.
+ */
 async function finalizeBattle(
   db: PrismaClient,
   state: BattleRedisState,
   winnerId: string | null
 ): Promise<void> {
-  // Guard: only finalize once per battle
-  if (state.status === "FINISHED" || state.status === "ABANDONED") return;
+  // NOTE: do NOT guard on state.status here — resolve functions (resolveRound,
+  // resolveMultiplayerRound, resolveCounter) already set state.status = "FINISHED"
+  // before calling this function. Checking it would cause an immediate early return
+  // and skip all DB work (XP awards, kill records, stats). Idempotency is handled
+  // by the DB-level updateMany guard below.
+  if (state.status === "ABANDONED") return;
 
   state.status = "FINISHED";
   state.phase = "FINISHED";
@@ -104,79 +118,111 @@ async function finalizeBattle(
 
   try {
     const participantIds = Object.keys(state.participants);
-    const loserId = participantIds.find((id) => id !== winnerId) ?? null;
+    const maxPlayers = state.maxPlayers ?? 2;
 
-    if (winnerId && loserId) {
-      const winnerStake = state.participants[winnerId]?.xpStaked ?? ENTRY_FEE_XP;
-      const loserStake = state.participants[loserId]?.xpStaked ?? ENTRY_FEE_XP;
+    // Idempotency guard — only finalize once
+    const updateResult = await db.battle.updateMany({
+      where: { id: state.battleId, status: { not: "FINISHED" } },
+      data: { status: "FINISHED", finishedAt: new Date(), currentRound: state.currentRound },
+    });
+    if (updateResult.count === 0) return;
 
-      // FIX: XP pre-deducted at join. Winner gets both stakes returned (net gain = loserStake).
-      // Winner receives their own stake back + loser's stake.
-      state.participants[winnerId]!.xpChange = loserStake;    // net gain
-      state.participants[loserId]!.xpChange = -loserStake;    // net loss (already deducted)
+    // ── Build XP awards map ─────────────────────────────────
+    const xpAwards: Record<string, number> = {};
 
-      // FIX: Use DB-level conditional update as idempotency guard — if already FINISHED, skip XP ops
-      const updateResult = await db.battle.updateMany({
-        where: { id: state.battleId, status: { not: "FINISHED" } },
-        data: { status: "FINISHED", finishedAt: new Date(), currentRound: state.currentRound },
-      });
+    if (maxPlayers === 2) {
+      // Classic 1v1: winner gets both stakes (net +1000)
+      const loserId = participantIds.find((id) => id !== winnerId) ?? null;
+      if (winnerId && loserId) {
+        const winnerStake = state.participants[winnerId]?.xpStaked ?? ENTRY_FEE_XP;
+        const loserStake = state.participants[loserId]?.xpStaked ?? ENTRY_FEE_XP;
+        xpAwards[winnerId] = winnerStake + loserStake;
+        state.participants[winnerId]!.xpChange = loserStake;         // net gain
+        state.participants[loserId]!.xpChange = -loserStake;         // net loss
+      } else {
+        // Solo / draw — full refund
+        for (const id of participantIds) {
+          xpAwards[id] = state.participants[id]?.xpStaked ?? ENTRY_FEE_XP;
+          state.participants[id]!.xpChange = 0;
+        }
+      }
+    } else {
+      // Multi-player: kill rewards + winner bonus
+      const kills = state.kills ?? [];
 
-      if (updateResult.count === 0) {
-        // Already finalized by a concurrent request — do not double-reward
-        return;
+      // Kill reward: each kill gives the killer the victim's staked XP
+      for (const kill of kills) {
+        if (kill.killerUserId) {
+          xpAwards[kill.killerUserId] =
+            (xpAwards[kill.killerUserId] ?? 0) + kill.xpStaked;
+        }
       }
 
-      await Promise.all([
-        db.user.update({
-          where: { id: winnerId },
-          // Gets back own stake + loser's stake; battlesWon incremented
-          data: {
-            xp: { increment: winnerStake + loserStake },
-            battlesWon: { increment: 1 },
-            battlesPlayed: { increment: 1 },
-          },
-        }),
-        db.user.update({
-          where: { id: loserId },
-          // XP already deducted at join; only increment battlesPlayed
-          data: { battlesPlayed: { increment: 1 } },
-        }),
-        db.battleParticipant.update({
-          where: { battleId_userId: { battleId: state.battleId, userId: winnerId } },
-          data: { isWinner: true, xpChange: loserStake, hp: state.participants[winnerId]?.hp ?? 0 },
-        }),
-        db.battleParticipant.update({
-          where: { battleId_userId: { battleId: state.battleId, userId: loserId } },
-          data: { isWinner: false, xpChange: -loserStake, hp: state.participants[loserId]?.hp ?? 0 },
-        }),
-      ]);
-    } else {
-      // No winner/loser — refund both participants (e.g., solo forfeit with no opponent)
-      const updateResult = await db.battle.updateMany({
-        where: { id: state.battleId, status: { not: "FINISHED" } },
-        data: { status: "FINISHED", finishedAt: new Date() },
-      });
-      if (updateResult.count > 0) {
-        await Promise.all(
-          participantIds.map((id) =>
-            db.user
-              .update({
-                where: { id },
-                data: { xp: { increment: state.participants[id]?.xpStaked ?? ENTRY_FEE_XP } },
-              })
-              .catch(() => {}) // best-effort refund
-          )
-        );
+      // Winner gets own stake returned + system bonus
+      if (winnerId) {
+        const winnerStake = state.participants[winnerId]?.xpStaked ?? ENTRY_FEE_XP;
+        const winnerBonus = maxPlayers * WINNER_BONUS_XP_PER_PLAYER;
+        xpAwards[winnerId] =
+          (xpAwards[winnerId] ?? 0) + winnerStake + winnerBonus;
+      }
+
+      // Compute net xpChange for each participant
+      for (const [uid, p] of Object.entries(state.participants)) {
+        const earned = xpAwards[uid] ?? 0;
+        p.xpChange = earned - p.xpStaked; // paid xpStaked at entry, get back earned
       }
     }
+
+    // ── DB updates ──────────────────────────────────────────
+    const kills = state.kills ?? [];
+
+    await Promise.all([
+      // Grant earned XP
+      ...Object.entries(xpAwards)
+        .filter(([, amt]) => amt > 0)
+        .map(([uid, amt]) =>
+          db.user.update({ where: { id: uid }, data: { xp: { increment: amt } } })
+        ),
+
+      // Winner stats
+      ...(winnerId
+        ? [
+            db.user.update({
+              where: { id: winnerId },
+              data: { battlesWon: { increment: 1 }, battlesPlayed: { increment: 1 } },
+            }),
+          ]
+        : []),
+
+      // All non-winner battlesPlayed
+      ...participantIds
+        .filter((id) => id !== winnerId)
+        .map((id) =>
+          db.user.update({ where: { id }, data: { battlesPlayed: { increment: 1 } } })
+        ),
+
+      // Update BattleParticipant records
+      ...Object.entries(state.participants).map(([uid, p]) =>
+        db.battleParticipant.update({
+          where: { battleId_userId: { battleId: state.battleId, userId: uid } },
+          data: {
+            isWinner: uid === winnerId,
+            xpChange: p.xpChange ?? 0,
+            hp: p.hp,
+            isEliminated: p.isEliminated ?? false,
+            killedByUserId:
+              kills.find((k) => k.killedUserId === uid)?.killerUserId ?? null,
+          },
+        })
+      ),
+    ]);
   } catch (err) {
     console.error("[Battle] finalizeBattle error:", err);
   }
 }
 
 // ============================================================
-// HELPER: sync current HP and battleXp to DB after each round
-// FIX: prevents cold-state reconstruction from resetting to initial values
+// HELPER: sync HP and battleXp to DB after each round
 // ============================================================
 async function syncParticipantsToDB(
   db: PrismaClient,
@@ -187,7 +233,7 @@ async function syncParticipantsToDB(
       Object.values(state.participants).map((p) =>
         db.battleParticipant.update({
           where: { battleId_userId: { battleId: state.battleId, userId: p.userId } },
-          data: { hp: p.hp, battleXp: p.battleXp },
+          data: { hp: p.hp, battleXp: p.battleXp, isEliminated: p.isEliminated },
         })
       )
     );
@@ -203,13 +249,11 @@ async function startNextRound(
   db: PrismaClient,
   state: BattleRedisState
 ): Promise<void> {
-  // FIX: pass usedQuestionIds for deduplication
   const nextQ = await selectBattleQuestion(
     db,
     state.currentRound,
     state.usedQuestionIds ?? []
   );
-  // FIX: track this question's DB id to avoid repeating it
   if (nextQ.dbId) {
     state.usedQuestionIds = [...(state.usedQuestionIds ?? []), nextQ.dbId];
   }
@@ -229,20 +273,31 @@ async function startNextRound(
       where: { id: state.battleId },
       data: { currentRound: state.currentRound },
     }),
-    // FIX: sync HP/battleXp so cold-state reconstruction uses correct values
     syncParticipantsToDB(db, state),
   ]);
 }
 
 // ============================================================
-// HELPER: build client-safe snapshot (answer field never sent)
+// HELPER: build client-safe snapshot
 // ============================================================
+type OpponentSnapshot = {
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  hp: number;
+  hasAnswered: boolean;
+  hasActed: boolean;
+  isEliminated: boolean;
+};
+
 type GameStateSnapshot = {
   battleId: string;
   status: BattleRedisState["status"];
   phase: BattleRedisState["phase"];
   currentRound: number;
   roundTimeRemaining: number;
+  maxPlayers: number;
+  playerCount: number;       // total joined (including eliminated)
   me: {
     hp: number;
     battleXp: number;
@@ -251,31 +306,27 @@ type GameStateSnapshot = {
     attackPowerUsed: number;
     xpStaked: number;
     xpChange: number | null;
+    isEliminated: boolean;
   } | null;
-  opponent: {
-    displayName: string;
-    avatarUrl: string | null;
-    hp: number;
-    hasAnswered: boolean;
-    hasActed: boolean;
-  } | null;
+  /** All opponents (alive and eliminated). For 2-player `opponent` alias still present. */
+  opponents: OpponentSnapshot[];
+  /** Backward-compat alias = opponents[0] ?? null */
+  opponent: OpponentSnapshot | null;
   currentQuestion: Omit<BattleQuestionState, "answer" | "dbId"> | null;
   lastRoundSummary: BattleRedisState["lastRoundSummary"];
-  // Populated only during COUNTER_CHOICE phase
   counterChoice: {
-    isDefender: boolean;          // true = it's MY turn to pick counter action
+    isDefender: boolean;
     defenderRemainingPower: number;
     attackerCurrentPower: number;
-    counterDamage: number;        // pre-calculated: remaining × 2
-    activeAttackDamage: number;   // pre-calculated: (remaining − attackerPower) × 3
+    counterDamage: number;
+    activeAttackDamage: number;
   } | null;
   winnerId: string | null;
+  kills: BattleRedisState["kills"];
 };
 
 function buildSnapshot(state: BattleRedisState, myUserId: string): GameStateSnapshot {
   const me = state.participants[myUserId] ?? null;
-  const opponent =
-    Object.values(state.participants).find((p) => p.userId !== myUserId) ?? null;
   const now = Date.now();
   const roundTimeRemaining =
     state.roundStartedAt > 0
@@ -287,24 +338,34 @@ function buildSnapshot(state: BattleRedisState, myUserId: string): GameStateSnap
         )
       : state.roundTimeoutSec;
 
+  const opponents: OpponentSnapshot[] = Object.values(state.participants)
+    .filter((p) => p.userId !== myUserId)
+    .map((p) => ({
+      userId: p.userId,
+      displayName: p.displayName,
+      avatarUrl: p.avatarUrl,
+      hp: p.hp,
+      hasAnswered: p.hasAnswered,
+      hasActed: p.hasActed,
+      isEliminated: p.isEliminated,
+    }));
+
   let counterChoice: GameStateSnapshot["counterChoice"] = null;
   if (state.phase === "COUNTER_CHOICE" && state.pendingCounter) {
     const pc = state.pendingCounter;
     const attackerState = state.participants[pc.attackerId];
-    const attackerCurrentPower = attackerState?.battleXp ?? 0;
     counterChoice = {
       isDefender: pc.defenderId === myUserId,
       defenderRemainingPower: pc.defenderRemainingPower,
-      attackerCurrentPower,
+      attackerCurrentPower: attackerState?.battleXp ?? 0,
       counterDamage: pc.defenderRemainingPower * 2,
       activeAttackDamage: Math.max(
         0,
-        (pc.defenderRemainingPower - attackerCurrentPower) * 3
+        (pc.defenderRemainingPower - (attackerState?.battleXp ?? 0)) * 3
       ),
     };
   }
 
-  // Strip server-only fields from question before sending to client
   const currentQuestion = state.currentQuestion
     ? {
         promptEn: state.currentQuestion.promptEn,
@@ -321,6 +382,8 @@ function buildSnapshot(state: BattleRedisState, myUserId: string): GameStateSnap
     phase: state.phase,
     currentRound: state.currentRound,
     roundTimeRemaining,
+    maxPlayers: state.maxPlayers ?? 2,
+    playerCount: Object.keys(state.participants).length,
     me: me
       ? {
           hp: me.hp,
@@ -330,51 +393,47 @@ function buildSnapshot(state: BattleRedisState, myUserId: string): GameStateSnap
           attackPowerUsed: me.attackPowerUsed ?? 0,
           xpStaked: me.xpStaked,
           xpChange: me.xpChange ?? null,
+          isEliminated: me.isEliminated,
         }
       : null,
-    opponent: opponent
-      ? {
-          displayName: opponent.displayName,
-          avatarUrl: opponent.avatarUrl,
-          hp: opponent.hp,
-          hasAnswered: opponent.hasAnswered,
-          hasActed: opponent.hasActed,
-        }
-      : null,
+    opponents,
+    opponent: opponents[0] ?? null,
     currentQuestion,
     lastRoundSummary: state.lastRoundSummary,
     counterChoice,
     winnerId: state.winnerId,
+    kills: state.kills ?? [],
   };
 }
 
 // ============================================================
-// HELPER: build initial participant state object
+// HELPER: build initial participant state
 // ============================================================
 function makeParticipant(
   userId: string,
   displayName: string,
-  avatarUrl: string | null
+  avatarUrl: string | null,
+  hp: number
 ): BattleParticipantState {
   return {
     userId,
     displayName,
     avatarUrl,
-    hp: STARTING_HP,
+    hp,
     battleXp: 0,
     hasAnswered: false,
     hasActed: false,
     actionChosen: "NONE",
     attackPowerUsed: 0,
+    isEliminated: false,
     lastSeenAt: Date.now(),
     xpStaked: ENTRY_FEE_XP,
-    lastAnswerCorrect: null, // FIX: initialize new field
+    lastAnswerCorrect: null,
   };
 }
 
 // ============================================================
-// HELPER: atomically deduct entry fee — throws if insufficient XP
-// FIX: prevents double-spend by using a single atomic conditional UPDATE
+// HELPER: atomically deduct entry fee
 // ============================================================
 async function deductEntryFee(db: PrismaClient, userId: string): Promise<void> {
   const affected = await db.$executeRaw`
@@ -390,6 +449,40 @@ async function deductEntryFee(db: PrismaClient, userId: string): Promise<void> {
 }
 
 // ============================================================
+// HELPER: activate a battle that just reached maxPlayers
+// ============================================================
+async function activateBattle(
+  db: PrismaClient,
+  state: BattleRedisState
+): Promise<void> {
+  const firstQ = await selectBattleQuestion(
+    db,
+    0,
+    state.usedQuestionIds ?? []
+  );
+  if (firstQ.dbId) {
+    state.usedQuestionIds = [firstQ.dbId];
+  }
+  await storeRoundQuestion(state.battleId, 0, firstQ);
+  state.status = "ACTIVE";
+  state.phase = "ANSWERING";
+  state.currentRound = 0;
+  state.roundStartedAt = Date.now();
+  state.currentQuestion = {
+    promptEn: firstQ.promptEn,
+    promptZh: firstQ.promptZh,
+    difficulty: firstQ.difficulty,
+    category: firstQ.category,
+    token: firstQ.token,
+  };
+
+  await db.battle.update({
+    where: { id: state.battleId },
+    data: { status: "ACTIVE", currentRound: 0 },
+  });
+}
+
+// ============================================================
 // ROUTER
 // ============================================================
 export const battleRouter = createTRPCRouter({
@@ -397,16 +490,23 @@ export const battleRouter = createTRPCRouter({
   // CREATE
   // ----------------------------------------------------------
   create: protectedProcedure
-    .input(z.object({ mode: z.enum(["INVITE", "RANDOM"]) }))
+    .input(
+      z.object({
+        mode: z.enum(["INVITE", "RANDOM"]),
+        maxPlayers: z.number().int().min(2).max(6).default(2),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
+      const maxPlayers = input.maxPlayers;
+      const hp = startingHp(maxPlayers);
 
       const user = await ctx.db.user.findUniqueOrThrow({
         where: { id: userId },
         select: { xp: true, displayName: true, avatarUrl: true },
       });
 
-      // If user has a stale WAITING battle, cancel it and start fresh
+      // Cancel any stale WAITING battle
       const existingWaiting = await ctx.db.battle.findFirst({
         where: { status: "WAITING", participants: { some: { userId } } },
         select: { id: true },
@@ -416,14 +516,13 @@ export const battleRouter = createTRPCRouter({
           where: { id: existingWaiting.id, status: "WAITING" },
         });
         if (deleted.count > 0) {
-          // Refund the stale entry fee so user only pays once for the new battle
           await ctx.db.user
             .update({ where: { id: userId }, data: { xp: { increment: ENTRY_FEE_XP } } })
             .catch(() => null);
-          await redis.zrem(RANDOM_ZQUEUE_KEY, existingWaiting.id).catch(() => null);
-          // Fall through: create a fresh battle below
+          await redis
+            .zrem(queueKey(maxPlayers), existingWaiting.id)
+            .catch(() => null);
         } else {
-          // Race: battle was just matched while we were checking — redirect user to it
           return {
             battleId: existingWaiting.id,
             inviteCode: null as string | null,
@@ -433,7 +532,6 @@ export const battleRouter = createTRPCRouter({
         }
       }
 
-      // Soft check before atomic deduction (avoids consuming a queue slot unnecessarily)
       if (user.xp < ENTRY_FEE_XP) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -442,10 +540,11 @@ export const battleRouter = createTRPCRouter({
       }
 
       if (input.mode === "RANDOM") {
-        // FIX: clean up expired entries from Sorted Set queue before popping
-        await redis.zremrangebyscore(RANDOM_ZQUEUE_KEY, "-inf", Date.now()).catch(() => null);
-        const popped = await redis.zpopmin(RANDOM_ZQUEUE_KEY, 1).catch(() => [] as string[]);
-        const waitingId = Array.isArray(popped) && popped.length >= 1 ? String(popped[0]) : null;
+        const key = queueKey(maxPlayers);
+        await redis.zremrangebyscore(key, "-inf", Date.now()).catch(() => null);
+        const popped = await redis.zpopmin(key, 1).catch(() => [] as string[]);
+        const waitingId =
+          Array.isArray(popped) && popped.length >= 1 ? String(popped[0]) : null;
 
         if (waitingId) {
           const existing = await ctx.db.battle.findUnique({
@@ -456,73 +555,94 @@ export const battleRouter = createTRPCRouter({
               },
             },
           });
+
           if (
             existing?.status === "WAITING" &&
-            existing.participants.length === 1 &&
-            existing.participants[0]!.userId !== userId
+            existing.participants.length < maxPlayers &&
+            !existing.participants.some((p) => p.userId === userId)
           ) {
-            const host = existing.participants[0]!;
-
-            // FIX: atomically deduct joiner's entry fee
+            // Deduct fee and join the waiting battle
             await deductEntryFee(ctx.db as unknown as PrismaClient, userId);
 
             await ctx.db.battleParticipant.create({
-              data: { battleId: waitingId, userId, xpStaked: ENTRY_FEE_XP, hp: STARTING_HP },
+              data: {
+                battleId: waitingId,
+                userId,
+                xpStaked: ENTRY_FEE_XP,
+                hp,
+              },
             });
-            const firstQ = await selectBattleQuestion(
-              ctx.db as unknown as PrismaClient,
-              0,
-              []
-            );
-            await storeRoundQuestion(waitingId, 0, firstQ);
-            const state: BattleRedisState = {
-              battleId: waitingId,
-              status: "ACTIVE",
-              phase: "ANSWERING",
-              currentRound: 0,
-              roundStartedAt: Date.now(),
-              roundTimeoutSec: 30,
-              participants: {
-                [host.userId]: makeParticipant(
-                  host.userId,
-                  host.user.displayName,
-                  host.user.avatarUrl
+
+            // Load or create Redis state
+            let state = await readBattleState(waitingId);
+            if (!state) {
+              // Build state from DB participants
+              state = {
+                battleId: waitingId,
+                status: "WAITING",
+                phase: "ANSWERING",
+                currentRound: 0,
+                roundStartedAt: 0,
+                roundTimeoutSec: 30,
+                maxPlayers,
+                participants: Object.fromEntries(
+                  existing.participants.map((p) => [
+                    p.userId,
+                    makeParticipant(p.userId, p.user.displayName, p.user.avatarUrl, hp),
+                  ])
                 ),
-                [userId]: makeParticipant(userId, user.displayName, user.avatarUrl),
-              },
-              currentQuestion: {
-                promptEn: firstQ.promptEn,
-                promptZh: firstQ.promptZh,
-                difficulty: firstQ.difficulty,
-                category: firstQ.category,
-                token: firstQ.token,
-              },
-              lastRoundSummary: null,
-              pendingCounter: null,
-              winnerId: null,
-              countdownStartedAt: null,
-              usedQuestionIds: firstQ.dbId ? [firstQ.dbId] : [], // FIX: dedup init
-              waitingExpiresAt: null,
-            };
-            await ctx.db.battle.update({
-              where: { id: waitingId },
-              data: { status: "ACTIVE", currentRound: 0 },
-            });
-            await writeBattleState(state);
-            return {
-              battleId: waitingId,
-              inviteCode: null as string | null,
-              status: "ACTIVE" as const,
-              waitingForOpponent: false,
-            };
+                currentQuestion: null,
+                lastRoundSummary: null,
+                pendingCounter: null,
+                kills: [],
+                winnerId: null,
+                countdownStartedAt: null,
+                usedQuestionIds: [],
+                waitingExpiresAt: Date.now() + QUEUE_ENTRY_TTL_MS,
+              };
+            }
+
+            // Add joiner
+            state.participants[userId] = makeParticipant(
+              userId,
+              user.displayName,
+              user.avatarUrl,
+              hp
+            );
+
+            const totalJoined = Object.keys(state.participants).length;
+
+            if (totalJoined >= maxPlayers) {
+              // Battle is full — start it
+              await activateBattle(ctx.db as unknown as PrismaClient, state);
+              await writeBattleState(state);
+              return {
+                battleId: waitingId,
+                inviteCode: null as string | null,
+                status: "ACTIVE" as const,
+                waitingForOpponent: false,
+              };
+            } else {
+              // Still waiting for more players — re-add to queue
+              const expiresAt = Date.now() + QUEUE_ENTRY_TTL_MS;
+              state.waitingExpiresAt = expiresAt;
+              await redis.zadd(key, expiresAt, waitingId).catch(() => null);
+              await writeBattleState(state);
+              return {
+                battleId: waitingId,
+                inviteCode: null as string | null,
+                status: "WAITING" as const,
+                waitingForOpponent: true,
+              };
+            }
           }
         }
       }
 
-      // FIX: atomically deduct XP before creating battle
+      // Deduct XP before creating
       await deductEntryFee(ctx.db as unknown as PrismaClient, userId);
 
-      // FIX: invite code collision retry — up to 5 attempts with larger code space
+      // Create battle with invite-code collision retry
       let battle: { id: string; inviteCode: string | null } | null = null;
       for (let attempt = 0; attempt < 5; attempt++) {
         const inviteCode = input.mode === "INVITE" ? generateInviteCode() : null;
@@ -532,15 +652,15 @@ export const battleRouter = createTRPCRouter({
               status: "WAITING",
               inviteCode,
               xpStake: ENTRY_FEE_XP,
+              maxPlayers,
               participants: {
-                create: { userId, xpStaked: ENTRY_FEE_XP, hp: STARTING_HP },
+                create: { userId, xpStaked: ENTRY_FEE_XP, hp },
               },
             },
             select: { id: true, inviteCode: true },
           });
           break;
         } catch (err: unknown) {
-          // Prisma unique constraint error code
           if (
             typeof err === "object" &&
             err !== null &&
@@ -548,9 +668,8 @@ export const battleRouter = createTRPCRouter({
             (err as { code: string }).code === "P2002" &&
             attempt < 4
           ) {
-            continue; // retry with a new code
+            continue;
           }
-          // Non-collision error or exhausted retries — refund XP and re-throw
           await ctx.db.user
             .update({ where: { id: userId }, data: { xp: { increment: ENTRY_FEE_XP } } })
             .catch(() => {});
@@ -559,20 +678,20 @@ export const battleRouter = createTRPCRouter({
       }
 
       if (!battle) {
-        // Should never happen (5 collision retries exhausted)
         await ctx.db.user
           .update({ where: { id: userId }, data: { xp: { increment: ENTRY_FEE_XP } } })
           .catch(() => {});
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create battle." });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create battle.",
+        });
       }
 
+      const expiresAt = Date.now() + QUEUE_ENTRY_TTL_MS;
       if (input.mode === "RANDOM") {
-        // FIX: push to Sorted Set with per-entry expiry score instead of TTL on whole list
-        const expiresAt = Date.now() + QUEUE_ENTRY_TTL_MS;
-        await redis.zadd(RANDOM_ZQUEUE_KEY, expiresAt, battle.id).catch(() => null);
+        await redis.zadd(queueKey(maxPlayers), expiresAt, battle.id).catch(() => null);
       }
 
-      const waitingExpiresAt = Date.now() + QUEUE_ENTRY_TTL_MS;
       const state: BattleRedisState = {
         battleId: battle.id,
         status: "WAITING",
@@ -580,16 +699,18 @@ export const battleRouter = createTRPCRouter({
         currentRound: 0,
         roundStartedAt: 0,
         roundTimeoutSec: 30,
+        maxPlayers,
         participants: {
-          [userId]: makeParticipant(userId, user.displayName, user.avatarUrl),
+          [userId]: makeParticipant(userId, user.displayName, user.avatarUrl, hp),
         },
         currentQuestion: null,
         lastRoundSummary: null,
         pendingCounter: null,
+        kills: [],
         winnerId: null,
         countdownStartedAt: null,
-        usedQuestionIds: [], // FIX: dedup init
-        waitingExpiresAt,    // FIX: for auto-expiry in getState
+        usedQuestionIds: [],
+        waitingExpiresAt: expiresAt,
       };
       await writeBattleState(state);
 
@@ -613,7 +734,6 @@ export const battleRouter = createTRPCRouter({
         select: { xp: true, displayName: true, avatarUrl: true },
       });
 
-      // Soft check
       if (user.xp < ENTRY_FEE_XP) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -629,61 +749,76 @@ export const battleRouter = createTRPCRouter({
           },
         },
       });
-      if (!battle) throw new TRPCError({ code: "NOT_FOUND", message: "Invite code not found." });
+      if (!battle)
+        throw new TRPCError({ code: "NOT_FOUND", message: "Invite code not found." });
       if (battle.status !== "WAITING")
-        throw new TRPCError({ code: "BAD_REQUEST", message: "This battle has already started." });
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This battle has already started.",
+        });
       if (battle.participants.some((p) => p.userId === userId))
-        throw new TRPCError({ code: "BAD_REQUEST", message: "You are already in this battle." });
-      if (battle.participants.length >= 2)
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You are already in this battle.",
+        });
+      if (battle.participants.length >= battle.maxPlayers)
         throw new TRPCError({ code: "BAD_REQUEST", message: "This battle is full." });
 
-      const host = battle.participants[0]!;
+      const maxPlayers = battle.maxPlayers;
+      const hp = startingHp(maxPlayers);
 
-      // FIX: atomically deduct joiner's XP
       await deductEntryFee(ctx.db as unknown as PrismaClient, userId);
 
       await ctx.db.battleParticipant.create({
-        data: { battleId: battle.id, userId, xpStaked: ENTRY_FEE_XP, hp: STARTING_HP },
+        data: { battleId: battle.id, userId, xpStaked: ENTRY_FEE_XP, hp },
       });
 
-      const firstQ = await selectBattleQuestion(ctx.db as unknown as PrismaClient, 0, []);
-      await storeRoundQuestion(battle.id, 0, firstQ);
-      await ctx.db.battle.update({
-        where: { id: battle.id },
-        data: { status: "ACTIVE", currentRound: 0 },
-      });
-
-      const state: BattleRedisState = {
-        battleId: battle.id,
-        status: "ACTIVE",
-        phase: "ANSWERING",
-        currentRound: 0,
-        roundStartedAt: Date.now(),
-        roundTimeoutSec: 30,
-        participants: {
-          [host.userId]: makeParticipant(
-            host.userId,
-            host.user.displayName,
-            host.user.avatarUrl
+      // Load or build Redis state
+      let state = await readBattleState(battle.id);
+      if (!state) {
+        state = {
+          battleId: battle.id,
+          status: "WAITING",
+          phase: "ANSWERING",
+          currentRound: 0,
+          roundStartedAt: 0,
+          roundTimeoutSec: 30,
+          maxPlayers,
+          participants: Object.fromEntries(
+            battle.participants.map((p) => [
+              p.userId,
+              makeParticipant(p.userId, p.user.displayName, p.user.avatarUrl, hp),
+            ])
           ),
-          [userId]: makeParticipant(userId, user.displayName, user.avatarUrl),
-        },
-        currentQuestion: {
-          promptEn: firstQ.promptEn,
-          promptZh: firstQ.promptZh,
-          difficulty: firstQ.difficulty,
-          category: firstQ.category,
-          token: firstQ.token,
-        },
-        lastRoundSummary: null,
-        pendingCounter: null,
-        winnerId: null,
-        countdownStartedAt: null,
-        usedQuestionIds: firstQ.dbId ? [firstQ.dbId] : [], // FIX: dedup init
-        waitingExpiresAt: null,
-      };
-      await writeBattleState(state);
-      return { battleId: battle.id, status: "ACTIVE" as const };
+          currentQuestion: null,
+          lastRoundSummary: null,
+          pendingCounter: null,
+          kills: [],
+          winnerId: null,
+          countdownStartedAt: null,
+          usedQuestionIds: [],
+          waitingExpiresAt: Date.now() + QUEUE_ENTRY_TTL_MS,
+        };
+      }
+
+      // Add joiner
+      state.participants[userId] = makeParticipant(
+        userId,
+        user.displayName,
+        user.avatarUrl,
+        hp
+      );
+
+      const totalJoined = Object.keys(state.participants).length;
+
+      if (totalJoined >= maxPlayers) {
+        await activateBattle(ctx.db as unknown as PrismaClient, state);
+        await writeBattleState(state);
+        return { battleId: battle.id, status: "ACTIVE" as const };
+      } else {
+        await writeBattleState(state);
+        return { battleId: battle.id, status: "WAITING" as const };
+      }
     }),
 
   // ----------------------------------------------------------
@@ -705,8 +840,8 @@ export const battleRouter = createTRPCRouter({
           },
         });
         if (!battle) throw new TRPCError({ code: "NOT_FOUND" });
-        // FIX: DB values for hp/battleXp are now kept in sync by syncParticipantsToDB
-        // so cold-state reconstruction correctly reflects in-battle progress
+        const maxPlayers = battle.maxPlayers ?? 2;
+        const hp = startingHp(maxPlayers);
         const coldState: BattleRedisState = {
           battleId: battle.id,
           status: battle.status as BattleRedisState["status"],
@@ -714,6 +849,7 @@ export const battleRouter = createTRPCRouter({
           currentRound: battle.currentRound,
           roundStartedAt: 0,
           roundTimeoutSec: battle.roundTimeoutSec,
+          maxPlayers,
           participants: Object.fromEntries(
             battle.participants.map((p) => [
               p.userId,
@@ -721,26 +857,30 @@ export const battleRouter = createTRPCRouter({
                 userId: p.userId,
                 displayName: p.user.displayName,
                 avatarUrl: p.user.avatarUrl,
-                hp: p.hp,           // FIX: now reflects latest round-synced value
-                battleXp: p.battleXp, // FIX: now reflects latest round-synced value
+                hp: p.hp,
+                battleXp: p.battleXp,
                 hasAnswered: false,
                 hasActed: false,
                 actionChosen: "NONE" as const,
                 attackPowerUsed: 0,
+                isEliminated: p.isEliminated,
                 lastSeenAt: Date.now(),
                 xpStaked: ENTRY_FEE_XP,
-                lastAnswerCorrect: null, // FIX: initialize new field
+                lastAnswerCorrect: null,
               } satisfies BattleParticipantState,
             ])
           ),
           currentQuestion: null,
           lastRoundSummary: null,
           pendingCounter: null,
+          kills: [],
           winnerId: null,
           countdownStartedAt: null,
           usedQuestionIds: [],
           waitingExpiresAt: null,
         };
+        // suppress unused variable warning
+        void hp;
         state = coldState;
       }
 
@@ -750,7 +890,7 @@ export const battleRouter = createTRPCRouter({
 
       st.participants[userId]!.lastSeenAt = Date.now();
 
-      // FIX: auto-expire WAITING battles that exceeded their queue TTL — refund XP
+      // Auto-expire WAITING battles that exceeded queue TTL
       if (
         st.status === "WAITING" &&
         st.waitingExpiresAt &&
@@ -770,34 +910,48 @@ export const battleRouter = createTRPCRouter({
             }
           })
           .catch((e) => console.error("[Battle] auto-expire error:", e));
-        await redis.zrem(RANDOM_ZQUEUE_KEY, input.battleId).catch(() => null);
+        await redis.zrem(queueKey(st.maxPlayers ?? 2), input.battleId).catch(() => null);
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Waiting time expired. Your XP has been refunded.",
         });
       }
 
-      if (st.status === "ACTIVE") {
-        const opponent = Object.values(st.participants).find(
-          (p) => p.userId !== userId
-        );
+      const maxPlayers = st.maxPlayers ?? 2;
 
-        if (opponent && isAbandoned(opponent)) {
+      if (st.status === "ACTIVE") {
+        const alive = alivePlayers(st);
+
+        // Abandon detection: eliminate disconnected players
+        for (const p of alive) {
+          if (p.userId !== userId && isAbandoned(p)) {
+            p.isEliminated = true;
+            // Give kill reward to system (no specific killer) — excluded from kill list
+            // Just remove from alive, no xpStaked award for environment kill
+          }
+        }
+
+        const aliveAfterAbandon = alivePlayers(st);
+        if (aliveAfterAbandon.length === 1 && aliveAfterAbandon[0]!.userId === userId) {
+          // Only player remaining — win by default
+          await finalizeBattle(ctx.db as unknown as PrismaClient, st, userId);
+        } else if (aliveAfterAbandon.length === 0) {
           await finalizeBattle(ctx.db as unknown as PrismaClient, st, userId);
         }
 
         const answerDeadline = st.roundStartedAt + st.roundTimeoutSec * 1000;
+        const currentAlive = alivePlayers(st);
 
-        // Answer timeout → auto-submit blank for non-answerers
+        // Answer timeout → auto-blank for non-answerers
         if (
           st.phase === "ANSWERING" &&
           st.roundStartedAt > 0 &&
           Date.now() > answerDeadline
         ) {
-          for (const p of Object.values(st.participants)) {
+          for (const p of currentAlive) {
             if (!p.hasAnswered) {
               p.hasAnswered = true;
-              p.lastAnswerCorrect = false; // FIX: timed-out = incorrect
+              p.lastAnswerCorrect = false;
             }
           }
           st.phase = "ACTING";
@@ -806,7 +960,7 @@ export const battleRouter = createTRPCRouter({
         // Action timeout (10s after answering closes) → auto ATTACK_100
         const actionDeadline = answerDeadline + 10_000;
         if (st.phase === "ACTING" && Date.now() > actionDeadline) {
-          for (const p of Object.values(st.participants)) {
+          for (const p of currentAlive) {
             if (!p.hasActed) {
               p.hasActed = true;
               p.actionChosen = "ATTACK_100";
@@ -814,8 +968,9 @@ export const battleRouter = createTRPCRouter({
           }
         }
 
-        // Counter-choice timeout → auto-COUNTER
+        // Counter-choice timeout (2-player only) → auto-COUNTER
         if (
+          maxPlayers === 2 &&
           st.phase === "COUNTER_CHOICE" &&
           st.pendingCounter &&
           Date.now() - st.pendingCounter.startedAt > COUNTER_TIMEOUT_MS
@@ -824,33 +979,37 @@ export const battleRouter = createTRPCRouter({
           if (hasLock) {
             const { finished, winnerId } = resolveCounter(st, "COUNTER");
             if (finished) {
-              await finalizeBattle(
-                ctx.db as unknown as PrismaClient,
-                st,
-                winnerId
-              );
+              await finalizeBattle(ctx.db as unknown as PrismaClient, st, winnerId);
             } else {
               await startNextRound(ctx.db as unknown as PrismaClient, st);
             }
           }
         }
 
-        // Both acted in ACTING → resolve round
-        const allActed = Object.values(st.participants).every((p) => p.hasActed);
+        // All alive players acted → resolve round
+        const aliveNow = alivePlayers(st);
+        const allActed =
+          aliveNow.length > 0 && aliveNow.every((p) => p.hasActed);
+
         if (st.phase === "ACTING" && allActed) {
           const hasLock = await acquireRoundLock(st.battleId, st.currentRound);
           if (hasLock) {
-            const { finished, winnerId, hasPendingCounter } = resolveRound(st);
-            if (hasPendingCounter) {
-              st.phase = "COUNTER_CHOICE";
-            } else if (finished) {
-              await finalizeBattle(
-                ctx.db as unknown as PrismaClient,
-                st,
-                winnerId
-              );
+            if (maxPlayers === 2) {
+              const { finished, winnerId, hasPendingCounter } = resolveRound(st);
+              if (hasPendingCounter) {
+                st.phase = "COUNTER_CHOICE";
+              } else if (finished) {
+                await finalizeBattle(ctx.db as unknown as PrismaClient, st, winnerId);
+              } else {
+                await startNextRound(ctx.db as unknown as PrismaClient, st);
+              }
             } else {
-              await startNextRound(ctx.db as unknown as PrismaClient, st);
+              const { finished, winnerId } = resolveMultiplayerRound(st);
+              if (finished) {
+                await finalizeBattle(ctx.db as unknown as PrismaClient, st, winnerId);
+              } else {
+                await startNextRound(ctx.db as unknown as PrismaClient, st);
+              }
             }
           }
         }
@@ -862,7 +1021,6 @@ export const battleRouter = createTRPCRouter({
 
   // ----------------------------------------------------------
   // SUBMIT ANSWER
-  // FIX: guarded by per-battle mutex to prevent concurrent read-modify-write race
   // ----------------------------------------------------------
   submitAnswer: protectedProcedure
     .input(
@@ -875,7 +1033,6 @@ export const battleRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      // FIX: acquire per-battle mutex before read-modify-write
       const release = await acquireBattleMutex(input.battleId);
       try {
         const state = await readBattleState(input.battleId);
@@ -887,6 +1044,8 @@ export const battleRouter = createTRPCRouter({
           throw new TRPCError({ code: "BAD_REQUEST", message: "Not in answering phase." });
         if (state.participants[userId]!.hasAnswered)
           throw new TRPCError({ code: "BAD_REQUEST", message: "Already answered." });
+        if (state.participants[userId]!.isEliminated)
+          throw new TRPCError({ code: "BAD_REQUEST", message: "You are eliminated." });
 
         const questionData = await getRoundQuestion(state.battleId, state.currentRound);
         if (!questionData)
@@ -906,7 +1065,7 @@ export const battleRouter = createTRPCRouter({
         const participant = state.participants[userId]!;
         participant.hasAnswered = true;
         participant.battleXp += battleXpGained;
-        participant.lastAnswerCorrect = isCorrect; // FIX: store for summary
+        participant.lastAnswerCorrect = isCorrect;
 
         try {
           const dbParticipant = await ctx.db.battleParticipant.findUnique({
@@ -937,9 +1096,9 @@ export const battleRouter = createTRPCRouter({
           console.error("[Battle] round persist error:", err);
         }
 
-        const allAnswered = Object.values(state.participants).every(
-          (p) => p.hasAnswered
-        );
+        // Advance to ACTING when all alive players have answered
+        const alive = alivePlayers(state);
+        const allAnswered = alive.length > 0 && alive.every((p) => p.hasAnswered);
         if (allAnswered) state.phase = "ACTING";
 
         await writeBattleState(state);
@@ -955,19 +1114,18 @@ export const battleRouter = createTRPCRouter({
 
   // ----------------------------------------------------------
   // SUBMIT ACTION (ACTING phase)
-  // FIX: guarded by per-battle mutex to prevent concurrent read-modify-write race
   // ----------------------------------------------------------
   submitAction: protectedProcedure
     .input(
       z.object({
         battleId: z.string(),
         action: z.enum(["ATTACK_50", "ATTACK_80", "ATTACK_100", "HOLD"]),
+        targetUserId: z.string().optional(), // required for 3+ player battles
       })
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      // FIX: acquire per-battle mutex before read-modify-write
       const release = await acquireBattleMutex(input.battleId);
       try {
         const state = await readBattleState(input.battleId);
@@ -980,38 +1138,58 @@ export const battleRouter = createTRPCRouter({
 
         const participant = state.participants[userId]!;
         if (participant.hasActed) return { acknowledged: true, resolved: false };
+        if (participant.isEliminated) return { acknowledged: true, resolved: false };
 
         participant.hasActed = true;
         participant.actionChosen = input.action;
+        if (input.targetUserId) {
+          participant.targetUserId = input.targetUserId;
+        }
 
-        const bothActed = Object.values(state.participants).every((p) => p.hasActed);
-        if (bothActed) {
+        const maxPlayers = state.maxPlayers ?? 2;
+        const alive = alivePlayers(state);
+        const allActed = alive.length > 0 && alive.every((p) => p.hasActed);
+
+        if (allActed) {
           const hasLock = await acquireRoundLock(state.battleId, state.currentRound);
           if (hasLock) {
-            const { finished, winnerId, hasPendingCounter } = resolveRound(state);
-            if (hasPendingCounter) {
-              state.phase = "COUNTER_CHOICE";
-            } else if (finished) {
-              await finalizeBattle(
-                ctx.db as unknown as PrismaClient,
-                state,
-                winnerId
-              );
+            if (maxPlayers === 2) {
+              const { finished, winnerId, hasPendingCounter } = resolveRound(state);
+              if (hasPendingCounter) {
+                state.phase = "COUNTER_CHOICE";
+              } else if (finished) {
+                await finalizeBattle(
+                  ctx.db as unknown as PrismaClient,
+                  state,
+                  winnerId
+                );
+              } else {
+                await startNextRound(ctx.db as unknown as PrismaClient, state);
+              }
             } else {
-              await startNextRound(ctx.db as unknown as PrismaClient, state);
+              const { finished, winnerId } = resolveMultiplayerRound(state);
+              if (finished) {
+                await finalizeBattle(
+                  ctx.db as unknown as PrismaClient,
+                  state,
+                  winnerId
+                );
+              } else {
+                await startNextRound(ctx.db as unknown as PrismaClient, state);
+              }
             }
           }
         }
 
         await writeBattleState(state);
-        return { acknowledged: true, resolved: bothActed };
+        return { acknowledged: true, resolved: allActed };
       } finally {
         await release?.();
       }
     }),
 
   // ----------------------------------------------------------
-  // SUBMIT COUNTER (COUNTER_CHOICE phase)
+  // SUBMIT COUNTER (2-player COUNTER_CHOICE phase)
   // ----------------------------------------------------------
   submitCounter: protectedProcedure
     .input(
@@ -1028,17 +1206,11 @@ export const battleRouter = createTRPCRouter({
       if (state.status !== "ACTIVE")
         throw new TRPCError({ code: "BAD_REQUEST", message: "Battle not active." });
       if (state.phase !== "COUNTER_CHOICE")
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Not in counter choice phase.",
-        });
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Not in counter choice phase." });
       if (!state.pendingCounter)
         throw new TRPCError({ code: "BAD_REQUEST", message: "No pending counter." });
       if (state.pendingCounter.defenderId !== userId)
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "It is not your turn to counter.",
-        });
+        throw new TRPCError({ code: "FORBIDDEN", message: "It is not your turn to counter." });
 
       const { finished, winnerId } = resolveCounter(state, input.action);
 
@@ -1065,6 +1237,28 @@ export const battleRouter = createTRPCRouter({
       if (state.status === "FINISHED" || state.status === "ABANDONED") {
         return { battleId: input.battleId, status: state.status };
       }
+
+      // In multi-player: eliminate the forfeiting player, let battle continue
+      const maxPlayers = state.maxPlayers ?? 2;
+      if (maxPlayers > 2 && state.status === "ACTIVE") {
+        const p = state.participants[userId]!;
+        p.isEliminated = true;
+
+        const alive = alivePlayers(state);
+        if (alive.length === 1) {
+          await finalizeBattle(
+            ctx.db as unknown as PrismaClient,
+            state,
+            alive[0]!.userId
+          );
+        } else if (alive.length === 0) {
+          await finalizeBattle(ctx.db as unknown as PrismaClient, state, null);
+        }
+        await writeBattleState(state);
+        return { battleId: input.battleId, status: state.status };
+      }
+
+      // 2-player: classic forfeit — opponent wins
       const opponent = Object.values(state.participants).find(
         (p) => p.userId !== userId
       );
@@ -1078,8 +1272,7 @@ export const battleRouter = createTRPCRouter({
     }),
 
   // ----------------------------------------------------------
-  // CANCEL WAITING
-  // FIX: refunds pre-deducted XP; uses ZREM for Sorted Set queue
+  // CANCEL WAITING (leave while waiting for players to join)
   // ----------------------------------------------------------
   cancelWaiting: protectedProcedure
     .input(z.object({ battleId: z.string() }))
@@ -1093,26 +1286,40 @@ export const battleRouter = createTRPCRouter({
       if (!battle.participants.some((p) => p.userId === userId))
         throw new TRPCError({ code: "FORBIDDEN" });
       if (battle.status !== "WAITING")
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Battle has already started.",
-        });
-      if (battle.participants.length > 1)
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Opponent has already joined.",
-        });
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Battle has already started." });
 
-      // FIX: delete battle and refund XP atomically
-      await ctx.db.$transaction([
-        ctx.db.battle.delete({ where: { id: input.battleId } }),
-        ctx.db.user.update({
-          where: { id: userId },
-          data: { xp: { increment: ENTRY_FEE_XP } },
-        }),
-      ]);
-      // FIX: remove from Sorted Set (was lrem on list before)
-      await redis.zrem(RANDOM_ZQUEUE_KEY, input.battleId).catch(() => null);
+      const maxPlayers = battle.maxPlayers ?? 2;
+      const otherParticipants = battle.participants.filter((p) => p.userId !== userId);
+
+      if (otherParticipants.length === 0) {
+        // Host is alone — delete the whole battle
+        await ctx.db.$transaction([
+          ctx.db.battle.delete({ where: { id: input.battleId } }),
+          ctx.db.user.update({
+            where: { id: userId },
+            data: { xp: { increment: ENTRY_FEE_XP } },
+          }),
+        ]);
+        await redis.zrem(queueKey(maxPlayers), input.battleId).catch(() => null);
+      } else {
+        // Others are waiting — just remove this participant and refund them
+        await ctx.db.$transaction([
+          ctx.db.battleParticipant.deleteMany({
+            where: { battleId: input.battleId, userId },
+          }),
+          ctx.db.user.update({
+            where: { id: userId },
+            data: { xp: { increment: ENTRY_FEE_XP } },
+          }),
+        ]);
+        // Update Redis state to remove this player
+        const state = await readBattleState(input.battleId);
+        if (state) {
+          delete state.participants[userId];
+          await writeBattleState(state);
+        }
+      }
+
       return { cancelled: true };
     }),
 
@@ -1151,14 +1358,19 @@ export const battleRouter = createTRPCRouter({
 
       return {
         items: items.map((p) => {
-          const opponent = p.battle.participants.find(
+          const opponents = p.battle.participants.filter(
             (op) => op.userId !== userId
           );
+          const opponent = opponents[0];
           return {
             battleId: p.battleId,
             isWinner: p.isWinner,
             xpChange: p.xpChange,
-            opponentName: opponent?.user.displayName ?? "Unknown",
+            maxPlayers: p.battle.maxPlayers,
+            opponentName:
+              p.battle.maxPlayers > 2
+                ? `${opponents.length} opponents`
+                : (opponent?.user.displayName ?? "Unknown"),
             opponentAvatarUrl: opponent?.user.avatarUrl ?? null,
             rounds: p.battle.currentRound,
             finishedAt: p.battle.finishedAt,
