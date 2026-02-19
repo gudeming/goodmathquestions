@@ -168,12 +168,11 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
   const entryFee = gameState?.me?.xpStaked ?? 0;
   const ABANDON_SECONDS = 60;
 
-  // Cleanup countdown on unmount
-  useEffect(() => {
-    return () => {
-      if (leaveCountdownRef.current) clearInterval(leaveCountdownRef.current);
-    };
-  }, []);
+  // Keep always-current refs so listeners registered once on mount never go stale
+  const isActiveBattleRef = useRef(false);
+  isActiveBattleRef.current = isActiveBattle;
+  const forfeitMutateRef = useRef(forfeitMutation.mutate);
+  forfeitMutateRef.current = forfeitMutation.mutate;
 
   // Dismiss modal when battle ends
   useEffect(() => {
@@ -186,21 +185,21 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
     }
   }, [gameState?.status]);
 
-  // beforeunload: native browser warning on refresh/close during active battle
+  // beforeunload: native browser warning on refresh/close — registered once on mount
   useEffect(() => {
-    if (!isActiveBattle) return;
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!isActiveBattleRef.current) return;
       e.preventDefault();
-      e.returnValue = "";
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [isActiveBattle]);
+  }, []);
 
   // visibilitychange: show warning modal when player returns after switching tabs
+  // Registered once on mount; reads live values through refs to avoid stale closures
   useEffect(() => {
-    if (!isActiveBattle) return;
     const handleVisibilityChange = () => {
+      if (!isActiveBattleRef.current) return;
       if (document.hidden) {
         awaySinceRef.current = Date.now();
       } else {
@@ -218,7 +217,7 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
               if (prev <= 1) {
                 clearInterval(leaveCountdownRef.current!);
                 leaveCountdownRef.current = null;
-                forfeitMutation.mutate({ battleId });
+                forfeitMutateRef.current({ battleId });
                 return 0;
               }
               return prev - 1;
@@ -235,12 +234,11 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
         leaveCountdownRef.current = null;
       }
     };
-  }, [isActiveBattle, battleId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show resolution overlay on lastRoundSummary change (round transition)
   useEffect(() => {
     if (!gameState) return;
-    const prevPhase = prevPhaseRef.current;
     const prevRound = prevRoundRef.current;
 
     if (
