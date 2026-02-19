@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { MathText } from "@/components/ui/MathText";
 
 interface QuestionCardProps {
   promptEn: string;
@@ -74,8 +75,8 @@ export function QuestionCard({
 
       {/* Question text */}
       <div className="mb-5">
-        <p className="text-white text-lg font-medium leading-relaxed">{promptEn}</p>
-        <p className="text-white/60 text-sm mt-1">{promptZh}</p>
+        <MathText as="p" className="text-white text-lg font-medium leading-relaxed" text={promptEn} />
+        <MathText as="p" className="text-white/60 text-sm mt-1" text={promptZh} />
       </div>
 
       {/* Answer form */}

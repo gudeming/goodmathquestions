@@ -17,13 +17,16 @@ interface MathTextProps {
 export function MathText({ text, className, as: Tag = "span" }: MathTextProps) {
   if (!text) return null;
 
+  const normalizeMathContent = (content: string) =>
+    content
+      // Some stored content may double-escape LaTeX commands like \\int or \\,.
+      .replace(/\\\\(?=[A-Za-z])/g, "\\")
+      .replace(/\\\\(?=[,;:!%])/g, "\\");
+
   // Some persisted content may contain double-escaped delimiters (e.g. "\\(").
   // Normalize them so both \(...\) and \\(...\\) render consistently.
   const normalizedText = text
-    .replace(/\\\\\(/g, "\\(")
-    .replace(/\\\\\)/g, "\\)")
-    .replace(/\\\\\[/g, "\\[")
-    .replace(/\\\\\]/g, "\\]");
+    .replace(/\\{2,}(?=[()\[\]])/g, "\\");
 
   // Fast path when no known math delimiters exist.
   if (!normalizedText.includes("$") && !normalizedText.includes("\\(") && !normalizedText.includes("\\[")) {
@@ -43,13 +46,13 @@ export function MathText({ text, className, as: Tag = "span" }: MathTextProps) {
     }
 
     if (token.startsWith("$$")) {
-      parts.push({ type: "display", content: token.slice(2, -2) });
+      parts.push({ type: "display", content: normalizeMathContent(token.slice(2, -2)) });
     } else if (token.startsWith("\\[")) {
-      parts.push({ type: "display", content: token.slice(2, -2) });
+      parts.push({ type: "display", content: normalizeMathContent(token.slice(2, -2)) });
     } else if (token.startsWith("\\(")) {
-      parts.push({ type: "inline", content: token.slice(2, -2) });
+      parts.push({ type: "inline", content: normalizeMathContent(token.slice(2, -2)) });
     } else {
-      parts.push({ type: "inline", content: token.slice(1, -1) });
+      parts.push({ type: "inline", content: normalizeMathContent(token.slice(1, -1)) });
     }
 
     lastIndex = tokenStart + token.length;
