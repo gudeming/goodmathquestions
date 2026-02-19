@@ -34,6 +34,7 @@ export interface BattleParticipantState {
   lastSeenAt: number;      // epoch ms — for abandon detection
   xpStaked: number;        // snapshot of entry fee at join time
   xpChange?: number;       // set after battle ends: actual XP won (+) or lost (-)
+  lastAnswerCorrect: boolean | null; // FIX: actual answer correctness for summary display
 }
 
 export interface BattleQuestionState {
@@ -43,6 +44,7 @@ export interface BattleQuestionState {
   category: string;
   answer: string; // stored server-side only — never sent to client
   token: string;
+  dbId?: string;  // DB question id — present for DB questions, absent for adaptive
 }
 
 export interface PendingCounter {
@@ -65,6 +67,8 @@ export interface BattleRedisState {
   pendingCounter: PendingCounter | null; // set when an attack is absorbed by a defender
   winnerId: string | null;
   countdownStartedAt: number | null;
+  usedQuestionIds: string[];  // FIX: DB question ids seen in this battle (for deduplication)
+  waitingExpiresAt: number | null; // FIX: epoch ms when a WAITING battle auto-expires
 }
 
 export interface RoundSummary {
@@ -91,6 +95,7 @@ export const ENTRY_FEE_XP = 1000;
 export const STARTING_HP = 5000;
 export const ABANDON_TIMEOUT_MS = 60_000;
 export const COUNTER_TIMEOUT_MS = 15_000; // 15s to choose counter action
+export const QUEUE_ENTRY_TTL_MS = 300_000; // 5 minutes in RANDOM queue
 
 // Battle XP per correct answer (accumulates as defense / attack resource)
 const DIFFICULTY_BASE: Record<string, number> = {
@@ -253,12 +258,12 @@ export function resolveRound(state: BattleRedisState): {
   }
 
   if (!pendingCounter) {
-    // Full round complete — build summary, reset answering state, advance round
+    // Full round complete — build summary using lastAnswerCorrect (FIX: was always true before)
     const summary: RoundSummary = {
       round: state.currentRound,
       participants: {
         [a.userId]: {
-          isCorrect: a.hasAnswered,
+          isCorrect: a.lastAnswerCorrect ?? false, // FIX: use actual correctness
           battleXpGained: aCommit,
           action: a.attackPowerUsed > 0 ? a.actionChosen || "ATTACK_100" : "HOLD",
           damageDealt: aDamageDealt,
@@ -266,7 +271,7 @@ export function resolveRound(state: BattleRedisState): {
           hpAfter: a.hp,
         },
         [b.userId]: {
-          isCorrect: b.hasAnswered,
+          isCorrect: b.lastAnswerCorrect ?? false, // FIX: use actual correctness
           battleXpGained: bCommit,
           action: b.attackPowerUsed > 0 ? b.actionChosen || "ATTACK_100" : "HOLD",
           damageDealt: bDamageDealt,
@@ -278,8 +283,10 @@ export function resolveRound(state: BattleRedisState): {
     state.lastRoundSummary = summary;
     a.hasAnswered = false;
     a.attackPowerUsed = 0;
+    a.lastAnswerCorrect = null; // FIX: reset for next round
     b.hasAnswered = false;
     b.attackPowerUsed = 0;
+    b.lastAnswerCorrect = null; // FIX: reset for next round
     state.currentRound += 1;
     return { summary, finished, winnerId, hasPendingCounter: false };
   } else {
@@ -352,6 +359,7 @@ export function resolveCounter(
     p.hasActed = false;
     p.actionChosen = "NONE";
     p.attackPowerUsed = 0;
+    p.lastAnswerCorrect = null; // FIX: reset for next round
   }
   state.currentRound += 1;
 
@@ -393,13 +401,24 @@ function questionKey(battleId: string, round: number): string {
   return `battle:${battleId}:round:${round}:question`;
 }
 
+function battleMutexKey(battleId: string): string {
+  return `battle:${battleId}:mutex`;
+}
+
 export async function readBattleState(
   battleId: string
 ): Promise<BattleRedisState | null> {
   try {
     const raw = await redis.get(battleKey(battleId));
     if (!raw) return null;
-    return JSON.parse(raw) as BattleRedisState;
+    const state = JSON.parse(raw) as BattleRedisState;
+    // Backward-compat: ensure new fields exist for states created before this migration
+    state.usedQuestionIds ??= [];
+    state.waitingExpiresAt ??= null;
+    for (const p of Object.values(state.participants)) {
+      p.lastAnswerCorrect ??= null;
+    }
+    return state;
   } catch {
     return null;
   }
@@ -432,8 +451,39 @@ export async function acquireRoundLock(
     );
     return result === "OK";
   } catch {
-    return true; // fail open
+    return false; // FIX: fail closed — do not process if Redis is unavailable
   }
+}
+
+/**
+ * Per-battle mutex to serialize concurrent player mutations (submitAnswer, submitAction).
+ * Returns a release function. TTL of 5s ensures auto-release if server crashes.
+ */
+export async function acquireBattleMutex(
+  battleId: string
+): Promise<(() => Promise<void>) | null> {
+  const key = battleMutexKey(battleId);
+  const lockValue = `${Date.now()}-${Math.random()}`;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    try {
+      const result = await redis.set(key, lockValue, "EX", 5, "NX");
+      if (result === "OK") {
+        return async () => {
+          try {
+            const current = await redis.get(key);
+            if (current === lockValue) await redis.del(key);
+          } catch {
+            // best-effort release
+          }
+        };
+      }
+    } catch {
+      // Redis error — fail open (no mutex) to avoid total lock-up
+      return null;
+    }
+    await new Promise<void>((r) => setTimeout(r, 50 + Math.random() * 50));
+  }
+  return null; // Could not acquire — caller proceeds without lock (degraded)
 }
 
 export async function storeRoundQuestion(
@@ -466,14 +516,17 @@ export async function getRoundQuestion(
   }
 }
 
+/**
+ * FIX: expanded from 1,440 to ~1 billion combinations (32^6).
+ * Excludes visually confusing chars (I, O, 0, 1).
+ */
 export function generateInviteCode(): string {
-  const words = [
-    "ZAP", "POW", "ACE", "GEM", "FLY", "WIN", "TOP", "MAX",
-    "PRO", "GOD", "ICE", "SUN", "SKY", "RAY", "OAK", "BIG",
-  ];
-  const word = words[Math.floor(Math.random() * words.length)]!;
-  const num = Math.floor(Math.random() * 90) + 10;
-  return `${word}-${num}`;
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
 }
 
 export function isAbandoned(participant: BattleParticipantState): boolean {
