@@ -52,6 +52,20 @@ enum AuthMethod {
   CLASS_CODE
 }
 
+enum BattleStatus {
+  WAITING    // Created, waiting for opponent
+  COUNTDOWN  // Both joined, 3-second pre-start
+  ACTIVE     // In progress
+  FINISHED   // Complete
+  ABANDONED  // Player left / timed out
+}
+
+enum BattleActionType {
+  ATTACK
+  SHIELD
+  NONE // Timed out — auto-treated as ATTACK
+}
+
 // ============================================================
 // USER SYSTEM
 // ============================================================
@@ -83,7 +97,10 @@ model User {
   sessions         Session[]
   classroom        Classroom?     @relation(fields: [classroomId], references: [id])
   classroomId      String?
-  knowledgeMastery UserKnowledgePointMastery[]
+  knowledgeMastery   UserKnowledgePointMastery[]
+  battleParticipants BattleParticipant[]
+  battlesWon         Int                 @default(0)
+  battlesPlayed      Int                 @default(0)
 
   @@index([xp(sort: Desc)])
   @@index([classroomId])
@@ -343,4 +360,74 @@ model UserKnowledgePointMastery {
 
   @@unique([userId, knowledgePointId])
   @@index([userId])
+}
+
+// ============================================================
+// BATTLE SYSTEM (OhMyGame)
+// ============================================================
+
+model Battle {
+  id              String       @id @default(cuid())
+  status          BattleStatus @default(WAITING)
+  inviteCode      String?      @unique // null = random queue
+  xpStake         Int          @default(1000) // fixed entry fee per player
+  questionPool    Json         @default("[]") // pre-selected questionIds for this battle
+  currentRound    Int          @default(0) // counter for display only
+  roundTimeoutSec Int          @default(30)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  finishedAt      DateTime?
+
+  participants BattleParticipant[]
+  rounds       BattleRound[]
+
+  @@index([status])
+  @@index([inviteCode])
+  @@index([createdAt])
+}
+
+model BattleParticipant {
+  id         String   @id @default(cuid())
+  battleId   String
+  userId     String
+  hp         Int      @default(5000) // starting HP; game ends when this hits 0
+  battleXp   Int      @default(0) // accumulated in-battle power (attack/shield fuel)
+  totalScore Int      @default(0) // total correct × difficulty weight
+  xpStaked   Int      @default(1000) // snapshot of entry fee at join time
+  isReady    Boolean  @default(false)
+  isWinner   Boolean?
+  xpChange   Int      @default(0) // net account XP change at game end
+  lastSeenAt DateTime @default(now()) // updated on each poll; used for abandon detection
+
+  battle Battle @relation(fields: [battleId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rounds BattleRound[]
+
+  @@unique([battleId, userId])
+  @@index([battleId])
+  @@index([userId])
+}
+
+model BattleRound {
+  id            String           @id @default(cuid())
+  battleId      String
+  participantId String
+  roundNumber   Int
+  questionToken String? // key into Redis in-battle question store
+  questionData  Json // { promptEn, promptZh, difficulty, category }
+  answerSubmitted String?
+  isCorrect     Boolean?
+  responseTimeMs Int?
+  battleXpGained Int             @default(0)
+  actionChosen  BattleActionType @default(NONE)
+  damageDealt   Int              @default(0)
+  createdAt     DateTime         @default(now())
+  answeredAt    DateTime?
+
+  battle      Battle            @relation(fields: [battleId], references: [id], onDelete: Cascade)
+  participant BattleParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([battleId, participantId, roundNumber])
+  @@index([battleId, roundNumber])
+  @@index([participantId])
 }

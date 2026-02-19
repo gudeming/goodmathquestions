@@ -96,6 +96,12 @@ export function Navbar() {
           >
             {t("mastery")}
           </Link>
+          <Link
+            href={toCurrentLocalePath("/ohmygame")}
+            className="font-heading font-medium text-gray-600 hover:text-fun-pink transition-colors"
+          >
+            ⚔️ {t("ohmygame")}
+          </Link>
 
           {/* Language Toggle */}
           <button
@@ -175,6 +181,13 @@ export function Navbar() {
             onClick={() => setMobileOpen(false)}
           >
             {t("mastery")}
+          </Link>
+          <Link
+            href={toCurrentLocalePath("/ohmygame")}
+            className="block font-heading text-gray-600 py-2"
+            onClick={() => setMobileOpen(false)}
+          >
+            ⚔️ {t("ohmygame")}
           </Link>
           <button
             onClick={switchLocale}

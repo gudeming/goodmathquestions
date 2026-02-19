@@ -21,6 +21,7 @@ jobs:
           script: |
             cd /opt/gmq
             git pull origin main
+            grep -qxF 'REDIS_URL="redis://localhost:6379"' .env || echo 'REDIS_URL="redis://localhost:6379"' >> .env
             npm install
             npx prisma generate --schema packages/db/prisma/schema.prisma
             npx prisma db push --schema packages/db/prisma/schema.prisma --accept-data-loss
