@@ -609,6 +609,50 @@ export async function readBattleState(
   }
 }
 
+// ============================================================
+// LAST-SEEN — separate Redis hash so getState doesn't need to
+// rewrite the full state just to track heartbeats (which would
+// race with submitAnswer / submitAction writes)
+// ============================================================
+
+function lastSeenKey(battleId: string): string {
+  return `battle:${battleId}:lastseen`;
+}
+
+/** Atomically record that userId is still active in this battle. */
+export async function updateLastSeen(
+  battleId: string,
+  userId: string
+): Promise<void> {
+  try {
+    await redis.hset(lastSeenKey(battleId), userId, Date.now().toString());
+    // Refresh TTL on each heartbeat; same lifetime as the battle state
+    await redis.expire(lastSeenKey(battleId), BATTLE_STATE_TTL);
+  } catch {
+    // non-fatal
+  }
+}
+
+/**
+ * Returns the most-recent lastSeen timestamp for each userId in the map.
+ * Falls back to 0 (treated as abandoned) when a key is missing.
+ */
+export async function getLastSeenMap(
+  battleId: string
+): Promise<Record<string, number>> {
+  try {
+    const raw = await redis.hgetall(lastSeenKey(battleId));
+    if (!raw) return {};
+    const result: Record<string, number> = {};
+    for (const [k, v] of Object.entries(raw)) {
+      result[k] = parseInt(v, 10);
+    }
+    return result;
+  } catch {
+    return {};
+  }
+}
+
 export async function writeBattleState(state: BattleRedisState): Promise<void> {
   try {
     await redis.set(

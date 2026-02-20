@@ -16,8 +16,10 @@ import {
   resolveMultiplayerRound,
   resolveCounter,
   calcBattleXp,
-  isAbandoned,
   alivePlayers,
+  updateLastSeen,
+  getLastSeenMap,
+  ABANDON_TIMEOUT_MS,
   ENTRY_FEE_XP,
   WINNER_BONUS_XP_PER_PLAYER,
   COUNTER_TIMEOUT_MS,
@@ -828,7 +830,17 @@ export const battleRouter = createTRPCRouter({
     .input(z.object({ battleId: z.string() }))
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      let state = await readBattleState(input.battleId);
+
+      // Update heartbeat atomically (separate key — no race with game-state writes)
+      // and read state in parallel to minimise latency.
+      const [state] = await Promise.all([
+        readBattleState(input.battleId),
+        updateLastSeen(input.battleId, userId),
+      ]);
+
+      // ── Cold-state reconstruction (Redis miss) ──────────────────────────────
+      let isNewState = false;
+      let st: BattleRedisState;
 
       if (!state) {
         const battle = await ctx.db.battle.findUnique({
@@ -841,8 +853,7 @@ export const battleRouter = createTRPCRouter({
         });
         if (!battle) throw new TRPCError({ code: "NOT_FOUND" });
         const maxPlayers = battle.maxPlayers ?? 2;
-        const hp = startingHp(maxPlayers);
-        const coldState: BattleRedisState = {
+        st = {
           battleId: battle.id,
           status: battle.status as BattleRedisState["status"],
           phase: "ANSWERING",
@@ -879,18 +890,14 @@ export const battleRouter = createTRPCRouter({
           usedQuestionIds: [],
           waitingExpiresAt: null,
         };
-        // suppress unused variable warning
-        void hp;
-        state = coldState;
+        isNewState = true;
+      } else {
+        st = state;
       }
-
-      const st: BattleRedisState = state;
 
       if (!st.participants[userId]) throw new TRPCError({ code: "FORBIDDEN" });
 
-      st.participants[userId]!.lastSeenAt = Date.now();
-
-      // Auto-expire WAITING battles that exceeded queue TTL
+      // ── Auto-expire WAITING battles ─────────────────────────────────────────
       if (
         st.status === "WAITING" &&
         st.waitingExpiresAt &&
@@ -919,30 +926,40 @@ export const battleRouter = createTRPCRouter({
 
       const maxPlayers = st.maxPlayers ?? 2;
 
+      // Track whether we mutated game state in this handler.
+      // We ONLY write back to Redis when we have made real changes — this prevents
+      // stale getState snapshots from overwriting valid state written by
+      // submitAnswer / submitAction (which use a proper mutex).
+      let gameStateChanged = false;
+
       if (st.status === "ACTIVE") {
         const alive = alivePlayers(st);
 
-        // Abandon detection: eliminate disconnected players
+        // ── Abandon detection via heartbeat keys (not lastSeenAt in state) ────
+        const lastSeenMap = await getLastSeenMap(input.battleId);
         for (const p of alive) {
-          if (p.userId !== userId && isAbandoned(p)) {
-            p.isEliminated = true;
-            // Give kill reward to system (no specific killer) — excluded from kill list
-            // Just remove from alive, no xpStaked award for environment kill
+          if (p.userId !== userId) {
+            const seenAt = lastSeenMap[p.userId] ?? p.lastSeenAt ?? 0;
+            if (Date.now() - seenAt > ABANDON_TIMEOUT_MS) {
+              p.isEliminated = true;
+              gameStateChanged = true;
+            }
           }
         }
 
         const aliveAfterAbandon = alivePlayers(st);
         if (aliveAfterAbandon.length === 1 && aliveAfterAbandon[0]!.userId === userId) {
-          // Only player remaining — win by default
           await finalizeBattle(ctx.db as unknown as PrismaClient, st, userId);
+          gameStateChanged = true;
         } else if (aliveAfterAbandon.length === 0) {
           await finalizeBattle(ctx.db as unknown as PrismaClient, st, userId);
+          gameStateChanged = true;
         }
 
         const answerDeadline = st.roundStartedAt + st.roundTimeoutSec * 1000;
         const currentAlive = alivePlayers(st);
 
-        // Answer timeout → auto-blank for non-answerers
+        // ── Answer timeout → auto-blank for non-answerers ────────────────────
         if (
           st.phase === "ANSWERING" &&
           st.roundStartedAt > 0 &&
@@ -952,23 +969,25 @@ export const battleRouter = createTRPCRouter({
             if (!p.hasAnswered) {
               p.hasAnswered = true;
               p.lastAnswerCorrect = false;
+              gameStateChanged = true;
             }
           }
-          st.phase = "ACTING";
+          if (gameStateChanged) st.phase = "ACTING";
         }
 
-        // Action timeout (10s after answering closes) → auto ATTACK_100
+        // ── Action timeout (10 s after answer closes) → auto ATTACK_100 ──────
         const actionDeadline = answerDeadline + 10_000;
         if (st.phase === "ACTING" && Date.now() > actionDeadline) {
           for (const p of currentAlive) {
             if (!p.hasActed) {
               p.hasActed = true;
               p.actionChosen = "ATTACK_100";
+              gameStateChanged = true;
             }
           }
         }
 
-        // Counter-choice timeout (2-player only) → auto-COUNTER
+        // ── Counter-choice timeout (2-player only) → auto-COUNTER ────────────
         if (
           maxPlayers === 2 &&
           st.phase === "COUNTER_CHOICE" &&
@@ -983,19 +1002,15 @@ export const battleRouter = createTRPCRouter({
             } else {
               await startNextRound(ctx.db as unknown as PrismaClient, st);
             }
+            gameStateChanged = true;
           } else {
-            // Another process already resolved this round. Re-read fresh state
-            // to avoid overwriting it with our stale copy.
+            // Another process already resolved. Return fresh state without writing.
             const fresh = await readBattleState(input.battleId);
-            if (fresh) {
-              fresh.participants[userId]!.lastSeenAt = Date.now();
-              await writeBattleState(fresh);
-              return buildSnapshot(fresh, userId);
-            }
+            if (fresh) return buildSnapshot(fresh, userId);
           }
         }
 
-        // All alive players acted → resolve round
+        // ── All alive players acted → resolve round ──────────────────────────
         const aliveNow = alivePlayers(st);
         const allActed =
           aliveNow.length > 0 && aliveNow.every((p) => p.hasActed);
@@ -1020,22 +1035,24 @@ export const battleRouter = createTRPCRouter({
                 await startNextRound(ctx.db as unknown as PrismaClient, st);
               }
             }
+            gameStateChanged = true;
           } else {
-            // Another process already resolved this round (submitAction or another
-            // concurrent getState). Re-read the fresh post-resolution state instead
-            // of writing our stale ACTING snapshot, which would undo the round advance
-            // and leave everyone stuck until the 30-second roundLock TTL expires.
+            // Another process already resolved this round (submitAction or a
+            // concurrent getState). Return fresh state — do NOT write our stale
+            // ACTING snapshot, which would undo the round advance and leave
+            // everyone stuck until the 30-second roundLock TTL expires.
             const fresh = await readBattleState(input.battleId);
-            if (fresh) {
-              fresh.participants[userId]!.lastSeenAt = Date.now();
-              await writeBattleState(fresh);
-              return buildSnapshot(fresh, userId);
-            }
+            if (fresh) return buildSnapshot(fresh, userId);
           }
         }
       }
 
-      await writeBattleState(st);
+      // Only persist when we actually changed game state (or cold-reconstructed).
+      // Unconditional writes were the root cause of stale snapshots overwriting
+      // valid state from submitAnswer / submitAction.
+      if (gameStateChanged || isNewState) {
+        await writeBattleState(st);
+      }
       return buildSnapshot(st, userId);
     }),
 
@@ -1198,6 +1215,12 @@ export const battleRouter = createTRPCRouter({
                 await startNextRound(ctx.db as unknown as PrismaClient, state);
               }
             }
+          } else {
+            // Another process already holds the round lock — round was resolved
+            // before we got the mutex. Write only our hasActed flag and return;
+            // the fresh state (with new round) will be visible on the next poll.
+            await writeBattleState(state);
+            return { acknowledged: true, resolved: false };
           }
         }
 
