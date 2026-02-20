@@ -11,6 +11,17 @@ interface PlayerHPBarProps {
   isMe?: boolean;
   hasAnswered?: boolean;
   damageReceived?: number; // trigger shake when > 0
+  avatarColorClass?: string; // e.g. "from-blue-400 to-blue-600"
+}
+
+/** Returns up to 2 initials: "John Smith" → "JS", "Alice" → "AL", "You" → "ME" */
+function getInitials(name: string): string {
+  if (name === "You") return "ME";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
 }
 
 export function PlayerHPBar({
@@ -21,6 +32,7 @@ export function PlayerHPBar({
   isMe = false,
   hasAnswered = false,
   damageReceived = 0,
+  avatarColorClass = "from-primary-400 to-fun-purple",
 }: PlayerHPBarProps) {
   const [shaking, setShaking] = useState(false);
   const ratio = Math.max(0, Math.min(1, hp / maxHp));
@@ -49,11 +61,11 @@ export function PlayerHPBar({
     >
       {/* Player info */}
       <div className={`flex items-center gap-2 ${isMe ? "" : "flex-row-reverse"}`}>
-        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary-400 to-fun-purple flex items-center justify-center text-white font-bold text-sm overflow-hidden">
+        <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${avatarColorClass} flex items-center justify-center text-white font-bold text-sm overflow-hidden`}>
           {avatarUrl ? (
             <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
           ) : (
-            displayName[0]?.toUpperCase()
+            getInitials(displayName)
           )}
         </div>
         <div className={isMe ? "text-left" : "text-right"}>

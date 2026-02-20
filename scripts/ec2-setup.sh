@@ -193,7 +193,14 @@ systemctl enable --now nginx
 if [[ -n "${GMQ_DOMAIN_NAME:-}" ]]; then
   echo "=== Enabling HTTPS for ${GMQ_DOMAIN_NAME} ==="
 
-  if certbot --nginx --non-interactive --agree-tos --register-unsafely-without-email -d "${GMQ_DOMAIN_NAME}"; then
+  # Derive bare domain (strip leading "www." if present) so both are covered by the cert
+  BARE_DOMAIN="${GMQ_DOMAIN_NAME#www.}"
+  CERTBOT_DOMAINS="-d ${GMQ_DOMAIN_NAME}"
+  if [[ "${BARE_DOMAIN}" != "${GMQ_DOMAIN_NAME}" ]]; then
+    CERTBOT_DOMAINS="${CERTBOT_DOMAINS} -d ${BARE_DOMAIN}"
+  fi
+
+  if certbot --nginx --non-interactive --agree-tos --register-unsafely-without-email --expand ${CERTBOT_DOMAINS}; then
     cat > /etc/nginx/conf.d/gmq.conf << CONFEOF
 server {
     listen 80 default_server;

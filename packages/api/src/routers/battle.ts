@@ -983,6 +983,15 @@ export const battleRouter = createTRPCRouter({
             } else {
               await startNextRound(ctx.db as unknown as PrismaClient, st);
             }
+          } else {
+            // Another process already resolved this round. Re-read fresh state
+            // to avoid overwriting it with our stale copy.
+            const fresh = await readBattleState(input.battleId);
+            if (fresh) {
+              fresh.participants[userId]!.lastSeenAt = Date.now();
+              await writeBattleState(fresh);
+              return buildSnapshot(fresh, userId);
+            }
           }
         }
 
@@ -1010,6 +1019,17 @@ export const battleRouter = createTRPCRouter({
               } else {
                 await startNextRound(ctx.db as unknown as PrismaClient, st);
               }
+            }
+          } else {
+            // Another process already resolved this round (submitAction or another
+            // concurrent getState). Re-read the fresh post-resolution state instead
+            // of writing our stale ACTING snapshot, which would undo the round advance
+            // and leave everyone stuck until the 30-second roundLock TTL expires.
+            const fresh = await readBattleState(input.battleId);
+            if (fresh) {
+              fresh.participants[userId]!.lastSeenAt = Date.now();
+              await writeBattleState(fresh);
+              return buildSnapshot(fresh, userId);
             }
           }
         }

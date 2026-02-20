@@ -108,6 +108,16 @@ function CounterPanel({
   );
 }
 
+// Player identity colors: index 0 = player 1 (me), indices 1-5 = opponents
+const PLAYER_COLORS = [
+  "from-emerald-400 to-teal-600",   // Me — always green/teal
+  "from-red-400 to-rose-600",
+  "from-blue-400 to-indigo-600",
+  "from-purple-400 to-violet-600",
+  "from-orange-400 to-amber-600",
+  "from-pink-400 to-fuchsia-600",
+];
+
 // ─── Multi-player opponents strip ────────────────────────────────────────────
 function OpponentsStrip({
   opponents,
@@ -122,8 +132,10 @@ function OpponentsStrip({
 }) {
   return (
     <div className="grid grid-cols-2 gap-2">
-      {opponents.map((op) => {
+      {opponents.map((op, idx) => {
         const dmg = lastSummary?.participants[op.userId]?.damageReceived ?? 0;
+        // Opponent colors start at index 1 (index 0 is reserved for "Me")
+        const colorClass = PLAYER_COLORS[(idx + 1) % PLAYER_COLORS.length]!;
         return (
           <div
             key={op.userId}
@@ -144,6 +156,7 @@ function OpponentsStrip({
               hp={op.hp}
               maxHp={maxHp}
               damageReceived={dmg}
+              avatarColorClass={colorClass}
             />
           </div>
         );
@@ -469,6 +482,7 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
                 isMe
                 hasAnswered={me?.hasAnswered ?? false}
                 damageReceived={lastRoundDamageToMe}
+                avatarColorClass={PLAYER_COLORS[0]}
               />
             </div>
             {/* Opponents grid */}
