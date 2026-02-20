@@ -351,7 +351,7 @@ export function BattleArena({ battleId, onPlayAgain }: BattleArenaProps) {
       gameState.lastRoundSummary
     ) {
       setShowResolution(true);
-      const timer = setTimeout(() => setShowResolution(false), 3000);
+      const timer = setTimeout(() => setShowResolution(false), 2000);
       prevPhaseRef.current = gameState.phase;
       prevRoundRef.current = gameState.currentRound;
       return () => clearTimeout(timer);

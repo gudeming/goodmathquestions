@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BattleXPMeter } from "./BattleXPMeter";
+
+const ACTION_TIMEOUT_SEC = 5;
 
 type AttackAction = "ATTACK_50" | "ATTACK_80" | "ATTACK_100" | "HOLD";
 
@@ -79,7 +81,34 @@ export function ActionPanel({
   // Multi-player: two-step flow — pick target first, then pick attack
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
 
+  // 5-second countdown — auto-submit HOLD on expiry
+  const [countdown, setCountdown] = useState(ACTION_TIMEOUT_SEC);
+  const autoFiredRef = useRef(false);
+
+  useEffect(() => {
+    if (hasActed) return;
+    autoFiredRef.current = false;
+    setCountdown(ACTION_TIMEOUT_SEC);
+
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          if (!autoFiredRef.current) {
+            autoFiredRef.current = true;
+            onAction("HOLD");
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [hasActed]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function handleAction(action: AttackAction) {
+    autoFiredRef.current = true; // prevent double-fire
     if (isMultiplayer && action !== "HOLD") {
       onAction(action, selectedTarget ?? aliveOpponents[0]?.userId);
     } else {
@@ -93,9 +122,23 @@ export function ActionPanel({
       animate={{ opacity: 1, y: 0 }}
       className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20"
     >
-      <h3 className="text-white font-heading font-bold text-center text-lg mb-3">
-        Choose Your Move!
-      </h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-white font-heading font-bold text-lg">
+          Choose Your Move!
+        </h3>
+        {!hasActed && (
+          <motion.span
+            key={countdown}
+            initial={{ scale: 1.4, opacity: 0.6 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={`font-heading font-bold text-2xl tabular-nums ${
+              countdown <= 2 ? "text-red-400" : "text-yellow-300"
+            }`}
+          >
+            {countdown}s
+          </motion.span>
+        )}
+      </div>
 
       <div className="mb-4">
         <BattleXPMeter battleXp={battleXp} label="Your Power" />

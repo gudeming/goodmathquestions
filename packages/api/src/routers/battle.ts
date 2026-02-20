@@ -975,13 +975,13 @@ export const battleRouter = createTRPCRouter({
           if (gameStateChanged) st.phase = "ACTING";
         }
 
-        // ── Action timeout (10 s after answer closes) → auto ATTACK_100 ──────
-        const actionDeadline = answerDeadline + 10_000;
+        // ── Action timeout (5 s after answer closes) → auto HOLD ────────────
+        const actionDeadline = answerDeadline + 5_000;
         if (st.phase === "ACTING" && Date.now() > actionDeadline) {
           for (const p of currentAlive) {
             if (!p.hasActed) {
               p.hasActed = true;
-              p.actionChosen = "ATTACK_100";
+              p.actionChosen = "HOLD";
               gameStateChanged = true;
             }
           }
