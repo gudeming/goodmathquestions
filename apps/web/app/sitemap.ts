@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { locales, type Locale } from "@gmq/i18n";
 import { getLocalizedUrl } from "@/lib/seo";
 
-const PUBLIC_PATHS = ["/", "/login", "/signup"] as const;
+const PUBLIC_PATHS = ["/"] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
