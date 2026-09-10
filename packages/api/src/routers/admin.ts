@@ -1,18 +1,6 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, adminProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-
-// Admin emails - in production, use a proper RBAC system
-const ADMIN_EMAILS = ["admin@goodmathquestions.com", "demo@example.com"];
-
-const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  // For now, check if user email is in admin list
-  // In production, add an `isAdmin` field to User model
-  if (!ctx.session.user.email || !ADMIN_EMAILS.includes(ctx.session.user.email)) {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
-  }
-  return next();
-});
 
 const questionInput = z.object({
   titleEn: z.string().min(1).max(200),

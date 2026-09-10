@@ -85,6 +85,7 @@ model User {
   parentEmail  String? // required for PARENT_EMAIL auth
   authMethod   AuthMethod @default(PARENT_EMAIL)
   locale       String     @default("en") // "en" or "zh"
+  isAdmin      Boolean    @default(false) // grants access to the admin console
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 

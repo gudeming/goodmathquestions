@@ -54,3 +54,26 @@ const enforceAuth = t.middleware(({ ctx, next }) => {
 });
 
 export const protectedProcedure = t.procedure.use(enforceAuth);
+
+// Admin procedure - requires the caller's `isAdmin` flag to be set.
+// The flag is read from the database on every call rather than from the JWT so
+// that revoking admin takes effect immediately instead of at token expiry.
+const enforceAdmin = t.middleware(async ({ ctx, next }) => {
+  const userId = (ctx.session?.user as { id?: string } | undefined)?.id;
+  if (!userId) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  const user = await ctx.db.user.findUnique({
+    where: { id: userId },
+    select: { isAdmin: true },
+  });
+
+  if (!user?.isAdmin) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
+  }
+
+  return next();
+});
+
+export const adminProcedure = protectedProcedure.use(enforceAdmin);
