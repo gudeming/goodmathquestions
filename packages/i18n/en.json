@@ -20,7 +20,9 @@
     "back": "Back",
     "next": "Next",
     "switchLang": "中文",
-    "ohmygame": "OhMyGame"
+    "ohmygame": "OhMyGame",
+    "bytelab": "ByteLab",
+    "chompulator": "Chompulator"
   },
   "landing": {
     "heroTitle": "Math Has Never Been This Fun!",

@@ -1,0 +1,2610 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body><title>CHOMPULATOR — the calculator that eats numbers</title>
+
+<style>
+/* ============================================================
+   TOKENS — light is the base, both dark states redefine tokens only
+   ============================================================ */
+:root{
+  --ink:        #1A1226;
+  --ink-soft:   #4A3B63;
+  --ground:     #FFEFD2;
+  --ground-dot: #F3D3A0;
+  --shell:      #FFC93C;
+  --shell-lo:   #D99C12;
+  --paper:      #FFFBF0;
+  --paper-lo:   #D9CFB8;
+  --punch:      #FF4E5B;
+  --punch-lo:   #C22C39;
+  --aqua:       #3ACFE0;
+  --aqua-lo:    #1B95A6;
+  --grape:      #7C4DFF;
+  --grape-lo:   #4F27C4;
+  --slime:      #9BE84A;
+  --slime-lo:   #6BB024;
+  --screen:     #241A3A;
+  --screen-hi:  #33254F;
+  --phosphor:   #A8FF5E;
+  --text:       #1A1226;
+  --on-shell:   #1A1226;
+
+  --display: "Arial Rounded MT Bold","Arial Rounded MT","Segoe UI Black","Segoe UI",system-ui,-apple-system,sans-serif;
+  --comic:   "Comic Sans MS","Chalkboard SE","Comic Neue",var(--display);
+  --mono:    ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"SF Mono",monospace;
+
+  --edge: 5px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:        #0C0716;
+    --ink-soft:   #C9B8E8;
+    --ground:     #241945;
+    --ground-dot: #32245C;
+    --shell:      #F5BC2B;
+    --shell-lo:   #B8850E;
+    --paper:      #F6EAD3;
+    --paper-lo:   #BCAE92;
+    --punch:      #FF5F6B;
+    --punch-lo:   #B32431;
+    --aqua:       #46D9EA;
+    --aqua-lo:    #14808F;
+    --grape:      #9269FF;
+    --grape-lo:   #4A22BE;
+    --slime:      #A6F057;
+    --screen:     #140D28;
+    --screen-hi:  #221741;
+    --text:       #FFEFD2;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:        #0C0716;
+  --ink-soft:   #C9B8E8;
+  --ground:     #241945;
+  --ground-dot: #32245C;
+  --shell:      #F5BC2B;
+  --shell-lo:   #B8850E;
+  --paper:      #F6EAD3;
+  --paper-lo:   #BCAE92;
+  --punch:      #FF5F6B;
+  --punch-lo:   #B32431;
+  --aqua:       #46D9EA;
+  --aqua-lo:    #14808F;
+  --grape:      #9269FF;
+  --grape-lo:   #4A22BE;
+  --slime:      #A6F057;
+  --screen:     #140D28;
+  --screen-hi:  #221741;
+  --text:       #FFEFD2;
+}
+
+/* ============================================================
+   SKINS — unlocked by level. Each commits to one visual world,
+   so it overrides the whole palette rather than tinting it.
+   Set on <body>, which beats :root by proximity for inherited
+   custom properties, whatever the theme is doing.
+   ============================================================ */
+body[data-skin="neon"]{
+  --ink:#07061A; --ink-soft:#8FB8FF; --ground:#0C0A24; --ground-dot:#1B1650;
+  --shell:#00E5FF; --shell-lo:#00A0B5; --paper:#EAF6FF; --paper-lo:#9FB8C9;
+  --punch:#FF2E88; --punch-lo:#B3005A; --aqua:#7DF9FF; --aqua-lo:#2AA9BC;
+  --grape:#B14BFF; --grape-lo:#6E1FB8; --slime:#B6FF3A; --slime-lo:#7FBF12;
+  --screen:#050418; --screen-hi:#0E0B33; --phosphor:#5CFFC8; --text:#EAF6FF;
+}
+body[data-skin="ice"]{
+  --ink:#12293D; --ink-soft:#4E7391; --ground:#E4F4FF; --ground-dot:#BEDFF2;
+  --shell:#8FD9FF; --shell-lo:#4FA8D8; --paper:#FFFFFF; --paper-lo:#C6DCE8;
+  --punch:#FF6B8A; --punch-lo:#C43B5A; --aqua:#3ACFE0; --aqua-lo:#1B95A6;
+  --grape:#7C8CFF; --grape-lo:#4453C4; --slime:#7CE8C8; --slime-lo:#3FA98C;
+  --screen:#0E2A3D; --screen-hi:#1A3E56; --phosphor:#9FF5FF; --text:#12293D;
+}
+body[data-skin="lava"]{
+  --ink:#1B0A05; --ink-soft:#E8A882; --ground:#2A0F08; --ground-dot:#451A0D;
+  --shell:#FF8A1E; --shell-lo:#C25A00; --paper:#FFE9C7; --paper-lo:#BF9C6E;
+  --punch:#FF3B2F; --punch-lo:#B01208; --aqua:#FFC93C; --aqua-lo:#C28E00;
+  --grape:#FF6B2C; --grape-lo:#B33A08; --slime:#FFD84D; --slime-lo:#C2A000;
+  --screen:#170703; --screen-hi:#2E0F06; --phosphor:#FFB347; --text:#FFE9C7;
+}
+
+/* ============================================================
+   GROUND
+   ============================================================ */
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  min-height:100vh;
+  background-color:var(--ground);
+  background-image:
+    radial-gradient(var(--ground-dot) 1.6px, transparent 1.7px),
+    radial-gradient(var(--ground-dot) 1.6px, transparent 1.7px);
+  background-size:22px 22px, 22px 22px;
+  background-position:0 0, 11px 11px;
+  color:var(--text);
+  font-family:var(--display);
+  -webkit-font-smoothing:antialiased;
+  padding:clamp(16px,4vw,44px) 16px 64px;
+  display:flex;
+  justify-content:center;
+  overflow-x:hidden;
+}
+
+.arena{
+  position:relative;
+  width:100%;
+  max-width:780px;
+  display:flex;
+  flex-direction:column;
+  gap:clamp(14px,2.4vw,22px);
+}
+
+/* radiating speed lines behind the console */
+.arena::before{
+  content:"";
+  position:absolute;
+  left:50%; top:clamp(150px,26vw,230px);
+  width:190%; aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  background:repeating-conic-gradient(
+    from 0deg at 50% 50%,
+    color-mix(in srgb, var(--ground-dot) 78%, transparent) 0deg 3.2deg,
+    transparent 3.2deg 11deg);
+  -webkit-mask-image:radial-gradient(circle at 50% 50%, transparent 26%, #000 44%, transparent 72%);
+          mask-image:radial-gradient(circle at 50% 50%, transparent 26%, #000 44%, transparent 72%);
+  pointer-events:none;
+  z-index:0;
+}
+
+#fx{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  pointer-events:none;
+  z-index:40;
+}
+
+/* ============================================================
+   WORDMARK
+   ============================================================ */
+.masthead{ position:relative; z-index:2; text-align:center; }
+
+.wordmark{
+  margin:0;
+  font-size:clamp(2.5rem,9.4vw,5rem);
+  font-weight:900;
+  letter-spacing:.01em;
+  line-height:.92;
+  color:var(--shell);
+  text-shadow:
+    -3px -3px 0 var(--ink),  3px -3px 0 var(--ink),
+    -3px  3px 0 var(--ink),  3px  3px 0 var(--ink),
+    -4px  0   0 var(--ink),  4px  0   0 var(--ink),
+     0   -4px 0 var(--ink),  0    4px 0 var(--ink),
+     0    9px 0 var(--ink);
+  text-wrap:balance;
+}
+.wordmark span{ display:inline-block; }
+.wordmark span:nth-child(odd){ transform:rotate(-3.5deg) translateY(2px); }
+.wordmark span:nth-child(even){ transform:rotate(3deg); }
+
+.tagline{
+  margin:14px 0 0;
+  font-family:var(--comic);
+  font-size:clamp(.85rem,2.5vw,1.05rem);
+  color:var(--ink-soft);
+}
+
+/* ============================================================
+   HUD RAIL
+   ============================================================ */
+.hud{
+  position:relative; z-index:2;
+  display:flex; align-items:stretch; gap:10px; flex-wrap:wrap;
+}
+
+.badge-lvl{
+  flex:0 0 auto;
+  display:grid; place-items:center;
+  width:76px; padding:6px 0 9px;
+  background:var(--punch);
+  border:var(--edge) solid var(--ink);
+  border-radius:16px;
+  box-shadow:0 6px 0 0 var(--ink);
+  color:#FFF6E0;
+  transition:transform .12s;
+}
+.badge-lvl .cap{
+  font-family:var(--mono); font-size:.6rem; font-weight:700;
+  letter-spacing:.18em; opacity:.85;
+}
+.badge-lvl .num{
+  font-size:2rem; font-weight:900; line-height:1;
+  font-variant-numeric:tabular-nums;
+  text-shadow:0 3px 0 var(--punch-lo);
+}
+.badge-lvl.pop{ animation:badgePop .5s cubic-bezier(.3,1.6,.5,1); }
+@keyframes badgePop{ 0%{transform:scale(1)} 40%{transform:scale(1.28) rotate(-6deg)} 100%{transform:scale(1)} }
+
+.meters{
+  flex:1 1 260px;
+  display:flex; flex-direction:column; gap:8px; justify-content:center;
+  padding:11px 14px;
+  background:var(--paper);
+  border:var(--edge) solid var(--ink);
+  border-radius:16px;
+  box-shadow:0 6px 0 0 var(--ink);
+}
+
+.meter-row{ display:flex; align-items:center; gap:10px; }
+.meter-label{
+  flex:0 0 46px;
+  font-family:var(--mono); font-size:.62rem; font-weight:700;
+  letter-spacing:.14em; color:var(--ink); opacity:.7;
+}
+.track{
+  flex:1;
+  height:16px;
+  background:color-mix(in srgb, var(--ink) 14%, var(--paper));
+  border:3px solid var(--ink);
+  border-radius:99px;
+  overflow:hidden;
+}
+.fill{
+  height:100%; width:0%;
+  border-radius:99px;
+  transition:width .34s cubic-bezier(.2,.9,.3,1);
+}
+.fill.xp{ background:linear-gradient(var(--slime), var(--slime-lo)); }
+.fill.combo{ background:linear-gradient(var(--aqua), var(--aqua-lo)); transition:width .1s linear; }
+.meter-val{
+  flex:0 0 auto; min-width:76px; text-align:right;
+  font-family:var(--mono); font-size:.68rem; font-weight:700;
+  font-variant-numeric:tabular-nums; color:var(--ink);
+}
+
+.combo-chip{
+  flex:0 0 auto; min-width:76px; text-align:right;
+  font-size:1rem; font-weight:900; color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+.combo-chip.hot{ color:var(--punch); }
+.combo-chip.hot.beat{ animation:comboBeat .3s ease; }
+@keyframes comboBeat{ 50%{ transform:scale(1.3) rotate(-4deg); } }
+
+.sfx-btn{
+  flex:0 0 auto;
+  padding:0 16px;
+  background:var(--grape);
+  border:var(--edge) solid var(--ink);
+  border-radius:16px;
+  box-shadow:0 6px 0 0 var(--ink);
+  color:#FFF6E0;
+  font-family:var(--mono); font-size:.66rem; font-weight:700; letter-spacing:.12em;
+  line-height:1.5;
+  cursor:pointer;
+  transition:transform .07s, box-shadow .07s;
+}
+.sfx-btn .state{ display:block; font-size:.9rem; font-weight:900; letter-spacing:.05em; }
+.sfx-btn[aria-pressed="false"]{ background:color-mix(in srgb, var(--grape) 34%, var(--paper)); color:var(--ink); }
+.sfx-btn:active{ transform:translateY(5px); box-shadow:0 1px 0 0 var(--ink); }
+
+/* ============================================================
+   CONTROL RAIL — modes, skins, reset
+   ============================================================ */
+.rail{
+  position:relative; z-index:2;
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+}
+
+.mode-btn{
+  padding:8px 15px 9px;
+  background:var(--paper); color:var(--ink);
+  border:var(--edge) solid var(--ink);
+  border-radius:14px;
+  box-shadow:0 5px 0 0 var(--ink);
+  font-family:var(--display); font-size:.92rem; font-weight:900;
+  letter-spacing:.03em;
+  cursor:pointer;
+  transition:transform .07s, box-shadow .07s, filter .12s;
+}
+.mode-btn:hover{ filter:brightness(1.06); }
+.mode-btn:active{ transform:translateY(4px); box-shadow:0 1px 0 0 var(--ink); }
+.mode-btn:focus-visible{ outline:4px dashed var(--ink); outline-offset:4px; }
+.mode-btn[aria-pressed="true"]{ background:var(--punch); color:#FFF6E0; }
+.mode-btn.fight[aria-pressed="true"]{ background:var(--punch); }
+.mode-btn.quiz[aria-pressed="true"]{ background:var(--grape); color:#FFF6E0; }
+
+.skins{
+  display:flex; gap:6px; align-items:center;
+  margin-left:auto;
+}
+.skin-chip{
+  width:30px; height:30px;
+  border:4px solid var(--ink);
+  border-radius:50%;
+  cursor:pointer;
+  padding:0;
+  box-shadow:0 4px 0 0 var(--ink);
+  transition:transform .1s;
+  position:relative;
+}
+.skin-chip:hover{ transform:translateY(-2px); }
+.skin-chip:focus-visible{ outline:3px dashed var(--ink); outline-offset:3px; }
+.skin-chip[aria-pressed="true"]{ transform:scale(1.16); }
+.skin-chip[disabled]{
+  cursor:not-allowed; opacity:.4;
+  background-image:linear-gradient(45deg, transparent 44%, var(--ink) 44% 56%, transparent 56%);
+}
+.skin-chip.toy { background:#FFC93C; }
+.skin-chip.neon{ background:linear-gradient(135deg,#00E5FF 50%,#FF2E88 50%); }
+.skin-chip.ice { background:linear-gradient(135deg,#8FD9FF 50%,#FFFFFF 50%); }
+.skin-chip.lava{ background:linear-gradient(135deg,#FF8A1E 50%,#FF3B2F 50%); }
+
+.reset-btn{
+  padding:7px 12px;
+  background:transparent; color:var(--ink-soft);
+  border:3px solid var(--ink-soft); border-radius:12px;
+  font-family:var(--mono); font-size:.58rem; font-weight:700; letter-spacing:.14em;
+  cursor:pointer;
+}
+.reset-btn:hover{ background:var(--ink-soft); color:var(--ground); }
+.reset-btn.armed{ background:var(--punch); border-color:var(--punch); color:#FFF6E0; }
+
+/* ============================================================
+   BOSS
+   ============================================================ */
+.boss{
+  position:relative; z-index:2;
+  display:flex; align-items:center; gap:13px;
+  background:var(--punch);
+  border:var(--edge) solid var(--ink);
+  border-radius:18px;
+  box-shadow:0 7px 0 0 var(--ink);
+  padding:11px 15px;
+  animation:bossIn .45s cubic-bezier(.2,1.5,.4,1);
+}
+.boss[hidden]{ display:none; }
+@keyframes bossIn{ 0%{ transform:translateY(-22px) scale(.9); opacity:0 } }
+.boss.hit{ animation:bossHit .28s ease; }
+@keyframes bossHit{ 25%{ transform:translateX(-9px) } 60%{ transform:translateX(7px) } }
+
+.bossface{ flex:0 0 58px; width:58px; height:58px; overflow:visible; }
+.boss.hit .bossface{ animation:bossFlinch .28s ease; }
+@keyframes bossFlinch{ 50%{ transform:scale(.82) rotate(-8deg) } }
+
+.bossinfo{ flex:1; min-width:0; display:flex; flex-direction:column; gap:5px; }
+.bossname{
+  font-family:var(--display); font-size:1rem; font-weight:900;
+  color:#FFF6E0; line-height:1;
+  text-shadow:0 2px 0 var(--punch-lo);
+}
+.fill.hp{ background:linear-gradient(var(--slime), var(--slime-lo)); transition:width .25s ease; }
+.fill.hp.low{ background:linear-gradient(#FFD23F, #D98F00); }
+.bossmeta{
+  display:flex; gap:10px;
+  font-family:var(--mono); font-size:.6rem; font-weight:700; letter-spacing:.1em;
+  color:#FFF6E0;
+  font-variant-numeric:tabular-nums;
+}
+.bossmeta .clock{ margin-left:auto; }
+
+.dmg{
+  position:absolute;
+  z-index:50;
+  font-family:var(--display); font-weight:900; font-size:1.5rem;
+  color:#FFF6E0;
+  text-shadow:-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),2px 2px 0 var(--ink);
+  pointer-events:none;
+  opacity:0;
+}
+
+/* ============================================================
+   CONSOLE
+   ============================================================ */
+.console{
+  position:relative; z-index:2;
+  transform:rotate(-1deg);
+  background:var(--shell);
+  border:7px solid var(--ink);
+  border-radius:34px;
+  box-shadow:0 12px 0 0 var(--ink), 0 12px 0 7px color-mix(in srgb, var(--ink) 22%, transparent);
+  padding:clamp(14px,2.6vw,22px);
+  display:flex; flex-direction:column; gap:clamp(12px,2.2vw,18px);
+}
+.console.shake{ animation:shake .34s cubic-bezier(.36,.07,.19,.97); }
+@keyframes shake{
+  10%,90%{ transform:rotate(-1deg) translate(-3px,1px); }
+  30%,70%{ transform:rotate(-1.9deg) translate(5px,-2px); }
+  50%{ transform:rotate(0deg) translate(-6px,2px); }
+}
+
+/* screws in the shell corners */
+.console::after{
+  content:"";
+  position:absolute; inset:12px;
+  border-radius:22px;
+  border:3px dashed color-mix(in srgb, var(--ink) 26%, transparent);
+  pointer-events:none;
+}
+
+.deck{ display:flex; align-items:flex-end; gap:clamp(8px,2vw,16px); position:relative; z-index:1; }
+
+/* ---- mascot ---- */
+.mascot{
+  flex:0 0 clamp(96px,20vw,150px);
+  width:clamp(96px,20vw,150px);
+  height:auto;
+  overflow:visible;
+  margin-bottom:-6px;
+}
+.mascot .eye{ transform-box:fill-box; transform-origin:center; animation:blink 5.2s infinite; }
+.mascot .eye.right{ animation-delay:.09s; }
+@keyframes blink{ 0%,94%,100%{transform:scaleY(1)} 96.5%{transform:scaleY(.08)} }
+
+.mascot .pupil{ transition:transform .16s cubic-bezier(.3,1.4,.5,1); }
+.mascot .m-open,.mascot .tongue{ opacity:0; }
+.mascot .m-line{ opacity:1; }
+
+.mascot.is-chomp .m-open{ opacity:1; }
+.mascot.is-chomp .m-line{ opacity:0; }
+.mascot.is-hype  .m-open{ opacity:1; }
+.mascot.is-hype  .tongue{ opacity:1; }
+.mascot.is-hype  .m-line{ opacity:0; }
+.mascot.is-dizzy .m-line{ opacity:0; }
+.mascot.is-dizzy .m-wave{ opacity:1; }
+.mascot .m-wave{ opacity:0; }
+
+.mascot.is-chomp{ animation:chomp .3s ease; }
+.mascot.is-hype{ animation:hype .6s ease; }
+.mascot.is-dizzy{ animation:dizzy .5s ease; }
+@keyframes chomp{ 50%{ transform:translateY(5px) scale(1.07,.93); } }
+@keyframes hype{ 25%{transform:translateY(-14px) rotate(-7deg)} 55%{transform:translateY(0) rotate(5deg)} 80%{transform:translateY(-6px)} }
+@keyframes dizzy{ 25%{transform:rotate(-9deg)} 60%{transform:rotate(8deg)} }
+
+/* --- chewing ------------------------------------------------
+   Duration, cycle count and puff size are set from JS per
+   mouthful, so a 7-digit answer takes visibly more work than a 2.
+   ------------------------------------------------------------ */
+.mascot .cheek{ opacity:0; transform-box:fill-box; transform-origin:center; }
+
+.mascot.is-chewing{
+  animation:chewBody var(--chew-dur,180ms) ease-in-out var(--chew-count,3);
+}
+.mascot.is-chewing .m-line,
+.mascot.is-chewing .m-wave{ opacity:0; }
+.mascot.is-chewing .m-open{
+  opacity:1;
+  transform-box:fill-box; transform-origin:top center;
+  animation:jaw var(--chew-dur,180ms) ease-in-out var(--chew-count,3);
+}
+.mascot.is-chewing .tongue{
+  opacity:1;
+  transform-box:fill-box; transform-origin:center;
+  animation:tongueChew var(--chew-dur,180ms) ease-in-out var(--chew-count,3);
+}
+.mascot.is-chewing .cheek{
+  animation:cheekPuff var(--chew-dur,180ms) ease-in-out var(--chew-count,3);
+}
+.mascot.is-chewing .cheek.r{ animation-delay:calc(var(--chew-dur,180ms) / 2); }
+
+@keyframes chewBody{
+  0%,100%{ transform:translateY(0) scale(1,1); }
+  50%    { transform:translateY(3px) scale(1.06,.93); }
+}
+@keyframes jaw{
+  0%,100%{ transform:scaleY(1); }
+  50%    { transform:scaleY(.16); }
+}
+@keyframes tongueChew{
+  0%,100%{ transform:translateY(0) scaleY(1); }
+  50%    { transform:translateY(-11px) scaleY(.3); }
+}
+@keyframes cheekPuff{
+  0%,100%{ opacity:0; transform:scale(.35); }
+  50%    { opacity:1; transform:scale(var(--puff,1)); }
+}
+
+/* --- evolution ----------------------------------------------
+   Stage is stamped on the SVG as data-stage; each stage reveals
+   another set of parts, so levelling is visible on the character.
+   ------------------------------------------------------------ */
+.mascot .horns,
+.mascot .wings,
+.mascot .aura{ opacity:0; transition:opacity .5s ease; }
+
+.mascot[data-stage="1"] .horns,
+.mascot[data-stage="2"] .horns,
+.mascot[data-stage="3"] .horns{ opacity:1; }
+.mascot[data-stage="2"] .wings,
+.mascot[data-stage="3"] .wings{ opacity:1; }
+.mascot[data-stage="3"] .aura{ opacity:1; }
+
+.mascot[data-stage="2"] .wings,
+.mascot[data-stage="3"] .wings{
+  transform-box:fill-box; transform-origin:center;
+  animation:flap 1.5s ease-in-out infinite;
+}
+@keyframes flap{ 50%{ transform:scaleY(.72) translateY(-4px); } }
+
+.mascot[data-stage="3"] .aura{ animation:auraSpin 9s linear infinite; transform-box:fill-box; transform-origin:center; }
+@keyframes auraSpin{ 100%{ transform:rotate(360deg); } }
+
+.mascot[data-stage="2"] .body{ fill:var(--aqua); }
+.mascot[data-stage="3"] .body{ fill:var(--grape); }
+.mascot[data-stage="2"] .cheek{ fill:var(--aqua); }
+.mascot[data-stage="3"] .cheek{ fill:var(--grape); }
+
+.mascot.evolving{ animation:evolve 1.5s cubic-bezier(.3,1.3,.4,1); }
+@keyframes evolve{
+  0%  { transform:scale(1) rotate(0deg); }
+  25% { transform:scale(1.3) rotate(-12deg); }
+  45% { transform:scale(.86) rotate(10deg); }
+  65% { transform:scale(1.34) rotate(-7deg); }
+  100%{ transform:scale(1) rotate(0deg); }
+}
+
+/* a full-bleed flash for the evolution moment */
+.flash{
+  position:fixed; inset:0;
+  background:#FFF6E0;
+  z-index:70;
+  pointer-events:none;
+  opacity:0;
+  animation:flashOut .8s ease forwards;
+}
+@keyframes flashOut{ 0%{opacity:.92} 100%{opacity:0} }
+
+/* --- quiz hearts -------------------------------------------- */
+.hearts{
+  letter-spacing:.1em;
+  color:var(--punch);
+  font-size:.82rem;
+}
+.hearts .gone{ color:var(--phosphor); opacity:.28; }
+
+/* --- the XP nugget he catches ------------------------------- */
+.morsel{
+  position:absolute; left:0; top:0;
+  z-index:45;
+  padding:5px 12px 6px;
+  background:var(--slime);
+  border:4px solid var(--ink);
+  border-radius:14px;
+  box-shadow:0 4px 0 0 var(--ink);
+  font-family:var(--display);
+  font-weight:900; font-size:1rem; line-height:1.1;
+  color:var(--ink);
+  white-space:nowrap;
+  pointer-events:none;
+  will-change:transform, opacity;
+  /* invisible until the flight animation takes over, so it can't flash
+     at its unanimated position for a frame */
+  opacity:0;
+  transform:translate(-50%,-50%) scale(0);
+}
+.morsel.crit{ background:var(--punch); color:#FFF6E0; }
+
+.mascot .antenna-ball{ animation:bob 2.4s ease-in-out infinite; transform-box:fill-box; transform-origin:center; }
+@keyframes bob{ 50%{ transform:translate(3px,-4px); } }
+
+/* ---- screen ---- */
+.screen{
+  flex:1 1 auto; min-width:0;
+  position:relative;
+  background:var(--screen);
+  background-image:repeating-linear-gradient(
+    to bottom, transparent 0 3px,
+    color-mix(in srgb, #000 26%, transparent) 3px 4px);
+  border:var(--edge) solid var(--ink);
+  border-radius:18px;
+  padding:12px 16px 14px;
+  display:flex; flex-direction:column; gap:4px;
+  min-height:clamp(128px,22vw,158px);
+  overflow:hidden;
+}
+.screen::before{
+  content:"";
+  position:absolute; left:0; right:0; top:0; height:42%;
+  background:linear-gradient(color-mix(in srgb,#fff 12%,transparent), transparent);
+  pointer-events:none;
+}
+
+.quest{
+  display:flex; align-items:center; gap:8px;
+  font-family:var(--mono); font-size:.62rem; font-weight:700; letter-spacing:.12em;
+  color:var(--slime);
+  min-height:22px;
+}
+.quest .tag{
+  background:var(--slime); color:var(--screen);
+  padding:2px 6px; border-radius:6px; letter-spacing:.16em;
+}
+.quest .goal{ color:var(--phosphor); letter-spacing:.06em; font-size:.72rem; }
+.quest .reroll{
+  margin-left:auto;
+  background:transparent; color:var(--slime);
+  border:2px solid var(--slime); border-radius:7px;
+  padding:1px 7px; font:inherit; font-size:.58rem; letter-spacing:.1em;
+  cursor:pointer;
+}
+.quest .reroll:hover{ background:var(--slime); color:var(--screen); }
+/* locked while a boss is up — no rerolling out of the fight */
+.quest .reroll[disabled]{
+  opacity:.45; cursor:not-allowed;
+  border-style:dashed;
+  color:var(--punch); border-color:var(--punch);
+}
+.quest .reroll[disabled]:hover{ background:transparent; color:var(--punch); }
+
+.expr{
+  font-family:var(--mono); font-size:.9rem; font-weight:700;
+  color:color-mix(in srgb, var(--phosphor) 58%, transparent);
+  font-variant-numeric:tabular-nums;
+  min-height:1.3em;
+  overflow-x:auto; overflow-y:hidden; white-space:nowrap;
+  scrollbar-width:none;
+}
+.expr::-webkit-scrollbar{ display:none; }
+
+.out{
+  margin-top:auto;
+  font-size:clamp(2rem,7.6vw,3.4rem);
+  font-weight:900; line-height:1;
+  color:var(--phosphor);
+  font-variant-numeric:tabular-nums;
+  text-align:right;
+  text-shadow:0 0 22px color-mix(in srgb, var(--phosphor) 55%, transparent);
+  overflow-x:auto; overflow-y:hidden; white-space:nowrap;
+  scrollbar-width:none;
+  direction:rtl;
+}
+.out::-webkit-scrollbar{ display:none; }
+
+/* The readout is RTL so long numbers stay pinned to the right edge.
+   Flip the contents back to LTR or a stacked fraction draws backwards. */
+.outin{
+  direction:ltr; unicode-bidi:isolate;
+  display:inline-flex; align-items:center; gap:.2em;
+}
+.frac{
+  display:inline-flex; flex-direction:column; align-items:center;
+  line-height:1; font-size:.6em;
+}
+.frac .n,.frac .d{ padding:0 .16em; }
+.frac .bar{
+  width:100%; min-width:.85em; height:.1em;
+  background:currentColor; border-radius:99px;
+  margin:.11em 0;
+}
+.frac .d.blank{ opacity:.45; }
+
+.out.err{ color:var(--punch); text-shadow:0 0 22px color-mix(in srgb, var(--punch) 55%, transparent); }
+.out.crit{ animation:critFlash .5s ease; }
+@keyframes critFlash{ 0%,100%{transform:scale(1)} 30%{transform:scale(1.14) rotate(-1.5deg)} }
+
+.say{
+  font-family:var(--comic);
+  font-size:.8rem;
+  color:var(--slime);
+  text-align:right;
+  min-height:1.25em;
+}
+
+/* ---- keypad ---- */
+.keys{
+  position:relative; z-index:1;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:clamp(7px,1.5vw,11px);
+}
+
+.key{
+  font-family:var(--display);
+  font-size:clamp(1.15rem,4.4vw,1.75rem);
+  font-weight:900;
+  padding:clamp(10px,2.4vw,16px) 4px;
+  border:var(--edge) solid var(--ink);
+  border-radius:15px;
+  cursor:pointer;
+  color:var(--ink);
+  background:var(--paper);
+  box-shadow:0 7px 0 0 var(--ink);
+  transform:translateY(0);
+  transition:transform .06s ease, box-shadow .06s ease, filter .12s;
+  -webkit-user-select:none; user-select:none;
+  touch-action:manipulation;
+}
+.key:hover{ filter:brightness(1.07); }
+.key.down{ transform:translateY(7px); box-shadow:0 0 0 0 var(--ink); }
+.key:focus-visible{ outline:4px dashed var(--ink); outline-offset:5px; }
+
+.key[data-type="op"]{ background:var(--aqua); color:var(--ink); }
+.key[data-type="util"]{ background:var(--grape); color:#FFF6E0; font-size:clamp(.95rem,3.4vw,1.35rem); }
+.key[data-type="eq"]{ background:var(--punch); color:#FFF6E0; }
+.key[data-type="frac"]{ background:var(--slime); color:var(--ink); font-size:clamp(1rem,3.6vw,1.35rem); }
+
+.key.wide{ grid-column:span 2; }
+.key .sub{
+  display:block;
+  font-family:var(--mono); font-size:.5rem; font-weight:700; letter-spacing:.14em;
+  opacity:.68; margin-top:3px;
+}
+/* a stacked "a over b" drawn right on the key face */
+.key .ab{
+  display:inline-flex; flex-direction:column; align-items:center;
+  line-height:.95; font-size:1.15em;
+}
+.key .ab .bar{
+  width:1.1em; height:.11em;
+  background:currentColor; border-radius:99px;
+  margin:.11em 0;
+}
+
+/* ============================================================
+   STICKER SHELF
+   ============================================================ */
+.shelf{
+  position:relative; z-index:2;
+  background:var(--paper);
+  border:var(--edge) solid var(--ink);
+  border-radius:18px;
+  box-shadow:0 6px 0 0 var(--ink);
+  padding:13px 15px 15px;
+}
+.shelf h2{
+  margin:0 0 11px;
+  display:flex; align-items:center; gap:10px;
+  font-family:var(--mono); font-size:.64rem; font-weight:700; letter-spacing:.2em;
+  color:var(--ink); opacity:.6;
+}
+.shelf h2 .tally{
+  margin-left:auto;
+  background:var(--ink); color:var(--paper);
+  padding:2px 8px; border-radius:99px;
+  letter-spacing:.1em;
+  font-variant-numeric:tabular-nums;
+}
+.stickers{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(96px,1fr));
+  gap:9px;
+}
+.sticker{
+  border:4px solid var(--ink);
+  border-radius:12px;
+  padding:8px 7px;
+  text-align:center;
+  background:transparent;
+  color:var(--ink);
+  opacity:.3;
+  transition:opacity .2s;
+}
+.sticker .name{
+  font-size:.74rem; font-weight:900; line-height:1.15;
+  display:block; text-wrap:balance;
+}
+.sticker .hint{
+  display:block; margin-top:3px;
+  font-family:var(--mono); font-size:.53rem; letter-spacing:.06em; opacity:.8;
+}
+.sticker.got{
+  opacity:1;
+  background:var(--slime);
+  box-shadow:0 4px 0 0 var(--ink);
+  transform:rotate(-1.5deg);
+}
+.sticker.got:nth-child(even){ background:var(--aqua); transform:rotate(1.8deg); }
+.sticker.got:nth-child(3n){ background:var(--shell); transform:rotate(-2.4deg); }
+.sticker.just{ animation:stickerSlap .45s cubic-bezier(.3,1.7,.4,1); }
+@keyframes stickerSlap{ 0%{transform:scale(2.2) rotate(14deg); opacity:0} 100%{transform:rotate(-1.5deg); opacity:1} }
+
+/* ============================================================
+   TOASTS
+   ============================================================ */
+.toasts{
+  position:fixed; left:50%; top:18px;
+  transform:translateX(-50%);
+  z-index:60;
+  display:flex; flex-direction:column; gap:9px; align-items:center;
+  pointer-events:none;
+  width:min(92vw,420px);
+}
+.toast{
+  background:var(--shell);
+  border:var(--edge) solid var(--ink);
+  border-radius:14px;
+  box-shadow:0 6px 0 0 var(--ink);
+  padding:9px 18px;
+  text-align:center;
+  color:var(--on-shell);
+  animation:toastIn .38s cubic-bezier(.2,1.6,.4,1);
+}
+.toast.big{ background:var(--punch); color:#FFF6E0; }
+.toast .kicker{
+  display:block;
+  font-family:var(--mono); font-size:.56rem; font-weight:700; letter-spacing:.24em;
+  opacity:.75;
+}
+.toast .body{ display:block; font-size:1.05rem; font-weight:900; line-height:1.2; }
+.toast.out{ animation:toastOut .3s ease forwards; }
+@keyframes toastIn{ 0%{transform:translateY(-26px) scale(.7); opacity:0} }
+@keyframes toastOut{ 100%{transform:translateY(-16px) scale(.86); opacity:0} }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.legend{
+  position:relative; z-index:2;
+  font-family:var(--mono); font-size:.62rem; letter-spacing:.05em;
+  color:var(--ink-soft);
+  text-align:center; line-height:1.7;
+}
+.legend kbd{
+  font-family:var(--mono); font-size:.62rem;
+  background:var(--paper); color:var(--ink);
+  border:2px solid var(--ink); border-radius:5px;
+  padding:0 4px; margin:0 1px;
+}
+
+@media (max-width:430px){
+  .deck{ flex-direction:column; align-items:stretch; }
+  .mascot{ align-self:center; margin-bottom:-14px; }
+  .meter-val,.combo-chip{ min-width:60px; }
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+  }
+}
+</style>
+
+<div class="arena">
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <header class="masthead">
+    <h1 class="wordmark" aria-label="Chompulator"><span aria-hidden="true">C</span><span aria-hidden="true">H</span><span aria-hidden="true">O</span><span aria-hidden="true">M</span><span aria-hidden="true">P</span><span aria-hidden="true">U</span><span aria-hidden="true">L</span><span aria-hidden="true">A</span><span aria-hidden="true">T</span><span aria-hidden="true">O</span><span aria-hidden="true">R</span></h1>
+    <p class="tagline">Feed Chompy some math. He pays in XP.</p>
+  </header>
+
+  <div class="hud">
+    <div class="badge-lvl" id="lvlBadge">
+      <span class="cap">LVL</span>
+      <span class="num" id="lvlNum">1</span>
+    </div>
+
+    <div class="meters">
+      <div class="meter-row">
+        <span class="meter-label">XP</span>
+        <div class="track"><div class="fill xp" id="xpFill"></div></div>
+        <span class="meter-val" id="xpVal">0 / 100</span>
+      </div>
+      <div class="meter-row">
+        <span class="meter-label">COMBO</span>
+        <div class="track"><div class="fill combo" id="comboFill"></div></div>
+        <span class="combo-chip" id="comboVal">x1</span>
+      </div>
+    </div>
+
+    <button class="sfx-btn" id="sfxBtn" aria-pressed="true">
+      SOUND
+      <span class="state" id="sfxState">ON</span>
+    </button>
+  </div>
+
+  <div class="rail">
+    <button class="mode-btn fight" id="fightBtn" aria-pressed="false">FIGHT!</button>
+    <button class="mode-btn quiz" id="quizBtn" aria-pressed="false">QUIZ</button>
+    <button class="reset-btn" id="resetBtn">RESET</button>
+    <div class="skins" id="skins" role="group" aria-label="Console skin"></div>
+  </div>
+
+  <div class="boss" id="bossPanel" hidden>
+    <svg class="bossface" id="bossFace" viewBox="0 0 100 100" aria-hidden="true">
+      <g stroke="var(--ink)" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M14 40 L 6 14 L 30 26 M86 40 L 94 14 L 70 26" fill="var(--grape)"/>
+        <path d="M50 12 Q 90 14 88 56 Q 86 92 50 92 Q 14 92 12 56 Q 10 14 50 12 Z" fill="var(--grape)"/>
+        <path d="M28 44 L 44 52 M72 44 L 56 52" fill="none"/>
+        <circle cx="35" cy="58" r="7" fill="var(--ink)"/>
+        <circle cx="65" cy="58" r="7" fill="var(--ink)"/>
+        <path d="M32 76 L 42 70 L 52 76 L 62 70 L 70 76" fill="none"/>
+      </g>
+    </svg>
+    <div class="bossinfo">
+      <div class="bossname" id="bossName">NUMBER GOBLIN</div>
+      <div class="track"><div class="fill hp" id="bossHp"></div></div>
+      <div class="bossmeta">
+        <span id="bossHpText">120 / 120 HP</span>
+        <span class="clock" id="bossClock">60s</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="console" id="console">
+    <div class="deck">
+      <svg class="mascot" id="mascot" viewBox="0 0 200 170" data-stage="0" role="img" aria-label="Chompy the number-eating monster">
+        <g class="aura">
+          <circle cx="100" cy="112" r="94" fill="none" stroke="var(--phosphor)" stroke-width="5"
+                  stroke-dasharray="10 16" stroke-linecap="round" opacity=".85"/>
+          <circle cx="100" cy="112" r="80" fill="none" stroke="var(--shell)" stroke-width="3"
+                  stroke-dasharray="4 20" stroke-linecap="round" opacity=".7"/>
+        </g>
+        <g class="wings" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round">
+          <path d="M28 108 Q -14 74 -4 128 Q 2 152 30 138 Z" fill="var(--paper)"/>
+          <path d="M172 108 Q 214 74 204 128 Q 198 152 170 138 Z" fill="var(--paper)"/>
+        </g>
+        <g stroke="var(--ink)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M104 62 Q 96 34 116 22" fill="none"/>
+          <circle class="antenna-ball" cx="119" cy="19" r="10" fill="var(--punch)"/>
+          <path class="body" d="M24 162 Q 8 78 100 72 Q 192 78 176 162 Z" fill="var(--slime)"/>
+          <path d="M34 96 L 18 84 M166 96 L 182 84" fill="none" stroke-width="6"/>
+        </g>
+        <g class="horns" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round">
+          <path d="M44 84 L 34 50 L 66 72 Z" fill="var(--punch)"/>
+          <path d="M156 84 L 166 50 L 134 72 Z" fill="var(--punch)"/>
+        </g>
+        <g class="eye left">
+          <ellipse cx="72" cy="108" rx="23" ry="25" fill="#FFFBF0" stroke="var(--ink)" stroke-width="6"/>
+        </g>
+        <g class="eye right">
+          <ellipse cx="130" cy="108" rx="23" ry="25" fill="#FFFBF0" stroke="var(--ink)" stroke-width="6"/>
+        </g>
+        <circle class="pupil" cx="72" cy="112" r="9.5" fill="var(--ink)"/>
+        <circle class="pupil" cx="130" cy="112" r="9.5" fill="var(--ink)"/>
+        <ellipse class="cheek l" cx="42" cy="131" rx="15" ry="13" fill="var(--slime)" stroke="var(--ink)" stroke-width="5"/>
+        <ellipse class="cheek r" cx="158" cy="131" rx="15" ry="13" fill="var(--slime)" stroke="var(--ink)" stroke-width="5"/>
+        <g stroke="var(--ink)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+          <path class="m-line" d="M78 142 Q 101 156 124 142" fill="none"/>
+          <path class="m-wave" d="M76 146 q 8 -10 16 0 q 8 10 16 0 q 8 -10 16 0" fill="none"/>
+          <path class="m-open" d="M70 134 L 80 144 L 90 134 L 100 144 L 110 134 L 120 144 L 130 134 Q 134 166 100 167 Q 66 166 70 134 Z" fill="#3B1030"/>
+          <ellipse class="tongue" cx="100" cy="160" rx="17" ry="10" fill="var(--punch)" stroke-width="5"/>
+        </g>
+      </svg>
+
+      <div class="screen">
+        <div class="quest">
+          <span class="tag" id="questTag">MISSION</span>
+          <span class="goal" id="questGoal">make 42</span>
+          <span class="hearts" id="hearts" hidden></span>
+          <button class="reroll" id="questSkip" type="button">SKIP</button>
+        </div>
+        <div class="expr" id="expr" aria-hidden="true"></div>
+        <div class="out" id="out" role="status" aria-live="polite" aria-atomic="true">0</div>
+        <div class="say" id="say">feed me!</div>
+      </div>
+    </div>
+
+    <div class="keys" id="keys">
+      <button class="key" data-k="ac"  data-type="util" aria-label="Clear all">AC</button>
+      <button class="key" data-k="del" data-type="util" aria-label="Delete last digit">⌫</button>
+      <button class="key" data-k="%"   data-type="util" aria-label="Percent">%</button>
+      <button class="key" data-k="÷"   data-type="op"   aria-label="Divide">÷</button>
+
+      <button class="key" data-k="7">7</button>
+      <button class="key" data-k="8">8</button>
+      <button class="key" data-k="9">9</button>
+      <button class="key" data-k="×" data-type="op" aria-label="Multiply">×</button>
+
+      <button class="key" data-k="4">4</button>
+      <button class="key" data-k="5">5</button>
+      <button class="key" data-k="6">6</button>
+      <button class="key" data-k="−" data-type="op" aria-label="Subtract">−</button>
+
+      <button class="key" data-k="1">1</button>
+      <button class="key" data-k="2">2</button>
+      <button class="key" data-k="3">3</button>
+      <button class="key" data-k="+" data-type="op" aria-label="Add">+</button>
+
+      <button class="key" data-k="±" data-type="util" aria-label="Flip sign">±</button>
+      <button class="key" data-k="0">0</button>
+      <button class="key" data-k="." aria-label="Decimal point">.</button>
+      <button class="key" data-k="=" data-type="eq" aria-label="Equals">=</button>
+
+      <button class="key wide" data-k="frac" data-type="frac" aria-label="Make a fraction, or turn the answer into one">
+        <span class="ab"><span>a</span><span class="bar"></span><span>b</span></span>
+        <span class="sub">FRACTION</span>
+      </button>
+      <button class="key" data-k="mix" data-type="frac" aria-pressed="true" aria-label="Toggle mixed numbers">MIX<span class="sub" id="mixState">ON</span></button>
+      <button class="key" data-k="show" data-type="frac" aria-pressed="false" aria-label="Switch answers between fraction and decimal">SHOW<span class="sub" id="showState">DEC</span></button>
+    </div>
+  </div>
+
+  <section class="shelf">
+    <h2>STICKER SHELF <span class="tally" id="stickerCount">0 / 35</span></h2>
+    <div class="stickers" id="stickers"></div>
+  </section>
+
+  <p class="legend">
+    Type on your keyboard too — <kbd>0</kbd>–<kbd>9</kbd> <kbd>+</kbd> <kbd>-</kbd> <kbd>*</kbd> <kbd>/</kbd> <kbd>Enter</kbd> <kbd>Backspace</kbd> <kbd>Esc</kbd> <kbd>F</kbd> fraction <kbd>M</kbd> mixed <kbd>D</kbd> decimal<br>
+    Fractions are worked out exactly — <strong>1/3 + 1/3</strong> really is <strong>2/3</strong>, never 0.6666666.<br>
+    Chain answers without a mistake to build a COMBO. Combos multiply your XP <em>and</em> your boss damage.<br>
+    Chompy evolves at levels 5, 10 and 15. New skins unlock at 3, 6 and 9. Your progress saves automatically.
+  </p>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+  const outEl = $("out"), exprEl = $("expr"), sayEl = $("say");
+  const mascot = $("mascot"), consoleEl = $("console");
+  const lvlNum = $("lvlNum"), lvlBadge = $("lvlBadge");
+  const xpFill = $("xpFill"), xpVal = $("xpVal");
+  const comboFill = $("comboFill"), comboVal = $("comboVal");
+  const questGoal = $("questGoal");
+  const toasts = $("toasts");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------------------------------------------------------
+     CALCULATOR CORE — immediate-execution semantics
+     --------------------------------------------------------- */
+  const MAX_DIGITS = 12;
+  let cur = "0";        // the number currently being typed, e.g. "12", "0.5", "3/4"
+  let stored = null;    // left-hand operand, as an exact rational
+  let op = null;        // pending operator token
+  let fresh = true;     // next digit replaces cur
+  let errored = false;
+  let lastWasEquals = false;
+  let approx = false;   // set when exact math overflowed and we fell back to floats
+  let fracMode = false; // show answers stacked as fractions
+  let mixedMode = true; // 7/4 shown as 1 3/4 rather than 7/4
+
+  /* --- exact rational arithmetic ---------------------------
+     Operands are kept as reduced {n, d} pairs, so 1/3 + 1/3
+     is exactly 2/3 and 0.1 + 0.2 is exactly 0.3.
+     ------------------------------------------------------- */
+  const SAFE = Number.MAX_SAFE_INTEGER;
+
+  function gcd(a, b) {
+    a = Math.abs(a); b = Math.abs(b);
+    while (b) { const t = a % b; a = b; b = t; }
+    return a || 1;
+  }
+  function rat(n, d) {
+    if (d === 0 || !isFinite(n) || !isFinite(d)) return null;
+    if (d < 0) { n = -n; d = -d; }
+    const g = gcd(n, d);
+    const r = { n: n / g, d: d / g };
+    return Object.is(r.n, -0) ? { n: 0, d: 1 } : r;
+  }
+  const ratVal = (r) => r.n / r.d;
+  const fits = (r) => r && Number.isFinite(r.n) && Math.abs(r.n) <= SAFE && r.d <= SAFE;
+
+  const ratAdd = (a, b) => rat(a.n * b.d + b.n * a.d, a.d * b.d);
+  const ratSub = (a, b) => rat(a.n * b.d - b.n * a.d, a.d * b.d);
+  const ratMul = (a, b) => rat(a.n * b.n, a.d * b.d);
+  const ratDiv = (a, b) => (b.n === 0 ? null : rat(a.n * b.d, a.d * b.n));
+
+  function applyRat(a, b, o) {
+    if (o === "+") return ratAdd(a, b);
+    if (o === "−") return ratSub(a, b);
+    if (o === "×") return ratMul(a, b);
+    if (o === "÷") return ratDiv(a, b);
+    return b;
+  }
+
+  // Continued fractions — the closest fraction to a float. Only used
+  // when exact math would blow past Number.MAX_SAFE_INTEGER.
+  function floatToRat(x, maxDen = 100000) {
+    if (!isFinite(x)) return null;
+    const neg = x < 0;
+    x = Math.abs(x);
+    let h0 = 0, h1 = 1, k0 = 1, k1 = 0, b = x;
+    for (let i = 0; i < 40; i++) {
+      const a = Math.floor(b);
+      const h2 = a * h1 + h0, k2 = a * k1 + k0;
+      if (!isFinite(h2) || (k2 > maxDen && k1 !== 0)) break;
+      h0 = h1; h1 = h2; k0 = k1; k1 = k2;
+      const rem = b - a;
+      if (rem < 1e-12) break;
+      b = 1 / rem;
+    }
+    return k1 === 0 ? null : rat(neg ? -h1 : h1, k1);
+  }
+
+  // "12.75" -> 51/4, exactly
+  function decToRat(s) {
+    if (s === "" || s === "-" || s === undefined) return { n: 0, d: 1 };
+    const neg = s.startsWith("-");
+    if (neg) s = s.slice(1);
+    if (/[eE]/.test(s)) return floatToRat(parseFloat((neg ? "-" : "") + s));
+    let n, d;
+    if (s.includes(".")) {
+      const parts = s.split(".");
+      const frac = parts[1] || "";
+      if (frac.length > 9) return floatToRat(parseFloat((neg ? "-" : "") + s));
+      d = Math.pow(10, frac.length);
+      n = parseInt((parts[0] || "0") + frac, 10);
+    } else {
+      n = parseInt(s, 10); d = 1;
+    }
+    if (!isFinite(n)) return null;
+    return rat(neg ? -n : n, d);
+  }
+
+  // The typed string may itself be a fraction like "3/4".
+  function curToRat() {
+    if (cur.includes("/")) {
+      const parts = cur.split("/");
+      const top = decToRat(parts[0]);
+      const bot = (parts[1] === "" || parts[1] === undefined) ? { n: 1, d: 1 } : decToRat(parts[1]);
+      if (!top || !bot || bot.n === 0) return null;
+      return ratDiv(top, bot);
+    }
+    return decToRat(cur);
+  }
+
+  // Round away binary float fuzz, then trim.
+  const clean = (n) => {
+    if (!isFinite(n)) return n;
+    const r = parseFloat(n.toPrecision(12));
+    return Object.is(r, -0) ? 0 : r;
+  };
+
+  const group = (intStr) => {
+    const neg = intStr.startsWith("-");
+    const digits = neg ? intStr.slice(1) : intStr;
+    return (neg ? "-" : "") + digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  // Comma-group a numeric string, keeping a trailing "." the user just typed.
+  const showDec = (s) => {
+    if (/[eE]/.test(s) || s === "ERR") return s;
+    const parts = s.split(".");
+    return group(parts[0]) + (s.includes(".") ? "." + (parts[1] || "") : "");
+  };
+
+  const numToStr = (n) => {
+    if (!isFinite(n)) return "ERR";
+    const abs = Math.abs(n);
+    if (abs !== 0 && (abs >= 1e12 || abs < 1e-6)) return n.toExponential(6).replace("e", "E");
+    return String(clean(n));
+  };
+
+  // Plain text for the expression line, and for feeding back into cur.
+  const ratToText = (r) => (r.d === 1 ? numToStr(r.n) : r.n + "/" + r.d);
+  const ratToInput = (r) => ((approx || r.d === 1) ? numToStr(ratVal(r)) : r.n + "/" + r.d);
+
+  // Do the exact thing; fall back to floats only if the integers overflow.
+  function safeApply(a, b, o) {
+    const r = applyRat(a, b, o);
+    if (r === null) return null;                 // division by zero
+    if (fits(r)) { approx = false; return r; }
+    const av = ratVal(a), bv = ratVal(b);
+    const v = o === "+" ? av + bv : o === "−" ? av - bv : o === "×" ? av * bv : av / bv;
+    if (!isFinite(v)) return null;
+    approx = true;
+    return floatToRat(v, 100000) || { n: clean(v), d: 1 };
+  }
+
+  /* --- fraction rendering --------------------------------- */
+  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+  function stackHTML(whole, num, den) {
+    let h = "";
+    if (whole !== null) h += `<span class="w">${esc(whole)}</span>`;
+    if (num !== null) {
+      const blank = den === "" || den === undefined;
+      h += `<span class="frac"><span class="n">${esc(num)}</span><span class="bar"></span>` +
+           `<span class="d${blank ? " blank" : ""}">${esc(blank ? "?" : den)}</span></span>`;
+    }
+    return h;
+  }
+
+  // Split a rational into the pieces the stacked display needs.
+  function ratParts(r) {
+    if (r.d === 1) return { whole: showDec(String(r.n)), num: null, den: null };
+    const neg = r.n < 0, n = Math.abs(r.n);
+    if (mixedMode && n > r.d) {
+      const w = Math.floor(n / r.d);
+      return { whole: (neg ? "-" : "") + showDec(String(w)), num: String(n % r.d), den: String(r.d) };
+    }
+    return { whole: null, num: (neg ? "-" : "") + n, den: String(r.d) };
+  }
+
+  const ratPlain = (r) => {
+    const p = ratParts(r);
+    return [p.whole, p.num !== null ? p.num + "/" + p.den : null].filter(Boolean).join(" ");
+  };
+
+  function renderOut() {
+    if (errored) {
+      outEl.innerHTML = `<span class="outin"><span class="w">OOPS!</span></span>`;
+      outEl.setAttribute("aria-label", "Oops");
+      outEl.classList.add("err");
+      return;
+    }
+    outEl.classList.remove("err");
+
+    let html, plain;
+    const r = curToRat();
+
+    if (lastWasEquals && fracMode && !approx && r) {
+      const p = ratParts(r);
+      html = stackHTML(p.whole, p.num, p.den);
+      plain = ratPlain(r);
+    } else if (lastWasEquals && r) {
+      plain = numToStr(ratVal(r));
+      html = `<span class="w">${esc(showDec(plain))}</span>`;
+    } else if (cur.includes("/")) {
+      // live stacked fraction while it's being typed
+      const parts = cur.split("/");
+      html = stackHTML(null, showDec(parts[0]), parts[1] === undefined ? "" : parts[1]);
+      plain = cur;
+    } else {
+      plain = showDec(cur);
+      html = `<span class="w">${esc(plain)}</span>`;
+    }
+
+    outEl.innerHTML = `<span class="outin">${html}</span>`;
+    outEl.setAttribute("aria-label", plain);
+  }
+
+  /* ---------------------------------------------------------
+     GAME STATE
+     --------------------------------------------------------- */
+  const G = {
+    xp: 0, level: 1, combo: 0, solves: 0, presses: 0,
+    usedDecimal: false, best: 0,
+    solveTimes: [], quest: null, questsDone: 0,
+    pressed: new Set(),   // distinct keys touched, for BUTTON MASHER
+    flips: new Set(),     // which display toggles were used, for SHAPESHIFTER
+    bosses: 0,            // bosses defeated
+    quizBest: 0           // longest quiz streak
+  };
+  const xpNeed = () => 60 + G.level * 40;
+
+  const COMBO_MS = 15000;
+  let comboUntil = 0;
+
+  // Roughly easiest first, so the shelf reads as a ladder.
+  const ACHIEVEMENTS = [
+    { id: "first",    name: "FIRST BITE",    hint: "solve one" },
+    { id: "deci",     name: "DECIMATOR",     hint: "use a dot" },
+    { id: "frac",     name: "FRACTION LORD", hint: "solve with a/b" },
+    { id: "simp",     name: "REDUCER",       hint: "shrink a fraction" },
+    { id: "half",     name: "PERFECT HALF",  hint: "land on 1/2" },
+    { id: "thirds",   name: "THIRD WHEEL",   hint: "land on thirds" },
+    { id: "topheavy", name: "TOP HEAVY",     hint: "improper fraction" },
+    { id: "shifter",  name: "SHAPESHIFTER",  hint: "flip MIX + SHOW" },
+    { id: "combo5",   name: "COMBO x5",      hint: "5 in a row" },
+    { id: "combo10",  name: "COMBO x10",     hint: "10 in a row" },
+    { id: "crit",     name: "CRIT HIT",      hint: "land a crit" },
+    { id: "speed",    name: "SPEEDRUN",      hint: "5 in 10 sec" },
+    { id: "negative", name: "BELOW ZERO",    hint: "go negative" },
+    { id: "zero",     name: "BACK TO ZERO",  hint: "answer exactly 0" },
+    { id: "pi",       name: "ALMOST PI",     hint: "start with 3.14" },
+    { id: "palin",    name: "MIRROR NUMBER", hint: "reads both ways" },
+    { id: "over",     name: "OVER 9000",     hint: "beat 9000" },
+    { id: "million",  name: "MILLIONAIRE",   hint: "top 1,000,000" },
+    { id: "lucky",    name: "LUCKY 777",     hint: "land on 777" },
+    { id: "void",     name: "VOID WALKER",   hint: "÷ by zero" },
+    { id: "hush",     name: "STEALTH MODE",  hint: "mute the sound" },
+    { id: "masher",   name: "BUTTON MASHER", hint: "press every key" },
+    { id: "quest",    name: "QUEST CLEAR",   hint: "finish a mission" },
+    { id: "quest5",   name: "QUEST MASTER",  hint: "5 missions done" },
+    { id: "brain",    name: "BIG BRAIN",     hint: "reach LVL 5" },
+    { id: "galaxy",   name: "GALAXY BRAIN",  hint: "reach LVL 10" },
+    { id: "cent",     name: "CENTURION",     hint: "100 presses" },
+    { id: "marathon", name: "MARATHON",      hint: "50 solves" },
+    { id: "drip",     name: "DRIP",          hint: "unlock a skin" },
+    { id: "evolve",   name: "EVOLVED",       hint: "grow some horns" },
+    { id: "elder",    name: "ELDER CHOMP",   hint: "reach final form" },
+    { id: "boss1",    name: "BOSS SLAYER",   hint: "beat a boss" },
+    { id: "boss5",    name: "BOSS HUNTER",   hint: "beat 5 bosses" },
+    { id: "quiz10",   name: "QUIZ WHIZ",     hint: "10 quiz streak" },
+    { id: "quiz25",   name: "UNTOUCHABLE",   hint: "25 quiz streak" }
+  ];
+  const unlocked = new Set();
+
+  /* ---------------------------------------------------------
+     SAVING — best effort. Some embeddings block storage
+     entirely, so every access is guarded and failure is silent
+     rather than fatal.
+     --------------------------------------------------------- */
+  const SAVE_KEY = "chompulator.save.v1";
+  let canSave = true;
+
+  function save() {
+    if (!canSave) return;
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        xp: G.xp, level: G.level, solves: G.solves, presses: G.presses,
+        questsDone: G.questsDone, best: G.best, bosses: G.bosses,
+        quizBest: G.quizBest,
+        stickers: [...unlocked],
+        skin, mixedMode, fracMode, sfxOn
+      }));
+    } catch (e) { canSave = false; }
+  }
+
+  function loadSave() {
+    let s = null;
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (raw) s = JSON.parse(raw);
+    } catch (e) { canSave = false; return; }
+    if (!s || typeof s !== "object") return;
+
+    const num = (v, d) => (typeof v === "number" && isFinite(v) && v >= 0 ? v : d);
+    G.xp = num(s.xp, 0);
+    G.level = Math.max(1, num(s.level, 1));
+    G.solves = num(s.solves, 0);
+    G.presses = num(s.presses, 0);
+    G.questsDone = num(s.questsDone, 0);
+    G.best = num(s.best, 0);
+    G.bosses = num(s.bosses, 0);
+    G.quizBest = num(s.quizBest, 0);
+    if (Array.isArray(s.stickers)) {
+      // only ids we still ship, so a stale save can't inflate the tally
+      s.stickers.filter((id) => ACHIEVEMENTS.some((a) => a.id === id))
+                .forEach((id) => unlocked.add(id));
+    }
+    if (typeof s.mixedMode === "boolean") mixedMode = s.mixedMode;
+    if (typeof s.fracMode === "boolean") fracMode = s.fracMode;
+    if (typeof s.sfxOn === "boolean") sfxOn = s.sfxOn;
+    if (typeof s.skin === "string" && SKINS.some((k) => k.id === s.skin)) skin = s.skin;
+  }
+
+  function wipeSave() {
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* nothing to do */ }
+    G.xp = 0; G.level = 1; G.solves = 0; G.presses = 0; G.questsDone = 0;
+    G.best = 0; G.bosses = 0; G.quizBest = 0;
+    G.pressed.clear(); G.flips.clear(); G.solveTimes = [];
+    unlocked.clear();
+    skin = "toy"; mixedMode = true; fracMode = false;
+    endBoss(false);
+    if (quizMode) toggleQuiz();
+    buildStickers(); tallyStickers(); applySkin(); buildSkins();
+    applyStage(true);
+    dropCombo(); resetAll(); render(); syncFracKeys();
+    toast("RESET", "back to level 1");
+  }
+
+  /* ---------------------------------------------------------
+     EVOLUTION — Chompy changes shape as you level
+     --------------------------------------------------------- */
+  const STAGES = [
+    { at: 1,  name: "CHOMPLING",     blurb: "a hungry little blob" },
+    { at: 5,  name: "HORNED CHOMPY", blurb: "he grew HORNS!" },
+    { at: 10, name: "WINGED CHOMPY", blurb: "he grew WINGS!" },
+    { at: 15, name: "ELDER CHOMP",   blurb: "final form!" }
+  ];
+  const stageIndex = (lv) => {
+    let i = 0;
+    for (let k = 0; k < STAGES.length; k++) if (lv >= STAGES[k].at) i = k;
+    return i;
+  };
+  let shownStage = -1;
+
+  function applyStage(silent) {
+    const idx = stageIndex(G.level);
+    if (idx === shownStage) return;
+    const first = shownStage === -1;
+    shownStage = idx;
+    mascot.setAttribute("data-stage", String(idx));
+    mascot.setAttribute("aria-label", "Chompy, stage " + (idx + 1) + ": " + STAGES[idx].name);
+    if (idx >= 1) unlock("evolve");
+    if (idx >= 3) unlock("elder");
+    if (silent || first || idx === 0) return;
+
+    // evolution moment
+    if (!reduced) {
+      const f = document.createElement("div");
+      f.className = "flash";
+      document.body.appendChild(f);
+      setTimeout(() => f.remove(), 820);
+      mascot.classList.add("evolving");
+      setTimeout(() => mascot.classList.remove("evolving"), 1550);
+      const c = cvs.parentElement;
+      burst(c.clientWidth / 2, c.clientHeight * 0.34, 80, 1.7);
+    }
+    sfxEvolve();
+    toast("CHOMPY EVOLVED", STAGES[idx].name + " — " + STAGES[idx].blurb, true);
+    say(STAGES[idx].blurb);
+  }
+
+  /* ---------------------------------------------------------
+     SKINS
+     --------------------------------------------------------- */
+  const SKINS = [
+    { id: "toy",  name: "Toy",  at: 1 },
+    { id: "neon", name: "Neon", at: 3 },
+    { id: "ice",  name: "Ice",  at: 6 },
+    { id: "lava", name: "Lava", at: 9 }
+  ];
+  let skin = "toy";
+
+  const applySkin = () => {
+    if (skin === "toy") document.body.removeAttribute("data-skin");
+    else document.body.setAttribute("data-skin", skin);
+  };
+
+  function buildSkins() {
+    const wrap = $("skins");
+    wrap.innerHTML = "";
+    for (const s of SKINS) {
+      const locked = G.level < s.at;
+      const b = document.createElement("button");
+      b.className = "skin-chip " + s.id;
+      b.type = "button";
+      b.disabled = locked;
+      b.setAttribute("aria-pressed", String(skin === s.id));
+      b.setAttribute("aria-label", locked ? `${s.name} skin, unlocks at level ${s.at}` : `${s.name} skin`);
+      b.title = locked ? `${s.name} — level ${s.at}` : s.name;
+      b.addEventListener("click", () => {
+        skin = s.id;
+        applySkin();
+        buildSkins();
+        if (s.id !== "toy") unlock("drip");
+        sfxFrac();
+        say("fresh look!");
+        save();
+      });
+      wrap.appendChild(b);
+    }
+  }
+
+  /* ---------------------------------------------------------
+     AUDIO — tiny synth, no assets
+     --------------------------------------------------------- */
+  let sfxOn = true, actx = null;
+  const audio = () => {
+    if (!actx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) actx = new AC();
+    }
+    if (actx && actx.state === "suspended") actx.resume();
+    return actx;
+  };
+
+  function tone(freq, dur, type = "square", vol = 0.05, delay = 0) {
+    if (!sfxOn) return;
+    const ctx = audio();
+    if (!ctx) return;
+    const t0 = ctx.currentTime + delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(vol, t0 + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  }
+
+  function noise(dur = 0.16, vol = 0.09) {
+    if (!sfxOn) return;
+    const ctx = audio();
+    if (!ctx) return;
+    const len = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = ctx.createBufferSource();
+    const filt = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+    src.buffer = buf;
+    filt.type = "lowpass";
+    filt.frequency.value = 900;
+    gain.gain.value = vol;
+    src.connect(filt).connect(gain).connect(ctx.destination);
+    src.start();
+  }
+
+  const sfxKey    = () => tone(420 + Math.random() * 60, 0.06, "square", 0.035);
+  const sfxOp     = () => tone(660, 0.08, "triangle", 0.045);
+  const sfxChomp  = () => { noise(0.18, 0.10); tone(150, 0.16, "sawtooth", 0.05); };
+  const sfxErr    = () => { tone(200, 0.14, "sawtooth", 0.06); tone(140, 0.2, "sawtooth", 0.06, 0.1); };
+  const sfxCrit   = () => [880, 1174, 1567].forEach((f, i) => tone(f, 0.11, "square", 0.05, i * 0.05));
+  const sfxLevel  = () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.16, "triangle", 0.055, i * 0.075));
+  const sfxSticker= () => [784, 1047].forEach((f, i) => tone(f, 0.13, "square", 0.05, i * 0.08));
+  const sfxFrac   = () => [523, 784].forEach((f, i) => tone(f, 0.1, "triangle", 0.05, i * 0.06));
+  const sfxPop    = () => tone(740, 0.07, "sine", 0.04);
+  const sfxEvolve = () => [392, 523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.3, "triangle", 0.055, i * 0.09));
+  const sfxHit    = () => { tone(320, 0.08, "square", 0.05); noise(0.1, 0.07); };
+  const sfxWrong  = () => [330, 247].forEach((f, i) => tone(f, 0.16, "sawtooth", 0.055, i * 0.12));
+  const sfxWin    = () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.2, "square", 0.055, i * 0.1));
+  // bigger mouthful -> deeper, longer, louder grind
+  const sfxBite   = (st) => {
+    noise(0.07 + st.scale * 0.05, 0.045 + st.scale * 0.03);
+    tone(200 - st.scale * 50, 0.08 + st.scale * 0.04, "sawtooth", 0.03 + st.scale * 0.015);
+  };
+
+  $("sfxBtn").addEventListener("click", (e) => {
+    sfxOn = !sfxOn;
+    e.currentTarget.setAttribute("aria-pressed", String(sfxOn));
+    $("sfxState").textContent = sfxOn ? "ON" : "OFF";
+    if (sfxOn) sfxOp(); else unlock("hush");
+  });
+
+  /* ---------------------------------------------------------
+     PARTICLES
+     --------------------------------------------------------- */
+  const cvs = $("fx"), ctx2d = cvs.getContext("2d");
+  let parts = [], raf = null;
+
+  function sizeCanvas() {
+    const r = cvs.parentElement.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cvs.width = Math.max(1, Math.round(r.width * dpr));
+    cvs.height = Math.max(1, Math.round(r.height * dpr));
+    ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener("resize", sizeCanvas);
+
+  const PCOLORS = ["#FFC93C", "#FF4E5B", "#3ACFE0", "#9BE84A", "#7C4DFF", "#FFFBF0"];
+
+  function burst(x, y, count, power = 1) {
+    if (reduced) return;
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = (1.6 + Math.random() * 5) * power;
+      parts.push({
+        x, y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - 2.2 * power,
+        life: 1,
+        decay: 0.014 + Math.random() * 0.016,
+        size: 4 + Math.random() * 7 * power,
+        rot: Math.random() * Math.PI,
+        spin: (Math.random() - 0.5) * 0.4,
+        color: PCOLORS[(Math.random() * PCOLORS.length) | 0],
+        round: Math.random() < 0.35
+      });
+    }
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+
+  function atElement(el) {
+    const a = cvs.parentElement.getBoundingClientRect();
+    const b = el.getBoundingClientRect();
+    return { x: b.left - a.left + b.width / 2, y: b.top - a.top + b.height / 2 };
+  }
+
+  function tick() {
+    ctx2d.clearRect(0, 0, cvs.width, cvs.height);
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
+      p.vy += 0.26;
+      p.vx *= 0.99;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.spin;
+      p.life -= p.decay;
+      if (p.life <= 0) { parts.splice(i, 1); continue; }
+      ctx2d.save();
+      ctx2d.globalAlpha = Math.max(0, Math.min(1, p.life));
+      ctx2d.translate(p.x, p.y);
+      ctx2d.rotate(p.rot);
+      ctx2d.fillStyle = p.color;
+      ctx2d.strokeStyle = "#1A1226";
+      ctx2d.lineWidth = 2;
+      if (p.round) {
+        ctx2d.beginPath();
+        ctx2d.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+        ctx2d.fill();
+        ctx2d.stroke();
+      } else {
+        ctx2d.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        ctx2d.strokeRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      }
+      ctx2d.restore();
+    }
+    raf = parts.length ? requestAnimationFrame(tick) : null;
+    if (!raf) ctx2d.clearRect(0, 0, cvs.width, cvs.height);
+  }
+
+  /* ---------------------------------------------------------
+     MASCOT REACTIONS
+     --------------------------------------------------------- */
+  let moodTimer = null, chewTimer = null, biteTimers = [];
+
+  function clearChew() {
+    clearTimeout(chewTimer);
+    biteTimers.forEach(clearTimeout);
+    biteTimers = [];
+  }
+
+  function mood(state, ms = 480) {
+    clearChew();
+    mascot.classList.remove("is-chomp", "is-hype", "is-dizzy", "is-chewing");
+    // reflow so a repeated animation restarts
+    void mascot.offsetWidth;
+    if (state) mascot.classList.add("is-" + state);
+    clearTimeout(moodTimer);
+    moodTimer = setTimeout(() => mascot.classList.remove("is-" + state), ms);
+  }
+
+  /* --- feeding Chompy -------------------------------------
+     The answer becomes a nugget sized by how many digits it
+     has, then he grinds through it. Bigger number, bigger
+     mouthful, more chews, slower jaw.
+     ------------------------------------------------------- */
+  function morselStats(r) {
+    const size = Math.max(1, digitCount(ratToText(r)));  // "355/113" counts as 6
+    return {
+      size,
+      scale:  Math.min(2.1, 0.72 + (size - 1) * 0.2),
+      puff:   Math.min(1.7, 0.7 + size * 0.12),
+      chews:  Math.max(2, Math.min(7, 1 + Math.ceil(size / 1.5))),
+      chewMs: 150 + Math.min(90, size * 12),           // heavier loads chew slower
+      flight: 400 + Math.min(220, size * 20)
+    };
+  }
+
+  // Where the number sits, and where the mouth is — both in arena pixels.
+  function outPoint() {
+    const a = cvs.parentElement.getBoundingClientRect();
+    const b = outEl.getBoundingClientRect();
+    return { x: b.right - a.left - Math.min(70, b.width * 0.18), y: b.top - a.top + b.height / 2 };
+  }
+  function mouthPoint() {
+    const a = cvs.parentElement.getBoundingClientRect();
+    const m = mascot.getBoundingClientRect();
+    // mouth sits at (100, 146) inside the 200x170 viewBox
+    return { x: m.left - a.left + m.width * 0.5, y: m.top - a.top + m.height * (146 / 170) };
+  }
+
+  function flingMorsel(gained, st) {
+    const arena = cvs.parentElement;
+    const from = outPoint(), to = mouthPoint();
+    const el = document.createElement("div");
+    el.className = "morsel" + (st.crit ? " crit" : "");
+    el.textContent = "+" + gained + " XP";
+    el.style.left = from.x + "px";
+    el.style.top = from.y + "px";
+    arena.appendChild(el);
+
+    const dx = to.x - from.x, dy = to.y - from.y;
+    const at = (fx, fy, s, rot, o) =>
+      ({ transform: `translate(calc(-50% + ${fx}px), calc(-50% + ${fy}px)) scale(${s}) rotate(${rot}deg)`, opacity: o });
+
+    const anim = el.animate([
+      at(0, 0, st.scale * 0.35, -14, 0),
+      { ...at(0, -6, st.scale, 5, 1), offset: 0.2 },
+      { ...at(dx * 0.55, dy * 0.55 - 48, st.scale * 1.06, -9, 1), offset: 0.62 },
+      at(dx, dy, st.scale * 0.18, 16, 0.9)
+    ], { duration: st.flight, easing: "cubic-bezier(.35,.05,.6,1)", fill: "forwards" });
+
+    sfxPop();
+    anim.onfinish = () => { el.remove(); startChew(st); };
+  }
+
+  function startChew(st) {
+    clearChew();
+    mascot.style.setProperty("--chew-dur", st.chewMs + "ms");
+    mascot.style.setProperty("--chew-count", st.chews);
+    mascot.style.setProperty("--puff", st.puff);
+    mascot.classList.remove("is-chomp", "is-hype", "is-dizzy", "is-chewing");
+    void mascot.offsetWidth;
+    mascot.classList.add("is-chewing");
+
+    const m = mouthPoint();
+    for (let i = 0; i < st.chews; i++) {
+      biteTimers.push(setTimeout(() => {
+        sfxBite(st);
+        burst(m.x, m.y + 4, 3 + Math.round(st.scale * 3), 0.4 * st.scale);
+      }, i * st.chewMs + st.chewMs * 0.35));
+    }
+
+    chewTimer = setTimeout(() => {
+      mascot.classList.remove("is-chewing");
+      const lines = st.size >= 6 ? BIG_SWALLOW : SWALLOW;
+      say(lines[(Math.random() * lines.length) | 0]);
+    }, st.chews * st.chewMs + 70);
+  }
+
+  function lookAt(el) {
+    const box = mascot.getBoundingClientRect();
+    const t = el.getBoundingClientRect();
+    const dx = (t.left + t.width / 2) - (box.left + box.width / 2);
+    const dy = (t.top + t.height / 2) - (box.top + box.height / 2);
+    const d = Math.hypot(dx, dy) || 1;
+    const px = (dx / d) * 6, py = (dy / d) * 5;
+    mascot.querySelectorAll(".pupil").forEach((p) => {
+      p.setAttribute("transform", `translate(${px.toFixed(1)},${py.toFixed(1)})`);
+    });
+  }
+
+  const CHATTER = ["nom nom!", "tasty!", "more!", "gulp!", "yum!", "crunchy!", "burp!", "delicious!"];
+  const FRAC_CHATTER = ["sliced it up!", "pizza math!", "a tasty slice!", "cut clean!", "nice piece!"];
+  const SWALLOW = ["gulp!", "all gone!", "mmm!", "burp!", "swallowed!"];
+  const BIG_SWALLOW = ["what a MOUTHFUL!", "so chewy!", "needed both jaws!", "that was a big one!"];
+  const say = (t) => { sayEl.textContent = t; };
+
+  /* ---------------------------------------------------------
+     TOASTS
+     --------------------------------------------------------- */
+  function toast(kicker, body, big = false) {
+    const el = document.createElement("div");
+    el.className = "toast" + (big ? " big" : "");
+    el.innerHTML = `<span class="kicker"></span><span class="body"></span>`;
+    el.querySelector(".kicker").textContent = kicker;
+    el.querySelector(".body").textContent = body;
+    toasts.appendChild(el);
+    setTimeout(() => {
+      el.classList.add("out");
+      setTimeout(() => el.remove(), 320);
+    }, 1900);
+  }
+
+  /* ---------------------------------------------------------
+     PROGRESSION
+     --------------------------------------------------------- */
+  function buildStickers() {
+    const wrap = $("stickers");
+    wrap.innerHTML = "";
+    for (const a of ACHIEVEMENTS) {
+      const d = document.createElement("div");
+      d.className = "sticker";
+      d.dataset.id = a.id;
+      d.innerHTML = `<span class="name"></span><span class="hint"></span>`;
+      d.querySelector(".name").textContent = a.name;
+      d.querySelector(".hint").textContent = a.hint;
+      wrap.appendChild(d);
+    }
+  }
+
+  function tallyStickers() {
+    $("stickerCount").textContent = unlocked.size + " / " + ACHIEVEMENTS.length;
+  }
+
+  function unlock(id) {
+    if (unlocked.has(id)) return;
+    const a = ACHIEVEMENTS.find((x) => x.id === id);
+    if (!a) return;              // guard before counting, so the tally can't drift
+    unlocked.add(id);
+    const el = document.querySelector(`.sticker[data-id="${id}"]`);
+    if (el) {
+      el.classList.add("got", "just");
+      setTimeout(() => el.classList.remove("just"), 500);
+    }
+    tallyStickers();
+    save();
+    toast("STICKER UNLOCKED", a.name);
+    sfxSticker();
+    burst(cvs.parentElement.clientWidth / 2, cvs.parentElement.clientHeight - 90, 22, 0.9);
+
+    if (unlocked.size === ACHIEVEMENTS.length) {
+      setTimeout(() => {
+        toast("SHELF COMPLETE", "every sticker collected!", true);
+        sfxLevel();
+        mood("hype", 620);
+        const c = cvs.parentElement;
+        burst(c.clientWidth / 2, c.clientHeight * 0.3, 90, 1.8);
+        say("YOU GOT THEM ALL!!");
+      }, 700);
+    }
+  }
+
+  function addXP(amount) {
+    G.xp += amount;
+    let leveled = false;
+    while (G.xp >= xpNeed()) {
+      G.xp -= xpNeed();
+      G.level++;
+      leveled = true;
+    }
+    if (leveled) {
+      sfxLevel();
+      mood("hype", 620);
+      lvlBadge.classList.add("pop");
+      setTimeout(() => lvlBadge.classList.remove("pop"), 520);
+      toast("LEVEL UP", "You are now level " + G.level, true);
+      const c = cvs.parentElement;
+      burst(c.clientWidth / 2, c.clientHeight * 0.34, 60, 1.5);
+      if (G.level >= 5) unlock("brain");
+      if (G.level >= 10) unlock("galaxy");
+      applyStage(false);
+      buildSkins();
+    }
+    render();
+    save();
+  }
+
+  function render() {
+    lvlNum.textContent = G.level;
+    const need = xpNeed();
+    xpFill.style.width = Math.min(100, (G.xp / need) * 100) + "%";
+    xpVal.textContent = `${Math.floor(G.xp)} / ${need}`;
+    const mult = comboMult();
+    comboVal.textContent = "x" + mult.toFixed(1);
+    comboVal.classList.toggle("hot", G.combo >= 3);
+  }
+
+  const comboMult = () => Math.min(3, 1 + G.combo * 0.2);
+
+  function bumpCombo() {
+    G.combo++;
+    comboUntil = Date.now() + COMBO_MS;
+    if (G.combo >= 5) unlock("combo5");
+    if (G.combo >= 10) unlock("combo10");
+    comboVal.classList.add("beat");
+    setTimeout(() => comboVal.classList.remove("beat"), 320);
+  }
+
+  function dropCombo() {
+    if (G.combo > 0) G.combo = 0;
+    comboUntil = 0;
+    comboFill.style.width = "0%";
+    render();
+  }
+
+  setInterval(() => {
+    if (!comboUntil) return;
+    const left = comboUntil - Date.now();
+    if (left <= 0) {
+      dropCombo();
+      if (G.combo === 0) say("combo lost... feed me!");
+    } else {
+      comboFill.style.width = (left / COMBO_MS) * 100 + "%";
+    }
+  }, 100);
+
+  /* ---------------------------------------------------------
+     QUESTS
+     --------------------------------------------------------- */
+  function newQuest() {
+    const kinds = [
+      () => ({ text: "make " + (10 + Math.floor(Math.random() * 90)), test: (n, t) => n === t, target: null }),
+      () => ({ text: "land on any number over 500", test: (n) => n > 500 }),
+      () => ({ text: "get an answer with a decimal", test: (n) => !Number.isInteger(n) && isFinite(n) }),
+      () => ({ text: "hit a negative number", test: (n) => n < 0 }),
+      () => ({ text: "make exactly 100", test: (n) => n === 100 }),
+      () => ({ text: "answer with a real fraction", test: (n, r) => !!r && r.d !== 1 }),
+      () => ({ text: "land on exactly one half", test: (n, r) => !!r && r.n === 1 && r.d === 2 })
+    ];
+    const pick = kinds[(Math.random() * kinds.length) | 0]();
+    if (pick.text.startsWith("make ") && pick.target === null) {
+      pick.target = parseInt(pick.text.slice(5), 10);
+      const t = pick.target;
+      pick.test = (n) => n === t;
+    }
+    G.quest = pick;
+    if (!quizMode) questGoal.textContent = pick.text;
+  }
+
+  $("questSkip").addEventListener("click", () => {
+    if (boss.active) { sfxWrong(); say("no skipping — beat the boss first!"); return; }
+    if (quizMode) {
+      quiz.streak = 0;
+      nextQuestion();
+      sfxOp();
+      say("skipped! streak reset.");
+      return;
+    }
+    newQuest();
+    sfxOp();
+    say("fine, a new one...");
+  });
+
+  function checkQuest(result, ratResult) {
+    if (!G.quest || !isFinite(result)) return;
+    if (G.quest.test(result, ratResult)) {
+      G.questsDone++;
+      unlock("quest");
+      if (G.questsDone >= 5) unlock("quest5");
+      addXP(45);
+      toast("MISSION COMPLETE", "+45 XP", true);
+      const c = cvs.parentElement;
+      burst(c.clientWidth / 2, c.clientHeight * 0.3, 45, 1.3);
+      newQuest();
+    }
+  }
+
+  /* ---------------------------------------------------------
+     BOSS FIGHTS
+     Answers are the weapon: damage scales with how many digits
+     you produced, times your combo. Big numbers hit hard.
+     --------------------------------------------------------- */
+  const BOSSES = [
+    { name: "NUMBER GOBLIN", hp: 120 },
+    { name: "DIGIT DRAGON",  hp: 200 },
+    { name: "THE DIVIDER",   hp: 300 },
+    { name: "INFINITY BLOB", hp: 420 }
+  ];
+  const BOSS_SECONDS = 60;
+  const boss = { active: false, name: "", hp: 0, max: 0, ends: 0 };
+  let bossTick = null, bossAttack = null;
+
+  function startBoss() {
+    const base = BOSSES[G.bosses % BOSSES.length];
+    const scale = 1 + Math.floor(G.bosses / BOSSES.length) * 0.5;
+    boss.active = true;
+    boss.name = base.name;
+    boss.max = Math.round(base.hp * scale);
+    boss.hp = boss.max;
+    boss.ends = Date.now() + BOSS_SECONDS * 1000;
+
+    $("bossName").textContent = boss.name;
+    $("bossPanel").hidden = false;
+    $("fightBtn").setAttribute("aria-pressed", "true");
+    $("fightBtn").textContent = "FLEE";
+    syncSkip();
+    paintBoss();
+
+    clearInterval(bossTick);
+    bossTick = setInterval(() => {
+      if (!boss.active) return;
+      if (Date.now() >= boss.ends) { escapeBoss(); return; }
+      paintBoss();
+    }, 200);
+
+    // it hits back: no damage to you, but your combo pays for it
+    clearInterval(bossAttack);
+    bossAttack = setInterval(() => {
+      if (!boss.active) return;
+      if (G.combo > 0) {
+        dropCombo();
+        if (!reduced) {
+          consoleEl.classList.add("shake");
+          setTimeout(() => consoleEl.classList.remove("shake"), 360);
+        }
+        sfxWrong();
+        say(boss.name + " broke your combo!");
+      }
+    }, 12000);
+
+    sfxHit();
+    toast("BOSS APPEARS", boss.name, true);
+    say("uh oh... " + boss.name + "!");
+  }
+
+  // SKIP is locked for the whole fight — you can't reroll your way
+  // out of a mission or a hard question while a boss is on the clock.
+  function syncSkip() {
+    const b = $("questSkip");
+    b.disabled = boss.active;
+    b.textContent = boss.active ? "LOCKED" : "SKIP";
+    b.title = boss.active ? "No skipping until the boss is down" : "";
+  }
+
+  function paintBoss() {
+    const pct = Math.max(0, (boss.hp / boss.max) * 100);
+    const bar = $("bossHp");
+    bar.style.width = pct + "%";
+    bar.classList.toggle("low", pct <= 30);
+    $("bossHpText").textContent = Math.max(0, Math.ceil(boss.hp)) + " / " + boss.max + " HP";
+    const left = Math.max(0, Math.ceil((boss.ends - Date.now()) / 1000));
+    $("bossClock").textContent = left + "s";
+  }
+
+  function floatDamage(n, crit) {
+    const panel = $("bossPanel");
+    const arena = cvs.parentElement;
+    const a = arena.getBoundingClientRect(), b = panel.getBoundingClientRect();
+    const el = document.createElement("div");
+    el.className = "dmg";
+    el.textContent = "-" + n + (crit ? "!!" : "");
+    el.style.left = (b.left - a.left + b.width * (0.45 + Math.random() * 0.3)) + "px";
+    el.style.top = (b.top - a.top + 8) + "px";
+    arena.appendChild(el);
+    el.animate([
+      { transform: "translateY(6px) scale(.7)", opacity: 0 },
+      { transform: `translateY(-14px) scale(${crit ? 1.5 : 1.15})`, opacity: 1, offset: 0.3 },
+      { transform: "translateY(-46px) scale(1)", opacity: 0 }
+    ], { duration: 900, easing: "ease-out" }).onfinish = () => el.remove();
+  }
+
+  function hitBoss(damage, crit) {
+    if (!boss.active) return;
+    boss.hp -= damage;
+    const panel = $("bossPanel");
+    panel.classList.remove("hit");
+    void panel.offsetWidth;
+    panel.classList.add("hit");
+    setTimeout(() => panel.classList.remove("hit"), 300);
+    if (!reduced) floatDamage(damage, crit);
+    sfxHit();
+    paintBoss();
+    if (boss.hp <= 0) defeatBoss();
+  }
+
+  function defeatBoss() {
+    const reward = 60 + boss.max;
+    G.bosses++;
+    unlock("boss1");
+    if (G.bosses >= 5) unlock("boss5");
+    endBoss(false);
+    sfxWin();
+    mood("hype", 620);
+    toast("BOSS DEFEATED", boss.name + " — +" + reward + " XP", true);
+    say("we beat it!!");
+    const c = cvs.parentElement;
+    burst(c.clientWidth / 2, c.clientHeight * 0.3, 80, 1.7);
+    addXP(reward);
+    save();
+  }
+
+  function escapeBoss() {
+    const name = boss.name;
+    endBoss(false);
+    toast("IT GOT AWAY", name + " escaped");
+    say("it ran off!");
+    sfxWrong();
+  }
+
+  function endBoss(fled) {
+    boss.active = false;
+    clearInterval(bossTick);
+    clearInterval(bossAttack);
+    $("bossPanel").hidden = true;
+    $("fightBtn").setAttribute("aria-pressed", "false");
+    $("fightBtn").textContent = "FIGHT!";
+    syncSkip();
+    if (fled) say("you let it go...");
+  }
+
+  /* ---------------------------------------------------------
+     QUIZ MODE — Chompy asks, you answer.
+     Operators are locked out so "=" always means "submit".
+     --------------------------------------------------------- */
+  let quizMode = false;
+  const quiz = { text: "", answer: null, hearts: 3, streak: 0 };
+
+  const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+
+  function makeQuestion() {
+    const lv = G.level;
+    const pool = [];
+
+    pool.push(() => { const a = randInt(1, 9), b = randInt(1, 9); return { text: `${a} + ${b}`, val: rat(a + b, 1) }; });
+    pool.push(() => { const a = randInt(2, 9), b = randInt(1, a); return { text: `${a} − ${b}`, val: rat(a - b, 1) }; });
+
+    if (lv >= 3) {
+      pool.push(() => { const a = randInt(10, 60), b = randInt(10, 39); return { text: `${a} + ${b}`, val: rat(a + b, 1) }; });
+      pool.push(() => { const a = randInt(2, 10), b = randInt(2, 10); return { text: `${a} × ${b}`, val: rat(a * b, 1) }; });
+    }
+    if (lv >= 6) {
+      pool.push(() => { const a = randInt(11, 25), b = randInt(3, 12); return { text: `${a} × ${b}`, val: rat(a * b, 1) }; });
+      pool.push(() => { const b = randInt(2, 12), q = randInt(2, 12); return { text: `${b * q} ÷ ${b}`, val: rat(q, 1) }; });
+      pool.push(() => { const a = randInt(40, 99), b = randInt(10, 39); return { text: `${a} − ${b}`, val: rat(a - b, 1) }; });
+    }
+    if (lv >= 9) {
+      pool.push(() => {
+        const d1 = randInt(2, 6), d2 = randInt(2, 6);
+        const n1 = randInt(1, d1 - 1), n2 = randInt(1, d2 - 1);
+        return { text: `${n1}/${d1} + ${n2}/${d2}`, val: ratAdd(rat(n1, d1), rat(n2, d2)) };
+      });
+      pool.push(() => {
+        const d1 = randInt(2, 6), d2 = randInt(2, 6);
+        const n1 = randInt(1, d1 - 1), n2 = randInt(1, d2 - 1);
+        return { text: `${n1}/${d1} × ${n2}/${d2}`, val: ratMul(rat(n1, d1), rat(n2, d2)) };
+      });
+    }
+
+    const q = pool[(Math.random() * pool.length) | 0]();
+    quiz.text = q.text;
+    quiz.answer = q.val;
+  }
+
+  function paintQuiz() {
+    $("questTag").textContent = quizMode ? "QUIZ" : "MISSION";
+    $("hearts").hidden = !quizMode;
+    if (!quizMode) { $("questGoal").textContent = G.quest ? G.quest.text : ""; return; }
+    $("questGoal").textContent = quiz.text + " = ?";
+    let h = "";
+    for (let i = 0; i < 3; i++) h += `<span class="${i < quiz.hearts ? "" : "gone"}">♥</span>`;
+    $("hearts").innerHTML = h;
+  }
+
+  function nextQuestion() {
+    makeQuestion();
+    paintQuiz();
+  }
+
+  function toggleQuiz() {
+    quizMode = !quizMode;
+    $("quizBtn").setAttribute("aria-pressed", String(quizMode));
+    $("quizBtn").textContent = quizMode ? "QUIT QUIZ" : "QUIZ";
+    if (quizMode) {
+      quiz.hearts = 3; quiz.streak = 0;
+      resetAll();
+      nextQuestion();
+      say("what's the answer?");
+      toast("QUIZ MODE", "Chompy asks, you answer");
+    } else {
+      paintQuiz();
+      say("back to free play!");
+    }
+    sfxFrac();
+  }
+
+  function submitAnswer() {
+    const given = curToRat();
+    if (!given) { say("that's not a number!"); return; }
+    const want = quiz.answer;
+    if (!want) { nextQuestion(); return; }
+    const right = given.n === want.n && given.d === want.d;
+
+    if (right) {
+      quiz.streak++;
+      G.quizBest = Math.max(G.quizBest, quiz.streak);
+      if (quiz.streak >= 10) unlock("quiz10");
+      if (quiz.streak >= 25) unlock("quiz25");
+      bumpCombo();
+
+      const st = morselStats(want);
+      st.crit = false;
+      const gained = Math.round((14 + st.size * 3) * comboMult());
+      exprEl.textContent = quiz.text + " =";
+      lastWasEquals = true;
+      renderOut();
+      if (reduced) { mood("chomp", 340); sfxChomp(); }
+      else flingMorsel(gained, st);
+      say("correct! streak " + quiz.streak);
+      addXP(gained);
+      if (boss.active) hitBoss(Math.round(12 + st.size * 5), false);
+      G.solves++;
+      save();
+
+      setTimeout(() => {
+        cur = "0"; fresh = true; lastWasEquals = false;
+        nextQuestion();
+        paint();
+      }, 620);
+    } else {
+      quiz.hearts--;
+      quiz.streak = 0;
+      dropCombo();
+      mood("dizzy", 520);
+      sfxWrong();
+      if (!reduced) {
+        consoleEl.classList.add("shake");
+        setTimeout(() => consoleEl.classList.remove("shake"), 360);
+      }
+      paintQuiz();
+      if (quiz.hearts <= 0) {
+        toast("OUT OF HEARTS", "the answer was " + ratPlain(quiz.answer), true);
+        say("it was " + ratPlain(quiz.answer) + "!");
+        quiz.hearts = 3;
+        setTimeout(() => { cur = "0"; fresh = true; nextQuestion(); paint(); }, 900);
+      } else {
+        say("not quite — try again!");
+        cur = "0"; fresh = true;
+        paint();
+      }
+      save();
+    }
+  }
+
+  /* ---------------------------------------------------------
+     SCREEN
+     --------------------------------------------------------- */
+  function paint() {
+    renderOut();
+    let e = "";
+    if (stored !== null && op) e = ratToText(stored) + " " + op + (fresh ? "" : " " + cur);
+    exprEl.textContent = e;
+  }
+
+  /* ---------------------------------------------------------
+     INPUT
+     --------------------------------------------------------- */
+  function resetAll() {
+    cur = "0"; stored = null; op = null; fresh = true; errored = false; lastWasEquals = false;
+    approx = false;
+    dropCombo();
+    paint();
+    say("clean slate!");
+  }
+
+  const digitCount = (s) => s.replace(/[^\d]/g, "").length;
+
+  function pressDigit(d) {
+    if (errored) { cur = "0"; errored = false; fresh = true; }
+    if (lastWasEquals) { stored = null; op = null; lastWasEquals = false; fresh = true; approx = false; }
+    if (fresh) { cur = d; fresh = false; }
+    else {
+      if (digitCount(cur) >= MAX_DIGITS) { say("that's plenty!"); return; }
+      if (cur.includes("/")) {
+        const parts = cur.split("/");
+        parts[1] = (parts[1] === "0" || parts[1] === "") ? d : parts[1] + d;
+        cur = parts.join("/");
+      } else {
+        cur = cur === "0" ? d : cur + d;
+      }
+    }
+    paint();
+  }
+
+  function pressDot() {
+    if (errored) { cur = "0"; errored = false; fresh = false; }
+    if (lastWasEquals) { stored = null; op = null; lastWasEquals = false; fresh = true; approx = false; }
+    if (fresh) { cur = "0."; fresh = false; }
+    else {
+      const tail = cur.includes("/") ? cur.slice(cur.indexOf("/") + 1) : cur;
+      if (tail.includes(".")) return;
+      cur += cur.endsWith("/") ? "0." : ".";
+    }
+    G.usedDecimal = true;
+    unlock("deci");
+    paint();
+  }
+
+  function pressOp(o) {
+    if (errored) return;
+    if (quizMode) { say("just type the answer!"); return; }
+    const b = curToRat();
+    if (!b) return divideByZero();
+    if (op !== null && stored !== null && !fresh) {
+      const r = safeApply(stored, b, op);
+      if (!r) return divideByZero();
+      stored = r;
+      cur = ratToInput(r);
+    } else {
+      stored = b;
+    }
+    op = o;
+    fresh = true;
+    lastWasEquals = false;
+    paint();
+  }
+
+  /* --- the fraction keys ---------------------------------- */
+  function pressFrac() {
+    if (errored) return;
+
+    // On a finished answer: show it as a fraction in simplest form.
+    if (lastWasEquals) {
+      if (approx) { say("that one's too wild for a fraction!"); return; }
+      fracMode = true;
+      syncFracKeys();
+      unlock("frac");
+      const r = curToRat();
+      if (r && r.d === 1) say("that one's already whole!");
+      else say("ta-da! simplest form!");
+      paint();
+      return;
+    }
+
+    if (cur.includes("/")) { say("one slash is plenty!"); return; }
+
+    // A typed decimal becomes a fraction on the spot: 0.75 -> 3/4
+    if (cur.includes(".")) {
+      const r = decToRat(cur);
+      if (!r || !fits(r)) { say("too many dots to fold up!"); return; }
+      cur = ratToInput(r);
+      fracMode = true;
+      syncFracKeys();
+      unlock("simp");
+      say("folded it up for you!");
+      paint();
+      return;
+    }
+
+    if (fresh && cur === "0") { say("give me a top number first!"); return; }
+
+    cur += "/";
+    fresh = false;
+    fracMode = true;
+    syncFracKeys();
+    say("now the bottom number!");
+    paint();
+  }
+
+  function syncFracKeys() {
+    const mixBtn = document.querySelector('.key[data-k="mix"]');
+    const showBtn = document.querySelector('.key[data-k="show"]');
+    if (mixBtn) {
+      mixBtn.setAttribute("aria-pressed", String(mixedMode));
+      $("mixState").textContent = mixedMode ? "ON" : "OFF";
+    }
+    if (showBtn) {
+      showBtn.setAttribute("aria-pressed", String(fracMode));
+      $("showState").textContent = fracMode ? "FRAC" : "DEC";
+    }
+  }
+
+  function noteFlip(which) {
+    G.flips.add(which);
+    if (G.flips.size >= 2) unlock("shifter");
+  }
+
+  function toggleMixed() {
+    mixedMode = !mixedMode;
+    syncFracKeys();
+    noteFlip("mix");
+    say(mixedMode ? "mixed numbers on!" : "top-heavy mode!");
+    paint();
+  }
+
+  function toggleShow() {
+    fracMode = !fracMode;
+    syncFracKeys();
+    noteFlip("show");
+    say(fracMode ? "fractions please!" : "decimals please!");
+    paint();
+  }
+
+  function divideByZero() {
+    errored = true;
+    op = null; stored = null; fresh = true;
+    dropCombo();
+    unlock("void");
+    mood("dizzy", 520);
+    sfxErr();
+    if (!reduced) {
+      consoleEl.classList.add("shake");
+      setTimeout(() => consoleEl.classList.remove("shake"), 360);
+    }
+    say("you can't split nothing!");
+    paint();
+  }
+
+  function pressEquals() {
+    if (errored) return;
+    if (quizMode) { submitAnswer(); return; }
+    if (op === null || stored === null) { say("give me two numbers!"); return; }
+
+    const a = stored;
+    const b = curToRat();
+    if (!b) return divideByZero();
+
+    const r = safeApply(a, b, op);
+    if (!r) return divideByZero();
+
+    // If either side was a fraction, answer in fractions without being asked.
+    const usedFraction = a.d !== 1 || b.d !== 1 || cur.includes("/");
+    if (usedFraction && !approx) { fracMode = true; unlock("frac"); }
+    if (r.d !== 1 && r.d < a.d * b.d) unlock("simp");
+
+    const result = ratVal(r);
+    const digits = digitCount(ratToText(a)) + digitCount(ratToText(b));
+    const crit = Math.random() < 0.12;
+
+    bumpCombo();
+    let gained = Math.round((8 + digits * 2 + (usedFraction ? 12 : 0)) * comboMult() * (crit ? 2 : 1));
+
+    exprEl.textContent = ratToText(a) + " " + op + " " + ratToText(b) + " =";
+    cur = ratToInput(r);
+    stored = null; op = null; fresh = true; lastWasEquals = true;
+
+    syncFracKeys();
+    renderOut();
+
+    // reactions — the answer becomes a nugget sized to its digits,
+    // flies into Chompy's mouth, and he grinds through it.
+    const st = morselStats(r);
+    st.crit = crit;
+    const eq = document.querySelector('.key[data-k="="]');
+    if (eq) { const p = atElement(eq); burst(p.x, p.y, crit ? 34 : 16, crit ? 1.4 : 0.9); }
+    if (reduced) { mood("chomp", 340); sfxChomp(); }
+    else flingMorsel(gained, st);
+
+    if (crit) {
+      outEl.classList.add("crit");
+      setTimeout(() => outEl.classList.remove("crit"), 520);
+      sfxCrit();
+      toast("CRITICAL BITE", "double XP! +" + gained, true);
+      say("CRUNCH!!");
+    } else if (usedFraction) {
+      say(FRAC_CHATTER[(Math.random() * FRAC_CHATTER.length) | 0]);
+    } else {
+      say(CHATTER[(Math.random() * CHATTER.length) | 0]);
+    }
+
+    // stats + achievements
+    G.solves++;
+    G.best = Math.max(G.best, result);
+    if (G.solves === 1) unlock("first");
+    if (G.solves >= 50) unlock("marathon");
+    if (crit) unlock("crit");
+
+    // number-shape stickers
+    if (result > 9000) unlock("over");
+    if (result > 1000000) unlock("million");
+    if (result === 777) unlock("lucky");
+    if (result < 0) unlock("negative");
+    if (result === 0) unlock("zero");
+    if (numToStr(result).startsWith("3.14")) unlock("pi");
+    if (Number.isInteger(result) && Math.abs(result) >= 10) {
+      const s = String(Math.abs(result));
+      if (s === s.split("").reverse().join("")) unlock("palin");
+    }
+
+    // fraction-shape stickers
+    if (r.d === 2 && Math.abs(r.n) === 1) unlock("half");
+    if (r.d === 3) unlock("thirds");
+    if (r.d !== 1 && Math.abs(r.n) > r.d) unlock("topheavy");
+
+    const now = Date.now();
+    G.solveTimes.push(now);
+    if (G.solveTimes.length > 5) G.solveTimes.shift();
+    if (G.solveTimes.length === 5 && now - G.solveTimes[0] <= 10000) unlock("speed");
+
+    addXP(gained);
+    checkQuest(result, r);
+    if (boss.active) hitBoss(Math.round((10 + st.size * 4) * comboMult() * (crit ? 2 : 1)), crit);
+    save();
+  }
+
+  function pressPercent() {
+    if (errored) return;
+    const r = curToRat();
+    if (!r) return divideByZero();
+    const q = rat(r.n, r.d * 100);
+    if (!q || !fits(q)) { say("too small to shrink!"); return; }
+    approx = false;
+    cur = ratToInput(q);
+    fresh = false;
+    lastWasEquals = false;
+    paint();
+  }
+
+  function pressSign() {
+    if (errored) return;
+    const flip = (s) => (s.startsWith("-") ? s.slice(1) : (s === "0" || s === "" ? s : "-" + s));
+    if (cur.includes("/")) {
+      const parts = cur.split("/");
+      parts[0] = flip(parts[0]);
+      cur = parts.join("/");
+    } else {
+      cur = flip(cur);
+    }
+    paint();
+  }
+
+  function pressDel() {
+    if (errored) { resetAll(); return; }
+    if (fresh) return;
+    cur = cur.slice(0, -1);
+    if (cur === "" || cur === "-" || cur === "0") { cur = "0"; fresh = true; }
+    paint();
+  }
+
+  function handle(k) {
+    G.presses++;
+    if (G.presses >= 100) unlock("cent");
+
+    G.pressed.add(k);
+    if (G.pressed.size >= document.querySelectorAll(".key").length) unlock("masher");
+
+    if (/^\d$/.test(k)) { pressDigit(k); sfxKey(); return; }
+    switch (k) {
+      case ".":   pressDot(); sfxKey(); break;
+      case "+": case "−": case "×": case "÷": pressOp(k); sfxOp(); break;
+      case "=":   pressEquals(); break;
+      case "ac":  resetAll(); sfxOp(); break;
+      case "del": pressDel(); sfxKey(); break;
+      case "%":   pressPercent(); sfxKey(); break;
+      case "±":   pressSign(); sfxKey(); break;
+      case "frac": pressFrac(); sfxFrac(); break;
+      case "mix":  toggleMixed(); sfxKey(); break;
+      case "show": toggleShow(); sfxKey(); break;
+    }
+  }
+
+  /* ---------------------------------------------------------
+     WIRING
+     --------------------------------------------------------- */
+  const keyEls = new Map();
+  document.querySelectorAll(".key").forEach((btn) => {
+    keyEls.set(btn.dataset.k, btn);
+    btn.addEventListener("click", () => {
+      lookAt(btn);
+      if (btn.dataset.k !== "=") {
+        const p = atElement(btn);
+        burst(p.x, p.y, 6, 0.55);
+      }
+      handle(btn.dataset.k);
+    });
+  });
+
+  function flash(k) {
+    const el = keyEls.get(k);
+    if (!el) return;
+    el.classList.add("down");
+    setTimeout(() => el.classList.remove("down"), 110);
+    lookAt(el);
+    const p = atElement(el);
+    if (k !== "=") burst(p.x, p.y, 6, 0.55);
+  }
+
+  const KEYMAP = {
+    "+": "+", "-": "−", "*": "×", "x": "×", "X": "×", "/": "÷",
+    "Enter": "=", "=": "=", "Escape": "ac", "Backspace": "del",
+    "%": "%", ".": ".", ",": ".", "n": "±", "c": "ac",
+    "f": "frac", "F": "frac", "m": "mix", "M": "mix", "d": "show", "D": "show"
+  };
+
+  window.addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    let k = null;
+    if (/^\d$/.test(e.key)) k = e.key;
+    else if (KEYMAP[e.key]) k = KEYMAP[e.key];
+    if (!k) return;
+    // Space/Enter on a focused button is the browser's job — don't double-fire.
+    if (e.key === "Enter" && document.activeElement && document.activeElement.classList.contains("key")) return;
+    e.preventDefault();
+    flash(k);
+    handle(k);
+  });
+
+  // Press feedback for pointer input
+  document.querySelectorAll(".key").forEach((btn) => {
+    const down = () => btn.classList.add("down");
+    const up = () => btn.classList.remove("down");
+    btn.addEventListener("pointerdown", down);
+    btn.addEventListener("pointerup", up);
+    btn.addEventListener("pointerleave", up);
+    btn.addEventListener("pointercancel", up);
+  });
+
+  $("fightBtn").addEventListener("click", () => {
+    if (boss.active) { endBoss(true); sfxOp(); }
+    else startBoss();
+  });
+
+  $("quizBtn").addEventListener("click", toggleQuiz);
+
+  // Two-step reset — no browser confirm dialog, which embeds can block.
+  let armed = null;
+  $("resetBtn").addEventListener("click", (e) => {
+    const btn = e.currentTarget;
+    if (armed) {
+      clearTimeout(armed); armed = null;
+      btn.classList.remove("armed");
+      btn.textContent = "RESET";
+      wipeSave();
+      return;
+    }
+    btn.classList.add("armed");
+    btn.textContent = "SURE?";
+    armed = setTimeout(() => {
+      armed = null;
+      btn.classList.remove("armed");
+      btn.textContent = "RESET";
+    }, 3000);
+  });
+
+  // Idle eye wander
+  setInterval(() => {
+    if (document.hidden) return;
+    const a = Math.random() * Math.PI * 2;
+    mascot.querySelectorAll(".pupil").forEach((p) => {
+      p.setAttribute("transform", `translate(${(Math.cos(a) * 4).toFixed(1)},${(Math.sin(a) * 3.5).toFixed(1)})`);
+    });
+  }, 3200);
+
+  /* ---------------------------------------------------------
+     BOOT
+     --------------------------------------------------------- */
+  loadSave();
+  buildStickers();
+  unlocked.forEach((id) => {
+    const el = document.querySelector(`.sticker[data-id="${id}"]`);
+    if (el) el.classList.add("got");
+  });
+  tallyStickers();
+  applySkin();
+  buildSkins();
+  applyStage(true);
+  newQuest();
+  sizeCanvas();
+  syncFracKeys();
+  $("sfxBtn").setAttribute("aria-pressed", String(sfxOn));
+  $("sfxState").textContent = sfxOn ? "ON" : "OFF";
+  render();
+  paint();
+  say(G.level > 1 ? "welcome back!" : "feed me!");
+  if (!canSave) say("(progress won't save here)");
+  // canvas needs the final laid-out size
+  requestAnimationFrame(sizeCanvas);
+})();
+</script>
+
+</body>
+</html>

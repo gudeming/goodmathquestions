@@ -37,6 +37,13 @@ const nextConfig = {
     "@gmq/i18n",
     "@gmq/animation-engine",
   ],
+  async rewrites() {
+    // Standalone single-file tools served from /public.
+    return [
+      { source: "/bytelab", destination: "/bytelab.html" },
+      { source: "/chompulator", destination: "/chompulator.html" },
+    ];
+  },
   images: {
     remotePatterns: [
       {

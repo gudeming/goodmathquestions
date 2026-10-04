@@ -1,13 +1,23 @@
 import type { MetadataRoute } from "next";
 import { locales, type Locale } from "@gmq/i18n";
-import { getLocalizedUrl } from "@/lib/seo";
+import { getLocalizedUrl, getSiteUrl } from "@/lib/seo";
 
 const PUBLIC_PATHS = ["/"] as const;
+
+// Standalone tools served from /public (not localized).
+const TOOL_PATHS = ["/bytelab", "/chompulator"] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
-  return locales.flatMap((locale) =>
+  const toolEntries: MetadataRoute.Sitemap = TOOL_PATHS.map((path) => ({
+    url: `${getSiteUrl()}${path}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+
+  const localizedEntries: MetadataRoute.Sitemap = locales.flatMap((locale) =>
     PUBLIC_PATHS.map((path) => {
       const alternates = Object.fromEntries(
         locales.map((alternateLocale) => [
@@ -30,4 +40,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       };
     })
   );
+
+  return [...localizedEntries, ...toolEntries];
 }

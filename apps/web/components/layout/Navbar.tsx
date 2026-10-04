@@ -102,6 +102,18 @@ export function Navbar() {
           >
             ⚔️ {t("ohmygame")}
           </Link>
+          <a
+            href="/bytelab"
+            className="font-heading font-medium text-gray-600 hover:text-primary-600 transition-colors"
+          >
+            💾 {t("bytelab")}
+          </a>
+          <a
+            href="/chompulator"
+            className="font-heading font-medium text-gray-600 hover:text-primary-600 transition-colors"
+          >
+            🍔 {t("chompulator")}
+          </a>
 
           {/* Language Toggle */}
           <button
@@ -189,6 +201,12 @@ export function Navbar() {
           >
             ⚔️ {t("ohmygame")}
           </Link>
+          <a href="/bytelab" className="block font-heading text-gray-600 py-2">
+            💾 {t("bytelab")}
+          </a>
+          <a href="/chompulator" className="block font-heading text-gray-600 py-2">
+            🍔 {t("chompulator")}
+          </a>
           <button
             onClick={switchLocale}
             className="block w-full text-left font-heading text-gray-600 py-2"
