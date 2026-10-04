@@ -1,8 +1,8 @@
 name: Deploy to ECS
 
+# Legacy AWS ECS target, kept for manual use only; production runs on the
+# Ubuntu server deployed by deploy.yml.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 env:

@@ -1,0 +1,39 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time on the single server; a newer push waits instead of
+# racing an in-progress build.
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  SITE_URL: https://goodmathquestions.com/
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 25m
+          # Pull first so the newest version of the deploy script is the one that runs.
+          script: |
+            set -e
+            cd /opt/gmq
+            git checkout -- package-lock.json
+            git pull --ff-only origin main
+            bash scripts/ec2-deploy.sh
+
+      - name: Public health check
+        run: curl -fsS -o /dev/null -m 20 --retry 5 --retry-delay 5 --retry-all-errors "$SITE_URL"
