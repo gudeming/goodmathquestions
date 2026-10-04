@@ -26,7 +26,9 @@ else
 fi
 
 echo "[2/5] Installing dependencies..."
-npm install --no-audit --no-fund
+# .env sets NODE_ENV=production, which makes npm skip devDependencies; the build
+# needs them (prisma CLI for @gmq/db's postinstall, typescript, tsx).
+npm install --include=dev --no-audit --no-fund
 
 echo "[3/5] Prisma generate + schema push..."
 npx prisma generate --schema "$SCHEMA"
