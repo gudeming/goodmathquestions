@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Suspense, lazy, useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { trpc } from "@/lib/trpc";
-import { DrillQuestion } from "./DrillQuestion";
 import { ThreeActQuestion } from "./ThreeActQuestion";
 import { useTrack } from "./useTrack";
 import type { Locale } from "./types";
+
+// Legacy DRILL questions are a minority and have their own UI: a separate chunk, so
+// hero questions don't ship it (ThreeActQuestion stays in the page bundle).
+const DrillQuestion = lazy(() => import("./DrillQuestion").then((mod) => ({ default: mod.DrillQuestion })));
 
 /**
  * Client entry of the question page. The server page has already resolved the
@@ -28,21 +31,7 @@ export function QuestionView({ questionId }: { questionId: string }) {
     track("question_view", { kind });
   }, [kind, track]);
 
-  if (query.isLoading) {
-    return (
-      <div className="mx-auto max-w-4xl py-20 text-center" role="status">
-        <motion.div
-          aria-hidden
-          className="mb-4 inline-block text-5xl"
-          animate={reduced ? undefined : { rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-        >
-          🧮
-        </motion.div>
-        <p className="font-heading text-gray-500">{t("loading")}</p>
-      </div>
-    );
-  }
+  if (query.isLoading) return <QuestionLoading label={t("loading")} reduced={reduced} />;
 
   if (query.isError || !query.data) {
     return (
@@ -56,8 +45,26 @@ export function QuestionView({ questionId }: { questionId: string }) {
   }
 
   return query.data.kind === "DRILL" ? (
-    <DrillQuestion question={query.data} locale={locale} track={track} />
+    <Suspense fallback={<QuestionLoading label={t("loading")} reduced={reduced} />}>
+      <DrillQuestion question={query.data} locale={locale} track={track} />
+    </Suspense>
   ) : (
     <ThreeActQuestion question={query.data} locale={locale} track={track} />
+  );
+}
+
+function QuestionLoading({ label, reduced }: { label: string; reduced: boolean | null }) {
+  return (
+    <div className="mx-auto max-w-4xl py-20 text-center" role="status">
+      <motion.div
+        aria-hidden
+        className="mb-4 inline-block text-5xl"
+        animate={reduced ? undefined : { rotate: 360 }}
+        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+      >
+        🧮
+      </motion.div>
+      <p className="font-heading text-gray-500">{label}</p>
+    </div>
   );
 }

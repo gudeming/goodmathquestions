@@ -3,7 +3,7 @@
 // Legacy v1 scene (DRILL questions only). Moved verbatim from components/animations/MathAnimation.tsx;
 // frozen per 03-scene-catalog.md §5. Only the SceneProps adapter below is new.
 import { motion } from "framer-motion";
-import { scaleLinear } from "d3";
+import { linearScale } from "./linear";
 import type { AnimationScene, SceneConfigOf, SceneProps } from "@gmq/animation-engine";
 import { useLegacyScene } from "./useLegacyScene";
 
@@ -34,7 +34,7 @@ function ProfessionalNumberCombineDiagram({
   if (isPerimeterRect || isAreaRect) {
     const a = numbers[0];
     const b = numbers[1];
-    const xScale = scaleLinear().domain([0, Math.max(a, b)]).range([0, 170]);
+    const xScale = linearScale(0, Math.max(a, b), 0, 170);
     const w = Math.max(56, xScale(a));
     const h = Math.max(40, xScale(b));
     return (

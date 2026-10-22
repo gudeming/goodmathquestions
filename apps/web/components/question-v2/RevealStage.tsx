@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -8,12 +8,12 @@ import { trpc } from "@/lib/trpc";
 import { getLocalizedPath } from "@/lib/seo";
 import { SceneHost } from "@/components/scenes/SceneHost";
 import { CelebrationEffect } from "@/components/animations/CelebrationEffect";
-import { DiscussionSection } from "@/components/questions/DiscussionSection";
+import { LazyDiscussionSection as DiscussionSection } from "@/components/questions/LazyDiscussionSection";
 import { guessOptionsFor } from "@/components/discussion/shared";
 import { MathText } from "@/components/ui/MathText";
 import { GuessHistogram } from "./GuessHistogram";
 import { answerOptions } from "./AnswerInput";
-import { hasScene } from "./scene";
+import { useHasScene } from "./scene";
 import type { SolvedResult } from "./ExploreStage";
 import type { Track } from "./useTrack";
 import { pick, type Locale, type PublicQuestion } from "./types";
@@ -36,7 +36,7 @@ export function RevealStage({ question, locale, gaveUp, guess, solved, isLoggedI
   const t = useTranslations("questions");
   const reduced = useReducedMotion();
   const extensionId = useId();
-  const showScene = useMemo(() => hasScene(question.animationConfig), [question.animationConfig]);
+  const showScene = useHasScene(question.animationConfig);
   const reveal = trpc.question.reveal.useQuery({ questionId: question.id }, { retry: 1, staleTime: Infinity });
   const histogram = trpc.guess.histogram.useQuery(
     { questionId: question.id },

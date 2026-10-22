@@ -1,6 +1,9 @@
 "use client";
 
-import katex from "katex";
+import { Suspense } from "react";
+import { readKatex } from "./katex-loader";
+
+type Part = { type: "text" | "inline" | "display"; content: string };
 
 interface MathTextProps {
   text: string;
@@ -13,6 +16,10 @@ interface MathTextProps {
  * Preferred delimiters: \( ... \) for inline and \[ ... \] for display.
  * Also supports $...$ and $$...$$, with a guard to avoid parsing currency like $12.
  * Non-math text is rendered as-is.
+ *
+ * KaTeX is not in the page bundle: text without math never loads it, and text with
+ * math renders the raw formulas until the KaTeX chunk is in (server-rendered math
+ * stays as the server sent it while the chunk loads).
  */
 export function MathText({ text, className, as: Tag = "span" }: MathTextProps) {
   if (!text) return null;
@@ -38,7 +45,7 @@ export function MathText({ text, className, as: Tag = "span" }: MathTextProps) {
     return <Tag className={className}>{normalizePlainText(normalizedText)}</Tag>;
   }
 
-  const parts: Array<{ type: "text" | "inline" | "display"; content: string }> = [];
+  const parts: Part[] = [];
   const tokenRegex = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$(?!\d)([^\$]+?)\$)/g;
   let lastIndex = 0;
 
@@ -70,8 +77,40 @@ export function MathText({ text, className, as: Tag = "span" }: MathTextProps) {
     parts.push({ type: "text", content: normalizePlainText(normalizedText.slice(lastIndex)) });
   }
 
+  // Delimiter-like text with no actual formula (e.g. "$5 and $3"): no KaTeX needed.
+  if (parts.every((part) => part.type === "text")) {
+    return (
+      <Tag className={className}>
+        <RawParts parts={parts} />
+      </Tag>
+    );
+  }
+
   return (
     <Tag className={className}>
+      <Suspense fallback={<RawParts parts={parts} />}>
+        <KatexParts parts={parts} />
+      </Suspense>
+    </Tag>
+  );
+}
+
+/** Placeholder while KaTeX loads: the same text with the formulas' source. */
+function RawParts({ parts }: { parts: Part[] }) {
+  return (
+    <>
+      {parts.map((part, i) => (
+        <span key={i}>{part.content}</span>
+      ))}
+    </>
+  );
+}
+
+function KatexParts({ parts }: { parts: Part[] }) {
+  const katex = readKatex();
+
+  return (
+    <>
       {parts.map((part, i) => {
         if (part.type === "text") {
           return <span key={i}>{part.content}</span>;
@@ -79,6 +118,7 @@ export function MathText({ text, className, as: Tag = "span" }: MathTextProps) {
 
         const displayMode = part.type === "display";
         try {
+          if (!katex) throw new Error("KaTeX unavailable");
           const html = katex.renderToString(part.content, {
             displayMode,
             throwOnError: false,
@@ -110,6 +150,6 @@ export function MathText({ text, className, as: Tag = "span" }: MathTextProps) {
           );
         }
       })}
-    </Tag>
+    </>
   );
 }

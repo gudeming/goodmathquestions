@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
 import { StageProgress } from "./StageProgress";
 import { HookStage } from "./HookStage";
 import { ExploreStage, type SolvedResult } from "./ExploreStage";
-import { RevealStage } from "./RevealStage";
+import { preloadAnswerControl } from "./AnswerInput";
 import { useQuestionFlow, type FlowPhase } from "./useQuestionFlow";
 import type { Track } from "./useTrack";
 import { pick, type Locale, type PublicQuestion } from "./types";
@@ -17,6 +17,11 @@ interface ThreeActQuestionProps {
   locale: Locale;
   track: Track;
 }
+
+// The reveal (with celebration and discussion) is its own chunk, fetched as soon as
+// the question mounts so it is in long before the kid gets there.
+const loadRevealStage = () => import("./RevealStage");
+const RevealStage = lazy(() => loadRevealStage().then((mod) => ({ default: mod.RevealStage })));
 
 const STAGE_HEADING: Record<FlowPhase, "stageGuess" | "exploreHeading" | "revealHeading"> = {
   hook: "stageGuess",
@@ -36,6 +41,11 @@ export function ThreeActQuestion({ question, locale, track }: ThreeActQuestionPr
   const [solved, setSolved] = useState<SolvedResult | null>(null);
   const lastPhase = useRef(phase);
   const [phaseChanged, setPhaseChanged] = useState(false);
+
+  useEffect(() => {
+    loadRevealStage().catch(() => undefined);
+    preloadAnswerControl(question.answerType);
+  }, [question.answerType]);
 
   // On every act change: back to the top; the new act's heading then takes focus (see StageHeading).
   useEffect(() => {
@@ -93,15 +103,17 @@ export function ThreeActQuestion({ question, locale, track }: ThreeActQuestionPr
           )}
 
           {phase === "reveal" && (
-            <RevealStage
-              question={question}
-              locale={locale}
-              gaveUp={flow.state.gaveUp}
-              guess={flow.state.guess}
-              solved={solved}
-              isLoggedIn={isLoggedIn}
-              track={track}
-            />
+            <Suspense fallback={<div aria-hidden className="h-64 w-full animate-pulse rounded-card bg-primary-50" />}>
+              <RevealStage
+                question={question}
+                locale={locale}
+                gaveUp={flow.state.gaveUp}
+                guess={flow.state.guess}
+                solved={solved}
+                isLoggedIn={isLoggedIn}
+                track={track}
+              />
+            </Suspense>
           )}
         </motion.section>
       </AnimatePresence>

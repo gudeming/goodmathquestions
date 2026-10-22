@@ -3,7 +3,7 @@
 // Legacy v1 scene (DRILL questions only). Moved verbatim from components/animations/MathAnimation.tsx;
 // frozen per 03-scene-catalog.md §5. Only the SceneProps adapter below is new.
 import { useMemo, useState } from "react";
-import { scaleLinear } from "d3";
+import { linearScale } from "./linear";
 import type { AnimationScene, SceneConfigOf, SceneProps } from "@gmq/animation-engine";
 import { useLegacyScene } from "./useLegacyScene";
 
@@ -27,7 +27,7 @@ function NumberJourneyAnimation({
   const max = range[1];
   const ticks = Math.min(24, Math.max(8, max - min + 1));
   const xScale = useMemo(
-    () => scaleLinear().domain([min, max]).range([24, 396]),
+    () => linearScale(min, max, 24, 396),
     [min, max]
   );
   const tickValues = useMemo(() => {

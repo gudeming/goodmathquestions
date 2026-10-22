@@ -7,10 +7,10 @@ import { useSession } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
 import { SceneHost } from "@/components/scenes/SceneHost";
 import { CelebrationEffect } from "@/components/animations/CelebrationEffect";
-import { DiscussionSection } from "@/components/questions/DiscussionSection";
+import { LazyDiscussionSection as DiscussionSection } from "@/components/questions/LazyDiscussionSection";
 import { MathText } from "@/components/ui/MathText";
 import { HintLadder } from "./HintLadder";
-import { hasScene } from "./scene";
+import { useHasScene } from "./scene";
 import { usableHints } from "./hints";
 import type { Track } from "./useTrack";
 import { pick, type CheckResult, type Locale, type LooseBi, type PublicQuestion } from "./types";
@@ -49,7 +49,7 @@ export function DrillQuestion({ question, locale, track }: DrillQuestionProps) {
   const isLoggedIn = Boolean(session?.user);
   const reduced = useReducedMotion() ?? false;
   const inputId = useId();
-  const showScene = useMemo(() => hasScene(question.animationConfig), [question.animationConfig]);
+  const showScene = useHasScene(question.animationConfig);
   const hints = useMemo(() => usableHints(question.hints), [question.hints]);
 
   const [answer, setAnswer] = useState("");

@@ -2,7 +2,6 @@
 
 // Legacy v1 scene (DRILL questions only). Moved verbatim from components/animations/MathAnimation.tsx;
 // frozen per 03-scene-catalog.md §5. Only the SceneProps adapter below is new.
-import { arc as d3Arc, line as d3Line } from "d3";
 import type { AnimationScene, SceneConfigOf, SceneProps } from "@gmq/animation-engine";
 import { useLegacyScene } from "./useLegacyScene";
 
@@ -29,15 +28,13 @@ function TriangleAnimation({
     [30, 184],
     [190, 184],
   ];
-  const trianglePath =
-    d3Line<[number, number]>()
-      .x((d) => d[0])
-      .y((d) => d[1])([...points, points[0]]) ?? "";
-  const arcPath = d3Arc();
+  const trianglePath = `M${[...points, points[0]].map(([x, y]) => `${x},${y}`).join("L")}`;
+  // Wedge paths are constants: d3 `arc()({ innerRadius: 8, outerRadius: 22, startAngle, endAngle })`
+  // for 62°..118°, -38°..0° and 180°..218°, precomputed so this scene no longer needs d3.
   const arcWedges = [
-    { cx: 110, cy: 26, start: (62 * Math.PI) / 180, end: (118 * Math.PI) / 180, color: "#93c5fd" },
-    { cx: 30, cy: 184, start: (-38 * Math.PI) / 180, end: (0 * Math.PI) / 180, color: "#bfdbfe" },
-    { cx: 190, cy: 184, start: Math.PI, end: (218 * Math.PI) / 180, color: "#fbcfe8" },
+    { cx: 110, cy: 26, d: "M19.425,-10.328A22,22,0,0,1,19.425,10.328L7.064,3.756A8,8,0,0,0,7.064,-3.756Z", color: "#93c5fd" },
+    { cx: 30, cy: 184, d: "M-13.545,-17.336A22,22,0,0,1,0,-22L0,-8A8,8,0,0,0,-4.925,-6.304Z", color: "#bfdbfe" },
+    { cx: 190, cy: 184, d: "M0,22A22,22,0,0,1,-13.545,17.336L-4.925,6.304A8,8,0,0,0,0,8Z", color: "#fbcfe8" },
   ];
 
   return (
@@ -53,12 +50,7 @@ function TriangleAnimation({
         {arcWedges.map((a, idx) => (
           <g key={idx} transform={`translate(${a.cx},${a.cy})`}>
             <path
-              d={arcPath({
-                innerRadius: 8,
-                outerRadius: 22,
-                startAngle: a.start,
-                endAngle: a.end,
-              }) ?? ""}
+              d={a.d}
               fill={a.color}
               opacity={0.75}
             />

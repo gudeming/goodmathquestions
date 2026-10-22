@@ -9,7 +9,7 @@ import { MathText } from "@/components/ui/MathText";
 import { AnswerInput, initialDraft, isDraftReady, proposalToDraft } from "./AnswerInput";
 import { HintLadder } from "./HintLadder";
 import { WrongAnswerCoach, type WrongAnswer } from "./WrongAnswerCoach";
-import { hasScene } from "./scene";
+import { useHasScene } from "./scene";
 import { usableHints } from "./hints";
 import type { QuestionFlow } from "./useQuestionFlow";
 import type { Track } from "./useTrack";
@@ -40,7 +40,7 @@ const COMPACT_TYPES = new Set(["NUMERIC", "ESTIMATE", "EXPRESSION", "MULTI_VALUE
 export function ExploreStage({ question, locale, flow, isLoggedIn, sessionLoading, onSolved, track }: ExploreStageProps) {
   const t = useTranslations("questions");
   const labelId = useId();
-  const showScene = useMemo(() => hasScene(question.animationConfig), [question.animationConfig]);
+  const showScene = useHasScene(question.animationConfig);
   const hints = useMemo(() => usableHints(question.hints), [question.hints]);
   const [draft, setDraft] = useState<AnswerDraft>(() => initialDraft(question, locale));
   const [wrong, setWrong] = useState<WrongAnswer | null>(null);

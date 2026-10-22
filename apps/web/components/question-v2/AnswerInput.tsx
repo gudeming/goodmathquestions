@@ -1,13 +1,28 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
-import { Reorder, useDragControls, useReducedMotion } from "framer-motion";
+import { Suspense, lazy, useState, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
-import { MathText } from "@/components/ui/MathText";
 import { ChoiceCards } from "./ChoiceCards";
-import { ExpressionInput } from "./ExpressionInput";
 import { SliderControl, snapToStep } from "./SliderControl";
 import { pick, type AnswerDraft, type AnswerType, type Locale, type OptionItem, type PublicQuestion } from "./types";
+
+// The two rare controls are their own chunks: EXPRESSION carries the expression
+// evaluator, ORDERING framer's Reorder. `preloadAnswerControl` fetches the one a
+// question needs while the kid is still on the hook, so the fallback rarely shows.
+const loadExpressionInput = () => import("./ExpressionInput");
+const loadOrderingInput = () => import("./OrderingInput");
+const ExpressionInput = lazy(() => loadExpressionInput().then((mod) => ({ default: mod.ExpressionInput })));
+const OrderingList = lazy(loadOrderingInput);
+
+/** Starts loading the answer control chunk for `answerType`, if it has one. */
+export function preloadAnswerControl(answerType: AnswerType): void {
+  const load = answerType === "EXPRESSION" ? loadExpressionInput : answerType === "ORDERING" ? loadOrderingInput : null;
+  load?.().catch(() => undefined);
+}
+
+function ControlSkeleton({ className }: { className: string }) {
+  return <div aria-hidden className={`w-full animate-pulse rounded-card bg-primary-50 ${className}`} />;
+}
 
 /** Options for CHOICE / ORDERING: `choices`, else a choice-type guess's options. */
 export function answerOptions(question: PublicQuestion, locale: Locale): OptionItem[] {
@@ -94,10 +109,18 @@ export function AnswerInput({ question, locale, value, onChange, onSubmit, disab
       return <ChipInput value={list} onChange={onChange} onSubmit={onSubmit} disabled={disabled} labelId={labelId} />;
 
     case "ORDERING":
-      return <OrderingList options={answerOptions(question, locale)} value={list} onChange={onChange} disabled={disabled} />;
+      return (
+        <Suspense fallback={<ControlSkeleton className="h-48" />}>
+          <OrderingList options={answerOptions(question, locale)} value={list} onChange={onChange} disabled={disabled} />
+        </Suspense>
+      );
 
     case "EXPRESSION":
-      return <ExpressionInput questionId={question.id} value={text} onChange={onChange} onSubmit={onSubmit} disabled={disabled} locale={locale} labelId={labelId} />;
+      return (
+        <Suspense fallback={<ControlSkeleton className="h-32" />}>
+          <ExpressionInput questionId={question.id} value={text} onChange={onChange} onSubmit={onSubmit} disabled={disabled} locale={locale} labelId={labelId} />
+        </Suspense>
+      );
 
     case "NUMERIC":
       return (
@@ -282,95 +305,3 @@ function ChipInput({
   );
 }
 
-function OrderingList({
-  options,
-  value,
-  onChange,
-  disabled,
-}: {
-  options: OptionItem[];
-  value: string[];
-  onChange: (v: string[]) => void;
-  disabled?: boolean;
-}) {
-  const t = useTranslations("questions");
-  const byId = new Map(options.map((o) => [o.id, o]));
-  const ids = value.filter((id) => byId.has(id));
-
-  const move = (from: number, delta: number) => {
-    const to = from + delta;
-    if (to < 0 || to >= ids.length) return;
-    const next = [...ids];
-    [next[from], next[to]] = [next[to], next[from]];
-    onChange(next);
-  };
-
-  return (
-    <div>
-      <p className="mb-3 text-sm text-gray-500">{t("orderingHelp")}</p>
-      <Reorder.Group axis="y" values={ids} onReorder={onChange} className="space-y-2">
-        {ids.map((id, i) => (
-          <OrderingItem
-            key={id}
-            id={id}
-            label={byId.get(id)?.label ?? id}
-            index={i}
-            count={ids.length}
-            onMove={move}
-            disabled={disabled}
-          />
-        ))}
-      </Reorder.Group>
-    </div>
-  );
-}
-
-function OrderingItem({
-  id,
-  label,
-  index,
-  count,
-  onMove,
-  disabled,
-}: {
-  id: string;
-  label: string;
-  index: number;
-  count: number;
-  onMove: (from: number, delta: number) => void;
-  disabled?: boolean;
-}) {
-  const t = useTranslations("questions");
-  const controls = useDragControls();
-  const reduced = useReducedMotion();
-  const arrowClass =
-    "flex h-11 w-11 items-center justify-center rounded-full text-lg text-gray-600 hover:bg-primary-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-fun-cyan/50 disabled:opacity-30";
-
-  return (
-    <Reorder.Item
-      value={id}
-      dragListener={false}
-      dragControls={controls}
-      layout="position"
-      transition={reduced ? { duration: 0 } : undefined}
-      className="flex items-center gap-2 rounded-card border-2 border-primary-100 bg-white p-2 shadow-sm"
-    >
-      <span
-        role="img"
-        aria-label={t("dragHandle", { item: label })}
-        onPointerDown={(e) => !disabled && controls.start(e)}
-        className="flex h-11 w-11 shrink-0 cursor-grab touch-none items-center justify-center text-xl text-gray-400 active:cursor-grabbing"
-      >
-        ⠿
-      </span>
-      <span className="font-mono text-sm text-gray-400">{index + 1}.</span>
-      <MathText className="flex-1 font-heading text-lg text-gray-800" text={label} />
-      <button type="button" className={arrowClass} disabled={disabled || index === 0} onClick={() => onMove(index, -1)} aria-label={t("moveUp", { item: label })}>
-        ↑
-      </button>
-      <button type="button" className={arrowClass} disabled={disabled || index === count - 1} onClick={() => onMove(index, 1)} aria-label={t("moveDown", { item: label })}>
-        ↓
-      </button>
-    </Reorder.Item>
-  );
-}

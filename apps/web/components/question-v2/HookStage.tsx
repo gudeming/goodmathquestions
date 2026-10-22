@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { trpc } from "@/lib/trpc";
 import { SceneHost } from "@/components/scenes/SceneHost";
@@ -8,7 +8,7 @@ import { MathText } from "@/components/ui/MathText";
 import { ChoiceCards } from "./ChoiceCards";
 import { GuessHistogram } from "./GuessHistogram";
 import { SliderControl, sliderMidpoint } from "./SliderControl";
-import { hasScene } from "./scene";
+import { useHasScene } from "./scene";
 import type { Track } from "./useTrack";
 import { formatNumber, pick, type GuessConfig, type Locale, type OptionItem, type PublicQuestion } from "./types";
 
@@ -50,7 +50,7 @@ export function HookStage({ question, locale, guess, onGuessSaved, onSkip, onCon
   const promptId = useId();
   const config = question.guessConfig;
   const hook = pick({ en: question.hookEn, zh: question.hookZh }, locale) || pick({ en: question.contentEn, zh: question.contentZh }, locale);
-  const showScene = useMemo(() => hasScene(question.animationConfig), [question.animationConfig]);
+  const showScene = useHasScene(question.animationConfig);
 
   const [sliderValue, setSliderValue] = useState<number>(() =>
     config?.type === "slider" ? sliderMidpoint(config.min, config.max, config.step, config.logScale) : 0

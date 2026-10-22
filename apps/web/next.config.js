@@ -44,6 +44,20 @@ const nextConfig = {
       { source: "/chompulator", destination: "/chompulator.html" },
     ];
   },
+  webpack(config, { isServer, webpack }) {
+    if (!isServer) {
+      // `*.ssr` modules hand heavy libraries (scene schemas, KaTeX) to the server render
+      // synchronously; the browser build gets the sibling `*.ssr.client` stub instead
+      // and loads the library as an async chunk (components/scenes/scene-parser.ts,
+      // components/ui/MathText.tsx). Keeps them out of first-load JS.
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/^\.{1,2}\/.*\.ssr$/, (resource) => {
+          resource.request = `${resource.request}.client`;
+        }),
+      );
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       {
