@@ -5,7 +5,9 @@
  * B8 clock-hands-meet (clock_overlap).
  * Editorial pass 1: titles read as story names, hints name the scenes' real controls (size buttons,
  * "Count the bridges", the "🔒 Right angle" toggle, the "extra rope" slider), facts re-checked.
- * TODO(phase-3): B5, B9-B11 once dissection_slide, tiling_lab, domino_tiling and mobius_cut land.
+ * Batch 4: B9 why-hexagons (tiling_lab; answered by numbers of sides), B10 mutilated-chessboard
+ * (domino_tiling); B5 missing-square and B11 mobius-cut are `illustration` until the Tier-3
+ * dissection_slide / mobius_cut scenes land.
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
@@ -685,6 +687,376 @@ export const clockHandsMeet: HeroQuestionBlueprint = {
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 1, retell 1: dragging the minute hand, a table of meeting times and the 'laps' argument all work; hint 3 gives away the 11-per-12-hours step",
 };
 
+/**
+ * B5. Curry's triangle on a 13 × 5 grid. Illustration until the T3 `dissection_slide` scene lands
+ * (待替换为 dissection_slide). Pieces: red 8 × 3 triangle (12), blue 5 × 2 (5), green 8 cells, yellow 7:
+ * 32 in all, against 32.5 for a true triangle. Slopes 3/8 = 0.375 and 2/5 = 0.4, so neither "hypotenuse"
+ * is straight: the top figure dents in (32), the bottom one bulges out (33 = 32 + the hole).
+ */
+export const missingSquare: HeroQuestionBlueprint = {
+  slug: "missing-square",
+  collection: "shapes-that-lie",
+  kind: "PARADOX",
+  ageGroup: "AGE_12_14",
+  difficulty: "MEDIUM",
+  category: "GEOMETRY",
+  title: { en: "The Missing Square", zh: "消失的一格" },
+  hook: {
+    en: "Four coloured pieces fit together into a neat triangle. Swap them around and they make the very same triangle again, except that now there's a hole in it! Where did that square of area go?",
+    zh: "四块彩色拼板拼成一个整齐的三角形。把它们换个位置再拼，还是一样大的三角形，中间却多出了一个洞！那一格面积跑到哪儿去了？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "shrunk", en: "The pieces secretly shrank a little", zh: "拼板被偷偷缩小了一点" },
+      { id: "bent-hypotenuse", en: "The long side isn't really straight, so neither is a true triangle", zh: "长边其实不是直的，两个都不是真正的三角形" },
+      { id: "really-vanished", en: "The square really did vanish", zh: "那一格真的消失了" },
+    ],
+  },
+  scene: {
+    type: "illustration",
+    asset: "missing-square",
+    caption: {
+      en: "Top: four pieces make a triangle 13 squares wide and 5 high. Bottom: the same pieces leave a one-square hole.",
+      zh: "上图：四块拼板拼成底 13 格、高 5 格的三角形。下图：同样的四块却留下一格空洞。",
+    },
+    revealAsset: "missing-square-reveal",
+    revealCaption: {
+      en: "Lay the two outlines on top of each other: the top one bends in, the bottom one bends out. The thin sliver between them is exactly one square.",
+      zh: "把两个轮廓叠在一起：上面那个的长边往里凹，下面那个往外鼓。两条边之间那条细缝，面积正好是一格。",
+    },
+  },
+  prompt: {
+    en: "The pieces are the same in both pictures, and nothing has been cut. So how can the second arrangement have a one-square hole?",
+    zh: "两张图里的拼板一模一样，也没有被剪过。为什么第二种拼法会多出一格空洞？",
+  },
+  answer: { type: "CHOICE", correctId: "bent-hypotenuse" },
+  hints: [
+    { en: "Count the area of each piece in the picture and add them up. Then compare with a real triangle 13 squares wide and 5 high: is it the same?", zh: "数一数图里每块拼板的面积，加起来，再和底 13 格、高 5 格的真三角形比一比：一样吗？" },
+    { en: "The red triangle climbs 3 squares over 8; the blue one climbs 2 over 5. Are those two slopes really the same? Work out 3 ÷ 8 and 2 ÷ 5.", zh: "红色三角形走 8 格升高 3 格，蓝色的走 5 格升高 2 格。这两个斜度真的一样吗？算算 3 ÷ 8 和 2 ÷ 5。" },
+    { en: "3/8 = 0.375 but 2/5 = 0.4, so where red meets blue the long side bends. Draw both on squared paper and lay a ruler along them: one dents in, one bulges out. How much area is in that thin gap?", zh: "3/8 = 0.375，2/5 = 0.4，所以红蓝相接的地方，长边会拐弯。在方格纸上画出两个图形，用尺子靠着比：一个往里凹，一个往外鼓。中间那条细缝有多大面积？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "choice:shrunk",
+      feedback: {
+        en: "Fair suspicion! But count the pieces: red 12 squares of area, blue 5, green 8, yellow 7, the same in both pictures. The pieces haven't changed, so look at the outline instead.",
+        zh: "怀疑得有道理！可是数一数：红色面积 12 格、蓝色 5 格、绿色 8 格、黄色 7 格，两张图里都一样。拼板没变，那就去看外轮廓。",
+      },
+    },
+    {
+      match: "choice:really-vanished",
+      feedback: {
+        en: "It does look like magic! But area can't disappear: the four pieces add up to 32 squares both times. The trick is that the two big shapes only look like the same triangle.",
+        zh: "看起来真像魔术！可面积不会凭空消失：四块拼板加起来两次都是 32 格。秘密在于，这两个大图形只是看起来像同一个三角形。",
+      },
+    },
+  ],
+  explanation: {
+    en: "The pieces always cover 12 + 5 + 8 + 7 = 32 squares, but a real triangle 13 wide and 5 high would be 13 × 5 ÷ 2 = 32.5. Neither shape is a real triangle: the red slope is 3/8 = 0.375 and the blue slope is 2/5 = 0.4, so the long side bends a tiny bit where they meet. In the top picture it bends in (area 32, no hole); in the bottom one it bends out (area 33), and the extra square of space shows up as the hole.",
+    zh: "四块拼板的面积一直是 12 + 5 + 8 + 7 = 32 格，可底 13、高 5 的真三角形面积是 13 × 5 ÷ 2 = 32.5 格。两个图形都不是真三角形：红色的斜度是 3/8 = 0.375，蓝色是 2/5 = 0.4，所以长边在两块相接处稍稍拐了个弯。上图往里凹（面积 32，没有洞），下图往外鼓（面积 33），多出来的那一格空间就变成了洞。",
+  },
+  aha: {
+    en: "Your eyes read \"almost straight\" as straight. The sliver between the two bent edges is too thin to see, yet it holds exactly one whole square.",
+    zh: "眼睛会把「差不多直」看成直的。两条弯边之间那条细缝薄得看不见，面积却正好是一整格。",
+  },
+  extension: {
+    en: "Work out 13 × 5 ÷ 2 and compare it with the total area of the four pieces. What does the difference tell you about each of the two shapes?",
+    zh: "算一算 13 × 5 ÷ 2，再和四块拼板的面积之和比较。差了多少？这说明两个图形各是怎么回事？",
+  },
+  discussionPrompt: {
+    en: "How would you convince a friend that the long side isn't straight: by measuring, by working out slopes, or by zooming in? Which way is most convincing, and why?",
+    zh: "你会怎么说服朋友长边不是直的：用尺子量、算斜度，还是放大看？哪种最让人信服？为什么？",
+  },
+  solutionTags: ["draw", "guess_check", "algebra"],
+  funFact: {
+    en: "The sides 2, 3, 5, 8 and 13 are all Fibonacci numbers. Fractions made from them, like 2/5 and 3/8, are always very close, which is why the bend is so hard to spot.",
+    zh: "边长 2、3、5、8、13 都是斐波那契数。用它们组成的分数（比如 2/5 和 3/8）总是非常接近，所以那个拐弯才这么难看出来。",
+  },
+  sortOrder: 5,
+  rubricNotes:
+    "18/20 — hook 2, guess 2, hands-on 1, aha 2, floor 1, ceiling 2, paths 2, wrong 2, hints 2, retell 2: illustration only (待替换为 dissection_slide); counting areas and comparing slopes are two real paths; slopes as fractions make it 12+; a picture kids love to show",
+};
+
+/**
+ * B9. MULTI_VALUE answer by number of sides ("3, 4, 6"): the multi-value input is a number-pad chip
+ * input that compares text, so shape names would fail in Chinese. The validator checks the values
+ * against tiling_lab's own `tilesAlone`. The scene's hook already shows three hexagons closing up.
+ */
+export const whyHexagons: HeroQuestionBlueprint = {
+  slug: "why-hexagons",
+  collection: "shapes-that-lie",
+  kind: "WODB",
+  ageGroup: "AGE_10_12",
+  difficulty: "EASY",
+  category: "GEOMETRY",
+  title: { en: "Why Bees Pick Hexagons", zh: "蜜蜂为什么选六边形" },
+  hook: {
+    en: "Bees build their honeycomb from six-sided cells that fit together with no gaps. Could they have used triangles, squares or five-sided pentagons instead? Which of these shapes can cover a floor all by itself, with no gaps and no overlaps?",
+    zh: "蜜蜂用六边形的小格子造蜂巢，一格挨一格，没有一点缝。换成三角形、正方形或者五边形行不行？这几种形状里，哪些能单独铺满地面，不留缝也不重叠？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "one", en: "Only one of the four", zh: "四种里只有一种" },
+      { id: "two", en: "Two of them", zh: "两种" },
+      { id: "three", en: "Three of them", zh: "三种" },
+      { id: "all-four", en: "All four", zh: "四种都行" },
+    ],
+  },
+  scene: { type: "tiling_lab", shapes: ["triangle", "square", "pentagon", "hexagon"], gridSize: 2, tilers: ["triangle", "square", "hexagon"] },
+  prompt: {
+    en: "Regular triangles, squares, pentagons and hexagons: which of them can tile a floor using copies of just that one shape? Type the number of sides of each shape that works (a triangle is 3).",
+    zh: "正三角形、正方形、正五边形、正六边形：哪些只用这一种形状，就能把地面铺满？把能铺满的形状的边数都填上（三角形填 3）。",
+  },
+  answer: { type: "MULTI_VALUE", values: ["3", "4", "6"] },
+  hints: [
+    { en: "Forget the whole floor and look at one corner point. Tap the same shape button again and again to fit copies around the dot: do they close up with no gap?", zh: "先别管整个地面，只看一个点。反复点同一个形状的按钮，把它们围着中间的点拼一圈：能正好合上、不留缝吗？" },
+    { en: "Each button shows the shape's corner angle, like 108° for the pentagon, and all the way round a point is 360°. Put down three pentagons: what does the scene say is left?", zh: "每个按钮上写着这种形状的内角，比如五边形是 108°，绕一个点转一整圈是 360°。放三个五边形：场景说还剩多少？" },
+    { en: "A shape works on its own only if copies of its corner add up to exactly 360°. Try 360 ÷ 60, 360 ÷ 90, 360 ÷ 108 and 360 ÷ 120: which come out as whole numbers?", zh: "只有这种形状的内角加几次正好是 360°，它才能单独铺满。算算 360 ÷ 60、360 ÷ 90、360 ÷ 108、360 ÷ 120：哪些能整除？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "regex:[A-Za-z一-鿿]",
+      feedback: {
+        en: "Type the number of sides instead of the name: a triangle is 3, a square 4, a pentagon 5 and a hexagon 6.",
+        zh: "请填边数，不要填名字：三角形是 3，正方形是 4，五边形是 5，六边形是 6。",
+      },
+    },
+    {
+      match: "regex:(^|\\D)(\\d{2,}|[0-27-9])(\\D|$)",
+      feedback: {
+        en: "Only the four shapes count here: a triangle has 3 sides, a square 4, a pentagon 5 and a hexagon 6. Which of those numbers work?",
+        zh: "这里只看这四种形状：三角形 3 条边，正方形 4 条，五边形 5 条，六边形 6 条。这几个数里哪些行？",
+      },
+    },
+    {
+      match: "regex:(^|\\D)5(\\D|$)",
+      feedback: {
+        en: "Pentagons look as if they should fit, but three of them make 3 × 108° = 324° and leave a 36° gap that nothing fills, while four make 432° and overlap. So 5 can't be on the list.",
+        zh: "五边形看起来应该行，可是三个是 3 × 108° = 324°，留下 36° 的缝，什么都塞不进；四个是 432°，又重叠了。所以 5 不能算。",
+      },
+    },
+    {
+      match: "4, 6",
+      feedback: {
+        en: "Squares and hexagons, yes! You left out the triangle: six triangles meet at a point, because 6 × 60° = 360°. Try it in the scene.",
+        zh: "正方形和六边形没错！你漏了三角形：六个三角形能围住一个点，因为 6 × 60° = 360°。在场景里试试。",
+      },
+    },
+    {
+      match: "3, 4",
+      feedback: {
+        en: "Triangles and squares, yes! But you've forgotten the bees' own shape: three hexagons make 3 × 120° = 360°.",
+        zh: "三角形和正方形没错！可你忘了蜜蜂自己的形状：三个六边形是 3 × 120° = 360°。",
+      },
+    },
+    {
+      match: "3, 6",
+      feedback: {
+        en: "Triangles and hexagons, yes! You skipped the most ordinary one of all: four squares meet at a point, 4 × 90° = 360°, like the tiles on a bathroom floor.",
+        zh: "三角形和六边形没错！你漏了最常见的一种：四个正方形围着一个点，4 × 90° = 360°，就像卫生间地上的瓷砖。",
+      },
+    },
+    {
+      match: "regex:^\\s*[346]\\s*$",
+      feedback: {
+        en: "That one works, but it isn't alone. Tap every shape button in the scene and see which others close up around the point.",
+        zh: "这一种确实行，但不止它一种。把场景里每个形状的按钮都试一遍，看看还有哪些能围着点合上。",
+      },
+    },
+  ],
+  explanation: {
+    en: "Copies of one shape meeting at a corner must add up to exactly 360°. Triangles (60°) fit six times, squares (90°) four times and hexagons (120°) three times, so 3, 4 and 6 work. A pentagon's corner is 108°: three make 324° and leave a gap, four make 432° and overlap, so it can't tile on its own.",
+    zh: "同一种形状围在一个点上，角加起来必须正好是 360°。三角形（60°）能放 6 个，正方形（90°）能放 4 个，六边形（120°）能放 3 个，所以 3、4、6 都行。五边形的内角是 108°：三个是 324°，留下缝；四个是 432°，又重叠了，所以它不能单独铺满。",
+  },
+  aha: {
+    en: "A shape tiles on its own only when its corner angle divides 360° exactly: 60°, 90° and 120° do, 108° doesn't. Of the three, hexagons wall in the most honey for the least wax.",
+    zh: "一种形状能单独铺满，只有当它的内角能整除 360° 的时候：60°、90°、120° 可以，108° 不行。三种里，六边形用最少的蜡围出最多的蜜。",
+  },
+  extension: {
+    en: "Now mix two shapes: can regular octagons (135° corners) and squares tile a floor together? Find another mix of shapes that closes up around a point.",
+    zh: "两种形状混着用呢？正八边形（内角 135°）和正方形能一起铺满地面吗？再找一种围着一个点正好合上的组合。",
+  },
+  discussionPrompt: {
+    en: "Where have you seen floors, walls or patterns in nature made of triangles, squares or hexagons? Which shape shows up most, and why do you think that is?",
+    zh: "你在哪儿见过用三角形、正方形或六边形铺满的地面、墙面，或者大自然里的图案？哪种最常见？你觉得为什么？",
+  },
+  solutionTags: ["guess_check", "draw", "table"],
+  funFact: {
+    en: "In 1999 the mathematician Thomas Hales proved what bees seem to know: to split a flat surface into equal cells with the least total wall, use hexagons.",
+    zh: "1999 年，数学家黑尔斯证明了蜜蜂好像早就知道的事：要把平面分成一样大的小格，又让墙加起来最短，就该用六边形。",
+  },
+  sortOrder: 9,
+  rubricNotes:
+    "18/20 — hook 2, guess 1, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 2, retell 1: the scene is the puzzle (fit copies round a point); trying shapes and dividing 360 by the angle are two real paths; the guess range is narrow and the scene's own hook already shows hexagons closing up",
+};
+
+/**
+ * B10. domino_tiling with the two dark corners (0,0) and (7,7) removed: 30 dark, 32 light squares,
+ * so no tiling (the validator re-checks with `dominoTiling`). Copy convention as seven-bridges.
+ * Extension answer: removing one dark and one light square always leaves a tileable 8 × 8 board (Gomory).
+ */
+export const mutilatedChessboard: HeroQuestionBlueprint = {
+  slug: "mutilated-chessboard",
+  collection: "shapes-that-lie",
+  kind: "PUZZLE",
+  ageGroup: "AGE_10_12",
+  difficulty: "MEDIUM",
+  category: "LOGIC",
+  title: { en: "Two Corners Missing", zh: "缺了两角的棋盘" },
+  hook: {
+    en: "Cut two opposite corner squares off a chessboard. A domino covers exactly two squares side by side, and you have just enough dominoes for the squares that are left. Can you cover the whole board with no gaps and no overlaps?",
+    zh: "把国际象棋棋盘上相对的两个角各剪掉一格。一块骨牌正好盖住相邻的两格，你手里的骨牌刚好够盖剩下的格子。能不能把整个棋盘盖满，不留空也不重叠？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "possible", en: "Yes, with the right arrangement", zh: "能，只要摆对了" },
+      { id: "lucky", en: "It depends on where you put the first domino", zh: "要看第一块骨牌放在哪儿" },
+      { id: "impossible", en: "No, never, however you place them", zh: "不能，怎么摆都不行" },
+    ],
+  },
+  scene: { type: "domino_tiling", size: 8, removed: [[0, 0], [7, 7]], tileable: false },
+  prompt: {
+    en: "The board has 62 squares left and you have 31 dominoes. Is there any way to lay them so that every square is covered exactly once?",
+    zh: "棋盘剩下 62 格，你有 31 块骨牌。有没有办法把它们摆好，让每一格都正好被盖住一次？",
+  },
+  answer: { type: "CHOICE", correctId: "impossible" },
+  hints: [
+    { en: "Tap two neighbouring squares to lay a domino, and keep going until you're stuck. When the scene says \"Stuck\", what colour are all the squares that are left?", zh: "点两个相邻的格子放一块骨牌，一直放到卡住为止。场景说「卡住了」的时候，剩下的格子都是什么颜色？" },
+    { en: "Every domino covers two squares side by side. Look at the board's colours: can one domino ever cover two dark squares?", zh: "每块骨牌盖住相邻的两格。看看棋盘的颜色：一块骨牌能同时盖住两格深色吗？" },
+    { en: "So each domino covers one dark and one light square. Check the two bars next to the board: how many dark squares are there, and how many light ones?", zh: "所以每块骨牌都正好盖一深一浅。看看棋盘旁边的两根柱子：深色有几格？浅色有几格？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "choice:possible",
+      feedback: {
+        en: "It feels as if a clever enough arrangement must exist, and you can get very close! But the two cut-off corners are both dark, so 30 dark squares are left against 32 light ones. Each domino covers one of each, so two light squares are always left over.",
+        zh: "总觉得只要摆得够聪明就一定行，而且确实能差一点就成功！可是剪掉的两个角都是深色，剩下深色 30 格、浅色 32 格。每块骨牌盖一深一浅，所以总会多出两格浅色。",
+      },
+    },
+    {
+      match: "choice:lucky",
+      feedback: {
+        en: "In lots of puzzles the first move matters. Not here: wherever you start, every domino covers one dark and one light square, and there are two more light squares than dark ones.",
+        zh: "很多谜题里第一步很重要。这里不是：不管从哪儿开始，每块骨牌都盖一深一浅，而浅色比深色多 2 格。",
+      },
+    },
+  ],
+  explanation: {
+    en: "Two squares side by side are always different colours, so every domino covers one dark and one light square. Opposite corners are the same colour (both dark here), so the board has 32 − 2 = 30 dark squares and 32 light ones left. Laying 31 dominoes would need 31 of each colour, so however you place them, 32 − 30 = 2 light squares stay uncovered.",
+    zh: "相邻的两格颜色一定不同，所以每块骨牌都盖住一格深色、一格浅色。相对的两个角颜色相同（这里都是深色），所以剩下深色 32 − 2 = 30 格、浅色 32 格。31 块骨牌要各盖 31 格深色和浅色，所以不管怎么摆，总有 32 − 30 = 2 格浅色盖不住。",
+  },
+  aha: {
+    en: "You don't have to try every arrangement: one colour count proves that none of them can work. Colouring a puzzle can turn \"I can't find it\" into \"it can't exist\".",
+    zh: "不用把所有摆法都试一遍：数一下颜色，就证明了哪种都不行。给谜题涂上颜色，能把「我找不到」变成「它根本不存在」。",
+  },
+  extension: {
+    en: "Put the corners back, then cut out one dark square and one light square instead, anywhere you like. Can the rest always be covered now?",
+    zh: "把两个角放回去，改成剪掉一格深色、一格浅色，位置随你挑。剩下的格子一定能盖满吗？",
+  },
+  discussionPrompt: {
+    en: "Could you convince a friend without mentioning the colours at all? Is there another argument, or are the colours the whole secret?",
+    zh: "不提颜色，你能说服朋友吗？有没有别的理由，还是颜色就是全部的秘密？",
+  },
+  solutionTags: ["guess_check", "draw", "pattern"],
+  funFact: {
+    en: "In the 1960s this puzzle became a famous challenge for computer programs that try to prove things, because checking arrangements one by one is hopeless while the colour trick takes a single line.",
+    zh: "20 世纪 60 年代，它成了「会证明题的电脑程序」的著名考题：一种摆法一种摆法地试根本试不完，而涂颜色的办法一句话就说完了。",
+  },
+  sortOrder: 10,
+  rubricNotes:
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the scene is the puzzle and its dark/light bars carry the proof; colouring is the one real path (trying only shows you get stuck); the one-dark-one-light extension is a real theorem",
+};
+
+/**
+ * B11. Illustration until the T3 `mobius_cut` scene lands (待替换为 mobius_cut); the real experiment
+ * (paper, tape, scissors) is hint 3. Extension answer: cutting a third of the way in gives a Möbius
+ * strip (same length) linked with a loop twice as long with two full twists.
+ */
+export const mobiusCut: HeroQuestionBlueprint = {
+  slug: "mobius-cut",
+  collection: "shapes-that-lie",
+  kind: "PUZZLE",
+  ageGroup: "AGE_10_12",
+  difficulty: "MEDIUM",
+  category: "GEOMETRY",
+  title: { en: "The Loop That Won't Split", zh: "剪不断的纸环" },
+  hook: {
+    en: "Take a strip of paper, give one end a half twist, and tape the ends together into a loop. Now cut all the way along the middle line, round and round until you're back where you started. What will be in your hands when you finish?",
+    zh: "拿一条纸带，把一头扭转半圈，再把两头粘成一个环。然后沿着中线一直剪，绕一圈剪回起点。剪完以后，你手里会是什么？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "two-loops", en: "Two separate loops", zh: "两个分开的环" },
+      { id: "one-longer-loop", en: "One loop, twice as long", zh: "一个更长的大环" },
+      { id: "knotted-loop", en: "A loop tied in a knot", zh: "一个打了结的环" },
+    ],
+  },
+  scene: {
+    type: "illustration",
+    asset: "mobius-cut",
+    caption: { en: "A strip with one half twist, taped into a loop, and scissors ready to cut along the middle line.", zh: "一条扭了半圈、粘成环的纸带，剪刀准备沿着中线剪。" },
+    revealAsset: "mobius-cut-reveal",
+    revealCaption: {
+      en: "One loop, twice as long, with two full twists. The cut never splits the strip, because the strip has only one side.",
+      zh: "只有一个环，长了一倍，扭了两整圈。剪刀没能把纸带分成两半，因为这条纸带只有一个面。",
+    },
+  },
+  prompt: {
+    en: "You cut a half-twisted paper loop all the way along its middle line. What do you end up with?",
+    zh: "沿着中线，把扭了半圈的纸环剪一整圈。最后你会得到什么？",
+  },
+  answer: { type: "CHOICE", correctId: "one-longer-loop" },
+  hints: [
+    { en: "Start with a plain loop that has no twist: cutting along its middle gives two thin loops. So the real question is what the half twist changes.", zh: "先想一个没扭过的普通纸环：沿中线剪开，会得到两个细环。所以真正的问题是：扭的那半圈改变了什么？" },
+    { en: "Follow the strip in the picture with your finger without lifting it. You end up on the inside AND the outside before you get back: the strip has only one side. Can scissors split a one-sided strip into a top half and a bottom half?", zh: "用手指顺着图里的纸带走一圈，手指不离开纸面。回到起点之前，你里面外面都走过了：这条纸带只有一个面。剪刀能把只有一个面的纸带分成上半边和下半边吗？" },
+    { en: "Try it at home with a long paper strip, tape and scissors (ask a grown-up to help). Twist one end half a turn, tape the ends, draw a line down the middle, cut along it, and see what you're holding.", zh: "在家试试：一条长纸带、一段胶带、一把剪刀（请大人帮忙）。把一头扭半圈，粘好，在中间画一条线，沿着线剪，看看手里是什么。" },
+  ],
+  wrongAnswers: [
+    {
+      match: "choice:two-loops",
+      feedback: {
+        en: "That's exactly what happens with a loop that has no twist, so it's a very sensible guess. But the half twist joins the two halves of the strip to each other, so after the cut they're still one piece: a single loop twice as long.",
+        zh: "没扭过的纸环剪开确实是两个环，所以这个猜测很合理。可是扭的那半圈把纸带的两半连在了一起，剪完还是一整条：一个长了一倍的环。",
+      },
+    },
+    {
+      match: "choice:knotted-loop",
+      feedback: {
+        en: "It does come out twisted, so you're half right! But there's only one loop and no knot: it has two full twists and is twice as long. Cut that one down the middle too and see what happens next.",
+        zh: "剪出来确实扭着，你说对了一半！可是只有一个环，也没有打结：它扭了两整圈，长了一倍。再沿中线剪它一次，看看又会怎样。",
+      },
+    },
+  ],
+  explanation: {
+    en: "A strip with a half twist has only one side and one edge: a finger sliding along it visits both faces of the paper before it gets back. When you cut along the middle, the part on the left of the cut is joined through the twist to the part on the right, so the two halves never come apart. You get one loop, twice as long, with two full twists, and this new loop has two sides.",
+    zh: "扭了半圈的纸带只有一个面、一条边：手指顺着它滑，回到起点之前会把纸的两面都走一遍。沿中线剪的时候，剪口左边的那一半通过扭转处和右边的那一半连在一起，所以两半永远分不开。最后得到一个长了一倍、扭了两整圈的环，而这个新环有两个面。",
+  },
+  aha: {
+    en: "The twisted strip has only one side, so there's no top half and bottom half for the scissors to separate. One cut along the middle makes one longer loop, not two.",
+    zh: "扭过的纸带只有一个面，剪刀根本找不到可以分开的「上半边」和「下半边」。沿中线剪一圈，得到的是一个更长的环，而不是两个。",
+  },
+  extension: {
+    en: "Make another one, but this time cut a third of the way in from the edge instead of along the middle. What do you get?",
+    zh: "再做一个，这次不沿中线剪，而是在离边三分之一的地方剪。这次会得到什么？",
+  },
+  discussionPrompt: {
+    en: "Describe what you held after cutting, in words a friend could follow without seeing it. Did anyone in your family guess right before you cut?",
+    zh: "用文字描述你剪完后手里拿着的东西，让没看见的朋友也能明白。剪之前，你家里有人猜对吗？",
+  },
+  solutionTags: ["simulate", "draw", "guess_check"],
+  funFact: {
+    en: "This shape is called a Möbius strip, after the German mathematician who described it in 1858. Some factory belts have been made with a half twist so that both faces wear out evenly.",
+    zh: "这种纸带叫莫比乌斯带，名字来自 1858 年研究它的德国数学家莫比乌斯。有些工厂的传送带故意扭了半圈，这样两面会磨损得一样多。",
+  },
+  sortOrder: 11,
+  rubricNotes:
+    "18/20 — hook 2, guess 2, hands-on 1, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 2: illustration only (待替换为 mobius_cut), though the paper experiment in hint 3 is the best hands-on there is; one path (do it, or reason about the single side); the third-of-the-way cut is a great ceiling; every family tries it",
+};
+
 export const SHAPES_THAT_LIE: readonly HeroQuestionBlueprint[] = [
   squaresOnChessboard,
   pizzaCuts,
@@ -693,4 +1065,8 @@ export const SHAPES_THAT_LIE: readonly HeroQuestionBlueprint[] = [
   pythagorasSquares,
   sevenBridges,
   clockHandsMeet,
+  missingSquare,
+  whyHexagons,
+  mutilatedChessboard,
+  mobiusCut,
 ];

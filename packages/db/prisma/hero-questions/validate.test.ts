@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { collatzSteps, parseSceneConfig, stepsToShrinkBelow } from "@gmq/animation-engine";
-import { AnswerSpecSchema, validateAnswerV2, wrongAnswerFeedbackFor } from "@gmq/math-engine";
+import { existsSync, statSync } from "node:fs";
+import { resolve } from "node:path";
+import {
+  binarySearchSteps,
+  collatzSteps,
+  frogMinMoves,
+  lcm,
+  parseSceneConfig,
+  queensSolutions,
+  staircaseWays,
+  stepsToShrinkBelow,
+} from "@gmq/animation-engine";
+import { AnswerSpecSchema, evaluateExpression, sameMultiset, validateAnswerV2, wrongAnswerFeedbackFor } from "@gmq/math-engine";
 import { DEFAULT_HINTS } from "../us-k12-question-bank";
 import {
   ALL_HERO_BLUEPRINTS,
@@ -78,6 +89,34 @@ const BATCH_3_SLUGS = [
   "perfect-28",
 ] as const;
 
+/** Phase 3 batch 4: the rest of the catalog (13 Tier-2 scenes + 11 illustrations). */
+const BATCH_4_SLUGS = [
+  "point-nine-repeating",
+  "hilbert-hotel",
+  "missing-square",
+  "why-hexagons",
+  "mutilated-chessboard",
+  "mobius-cut",
+  "spot-the-real-random",
+  "prime-spiral",
+  "missing-dollar",
+  "staircase-ways",
+  "pascal-row-sum",
+  "tetris-shapes",
+  "star-strokes",
+  "calendar-square",
+  "cicada-primes",
+  "frog-swap",
+  "bridge-and-torch",
+  "four-fours",
+  "water-jugs",
+  "four-queens",
+  "nine-dots-four-lines",
+  "blindfold-coins",
+  "fly-between-trains",
+  "guess-my-number",
+] as const;
+
 const bySlug = (slug: string): HeroQuestionBlueprint => {
   const bp = ALL_HERO_BLUEPRINTS.find((b) => b.slug === slug);
   if (!bp) throw new Error(`no blueprint ${slug}`);
@@ -109,7 +148,8 @@ describe("hero blueprints (batch 1)", () => {
       const spec = AnswerSpecSchema.parse(bp.answer);
       // JSON round-trip, as the seed stores it in Question.answerRule.
       const stored = AnswerSpecSchema.parse(JSON.parse(JSON.stringify(spec)));
-      const correct = canonicalCorrectInput(stored);
+      // EXPRESSION answers take their canonical input from the scene's first listed solution.
+      const correct = canonicalCorrectInput(stored, bp.scene);
       expect(correct).not.toBeNull();
       expect(validateAnswerV2(correct!, stored).isCorrect).toBe(true);
       expect(wrongAnswerFeedbackFor(correct!, stored, bp.wrongAnswers)).toBeNull();
@@ -444,7 +484,7 @@ describe("hero blueprints (batch 2)", () => {
   });
 
   it("uses illustration scenes only where no interactive scene exists yet", () => {
-    const illustrated = ALL_HERO_BLUEPRINTS.filter((bp) => bp.scene.type === "illustration").map((bp) => bp.slug);
+    const illustrated = BATCH_2_SLUGS.filter((slug) => bySlug(slug).scene.type === "illustration");
     expect(illustrated).toEqual(["three-switches", "knights-and-knaves"]);
     for (const slug of illustrated) expect(bySlug(slug).rubricNotes).toMatch(/待替换为 \w+/);
   });
@@ -493,11 +533,10 @@ describe("hero blueprints (batch 3)", () => {
   const ok = (slug: string, input: string) => validateAnswerV2(input, spec(slug)).isCorrect;
   const fb = (slug: string, input: string) => wrongAnswerFeedbackFor(input, spec(slug), bySlug(slug).wrongAnswers)?.feedback.en ?? null;
 
-  it("adds the fifteen batch-3 questions: 39 in all", () => {
+  it("adds the fifteen batch-3 questions: 39 after batch 3", () => {
     const slugs = ALL_HERO_BLUEPRINTS.map((bp) => bp.slug);
     expect(slugs).toEqual(expect.arrayContaining([...BATCH_3_SLUGS]));
-    expect(slugs).toHaveLength(BATCH_1_SLUGS.length + BATCH_2_SLUGS.length + BATCH_3_SLUGS.length);
-    expect(slugs).toHaveLength(39);
+    expect(BATCH_1_SLUGS.length + BATCH_2_SLUGS.length + BATCH_3_SLUGS.length).toBe(39);
   });
 
   it("puts each question in its catalog world and slot (sortOrder = catalog number)", () => {
@@ -529,18 +568,17 @@ describe("hero blueprints (batch 3)", () => {
     for (const s of BATCH_3_SLUGS) expect(bySlug(s).scene.type, s).not.toBe("illustration");
   });
 
-  it("AGE_8_10 counts per world (huge-numbers and number-magic grew this batch)", () => {
+  it("AGE_8_10 counts per world (batch 4: E7 and F12 added one each)", () => {
     const young = Object.fromEntries(
       HERO_WORLDS.map((w) => [w.slug, w.blueprints.filter((bp) => bp.ageGroup === "AGE_8_10").length])
     );
-    // impossible-puzzles reaches 2 when F12 lands.
     expect(young).toEqual({
       "huge-numbers": 2,
       "shapes-that-lie": 2,
       "chance-and-luck": 3,
       "number-magic": 3,
-      "patterns-everywhere": 2,
-      "impossible-puzzles": 1,
+      "patterns-everywhere": 3,
+      "impossible-puzzles": 2,
     });
   });
 
@@ -706,10 +744,10 @@ describe("scene/answer cross-checks for the Tier-2 scenes", () => {
 describe("editorial pass 1 (docs/plans/good-questions-overhaul/editorial-pass-1.md)", () => {
   const COMPUTE_WORDS = /^(compute|calculate|solve|simplify|find|what is|evaluate|write|round|fill in)\b/i;
 
-  it("no hook or prompt opens with a COMPUTE_PREFIX word (scramble-and-nine's 'Write down' is a reviewed waiver)", () => {
+  it("no hook or prompt opens with a COMPUTE_PREFIX word (batch 4 retired the scramble-and-nine waiver)", () => {
     for (const bp of ALL_HERO_BLUEPRINTS) {
       expect(COMPUTE_WORDS.test(bp.prompt.en.trim()), `${bp.slug} prompt`).toBe(false);
-      if (bp.slug !== "scramble-and-nine") expect(COMPUTE_WORDS.test(bp.hook.en.trim()), `${bp.slug} hook`).toBe(false);
+      expect(COMPUTE_WORDS.test(bp.hook.en.trim()), `${bp.slug} hook`).toBe(false);
     }
   });
 
@@ -732,7 +770,7 @@ describe("editorial pass 1 (docs/plans/good-questions-overhaul/editorial-pass-1.
   });
 
   it("illustration scenes say something new in Act 3", () => {
-    for (const slug of ["three-switches", "knights-and-knaves"]) {
+    for (const slug of ALL_HERO_BLUEPRINTS.filter((bp) => bp.scene.type === "illustration").map((bp) => bp.slug)) {
       expect(bySlug(slug).scene, slug).toHaveProperty("revealCaption");
     }
   });
@@ -748,5 +786,291 @@ describe("editorial pass 1 (docs/plans/good-questions-overhaul/editorial-pass-1.
 
   it("every hero question scores at least 17/20 after the pass", () => {
     for (const bp of ALL_HERO_BLUEPRINTS) expect(Number(bp.rubricNotes.slice(0, 2)), bp.slug).toBeGreaterThanOrEqual(17);
+  });
+});
+
+describe("hero blueprints (batch 4: the rest of the catalog)", () => {
+  const spec = (slug: string) => AnswerSpecSchema.parse(bySlug(slug).answer);
+  const ok = (slug: string, input: string) => validateAnswerV2(input, spec(slug)).isCorrect;
+  const fb = (slug: string, input: string) => wrongAnswerFeedbackFor(input, spec(slug), bySlug(slug).wrongAnswers)?.feedback.en ?? null;
+  const SCENES_DIR = resolve(__dirname, "../../../../apps/web/public/scenes");
+
+  it("adds the twenty-four batch-4 questions: 63 in all, every slug unique", () => {
+    const slugs = ALL_HERO_BLUEPRINTS.map((bp) => bp.slug);
+    expect(slugs).toEqual(expect.arrayContaining([...BATCH_4_SLUGS]));
+    expect(new Set(slugs).size).toBe(slugs.length);
+    expect(slugs).toHaveLength(BATCH_1_SLUGS.length + BATCH_2_SLUGS.length + BATCH_3_SLUGS.length + BATCH_4_SLUGS.length);
+    expect(slugs).toHaveLength(63);
+  });
+
+  it("puts each question in its catalog world and slot (sortOrder = catalog number)", () => {
+    const slot = (slug: string) => `${bySlug(slug).collection}/${bySlug(slug).sortOrder}`;
+    expect(BATCH_4_SLUGS.map(slot)).toEqual([
+      "huge-numbers/6",
+      "huge-numbers/7",
+      "shapes-that-lie/5",
+      "shapes-that-lie/9",
+      "shapes-that-lie/10",
+      "shapes-that-lie/11",
+      "chance-and-luck/10",
+      "number-magic/7",
+      "number-magic/10",
+      "patterns-everywhere/2",
+      "patterns-everywhere/4",
+      "patterns-everywhere/5",
+      "patterns-everywhere/6",
+      "patterns-everywhere/7",
+      "patterns-everywhere/8",
+      "patterns-everywhere/9",
+      "impossible-puzzles/4",
+      "impossible-puzzles/5",
+      "impossible-puzzles/6",
+      "impossible-puzzles/7",
+      "impossible-puzzles/9",
+      "impossible-puzzles/10",
+      "impossible-puzzles/11",
+      "impossible-puzzles/12",
+    ]);
+    // Every world now holds its full catalog: slots 1..N with no gaps.
+    for (const world of HERO_WORLDS) {
+      const orders = world.blueprints.map((bp) => bp.sortOrder).sort((a, b) => a - b);
+      expect(orders, world.slug).toEqual(orders.map((_, i) => i + 1));
+    }
+  });
+
+  it("uses the catalog ages and keeps the age spread (>= 2 AGE_8_10 per world, >= 15 per band)", () => {
+    const ages = Object.fromEntries(BATCH_4_SLUGS.map((s) => [s, bySlug(s).ageGroup]));
+    for (const s of ["calendar-square", "guess-my-number"]) expect(ages[s], s).toBe("AGE_8_10");
+    for (const s of ["point-nine-repeating", "hilbert-hotel", "missing-square", "prime-spiral", "bridge-and-torch", "blindfold-coins", "fly-between-trains"]) {
+      expect(ages[s], s).toBe("AGE_12_14");
+    }
+    const tens = BATCH_4_SLUGS.filter((s) => ages[s] === "AGE_10_12");
+    expect(tens).toHaveLength(15);
+    for (const world of HERO_WORLDS) {
+      expect(world.blueprints.filter((bp) => bp.ageGroup === "AGE_8_10").length, world.slug).toBeGreaterThanOrEqual(2);
+    }
+    for (const band of ["AGE_8_10", "AGE_10_12", "AGE_12_14"] as const) {
+      expect(ALL_HERO_BLUEPRINTS.filter((bp) => bp.ageGroup === band).length, band).toBeGreaterThanOrEqual(15);
+    }
+  });
+
+  it("keeps illustration questions within the budget (<= 15), each with a real SVG, a reveal and a planned scene", () => {
+    const illustrated = ALL_HERO_BLUEPRINTS.filter((bp) => bp.scene.type === "illustration");
+    expect(illustrated.length).toBeLessThanOrEqual(15);
+    expect(illustrated.map((bp) => bp.slug).sort()).toEqual(
+      [
+        "three-switches",
+        "knights-and-knaves",
+        "point-nine-repeating",
+        "hilbert-hotel",
+        "missing-square",
+        "mobius-cut",
+        "spot-the-real-random",
+        "prime-spiral",
+        "missing-dollar",
+        "tetris-shapes",
+        "star-strokes",
+        "bridge-and-torch",
+        "nine-dots-four-lines",
+      ].sort()
+    );
+    for (const bp of illustrated) {
+      const scene = bp.scene as { asset: string; revealAsset?: string };
+      expect(bp.rubricNotes, bp.slug).toMatch(/待替换为 \w+/);
+      for (const asset of [scene.asset, scene.revealAsset].filter((a): a is string => a !== undefined)) {
+        const file = resolve(SCENES_DIR, `${asset}.svg`);
+        expect(existsSync(file), file).toBe(true);
+        expect(statSync(file).size, file).toBeLessThan(20_000);
+      }
+      if (BATCH_4_SLUGS.includes(bp.slug as (typeof BATCH_4_SLUGS)[number])) {
+        expect(scene.revealAsset, bp.slug).toBe(`${scene.asset}-reveal`);
+      }
+    }
+  });
+
+  it("only E8 upgrades a legacy row in this batch (Bee Hexagon Efficiency stays a drill: different maths)", () => {
+    const upgrades = BATCH_4_SLUGS.map(bySlug).filter((bp) => bp.upgradesLegacyTitleEn !== undefined);
+    expect(upgrades.map((bp) => [bp.slug, bp.upgradesLegacyTitleEn])).toEqual([["cicada-primes", "Cicada Underground Mystery"]]);
+  });
+
+  it("guess-is-the-question CHOICE items reuse the guess options", () => {
+    for (const [slug, correct] of [
+      ["point-nine-repeating", "exactly-one"],
+      ["hilbert-hotel", "move-up-one"],
+      ["missing-square", "bent-hypotenuse"],
+      ["mutilated-chessboard", "impossible"],
+      ["mobius-cut", "one-longer-loop"],
+      ["spot-the-real-random", "C"],
+      ["prime-spiral", "diagonal-streaks"],
+      ["missing-dollar", "nothing-missing"],
+      ["nine-dots-four-lines", "outside-the-box"],
+      ["blindfold-coins", "take-ten-flip"],
+    ] as const) {
+      const bp = bySlug(slug);
+      expect(bp.choices, slug).toBeUndefined();
+      expect(bp.guess?.type, slug).toBe("choice");
+      expect(bp.answer, slug).toEqual({ type: "CHOICE", correctId: correct });
+    }
+  });
+
+  it("answers agree with what the Tier-2 scenes compute", () => {
+    expect(staircaseWays(10, 2)).toBe(89);
+    expect(lcm(13, 6)).toBe(78);
+    expect(frogMinMoves(3)).toBe(15);
+    expect(queensSolutions(4)).toHaveLength(2);
+    expect(queensSolutions(8)).toHaveLength(92);
+    expect(binarySearchSteps(100)).toBe(7);
+    expect(spec("staircase-ways")).toMatchObject({ type: "NUMERIC", value: 89 });
+    expect(spec("pascal-row-sum")).toMatchObject({ type: "NUMERIC", value: 1024 });
+    expect(spec("calendar-square")).toMatchObject({ type: "NUMERIC", value: 9 * 17 });
+    expect(spec("cicada-primes")).toMatchObject({ type: "NUMERIC", value: 78 });
+    expect(spec("frog-swap")).toMatchObject({ type: "NUMERIC", value: 15 });
+    expect(spec("water-jugs")).toMatchObject({ type: "NUMERIC", value: 6 });
+    expect(spec("four-queens")).toMatchObject({ type: "NUMERIC", value: 2 });
+    expect(spec("fly-between-trains")).toMatchObject({ type: "NUMERIC", value: 75 });
+    expect(spec("guess-my-number")).toMatchObject({ type: "NUMERIC", value: 7 });
+    expect(bySlug("mutilated-chessboard").scene).toMatchObject({ type: "domino_tiling", size: 8, removed: [[0, 0], [7, 7]] });
+  });
+
+  it("B9 takes the numbers of sides (number pad, same in both languages) and explains typed names", () => {
+    expect(spec("why-hexagons")).toEqual({ type: "MULTI_VALUE", values: ["3", "4", "6"] });
+    for (const v of ["3, 4, 6", "6, 3, 4", "3 and 4 and 6", "3、4、6"]) expect(ok("why-hexagons", v), v).toBe(true);
+    expect(ok("why-hexagons", "3, 4, 5, 6")).toBe(false);
+    expect(fb("why-hexagons", "triangle, square, hexagon")).toMatch(/number of sides/);
+    expect(fb("why-hexagons", "三角形、正方形、六边形")).toMatch(/number of sides/);
+    expect(fb("why-hexagons", "3, 4, 5, 6")).toMatch(/324°/);
+    expect(fb("why-hexagons", "4, 6")).toMatch(/left out the triangle/);
+  });
+
+  it("F5's listed solutions make 7 with exactly four 4s, and the checker accepts other ways too", () => {
+    const scene = bySlug("four-fours").scene as { type: string; solutions: string[]; allowedOps: string[] };
+    const answer = spec("four-fours");
+    if (answer.type !== "EXPRESSION") throw new Error("four-fours must be an EXPRESSION answer");
+    expect(answer).toMatchObject({ target: 7, allowedNumbers: [4, 4, 4, 4] });
+    expect(scene.solutions.length).toBeGreaterThanOrEqual(2);
+    for (const s of scene.solutions) {
+      const r = evaluateExpression(s, { allowedOps: answer.allowedOps });
+      expect(r.ok && Math.abs(r.value - 7) < 1e-9, s).toBe(true);
+      expect(r.ok && sameMultiset(r.numbersUsed, [4, 4, 4, 4]), s).toBe(true);
+      expect(ok("four-fours", s), s).toBe(true);
+    }
+    expect(ok("four-fours", "4 + 4 − 4 ÷ 4")).toBe(true);
+    expect(fb("four-fours", "4+4-4/4+4-4")).toMatch(/more than four/);
+    expect(fb("four-fours", "8-1")).toMatch(/Only the digit 4/);
+    expect(fb("four-fours", "4+4+4-4")).toMatch(/bigger than 7/);
+  });
+
+  it("C10 bakes the same four flip records into both languages, and only C has a long run", () => {
+    const bp = bySlug("spot-the-real-random");
+    const rows = [...bp.prompt.en.matchAll(/([ABCD]): ((?:[HT] ?){20})/g)].map((m) => [m[1], m[2].replace(/ /g, "")] as const);
+    expect(rows.map(([id]) => id)).toEqual(["A", "B", "C", "D"]);
+    const zh = [...bp.prompt.zh.matchAll(/([ABCD])：([正反]{20})/g)].map((m) => m[2].replace(/正/g, "H").replace(/反/g, "T"));
+    expect(zh).toEqual(rows.map(([, seq]) => seq));
+    const longestRun = (seq: string) => Math.max(...(seq.match(/H+|T+/g) ?? []).map((r) => r.length));
+    expect(Object.fromEntries(rows.map(([id, seq]) => [id, longestRun(seq)]))).toEqual({ A: 2, B: 2, C: 5, D: 2 });
+  });
+
+  it("names the likely mistake for the classic wrong answers", () => {
+    expect(fb("point-nine-repeating", "a-tiny-bit-less")).toMatch(/gap/);
+    expect(fb("hilbert-hotel", "impossible")).toMatch(/last room/);
+    expect(fb("missing-square", "shrunk")).toMatch(/count the pieces/);
+    expect(fb("mutilated-chessboard", "possible")).toMatch(/very close/);
+    expect(fb("mobius-cut", "two-loops")).toMatch(/no twist/);
+    expect(fb("spot-the-real-random", "A")).toMatch(/15 times out of 19/);
+    expect(fb("missing-dollar", "bellboy")).toMatch(/already inside the 27/);
+    expect(fb("staircase-ways", "55")).toMatch(/9 stairs/);
+    expect(fb("staircase-ways", "1024")).toMatch(/two choices/);
+    expect(fb("pascal-row-sum", "512")).toMatch(/row 9/);
+    expect(fb("tetris-shapes", "5")).toMatch(/L and J/);
+    expect(fb("star-strokes", "1")).toMatch(/six dots/);
+    expect(fb("calendar-square", "136")).toMatch(/8 × 17/);
+    expect(fb("cicada-primes", "19")).toMatch(/13 \+ 6/);
+    expect(fb("frog-swap", "9")).toMatch(/jumps/);
+    expect(fb("bridge-and-torch", "19")).toMatch(/fastest friend/);
+    expect(fb("water-jugs", "8")).toMatch(/3-litre jug/);
+    expect(fb("four-queens", "1")).toMatch(/mirror/);
+    expect(fb("nine-dots-four-lines", "inside-the-box")).toMatch(/one dot always gets left out/);
+    expect(fb("blindfold-coins", "take-ten")).toMatch(/10 − k/);
+    expect(fb("fly-between-trains", "100")).toMatch(/gap between the trains/);
+    expect(fb("fly-between-trains", "150")).toMatch(/2 hours/);
+    expect(fb("guess-my-number", "6")).toMatch(/63 numbers/);
+  });
+});
+
+describe("scene/answer cross-checks for the batch-3b Tier-2 scenes", () => {
+  const neutralRules = (b: HeroQuestionBlueprint) => {
+    b.wrongAnswers = [
+      { match: "regex:^never$", feedback: { en: "Placeholder feedback one.", zh: "占位反馈一。" } },
+      { match: "regex:^nope$", feedback: { en: "Placeholder feedback two.", zh: "占位反馈二。" } },
+    ];
+  };
+
+  it("NUMERIC answers must match what staircase_paths, pascal_triangle, calendar_grid, cycle_timeline, frog_puzzle, water_jugs, queens_board, guess_game and trains_fly compute", () => {
+    for (const [slug, wrong, pattern] of [
+      ["staircase-ways", 55, /staircase_paths asserts 89, answer is 55/],
+      ["pascal-row-sum", 512, /pascal_triangle asserts 1024, answer is 512/],
+      ["calendar-square", 136, /calendar_grid asserts 153, answer is 136/],
+      ["cicada-primes", 72, /cycle_timeline asserts 78, answer is 72/],
+      ["frog-swap", 12, /frog_puzzle asserts 15, answer is 12/],
+      ["water-jugs", 8, /water_jugs asserts 6, answer is 8/],
+      ["four-queens", 4, /queens_board asserts 2, answer is 4/],
+      ["guess-my-number", 10, /guess_game asserts 7, answer is 10/],
+      ["fly-between-trains", 100, /trains_fly asserts 75, answer is 100/],
+    ] as const) {
+      expectProblem(
+        broken(bySlug(slug), (b) => {
+          neutralRules(b);
+          b.answer = { type: "NUMERIC", value: wrong };
+        }),
+        pattern
+      );
+    }
+  });
+
+  it("domino_tiling must agree with an exact search, tiling_lab with the angle rule", () => {
+    expectProblem(
+      broken(bySlug("mutilated-chessboard"), (b) => {
+        b.answer = { type: "CHOICE", correctId: "possible" };
+        b.wrongAnswers = b.wrongAnswers.filter((w) => w.match !== "choice:possible");
+        b.wrongAnswers.push({ match: "choice:impossible", feedback: { en: "Placeholder feedback.", zh: "占位反馈。" } });
+      }),
+      /domino_tiling can't be tiled, so the answer must be CHOICE "impossible"/
+    );
+    expectProblem(
+      broken(bySlug("why-hexagons"), (b) => {
+        neutralRules(b);
+        b.answer = { type: "MULTI_VALUE", values: ["4", "6"] };
+      }),
+      /tiling_lab's tilers have 3, 4, 6 sides, answer is 4, 6/
+    );
+  });
+
+  it("an EXPRESSION answer must match its expression_builder and every listed solution must be correct", () => {
+    const bp = bySlug("four-fours");
+    expectProblem(
+      broken(bp, (b) => {
+        (b.scene as { solutions: string[] }).solutions = ["44/4-4", "4+4+4/4"];
+      }),
+      /listed solution "4\+4\+4\/4" is not a correct EXPRESSION answer/
+    );
+    expectProblem(
+      broken(bp, (b) => {
+        neutralRules(b);
+        if (b.answer.type === "EXPRESSION") b.answer.target = 8;
+      }),
+      /expression_builder target 7, answer target 8/
+    );
+    expectProblem(
+      broken(bp, (b) => {
+        if (b.answer.type === "EXPRESSION") b.answer.allowedOps = ["+", "-", "*", "/"];
+      }),
+      /expression_builder ops .* differ from the answer's/
+    );
+    expectProblem(
+      broken(bp, (b) => {
+        delete (b.scene as { solutions?: string[] }).solutions;
+      }),
+      /needs at least one listed solution/
+    );
   });
 });

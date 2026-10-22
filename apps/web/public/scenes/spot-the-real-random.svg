@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="t">
+  <title id="t">Four rows of twenty coin flips, A to D. Gold coins are heads, silver coins are tails.</title>
+  <rect width="640" height="360" fill="#eff6ff"/>
+  <defs>
+    <g id="ch"><circle r="11.5" fill="#fbbf24" stroke="#b45309" stroke-width="2.5"/><polygon points="0,-6 1.7,-1.9 6.2,-1.5 2.8,1.4 3.8,5.8 0,3.4 -3.8,5.8 -2.8,1.4 -6.2,-1.5 -1.7,-1.9" fill="#b45309"/></g>
+    <g id="ct"><circle r="11.5" fill="#cbd5e1" stroke="#475569" stroke-width="2.5"/><circle r="3" fill="#475569"/></g>
+  </defs>
+  <g>
+    <rect x="24" y="36" width="598" height="60" rx="30" fill="#ffffff" opacity="0.85"/>
+    <circle cx="52" cy="66" r="19" fill="#c084fc"/>
+    <text x="52" y="74" text-anchor="middle" font-family="sans-serif" font-size="22" font-weight="700" fill="#ffffff">A</text>
+    <use href="#ch" x="94.0" y="66"/>
+    <use href="#ct" x="120.5" y="66"/>
+    <use href="#ch" x="147.0" y="66"/>
+    <use href="#ch" x="173.5" y="66"/>
+    <use href="#ct" x="200.0" y="66"/>
+    <use href="#ch" x="226.5" y="66"/>
+    <use href="#ct" x="253.0" y="66"/>
+    <use href="#ct" x="279.5" y="66"/>
+    <use href="#ch" x="306.0" y="66"/>
+    <use href="#ct" x="332.5" y="66"/>
+    <use href="#ch" x="359.0" y="66"/>
+    <use href="#ct" x="385.5" y="66"/>
+    <use href="#ch" x="412.0" y="66"/>
+    <use href="#ch" x="438.5" y="66"/>
+    <use href="#ct" x="465.0" y="66"/>
+    <use href="#ch" x="491.5" y="66"/>
+    <use href="#ct" x="518.0" y="66"/>
+    <use href="#ct" x="544.5" y="66"/>
+    <use href="#ch" x="571.0" y="66"/>
+    <use href="#ct" x="597.5" y="66"/>
+  </g>
+  <g>
+    <rect x="24" y="112" width="598" height="60" rx="30" fill="#ffffff" opacity="0.85"/>
+    <circle cx="52" cy="142" r="19" fill="#c084fc"/>
+    <text x="52" y="150" text-anchor="middle" font-family="sans-serif" font-size="22" font-weight="700" fill="#ffffff">B</text>
+    <use href="#ct" x="94.0" y="142"/>
+    <use href="#ch" x="120.5" y="142"/>
+    <use href="#ct" x="147.0" y="142"/>
+    <use href="#ch" x="173.5" y="142"/>
+    <use href="#ch" x="200.0" y="142"/>
+    <use href="#ct" x="226.5" y="142"/>
+    <use href="#ct" x="253.0" y="142"/>
+    <use href="#ch" x="279.5" y="142"/>
+    <use href="#ct" x="306.0" y="142"/>
+    <use href="#ch" x="332.5" y="142"/>
+    <use href="#ct" x="359.0" y="142"/>
+    <use href="#ch" x="385.5" y="142"/>
+    <use href="#ch" x="412.0" y="142"/>
+    <use href="#ct" x="438.5" y="142"/>
+    <use href="#ch" x="465.0" y="142"/>
+    <use href="#ct" x="491.5" y="142"/>
+    <use href="#ct" x="518.0" y="142"/>
+    <use href="#ch" x="544.5" y="142"/>
+    <use href="#ct" x="571.0" y="142"/>
+    <use href="#ch" x="597.5" y="142"/>
+  </g>
+  <g>
+    <rect x="24" y="188" width="598" height="60" rx="30" fill="#ffffff" opacity="0.85"/>
+    <circle cx="52" cy="218" r="19" fill="#c084fc"/>
+    <text x="52" y="226" text-anchor="middle" font-family="sans-serif" font-size="22" font-weight="700" fill="#ffffff">C</text>
+    <use href="#ch" x="94.0" y="218"/>
+    <use href="#ct" x="120.5" y="218"/>
+    <use href="#ct" x="147.0" y="218"/>
+    <use href="#ch" x="173.5" y="218"/>
+    <use href="#ch" x="200.0" y="218"/>
+    <use href="#ch" x="226.5" y="218"/>
+    <use href="#ch" x="253.0" y="218"/>
+    <use href="#ch" x="279.5" y="218"/>
+    <use href="#ct" x="306.0" y="218"/>
+    <use href="#ch" x="332.5" y="218"/>
+    <use href="#ct" x="359.0" y="218"/>
+    <use href="#ct" x="385.5" y="218"/>
+    <use href="#ch" x="412.0" y="218"/>
+    <use href="#ct" x="438.5" y="218"/>
+    <use href="#ch" x="465.0" y="218"/>
+    <use href="#ch" x="491.5" y="218"/>
+    <use href="#ct" x="518.0" y="218"/>
+    <use href="#ct" x="544.5" y="218"/>
+    <use href="#ct" x="571.0" y="218"/>
+    <use href="#ch" x="597.5" y="218"/>
+  </g>
+  <g>
+    <rect x="24" y="264" width="598" height="60" rx="30" fill="#ffffff" opacity="0.85"/>
+    <circle cx="52" cy="294" r="19" fill="#c084fc"/>
+    <text x="52" y="302" text-anchor="middle" font-family="sans-serif" font-size="22" font-weight="700" fill="#ffffff">D</text>
+    <use href="#ch" x="94.0" y="294"/>
+    <use href="#ch" x="120.5" y="294"/>
+    <use href="#ct" x="147.0" y="294"/>
+    <use href="#ch" x="173.5" y="294"/>
+    <use href="#ct" x="200.0" y="294"/>
+    <use href="#ct" x="226.5" y="294"/>
+    <use href="#ch" x="253.0" y="294"/>
+    <use href="#ct" x="279.5" y="294"/>
+    <use href="#ch" x="306.0" y="294"/>
+    <use href="#ct" x="332.5" y="294"/>
+    <use href="#ch" x="359.0" y="294"/>
+    <use href="#ch" x="385.5" y="294"/>
+    <use href="#ct" x="412.0" y="294"/>
+    <use href="#ct" x="438.5" y="294"/>
+    <use href="#ch" x="465.0" y="294"/>
+    <use href="#ct" x="491.5" y="294"/>
+    <use href="#ch" x="518.0" y="294"/>
+    <use href="#ct" x="544.5" y="294"/>
+    <use href="#ct" x="571.0" y="294"/>
+    <use href="#ch" x="597.5" y="294"/>
+  </g>
+</svg>

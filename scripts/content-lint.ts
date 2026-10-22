@@ -58,12 +58,8 @@ const WARNING_FLAGS: ReadonlySet<RubricFlag> = new Set<RubricFlag>(["NUMBERS_FIR
  * can check against the blueprint; add one only after a human looked at the copy.
  */
 const RUBRIC_WAIVERS: Readonly<Record<string, Partial<Record<RubricFlag, string>>>> = {
-  "scramble-and-nine": {
-    COMPUTE_PREFIX: 'hook opens "Write down a number…": the first step of a magic trick, not a "write 3/4 as…" drill',
-  },
-  "kaprekar-6174": {
-    LONG_FUN_FACT: 'the initials in "D. R. Kaprekar" count as sentence breaks; it is one sentence of 117 chars',
-  },
+  // Empty since Phase 3 batch 4: scramble-and-nine's hook no longer opens "Write down…" and
+  // kaprekar-6174's fun fact dropped the initials that read as sentence breaks.
 };
 
 const normalise = (s: string): string => s.trim().toLowerCase();

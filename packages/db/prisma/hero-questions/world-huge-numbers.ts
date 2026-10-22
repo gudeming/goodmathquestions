@@ -6,7 +6,8 @@
  * A10 halfway-to-the-wall (halving_bar).
  * Editorial pass 1 (docs/plans/good-questions-overhaul/editorial-pass-1.md): copy aligned with
  * each scene's real controls, facts re-checked, hooks/prompts kept off the COMPUTE_PREFIX words.
- * TODO(phase-3): A6 (zoom_number_line), A7 (hotel_shift) once those Tier-3 scenes land.
+ * Batch 4: A6 point-nine-repeating and A7 hilbert-hotel, both `illustration` (with a reveal picture)
+ * until the Tier-3 zoom_number_line / hotel_shift scenes land.
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
@@ -770,6 +771,179 @@ export const halfwayToTheWall: HeroQuestionBlueprint = {
     "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 2, wrong 2, hints 1, retell 1: infinite sums are a 12+ idea; paths are the bar picture and the 'walked + left = 1' algebra; hint 3 nearly states the argument",
 };
 
+/**
+ * A6. Illustration until the T3 `zoom_number_line` scene lands (待替换为 zoom_number_line). The guess is
+ * the question. Three paths: 1/3 × 3, 10x − x, and "no number fits between them".
+ * Extension answer: 0.4999… = 0.5 (every terminating decimal has a second, nines-forever name).
+ */
+export const pointNineRepeating: HeroQuestionBlueprint = {
+  slug: "point-nine-repeating",
+  collection: "huge-numbers",
+  kind: "PARADOX",
+  ageGroup: "AGE_12_14",
+  difficulty: "HARD",
+  category: "FRACTIONS",
+  title: { en: "Is 0.999… Really 1?", zh: "0.999… 到底等不等于 1" },
+  hook: {
+    en: "Put a nine after the decimal point and you get a number just below one. Add another nine, and another, and it's still just below one. But what if the nines never, ever stop: is 0.999… still smaller than 1?",
+    zh: "0.9 比 1 小，0.99 也比 1 小，0.999 还是比 1 小。那后面的 9 永远写不完的 0.999… 呢？它还比 1 小吗？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "a-tiny-bit-less", en: "A tiny bit less than 1", zh: "比 1 小一点点" },
+      { id: "exactly-one", en: "Exactly equal to 1", zh: "正好等于 1" },
+      { id: "cant-tell", en: "Nobody can tell, because it never finishes", zh: "没法确定，因为它永远写不完" },
+    ],
+  },
+  scene: {
+    type: "illustration",
+    asset: "point-nine-repeating",
+    caption: { en: "Zoom in and in: 0.9, 0.99, 0.999 … creep closer and closer to 1.", zh: "放大，再放大：0.9、0.99、0.999……离 1 越来越近。" },
+    revealAsset: "point-nine-repeating-reveal",
+    revealCaption: {
+      en: "One third is 0.333…, and three thirds make 1. So 3 × 0.333… = 0.999… is exactly 1, with no gap left.",
+      zh: "三分之一是 0.333…，三个三分之一正好是 1。所以 3 × 0.333… = 0.999… 正好等于 1，一点缝都不剩。",
+    },
+  },
+  prompt: {
+    en: "The nines in 0.999… go on forever. Is that number less than 1, equal to 1, or impossible to decide?",
+    zh: "0.999… 后面的 9 永远没有尽头。这个数比 1 小、等于 1，还是没法判断？",
+  },
+  answer: { type: "CHOICE", correctId: "exactly-one" },
+  hints: [
+    { en: "Two different numbers always have another number between them, like their average. Try to name a number that sits between 0.999… and 1.", zh: "两个不一样的数中间，总能塞进另一个数，比如它们的平均数。试着说出一个夹在 0.999… 和 1 中间的数。" },
+    { en: "You already know one decimal that never ends: 1 ÷ 3 = 0.333… (check it on a calculator). What happens if you multiply both sides by 3?", zh: "你见过一个永远写不完的小数：1 ÷ 3 = 0.333…（可以用计算器验证）。两边都乘 3，会得到什么？" },
+    { en: "Call the number x, so x = 0.999… and 10x = 9.999…. Take x away from 10x: the endless tails of nines cancel out. What is 9x, and so what is x?", zh: "把这个数叫作 x，x = 0.999…，那么 10x = 9.999…。用 10x 减去 x，后面无穷多个 9 正好抵消。9x 是多少？x 又是多少？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "choice:a-tiny-bit-less",
+      feedback: {
+        en: "That's what almost everyone feels at first: every extra nine still seems to leave a gap. But how much less is \"a tiny bit\"? Writing the gap as 0.000…1 needs a last digit, and the nines never let a last digit arrive. A gap you can't name is a gap of 0.",
+        zh: "几乎每个人一开始都这么觉得：每多一个 9，好像还差一点。可是「小一点点」到底小多少？把差距写成 0.000…1，就得有最后一位，而 9 永远不会让最后一位出现。说不出来的差距，就是 0。",
+      },
+    },
+    {
+      match: "choice:cant-tell",
+      feedback: {
+        en: "It does feel as if a number that never finishes can't be pinned down. But 1/3 = 0.333… never finishes either, and you're sure it's exactly one third. Multiply it by 3 and see what you get.",
+        zh: "永远写不完的数，好像没法确定是多少。可是 1/3 = 0.333… 也永远写不完，你却很确定它正好是三分之一。把它乘 3 看看会得到什么。",
+      },
+    },
+  ],
+  explanation: {
+    en: "One third is 0.333…, so three thirds is 3 × 0.333… = 0.999…, and three thirds is also exactly 1. Another way: if x = 0.999…, then 10x − x = 9.999… − 0.999… = 9, so 9x = 9 and x = 1. And if 0.999… were smaller than 1, some number would fit between them, but none does.",
+    zh: "三分之一是 0.333…，所以三个三分之一是 3 × 0.333… = 0.999…，而三个三分之一又正好是 1。另一种算法：设 x = 0.999…，那么 10x − x = 9.999… − 0.999… = 9，所以 9x = 9，x = 1。再说，如果 0.999… 比 1 小，它们中间就该能塞进一个数，可是一个也找不到。",
+  },
+  aha: {
+    en: "0.999… and 1 are two ways of writing the same number, just as 1/2 and 0.5 are. The gap you imagine is smaller than every number you can name, so it is zero.",
+    zh: "0.999… 和 1 是同一个数的两种写法，就像 1/2 和 0.5 一样。你想象中的那条缝，比任何一个说得出的数都小，所以它就是 0。",
+  },
+  extension: {
+    en: "What is 0.4999… (with nines forever) equal to? Can you find other numbers that have two different decimal names?",
+    zh: "0.4999…（后面的 9 永远不停）等于多少？你还能找到别的有两种小数写法的数吗？",
+  },
+  discussionPrompt: {
+    en: "This is the best question on the site for saying \"I disagree\". Write the strongest argument you can that 0.999… is NOT 1, then read someone else's and find its weak spot.",
+    zh: "这是全站最适合说「我不同意」的一道题。写下你能想到的最有力的理由，证明 0.999… 不等于 1；再读读别人的理由，找出它的漏洞。",
+  },
+  solutionTags: ["algebra", "pattern", "other"],
+  funFact: {
+    en: "Plenty of grown-ups refuse to believe this, and people have argued about it online for years. Mathematicians settled it long ago: a decimal that never ends stands for the number it gets closer and closer to.",
+    zh: "很多大人也不肯相信这个结论，网上为它吵了好多年。数学家早就说清楚了：一个永远写不完的小数，指的就是它越来越接近的那个数。",
+  },
+  sortOrder: 6,
+  rubricNotes:
+    "18/20 — hook 2, guess 2, hands-on 1, aha 2, floor 1, ceiling 2, paths 2, wrong 2, hints 2, retell 2: illustration only (待替换为 zoom_number_line); 1/3 × 3, 10x − x and 'nothing fits between' are three real paths; needs comfort with endless decimals and a letter for the number, so 12+; kids love springing it on adults",
+};
+
+/**
+ * A7. Illustration until the T3 `hotel_shift` scene lands (待替换为 hotel_shift). The guess is the question.
+ * Extension answer: the guest in room n moves to room 2n; the odd rooms are free, bus guest k takes room 2k − 1.
+ */
+export const hilbertHotel: HeroQuestionBlueprint = {
+  slug: "hilbert-hotel",
+  collection: "huge-numbers",
+  kind: "PARADOX",
+  ageGroup: "AGE_12_14",
+  difficulty: "MEDIUM",
+  category: "LOGIC",
+  title: { en: "The Hotel That's Never Full", zh: "永远住得下的旅馆" },
+  hook: {
+    en: "A hotel has an endless corridor of rooms, numbered one, two, three and on forever, and tonight every room has a guest. A tired traveller walks in and asks for a bed, and the owner smiles: \"No problem!\" How can he fit her in without anyone sharing a room?",
+    zh: "一家旅馆有一条没有尽头的走廊，房间编号 1、2、3……一直排下去，今晚每一间都住满了。一位疲惫的旅客走进来要一张床，老板笑着说：「没问题！」不让任何人合住，他怎么把她安排进去？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "impossible", en: "Impossible: every room is taken", zh: "不可能，每间都住满了" },
+      { id: "move-up-one", en: "Ask every guest to move to the next room up", zh: "请每位客人搬到下一个号码的房间" },
+      { id: "hallway", en: "Give the new guest a bed in the corridor", zh: "让新客人睡在走廊里" },
+    ],
+  },
+  scene: {
+    type: "illustration",
+    asset: "hilbert-hotel",
+    caption: { en: "Every room in the endless corridor has a guest, and a new guest waits at the desk.", zh: "没有尽头的走廊里，每间房都住着客人，一位新客人在前台等着。" },
+    revealAsset: "hilbert-hotel-reveal",
+    revealCaption: {
+      en: "The guest in room n moves to room n + 1. Nobody loses a room, and room 1 is free for the new guest.",
+      zh: "n 号房的客人搬到 n + 1 号房。谁都没丢房间，1 号房空了出来，正好给新客人。",
+    },
+  },
+  prompt: {
+    en: "Every room in the endless hotel is full, and nobody may share a room or be sent away. Is there a way to give the new guest a room of her own?",
+    zh: "这家无限旅馆每一间都住满了，谁都不能合住，也不能被赶走。有没有办法让新客人单独住一间？",
+  },
+  answer: { type: "CHOICE", correctId: "move-up-one" },
+  hints: [
+    { en: "In a normal hotel this really would be impossible, because somebody is in the last room. Look at the end of the corridor in the picture: what is this hotel missing?", zh: "普通旅馆确实住不下，因为最后一间房也有人。看看图里走廊的尽头：这家旅馆少了什么？" },
+    { en: "Ask the guest in room 1 to move into room 2. Now the guest from room 2 needs somewhere to go. Where should they move, and who moves after that?", zh: "请 1 号房的客人搬进 2 号房。这下 2 号房原来的客人也得搬。他该搬去哪儿？接下来又轮到谁？" },
+    { en: "Give one instruction to everyone at the same moment: the guest in room n moves to room n + 1. Does every guest still get a room? Which room is left empty?", zh: "对所有人同时发一条通知：n 号房的客人搬到 n + 1 号房。每位客人还有房住吗？哪一间空出来了？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "choice:impossible",
+      feedback: {
+        en: "That's true for any hotel with a last room: the guest at the end would have nowhere to go. But this corridor has no last room, so every guest always has a next room to move into.",
+        zh: "只要旅馆有最后一间房，你说得没错：最后那位客人就没地方去。可这条走廊没有最后一间，每位客人总有下一间可以搬。",
+      },
+    },
+    {
+      match: "choice:hallway",
+      feedback: {
+        en: "That would work in real life, but the owner promised her a room of her own. You can free one up without sending anybody out of their room for good.",
+        zh: "现实里这样也行，可老板答应给她一间房。其实不用让任何人没房住，就能空出一间。",
+      },
+    },
+  ],
+  explanation: {
+    en: "The owner asks every guest to move up one: whoever is in room n moves to room n + 1, so the guest in room 1 goes to room 2, the guest in room 2 goes to room 3, and so on. Because the corridor never ends, every guest always has a room n + 1 to move into. Room 1 is now empty, and the new guest takes it.",
+    zh: "老板请每位客人往后挪一间：n 号房的客人搬到 n + 1 号房，也就是 1 号搬到 2 号，2 号搬到 3 号，一直这样下去。因为走廊没有尽头，每位客人总有 n + 1 号房可以搬。这样 1 号房就空了，新客人住进去。",
+  },
+  aha: {
+    en: "In an endless hotel, \"full\" and \"room for one more\" can both be true at once. Infinity plus one is still the same infinity.",
+    zh: "在无限的旅馆里，「住满了」和「还能再住一个」可以同时成立。无限多再加一个，还是一样多。",
+  },
+  extension: {
+    en: "A bus pulls up carrying infinitely many new guests, numbered 1, 2, 3, and so on. How can the owner fit every one of them in?",
+    zh: "来了一辆大巴，车上有无限多位新客人，编号 1、2、3……老板怎么让他们全都住下？",
+  },
+  discussionPrompt: {
+    en: "Is the owner cheating, or is this a fair answer? What would you say to someone who insists that \"full means full\"?",
+    zh: "老板这算作弊吗？还是一个公平的答案？如果有人坚持说「满了就是满了」，你会怎么回答他？",
+  },
+  solutionTags: ["draw", "pattern", "other"],
+  funFact: {
+    en: "The mathematician David Hilbert told this story about 100 years ago to show how strange infinity is. In his hotel, the even-numbered rooms alone hold as many guests as the whole hotel.",
+    zh: "大约 100 年前，数学家希尔伯特讲了这个故事，用来说明无限有多奇怪。在他的旅馆里，光是双号房住的客人，就和整个旅馆一样多。",
+  },
+  sortOrder: 7,
+  rubricNotes:
+    "17/20 — hook 2, guess 2, hands-on 1, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 2: illustration only (待替换为 hotel_shift); one real path (shift everyone along), and 'room n' thinking puts it at 12+; the bus extension opens the door to comparing infinities; a story kids retell",
+};
+
 export const HUGE_NUMBERS: readonly HeroQuestionBlueprint[] = [
   gaussSum,
   chessboardRice,
@@ -779,4 +953,6 @@ export const HUGE_NUMBERS: readonly HeroQuestionBlueprint[] = [
   handshakeParty,
   googolVsAtoms,
   halfwayToTheWall,
+  pointNineRepeating,
+  hilbertHotel,
 ];

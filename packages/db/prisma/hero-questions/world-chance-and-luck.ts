@@ -6,7 +6,7 @@
  * Editorial pass 1: Monty Hall's prize matches the scene (🎁, not a bike); C6 uses 偶数/奇数 like the
  * scene and the names 双双/单单 (双数/单数 mnemonic, as Evan/Otto is in English); C7's guess is a
  * choice so the reveal histogram never marks 3.14 on a "drops inside" slider.
- * TODO(phase-3): C10 (sequence_lineup) once that Tier-3 scene lands.
+ * Batch 4: C10 spot-the-real-random, `illustration` until the Tier-3 sequence_lineup scene lands.
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
@@ -818,6 +818,105 @@ export const piFromRaindrops: HeroQuestionBlueprint = {
     "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: needs the area of a circle; simulation plus the area ratio is one path; the scene does the 4 × share sum, so the work is understanding why; the estimate varies run to run (window 3.0-3.3 is about 3 standard deviations at 1,000 dots)",
 };
 
+/**
+ * C10. Illustration until the T3 `sequence_lineup` scene lands (待替换为 sequence_lineup). The guess is the
+ * question; the four rows are baked into the prompt and the picture. Checked by script:
+ *   A HTHHTHTTHTHTHHTHTTHT  10 heads, 15 switches, longest run 2
+ *   B THTHHTTHTHTHHTHTTHTH  10 heads, 15 switches, longest run 2
+ *   C HTTHHHHHTHTTHTHHTTTH  11 heads, 10 switches, longest run 5 (real)
+ *   D HHTHTTHTHTHHTTHTHTTH  10 heads, 14 switches, longest run 2
+ * Exact for 20 fair flips: P(run ≥ 3) ≈ 97.9%, P(run ≥ 4) ≈ 76.8%, P(run ≥ 5) ≈ 45.8%.
+ */
+export const spotTheRealRandom: HeroQuestionBlueprint = {
+  slug: "spot-the-real-random",
+  collection: "chance-and-luck",
+  kind: "WODB",
+  ageGroup: "AGE_10_12",
+  difficulty: "MEDIUM",
+  category: "PROBABILITY",
+  title: { en: "Which Coin Was Real?", zh: "哪一串是真随机" },
+  hook: {
+    en: "Three friends were asked to make up twenty coin flips that look random, and a fourth friend really flipped a coin twenty times. Their four rows of heads and tails are in the picture. Can you spot the one that came from a real coin?",
+    zh: "三个朋友被要求编出看起来很随机的 20 次掷硬币记录，第四个朋友真的掷了 20 次硬币。四串正面和反面就在图里。你能找出哪一串是真掷出来的吗？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "A", en: "Row A", zh: "A 串" },
+      { id: "B", en: "Row B", zh: "B 串" },
+      { id: "C", en: "Row C", zh: "C 串" },
+      { id: "D", en: "Row D", zh: "D 串" },
+    ],
+  },
+  scene: {
+    type: "illustration",
+    asset: "spot-the-real-random",
+    caption: { en: "Four rows of twenty flips, A to D. Gold coins are heads, silver coins are tails.", zh: "四串各 20 次的掷硬币记录，A 到 D。金色是正面，银色是反面。" },
+    revealAsset: "spot-the-real-random-reveal",
+    revealCaption: {
+      en: "Row C is the real one: it has five heads in a row. The made-up rows never repeat a face more than twice, and a real coin almost always does.",
+      zh: "C 串是真的：它有连续 5 个正面。编出来的三串，同一面从来没有连续超过 2 次，而真硬币几乎总会超过。",
+    },
+  },
+  prompt: {
+    en: "Gold is heads (H) and silver is tails (T). A: H T H H T H T T H T H T H H T H T T H T. B: T H T H H T T H T H T H H T H T T H T H. C: H T T H H H H H T H T T H T H H T T T H. D: H H T H T T H T H T H H T T H T H T T H. Which row came from a real coin?",
+    zh: "金色是正面（正），银色是反面（反）。A：正反正正反正反反正反正反正正反正反反正反。B：反正反正正反反正反正反正正反正反反正反正。C：正反反正正正正正反正反反正反正正反反反正。D：正正反正反反正反正反正正反反正反正反反正。哪一串是真掷出来的？",
+  },
+  answer: { type: "CHOICE", correctId: "C" },
+  hints: [
+    { en: "Real randomness isn't tidy. In each row of the picture, find the longest stretch of the same colour in a row.", zh: "真正的随机并不整齐。在图里的每一串中，找出同一种颜色连在一起最长的那一段。" },
+    { en: "Count how many times row A changes colour: there are 19 chances, one between each pair of neighbours. A real coin changes about half the time, so roughly 9 or 10 times. How do the four rows compare?", zh: "数一数 A 串换了几次颜色：相邻两枚之间各有一次机会，一共 19 次。真硬币大约一半时候会换，也就是 9 到 10 次左右。四串比一比怎么样？" },
+    { en: "In 20 real flips, the chance of at least four of the same face in a row is about 77%, and the chance that no face ever shows up three times running is only about 2%. Which row has a long run?", zh: "真掷 20 次，至少出现连续 4 个同一面的机会大约是 77%，而同一面从来不连续出现 3 次的机会只有 2% 左右。哪一串有长长的连串？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "choice:A",
+      feedback: {
+        en: "Row A looks nicely mixed, and that's the giveaway: it changes face 15 times out of 19 and never shows the same face three times running. A real coin is lumpier than that.",
+        zh: "A 串看起来混得很匀，这恰恰露了馅：19 次机会里换了 15 次面，同一面从来没有连续出现 3 次。真硬币要「扎堆」得多。",
+      },
+    },
+    {
+      match: "choice:B",
+      feedback: {
+        en: "Row B feels random because heads and tails come out exactly 10 and 10 and keep taking turns. Real coins are rarely that polite: B changes face 15 times, where a real coin changes about 9 or 10 times.",
+        zh: "B 串让人觉得随机，因为正反面正好各 10 个，还总是轮流出现。真硬币很少这么「讲礼貌」：B 换了 15 次面，真硬币一般只换 9 到 10 次。",
+      },
+    },
+    {
+      match: "choice:D",
+      feedback: {
+        en: "Row D has a few pairs, which looks clever, but it never has three of the same in a row. In 20 real flips, a run of three or more happens about 98 times out of 100.",
+        zh: "D 串有几对重复，看起来编得很聪明，可是从来没有连续 3 个一样的。真掷 20 次，大约 100 次里有 98 次会出现连续 3 个或更多。",
+      },
+    },
+  ],
+  explanation: {
+    en: "People who fake randomness avoid streaks, because five heads in a row feels too neat to be chance. But a real coin makes runs all the time: in 20 flips there's about a 77% chance of four in a row and about a 46% chance of five, while a row with no run longer than two turns up only about 2% of the time. Rows A, B and D never repeat a face more than twice and change face 14 or 15 times; row C changes 10 times and has five heads in a row. So C is the real one.",
+    zh: "编随机数的人会躲着连串走，因为连续 5 个正面看起来太整齐，不像是碰巧。可真硬币常常出现连串：掷 20 次，出现连续 4 个的机会约 77%，连续 5 个约 46%，而最长连串不超过 2 的情况只有约 2%。A、B、D 三串同一面从不连续超过 2 次，还换了 14 或 15 次面；C 串只换了 10 次面，还有连续 5 个正面。所以 C 是真的。",
+  },
+  aha: {
+    en: "Real randomness is lumpier than people expect: streaks are normal, and perfect mixing is the fake. That's how you can catch someone who made up their coin flips.",
+    zh: "真正的随机比人们想象的更「扎堆」：连串很正常，混得太匀才是假的。靠这一点，你就能揭穿编造掷硬币记录的人。",
+  },
+  extension: {
+    en: "Flip a real coin 20 times and write it down, and ask a friend to make up 20 flips without a coin. Can you tell which is which? How likely is a run of at least four in 20 real flips?",
+    zh: "真掷 20 次硬币并记下来，再请朋友不用硬币编 20 次。你能分出哪个是真的吗？真掷 20 次，出现至少连续 4 个同一面的可能性有多大？",
+  },
+  discussionPrompt: {
+    en: "Which clue convinced you: the long run, the number of changes, or the exact 10-and-10 balance? Get a friend to fake 20 flips and see whether your clue catches them.",
+    zh: "是哪条线索说服了你：长长的连串、换面的次数，还是正好 10 比 10？请朋友编 20 次，看看你的线索能不能抓住他。",
+  },
+  solutionTags: ["pattern", "simulate", "table"],
+  funFact: {
+    en: "Some teachers play this as a magic trick: half the class flips real coins, half makes up their flips, and the teacher spots the fakes in seconds just by looking for long runs.",
+    zh: "有些老师把这当成魔术来玩：一半同学真掷硬币，一半同学自己编，老师只要找长长的连串，几秒钟就能认出哪些是编的。",
+  },
+  sortOrder: 10,
+  rubricNotes:
+    "18/20 — hook 2, guess 2, hands-on 1, aha 2, floor 2, ceiling 1, paths 2, wrong 2, hints 2, retell 2: illustration only (待替换为 sequence_lineup); longest runs, counting changes of face and flipping a real coin are real paths; the run probabilities behind the extension are beyond most 10-12s, which holds the ceiling back; a trick kids can play on friends",
+};
+
 export const CHANCE_AND_LUCK: readonly HeroQuestionBlueprint[] = [
   birthdayParadox,
   montyHall,
@@ -828,4 +927,5 @@ export const CHANCE_AND_LUCK: readonly HeroQuestionBlueprint[] = [
   piFromRaindrops,
   rollsUntilSix,
   someoneSharesMyBirthday,
+  spotTheRealRandom,
 ];

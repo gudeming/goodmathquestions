@@ -7,7 +7,9 @@
  * (fib_spiral; upgrades the legacy "Sunflower Fibonacci Spiral" row), D9 perfect-28 (divisor_blocks).
  * Editorial pass 1: D1 opens as a magic act (sealed card), D3's reveal no longer shows the
  * 3-digit 1089 table, D4 counts "rounds" like its scene, D6 gained an Act-1 guess, D9 says 52 known.
- * TODO(phase-3): D7 (prime_spiral), D10 (money_flow) once those Tier-3 scenes land.
+ * Batch 4: D7 prime-spiral and D10 missing-dollar, `illustration` until the Tier-3 prime_spiral /
+ * money_flow scenes land. D3's hook no longer opens with "Write" and D4's fun fact drops the
+ * initials, so neither needs a content-lint waiver any more.
  */
 import type { GuessConfig, HeroQuestionBlueprint } from "./_template";
 
@@ -209,7 +211,7 @@ export const scrambleAndNine: HeroQuestionBlueprint = {
   category: "NUMBER_THEORY",
   title: { en: "Scramble and Subtract", zh: "打乱数字之后" },
   hook: {
-    en: "Write down a number with a few digits, scramble its digits to make a new number, and subtract the smaller one from the bigger one. Whatever you started with, the answer always divides exactly by one special number. Which one is it?",
+    en: "Take any number with a few digits, scramble its digits to make a new number, and subtract the smaller one from the bigger one. Whatever you started with, the answer always divides exactly by one special number. Which one is it?",
     zh: "写一个几位数，把它的数字打乱顺序变成另一个数，再用大数减小数。不管你一开始写的是什么，结果总能被一个特别的数整除。是哪一个？",
   },
   guess: {
@@ -378,7 +380,7 @@ export const kaprekar6174: HeroQuestionBlueprint = {
   },
   solutionTags: ["guess_check", "table", "pattern", "simulate"],
   funFact: {
-    en: "6174 is named after D. R. Kaprekar, a school teacher in India who found it in 1949 while playing with numbers for fun.",
+    en: "6174 is named after Kaprekar, a school teacher in India who found it in 1949 while playing with numbers for fun.",
     zh: "6174 以印度的一位中学老师卡普雷卡尔命名。1949 年，他在玩数字游戏时发现了它。",
   },
   sortOrder: 4,
@@ -790,6 +792,186 @@ export const perfect28: HeroQuestionBlueprint = {
     "17/20 — hook 2, guess 1, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the guess is a pick among eleven numbers rather than a real hunch; listing divisors (on paper or as stacks in the scene) is the one path",
 };
 
+/**
+ * D7. Ulam's spiral. Illustration until the T3 `prime_spiral` scene lands (待替换为 prime_spiral): a 7 × 7
+ * numbered start (2, 3, 5, 7 shaded) and a 51 × 51 reveal with the densest diagonals highlighted.
+ * Diagonals through the centre are 4k² − 2k + 1 (3, 13, 31) and 4k² + 1 (5, 17, 37). Odd and even
+ * numbers sit like chessboard squares, so primes after 2 share one colour and line up diagonally.
+ * Extension answer: from 41, the diagonal n² + n + 41 is prime for n = 0..39; n = 40 gives 1681 = 41².
+ */
+export const primeSpiral: HeroQuestionBlueprint = {
+  slug: "prime-spiral",
+  collection: "number-magic",
+  kind: "PATTERN",
+  ageGroup: "AGE_12_14",
+  difficulty: "MEDIUM",
+  category: "NUMBER_THEORY",
+  title: { en: "The Prime Number Spiral", zh: "质数排成的线" },
+  hook: {
+    en: "Start with a one in the middle of some squared paper and write the counting numbers round and round it in a spiral. Then shade every prime number, the ones that divide only by one and themselves. When the spiral gets really big, what picture do you think the shaded squares make?",
+    zh: "在方格纸中间写一个 1，然后把 2、3、4、5……一圈一圈绕着它写成螺旋。再把所有质数（只能被 1 和它自己整除的数）涂黑。螺旋写得很大以后，涂黑的格子会组成什么样的图案？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "random-dots", en: "Random scattered dots, like spilled salt", zh: "乱七八糟的点，像撒了一把盐" },
+      { id: "diagonal-streaks", en: "Diagonal lines", zh: "一条条斜线" },
+      { id: "circles", en: "Rings around the middle", zh: "围着中心的一圈圈圆环" },
+    ],
+  },
+  scene: {
+    type: "illustration",
+    asset: "prime-spiral",
+    caption: { en: "The numbers 1 to 49 spiral out from the middle. The first primes, 2, 3, 5 and 7, are shaded.", zh: "从中间开始，1 到 49 绕成螺旋。前几个质数 2、3、5、7 已经涂上了颜色。" },
+    revealAsset: "prime-spiral-reveal",
+    revealCaption: {
+      en: "Out to 2,601, every prime is a dot, and lots of them line up in long diagonal streaks.",
+      zh: "一直写到 2601，每个质数是一个点，很多点排成了长长的斜线。",
+    },
+  },
+  prompt: {
+    en: "In a big number spiral with every prime shaded, what pattern do the shaded squares make?",
+    zh: "在一个很大的数字螺旋里，把所有质数涂黑，涂黑的格子会排成什么图案？",
+  },
+  answer: { type: "CHOICE", correctId: "diagonal-streaks" },
+  hints: [
+    { en: "Every prime except 2 is odd. In the 7 × 7 picture, colour all the odd numbers: what pattern do they make, and which way do you step to get from one odd square to the next?", zh: "除了 2，质数都是奇数。在 7 × 7 的图里把奇数都涂上颜色：它们排成什么图案？从一个奇数格走到下一个奇数格，要往哪个方向走？" },
+    { en: "In the picture, follow the diagonal from 1 through 3, 13 and 31, and the one through 5, 17 and 37. What do you notice about all those numbers?", zh: "在图里，沿着从 1 经过 3、13、31 的斜线看，再看经过 5、17、37 的那条。这些数有什么共同点？" },
+    { en: "The numbers on a diagonal follow one squared rule: 5, 17, 37 are 4k² + 1 for k = 1, 2, 3. Some rules like this produce primes again and again, and each rule is a straight diagonal in the spiral. So what will the big picture show?", zh: "同一条斜线上的数遵守同一个平方规律：5、17、37 就是 k = 1、2、3 时的 4k² + 1。有些这样的规律会一次又一次地算出质数，而每个规律在螺旋里都是一条斜线。那么大图里会看到什么？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "choice:random-dots",
+      feedback: {
+        en: "A very sensible guess: primes seem to pop up with no plan at all. Up close they do look scattered, but zoom out and they crowd onto diagonal lines, because the numbers on one diagonal follow one rule, and some rules make lots of primes.",
+        zh: "很合理的猜测：质数好像毫无规律地冒出来。凑近看确实很散，可是退远一看，它们挤在一条条斜线上，因为同一条斜线上的数遵守同一个规律，而有些规律能算出很多质数。",
+      },
+    },
+    {
+      match: "choice:circles",
+      feedback: {
+        en: "Rings would mean that being prime depends on how far you are from the middle. It doesn't: every ring of the spiral has primes and non-primes mixed together. The pattern runs along the diagonals instead.",
+        zh: "如果是圆环，就说明是不是质数只看离中心有多远。可并不是：螺旋的每一圈里质数和非质数都混在一起。图案是沿着斜线走的。",
+      },
+    },
+  ],
+  explanation: {
+    en: "In the spiral, odd and even numbers sit like the squares of a chessboard, so every prime except 2 lands on the same colour, and squares of one colour line up diagonally. The numbers along a diagonal follow a single squared rule, like 4k² + 1 (5, 17, 37, 65, …) or 4k² − 2k + 1 (3, 13, 31, 57, …), and some of those rules produce primes unusually often. So the shaded squares crowd onto diagonal streaks, with plenty of scattered dots in between.",
+    zh: "在螺旋里，奇数和偶数像国际象棋棋盘的黑白格一样交错排列，所以除了 2 以外的质数都落在同一种颜色上，而同色的格子是沿斜线排的。同一条斜线上的数遵守同一个平方规律，比如 4k² + 1（5、17、37、65……）或 4k² − 2k + 1（3、13、31、57……），有些规律算出质数特别频繁。所以涂黑的格子挤成一条条斜线，中间还夹着不少零散的点。",
+  },
+  aha: {
+    en: "Primes aren't completely random: lay them out in a spiral and they crowd onto diagonal streaks. Yet nobody has proved that the diagonal 5, 17, 37, … keeps finding primes forever.",
+    zh: "质数并不是完全随机的：把它们排成螺旋，就会挤成一条条斜线。可是到现在，还没人能证明 5、17、37……这条斜线会永远找到新的质数。",
+  },
+  extension: {
+    en: "Start the spiral at 41 instead of 1. One diagonal then holds n² + n + 41 for n = 0, 1, 2, and so on: check the first few. How long does it keep making primes?",
+    zh: "这次从 41 开始写螺旋。有一条斜线上的数正好是 n² + n + 41（n = 0、1、2……）：验证前几个。它能连续算出多少个质数？",
+  },
+  discussionPrompt: {
+    en: "Find the longest streak in the reveal picture. Describe where it is so that a friend could find it too, and say what the whole picture reminds you of.",
+    zh: "在揭晓的大图里找出最长的一条斜线。描述它在哪儿，让朋友也能找到；再说说整张图让你想到了什么。",
+  },
+  solutionTags: ["draw", "pattern"],
+  funFact: {
+    en: "The story goes that the mathematician Stanisław Ulam found this pattern in 1963, while doodling numbers in a spiral during a boring meeting.",
+    zh: "据说，数学家乌拉姆是在 1963 年一次无聊的会议上，在纸上随手把数字写成螺旋时发现这个图案的。",
+  },
+  sortOrder: 7,
+  rubricNotes:
+    "17/20 — hook 2, guess 2, hands-on 1, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 2: illustration only (待替换为 prime_spiral); drawing it on squared paper is the one real path, and the chessboard-parity idea is a partial reason, not a proof; primes and squared rules make it 12+; the open question is real",
+};
+
+/**
+ * D10. The missing-dollar riddle. Illustration until the T3 `money_flow` scene lands (待替换为 money_flow);
+ * the picture's numbers are 30, 25, 5, 2, 1, 27 and 29. The guess is the question.
+ * Extension answer (open): any "vanishing money" story adds an amount that is already inside the total
+ * (or adds what should be subtracted); the honest check is to follow every coin to where it ends up.
+ */
+export const missingDollar: HeroQuestionBlueprint = {
+  slug: "missing-dollar",
+  collection: "number-magic",
+  kind: "PARADOX",
+  ageGroup: "AGE_10_12",
+  difficulty: "MEDIUM",
+  category: "ARITHMETIC",
+  title: { en: "The Missing Dollar", zh: "消失的一块钱" },
+  hook: {
+    en: "Three friends share a hotel room and pay 30 dollars between them. The clerk realises the room costs only 25 and sends the bellboy back with 5, but the bellboy quietly keeps 2 and gives each friend 1 back. So each friend paid 9, and 3 × 9 = 27, plus the bellboy's 2 makes 29: where did the missing dollar go?",
+    zh: "三个朋友合住一间旅馆，一共付了 30 元。前台发现房费只要 25 元，就让服务员退回 5 元；服务员偷偷留下 2 元，给每人退了 1 元。这样每人付了 9 元，3 × 9 = 27，再加上服务员的 2 元是 29 元。还有 1 元去哪儿了？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "bellboy", en: "The bellboy has it", zh: "服务员拿走了" },
+      { id: "clerk", en: "The clerk kept it", zh: "前台拿走了" },
+      { id: "nothing-missing", en: "Nothing is missing: the sum is the trick", zh: "根本没少，是算式在骗人" },
+    ],
+  },
+  scene: {
+    type: "illustration",
+    asset: "missing-dollar",
+    caption: {
+      en: "Follow the arrows: 30 to the desk, 5 to the bellboy, 2 into his pocket, 1 back to each friend.",
+      zh: "顺着箭头看：30 元交给前台，5 元交给服务员，2 元进了他的口袋，每人退回 1 元。",
+    },
+    revealAsset: "missing-dollar-reveal",
+    revealCaption: {
+      en: "30 = 25 at the desk + 2 with the bellboy + 3 back to the friends. The friends' 27 already includes the bellboy's 2.",
+      zh: "30 = 前台的 25 + 服务员的 2 + 退给三人的 3。三人付的 27 里，已经包含了服务员的 2。",
+    },
+  },
+  prompt: {
+    en: "In the end the friends paid 27 and the bellboy has 2. Why doesn't 27 + 2 make 30, and where is the missing dollar?",
+    zh: "三个朋友最后一共付了 27 元，服务员手里有 2 元。为什么 27 + 2 不等于 30？少的那 1 元去哪儿了？",
+  },
+  answer: { type: "CHOICE", correctId: "nothing-missing" },
+  hints: [
+    { en: "Forget the story's sum for a moment. Follow the arrows in the picture and write down where each of the 30 dollars is at the end.", zh: "先别管故事里的算式。顺着图里的箭头，写下最后这 30 元分别在谁手里。" },
+    { en: "At the end the desk has 25, the bellboy has 2 and the friends have 3 back. Add those up. Has any money vanished?", zh: "最后前台有 25 元，服务员有 2 元，三个朋友拿回 3 元。加起来是多少？有钱消失了吗？" },
+    { en: "Now look at the 27 the friends paid. Where did those 27 dollars go? Part is at the desk and part is in the bellboy's pocket. So should the bellboy's 2 be added to 27, or is it already inside it?", zh: "再看三个朋友付的 27 元。这 27 元去了哪儿？一部分在前台，一部分在服务员口袋里。那么服务员的 2 元应该加到 27 上，还是本来就在 27 里面？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "choice:bellboy",
+      feedback: {
+        en: "The bellboy did keep 2, but that isn't an extra dollar: those 2 are already inside the 27 the friends paid. Count where all 30 dollars end up: 25 + 2 + 3.",
+        zh: "服务员确实留了 2 元，但那不是多出来的钱：这 2 元已经包含在三人付的 27 元里了。数一数 30 元最后都在哪儿：25 + 2 + 3。",
+      },
+    },
+    {
+      match: "choice:clerk",
+      feedback: {
+        en: "The clerk keeps 25, exactly the price of the room, and not a dollar more. The story's sum makes it feel as if a dollar slipped away, but every one is accounted for: 25 + 2 + 3 = 30.",
+        zh: "前台留下 25 元，正好是房费，一元也没多拿。故事里的算式让人觉得少了一块钱，其实每一元都有着落：25 + 2 + 3 = 30。",
+      },
+    },
+  ],
+  explanation: {
+    en: "Follow the money: of the 30 dollars, 25 stay at the desk, 2 go into the bellboy's pocket and 3 go back to the friends, and 25 + 2 + 3 = 30. The friends paid 27 in the end, and that 27 is exactly the desk's 25 plus the bellboy's 2. Adding the bellboy's 2 to 27 counts the same 2 dollars twice, so the 29 means nothing. The honest sums are 27 = 25 + 2 and 27 + 3 = 30.",
+    zh: "跟着钱走：30 元里，25 元留在前台，2 元进了服务员的口袋，3 元退给了三个朋友，25 + 2 + 3 = 30。三个朋友最后付的 27 元，正好是前台的 25 元加上服务员的 2 元。把服务员的 2 元再加到 27 上，就把同一笔 2 元算了两遍，所以 29 这个数毫无意义。正确的算式是 27 = 25 + 2，以及 27 + 3 = 30。",
+  },
+  aha: {
+    en: "Nothing is missing: the story adds the bellboy's 2 to a total that already contains it. The money is fine; it's the sum that's crooked.",
+    zh: "什么都没少：故事把服务员的 2 元加到了一个已经包含它的总数上。钱没问题，有问题的是那道算式。",
+  },
+  extension: {
+    en: "Make up your own \"vanishing money\" story to try on a friend. What rule does the fake sum have to break so that it sounds right but isn't?",
+    zh: "自己编一个「钱不见了」的故事，考考朋友。那道假算式要违反什么规则，才能听起来对、其实不对？",
+  },
+  discussionPrompt: {
+    en: "The first time you heard it, which step fooled you? Copy out the sentence of the story where the trick really happens.",
+    zh: "第一次听到这道题时，你是在哪一步被骗的？写出故事里真正「做手脚」的那一句。",
+  },
+  solutionTags: ["draw", "table", "work_backwards"],
+  funFact: {
+    en: "This riddle has been fooling people for nearly a hundred years, told in many languages and with many different coins.",
+    zh: "这个谜题已经骗了人快一百年，换了好多种语言、好多种钱，照样管用。",
+  },
+  sortOrder: 10,
+  rubricNotes:
+    "18/20 — hook 2, guess 2, hands-on 1, aha 2, floor 2, ceiling 1, paths 2, wrong 2, hints 2, retell 2: illustration only (待替换为 money_flow); following every coin and asking what the 27 is made of are two real paths; the extension is open-ended rather than a general law; a classic to try on parents",
+};
+
 export const NUMBER_MAGIC: readonly HeroQuestionBlueprint[] = [
   trick1089,
   mindReadingFive,
@@ -799,4 +981,6 @@ export const NUMBER_MAGIC: readonly HeroQuestionBlueprint[] = [
   timesEleven,
   fibonacciNext,
   perfect28,
+  primeSpiral,
+  missingDollar,
 ];

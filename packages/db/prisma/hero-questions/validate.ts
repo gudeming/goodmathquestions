@@ -7,19 +7,32 @@
  * Pure: no Prisma, no I/O.
  */
 import {
+  SHAPE_SIDES,
+  binarySearchSteps,
+  centreRule,
   countSquares,
+  dominoTiling,
+  flyTotal,
+  frogMinMoves,
   handshakes,
   hasEulerPath,
   integerHypotenuse,
   isLegacySceneType,
+  jugsShortestSolution,
+  lcm,
   longestCollatz,
+  mirrorKey,
   overlapTimes,
   parseSceneConfig,
+  queensSolutions,
   ratioDenominator,
   scaleAnswer,
   seriesLimit,
   socksToGuarantee,
+  staircaseWays,
+  tilesAlone,
   type SceneConfig,
+  type SceneConfigInput,
 } from "@gmq/animation-engine";
 import {
   AnswerSpecSchema,
@@ -85,8 +98,11 @@ export function countSentencesBi(text: Bi): { en: number; zh: number } {
   };
 }
 
-/** The input a child would type for a correct answer, or null when the type has none yet. */
-export function canonicalCorrectInput(spec: AnswerSpec): string | null {
+/**
+ * The input a child would type for a correct answer, or null when the type has none.
+ * EXPRESSION answers take the first known solution of their `expression_builder` scene.
+ */
+export function canonicalCorrectInput(spec: AnswerSpec, scene?: SceneConfigInput): string | null {
   switch (spec.type) {
     case "NUMERIC":
       return String(spec.value);
@@ -99,8 +115,9 @@ export function canonicalCorrectInput(spec: AnswerSpec): string | null {
     case "ORDERING":
       return spec.correctOrder.join(" > ");
     case "EXPRESSION":
+      return scene?.type === "expression_builder" ? (scene.solutions?.[0] ?? null) : null;
     case "SCENE_COMPLETION":
-      return null; // judged in Phase 4 (expression evaluator / scene completion)
+      return null; // judged by the scene
   }
 }
 
@@ -137,6 +154,27 @@ export function sceneTruth(scene: SceneConfig): number | null {
       return socksToGuarantee(scene.colors, scene.guaranteeTwoPairs ? 2 : 1);
     case "collatz_path":
       return longestCollatz(scene.highlightRange[0], scene.highlightRange[1]);
+    // Tier-2 batch 3b: the scene's own helpers compute what its reveal shows.
+    case "staircase_paths":
+      return staircaseWays(scene.askN, scene.maxHop);
+    case "pascal_triangle":
+      return 2 ** (scene.askRow ?? scene.rows);
+    case "calendar_grid":
+      return scene.centre === undefined ? null : centreRule(scene.centre);
+    case "cycle_timeline":
+      return lcm(scene.a, scene.b);
+    case "frog_puzzle":
+      return frogMinMoves(scene.perSide);
+    case "water_jugs":
+      return jugsShortestSolution(scene)?.length ?? null;
+    case "queens_board": {
+      const all = queensSolutions(scene.n);
+      return scene.dedupeMirrors ? new Set(all.map(mirrorKey)).size : all.length;
+    }
+    case "guess_game":
+      return binarySearchSteps(scene.max);
+    case "trains_fly":
+      return flyTotal(scene);
     default:
       return null;
   }
@@ -214,7 +252,7 @@ function checkWrongAnswers(bp: HeroQuestionBlueprint, spec: AnswerSpec, options:
   if (bp.wrongAnswers.length < HERO_LIMITS.minWrongAnswers) {
     errors.push(`wrongAnswers: ${bp.wrongAnswers.length} < ${HERO_LIMITS.minWrongAnswers}`);
   }
-  const correctInput = canonicalCorrectInput(spec);
+  const correctInput = canonicalCorrectInput(spec, bp.scene);
   const seen = new Set<string>();
   bp.wrongAnswers.forEach((rule, i) => {
     const label = `wrongAnswers[${i}] (${rule.match})`;
@@ -246,6 +284,41 @@ function checkSceneAnswer(scene: SceneConfig, spec: AnswerSpec, errors: string[]
   if (scene.type === "monty_hall") {
     if (spec.type !== "CHOICE" || spec.correctId !== "switch") {
       errors.push(`scene/answer: monty_hall needs a CHOICE answer with correctId "switch"`);
+    }
+    return;
+  }
+  if (scene.type === "domino_tiling") {
+    // Same copy convention as bridges_trace: CHOICE "possible" / "impossible".
+    const want = dominoTiling(scene) !== null ? "possible" : "impossible";
+    if (spec.type !== "CHOICE" || spec.correctId !== want) {
+      errors.push(`scene/answer: domino_tiling ${want === "possible" ? "can" : "can't"} be tiled, so the answer must be CHOICE "${want}"`);
+    }
+    return;
+  }
+  if (scene.type === "tiling_lab") {
+    // MULTI_VALUE answers name the tilers by their number of sides ("3, 4, 6"): typed on a number pad, same in both languages.
+    const truth = scene.shapes.map((s) => SHAPE_SIDES[s]).filter(tilesAlone).sort((a, b) => a - b).map(String);
+    if (spec.type !== "MULTI_VALUE") {
+      errors.push(`scene/answer: tiling_lab needs a MULTI_VALUE answer (sides of the shapes that tile alone)`);
+    } else if ([...spec.values].sort((a, b) => Number(a) - Number(b)).join() !== truth.join()) {
+      errors.push(`scene/answer: tiling_lab's tilers have ${truth.join(", ")} sides, answer is ${spec.values.join(", ")}`);
+    }
+    return;
+  }
+  if (scene.type === "expression_builder") {
+    if (spec.type !== "EXPRESSION") {
+      errors.push(`scene/answer: expression_builder needs an EXPRESSION answer`);
+      return;
+    }
+    const sameList = (a: readonly (number | string)[], b: readonly (number | string)[]) => [...a].map(String).sort().join() === [...b].map(String).sort().join();
+    if (scene.target !== spec.target) errors.push(`scene/answer: expression_builder target ${scene.target}, answer target ${spec.target}`);
+    if (!sameList(scene.allowedNumbers, spec.allowedNumbers)) errors.push(`scene/answer: expression_builder numbers ${scene.allowedNumbers.join(",")} differ from the answer's ${spec.allowedNumbers.join(",")}`);
+    if (!sameList(scene.allowedOps, spec.allowedOps)) errors.push(`scene/answer: expression_builder ops ${scene.allowedOps.join(" ")} differ from the answer's ${spec.allowedOps.join(" ")}`);
+    const solutions = scene.solutions ?? [];
+    if (solutions.length === 0) errors.push(`scene/answer: expression_builder needs at least one listed solution (it is the canonical correct input)`);
+    // Every solution the reveal shows must make the target with exactly the allowed numbers (math-engine evaluator).
+    for (const s of solutions) {
+      if (!validateAnswerV2(s, spec).isCorrect) errors.push(`scene/answer: listed solution "${s}" is not a correct EXPRESSION answer`);
     }
     return;
   }
@@ -381,7 +454,7 @@ export function validateHeroBlueprint(bp: HeroQuestionBlueprint): string[] {
     errors.push(`choices: only CHOICE answers take options (answer is ${spec.type})`);
   }
 
-  const correctInput = canonicalCorrectInput(spec);
+  const correctInput = canonicalCorrectInput(spec, bp.scene);
   if (correctInput !== null && !validateAnswerV2(correctInput, spec).isCorrect) {
     errors.push(`answer: validateAnswerV2 rejects the canonical correct input "${correctInput}"`);
   }

@@ -165,8 +165,8 @@
 
 **B9 · `why-hexagons` · 蜜蜂为什么选六边形** — 10–12 · WODB · MULTI_VALUE · `tiling_lab` T2
 - 钩子：用一种正多边形铺地板，不能有缝。三角形、正方形、五边形、六边形，哪些能做到？
-- 猜测：multi-select 四个形状
-- 答案：三角形、正方形、六边形。
+- 猜测：multi-select 四个形状（成稿：没有多选型猜测，改为 choice「四种里有几种能单独铺满：一种 / 两种 / 三种 / 四种」）
+- 答案：三角形、正方形、六边形。（成稿：MULTI_VALUE 按**边数**作答，答案 3、4、6。多值输入框是数字键盘、按文本比对，中文孩子输入「三角形」对不上 "triangle"；输入形状名会得到「请填边数」的反馈。）
 - 顿悟：一个角要能整除 360°：60、90、120 可以，108 不行。六边形同样面积用的边最少——蜜蜂省蜡。
 - 常见错误：选了五边形（反馈：三个五边形角加起来 324°，差一点；四个就 432°，多了）。
 - 延伸：两种形状混着用呢？（八边形 + 正方形）
@@ -267,7 +267,8 @@
 - 钩子：四串各 20 次的硬币记录，三串是人编的，一串是真的掷出来的。哪一串是真的？
 - 猜测 = 问题：choice A/B/C/D。答案：含有最长连串（4–5 个连续相同）的那一串。
 - 顿悟：人编的随机太「均匀」了。真正的随机会出现连续五个正面，这很正常。
-- 延伸：掷 20 次出现至少 4 连的概率有多大？（约 77%）
+- 延伸：掷 20 次出现至少 4 连的概率有多大？（约 77%；已精确核对为 76.8%，至少 5 连约 46%，完全没有 3 连只有约 2%）
+- 成稿的四串（20 次，H 正 T 反）：A HTHHTHTTHTHTHHTHTTHT、B THTHHTTHTHTHHTHTTHTH、**C HTTHHHHHTHTTHTHHTTTH**（真，5 连正、11 正、换面 10 次）、D HHTHTTHTHTHHTTHTHTTH；三串假的最长只连 2 个，换面 14–15 次。
 - 讨论：你是怎么判断的？
 
 ---
@@ -420,10 +421,10 @@
 - 问题：中间是 17，九个数的和是多少？答案 153。
 - 顿悟：和永远是中间数的 9 倍。左右对称的两个日期加起来是中间的两倍，上下也是。
 - 常见错误：136（8 × 17）；170。
-- 延伸：框 5×5 呢？框一个 3×3 但只看四个角呢？
+- 延伸：框 5×5 呢？框一个 3×3 但只看四个角呢？（更正：5 × 5 的框在任何月份都放不下，中间数要同时 ≥ 17 和 ≤ 15；成稿改为「四个角」和「2 × 2 小框」。）
 - 讨论：换到不同的月份，规律还成立吗？为什么？
 
-**E8 · `cicada-primes` · 十七年才出来一次的虫** ✱ — 10–12 · PATTERN · NUMERIC · `cycle_timeline` T2
+**E8 · `cicada-primes` · 十七年才出来一次的虫** ✱ — 10–12 · PATTERN · NUMERIC · `cycle_timeline` T2（成稿升级旧题 `Cicada Underground Mystery`：同样是两个周期的最小公倍数）
 - 钩子：有一种蝉每 13 年或 17 年才钻出地面一次。为什么是这两个数？假设有一种天敌每 6 年大爆发一次。
 - 猜测：choice —「蝉周期 12 年每隔几年撞上天敌？每 12 年 / 每 6 年 / 从不」
 - 问题：如果蝉是 13 年周期、天敌 6 年周期，多少年撞一次？答案 78。
@@ -436,7 +437,7 @@
 - 钩子：7 片荷叶一排，左边 3 只绿蛙，右边 3 只棕蛙，中间空一片。青蛙只能往前跳到空叶，或跳过一只别的蛙。让两边的蛙完全交换位置。最少几步？
 - 猜测：slider 6–30
 - 答案：15。
-- 顿悟：3 只换 3 只是 15 步；2 换 2 是 8；n 换 n 是 n(n + 2)。关键是永远不要让两只同色的蛙贴在一起。
+- 顿悟：3 只换 3 只是 15 步；2 换 2 是 8；n 换 n 是 n(n + 2)。关键是永远不要让两只同色的蛙贴在一起。（补充：只要换完，步数一定正好是 n(n + 2)：n² 次跳跃加 2n 次小跳，所以难点是别卡住，不是快。）
 - 常见错误：9；12；18。
 - 延伸：4 对 4 呢？（24）
 - 讨论：你卡住时是什么局面？
@@ -490,14 +491,14 @@
 
 **F5 · `four-fours` · 四个 4** — 10–12 · OPEN_MIDDLE · EXPRESSION · `expression_builder` T2
 - 钩子：只用四个 4，加减乘除和括号（也可以用 √ 和 !，或把两个 4 拼成 44），你能凑出 0 到 9 的每个数吗？先凑 7。
-- 猜测：无
+- 猜测：无（成稿补了 choice「凑出 7 的式子有几种」，让 Act 1 有猜测）
 - 问题：用四个 4 凑出 7。答案不唯一：44 ÷ 4 − 4、4 + 4 − 4 ÷ 4 …（表达式校验器验证）。
 - 顿悟：同一个数有很多种写法；有的数特别难（比如 10 需要 (44 − 4) ÷ 4）。
 - 常见错误：用了三个或五个 4（反馈：数一数 4 的个数）；结果不是 7。
 - 延伸：0 到 20 全部凑出来；哪些数最难？
 - 讨论：贴出你最得意的一个式子。
 
-**F6 · `water-jugs` · 三升和五升量出四升** — 10–12 · PUZZLE · SCENE_COMPLETION · `water_jugs` T2
+**F6 · `water-jugs` · 三升和五升量出四升** — 10–12 · PUZZLE · SCENE_COMPLETION · `water_jugs` T2（成稿：NUMERIC 6，和 F1 一样问最少步数；场景报告 `completed {steps}`。标题改为「巨人要的 4 升水」）
 - 钩子：一个 3 升壶，一个 5 升壶，水龙头随便用。量出正好 4 升。
 - 猜测：slider「最少几步？」2–12
 - 问题：场景完成即正确；最少步数 6。
@@ -506,7 +507,7 @@
 - 讨论：你用了几步？有人找到 6 步以下的吗？（没有，解释为什么）
 
 **F7 · `four-queens` · 四个皇后互不攻击** — 10–12 · PUZZLE · NUMERIC · `queens_board` T2
-- 钩子：4×4 棋盘放 4 个皇后，任何两个都不能在同一行、同一列、同一斜线。摆得出来吗？有几种摆法？
+- 钩子：4×4 棋盘放 4 个皇后，任何两个都不能在同一行、同一列、同一斜线。摆得出来吗？有几种摆法？（成稿：场景关掉 `countSolutions`，否则探索时「已找到 0/2」直接给出答案；两个解互为镜像，转 90° 不会得到新解。）
 - 猜测：slider 0–10
 - 答案：2（互为镜像）。
 - 顿悟：每行只能有一个皇后，先放第一行再排除。8×8 有 92 种解。
@@ -544,7 +545,7 @@
 - 延伸：苍蝇飞了多少个来回？（无限多，但距离有限——见 A10）
 - 讨论：你先算了什么？
 
-**F12 · `guess-my-number` · 七次猜中 1 到 100** — 8–10 · PUZZLE · NUMERIC · `guess_game` T2
+**F12 · `guess-my-number` · 七次猜中 1 到 100** — 8–10 · PUZZLE · NUMERIC · `guess_game` T2（成稿标题改为「比它大还是比它小 / Higher or Lower?」：原标题直接说出了答案 7）
 - 钩子：我想了一个 1 到 100 的数。你每猜一次我告诉你「大了」或「小了」。最少几次一定能猜中？先玩几局。
 - 猜测：slider 1–20
 - 答案：7。
@@ -556,7 +557,7 @@
 ---
 
 ## 旧题库升级候选（Phase 0 审计后确认，预计 ≤ 15 道）
-`Math Mind-Reading Trick`（→ D2）、`Paper Folding Challenge`（→ A3）、`Cicada Underground Mystery`（→ E8）、`Sudoku Number Logic`、`Tower Shadow Trick`、`Card Magician's …`、`Chess Knight's …`、`Rubik's …`、`Domino Chain Reaction`、`Origami Paper Folds`、`Bee Hexagon Efficiency`（→ B9）、`Fibonacci in Music` / `Sunflower Fibonacci Spiral`（→ D8）、`Golden Ratio in Art`、`Dice Game Fairness`（→ C6）、`Locker Code Logic`。升级时保留原 `id`（已被外部链接 / 提交记录引用），新增 `slug`，`kind` 改为对应类型。
+`Math Mind-Reading Trick`（→ D2）、`Paper Folding Challenge`（→ A3）、`Cicada Underground Mystery`（→ E8，batch 4 已升级）、`Sudoku Number Logic`、`Tower Shadow Trick`、`Card Magician's …`、`Chess Knight's …`、`Rubik's …`、`Domino Chain Reaction`、`Origami Paper Folds`、`Bee Hexagon Efficiency`（→ B9；batch 4 未升级：旧题算的是面积百分比、年龄 14–16，和 B9「内角整除 360°」不是一回事，留作练习题）、`Fibonacci in Music` / `Sunflower Fibonacci Spiral`（→ D8）、`Golden Ratio in Art`、`Dice Game Fairness`（→ C6）、`Locker Code Logic`。升级时保留原 `id`（已被外部链接 / 提交记录引用），新增 `slug`，`kind` 改为对应类型。
 
 ---
 
@@ -568,6 +569,16 @@
 - **事实更正**：A2「一千多年」→「500 年以上」；A9「一百个宇宙」→「十几个」；C9「差了十倍」→ 11 倍；D5 已验证范围 → 约 3 × 10^20；D9 完全数「50 多个」→ 已知 52 个（截至 2024 年 10 月）。
 - **难度**：D4 `kaprekar-6174` 由 HARD 调为 MEDIUM（场景代算减法，难点只在坚持迭代）。
 
+## Phase 3 batch 4 补记（2026-10-22）
+
+目录剩下的 24 道全部成稿，hero 题共 63 道：A6、A7、B5、B9、B10、B11、C10、D7、D10、E2、E4–E9、F4–F7、F9–F12。
+
+- **场景**：13 道用 Tier-2 场景（B9 `tiling_lab`、B10 `domino_tiling`、E2 `staircase_paths`、E4 `pascal_triangle`、E7 `calendar_grid`、E8 `cycle_timeline`、E9 `frog_puzzle`、F5 `expression_builder`、F6 `water_jugs`、F7 `queens_board`、F10 `coin_piles`、F11 `trains_fly`、F12 `guess_game`）。11 道 T3 场景还没有，先用 `illustration`，每道一张题图加一张揭晓图（`apps/web/public/scenes/<slug>.svg` 与 `<slug>-reveal.svg`）：A6、A7、B5、B11、C10、D7、D10、E5、E6、F4、F9。illustration 共 13 道，没超过 15 道的上限。
+- **校验**：`validate.ts` 用场景自己的函数算出 Tier-2 场景的答案（楼梯走法、行和、九格和、最小公倍数、青蛙步数、量水最短步数、皇后解数、猜数次数、苍蝇距离），再和答案对比。`domino_tiling` 必须和精确搜索一致（CHOICE `possible`/`impossible`），`tiling_lab` 必须和「内角整除 360°」一致（按边数）。EXPRESSION 的目标、可用数字、可用运算必须和 `expression_builder` 完全一样，列出的每个解都要用 math-engine 的求值器算出目标值，并且正好用四个 4。
+- **升级旧题**：只有 E8（`Cicada Underground Mystery`）。其他候选的数学对不上，都留作 DRILL：`Locker Code Logic`（逻辑推理）、`Sudoku Number Logic`（数独）、`Domino Chain Reaction`（每块推倒 2 块的等比求和，和 B10 铺骨牌无关）、`Origami Paper Folds`（就是 A3 的 0.1 mm 折 10 次，A3 已经升级了 `Paper Folding Challenge`）、`Bee Hexagon Efficiency`（见上）。
+- **content-lint 豁免清空**：`scramble-and-nine` 的钩子改成 "Take any number with a few digits…"，`kaprekar-6174` 的趣闻去掉了 "D. R."，两条豁免一起删掉。
+- **年龄**：AGE_8_10 15 道、AGE_10_12 32 道、AGE_12_14 16 道；每个世界的 AGE_8_10 至少 2 道（E7、F12 是 8–10 岁）。
+
 ### 延伸问题的答案（成稿里的「再往前一步」）
 
 | 题 | 延伸 | 答案 |
@@ -577,6 +588,8 @@
 | A3 fold-to-the-moon | 比人高；比珠峰高 | 1.7 m 的人：15 折（3.3 m）；珠峰：27 折（13.4 km） |
 | A4 million-seconds | 满十亿秒是几岁 | 约 31.7 岁 |
 | A5 billion-heartbeats | 老鼠 500/分；大象 30/分 | 约 3.8 年；约 63 年 |
+| A6 point-nine-repeating | 0.4999… 等于多少；别的两种写法 | 0.5；每个有限小数都有第二种写法，如 0.25 = 0.24999… |
+| A7 hilbert-hotel | 来了一辆载着无限多位客人的大巴 | n 号房的客人搬到 2n 号，单号房全空；大巴上第 k 位住 2k − 1 号 |
 | A8 handshake-party | 30 人；任意 n | 435；n(n − 1)/2 |
 | A9 googol-vs-atoms | 每个原子写一个 0 能写下古戈尔普勒克斯吗 | 不能：要 10^100 个 0，只有约 10^80 个原子 |
 | A10 halfway-to-the-wall | 1/3 + 1/9 + … | 1/2 |
@@ -584,9 +597,13 @@
 | B2 pizza-cuts | 5 刀；10 刀；n 刀 | 16；56；n(n + 1)/2 + 1 |
 | B3 rope-around-earth | 让 1.8 m 的人走过去 | 2π × 1.8 ≈ 11.3 m（滑块上限改为 12 m） |
 | B4 fence-shaper | 靠墙；可以弯 | 6 × 12 = 72 m²；圆约 45.8 m² |
+| B5 missing-square | 13 × 5 ÷ 2 和拼板面积之和 | 32.5 对 32（12 + 5 + 8 + 7）：上图比真三角形少半格，下图多半格，差 1 格就是那个洞 |
 | B6 pythagoras-squares | 5 和 12；其他整数三角形 | 13；如 3-4-5、8-15-17、7-24-25 |
 | B7 seven-bridges | 拆掉一座桥 | 拆哪座都能走：只剩两块奇数陆地，起点终点就在那两块 |
 | B8 clock-hands-meet | 一天里成一直线（相反方向） | 22 次 |
+| B9 why-hexagons | 八边形 + 正方形；别的组合 | 能：135 + 135 + 90 = 360；如 60 + 60 + 60 + 90 + 90、120 + 120 + 60 + 60、120 + 60 + 60 + 60 + 60 |
+| B10 mutilated-chessboard | 剪掉一深一浅两格 | 总能铺满（Gomory 定理） |
+| B11 mobius-cut | 在离边三分之一处剪 | 两个套在一起的环：一个原长的莫比乌斯带 + 一个两倍长、扭两整圈的环 |
 | C1 birthday-paradox | 99% 的机会 | 57 人 |
 | C2 monty-hall | 100 扇门 | 换门赢 99/100 |
 | C3 two-dice-sum | 三个骰子 | 10 和 11 并列（各 27/216） |
@@ -596,19 +613,37 @@
 | C7 pi-from-raindrops | 晃动小十倍要多少点 | 约 100 倍（10 万个） |
 | C8 rolls-until-six | 连续两个 6 | 平均 42 次 |
 | C9 someone-shares-my-birthday | 90% 的机会 | 840 人 |
+| C10 spot-the-real-random | 真掷 20 次至少 4 连的概率 | ≈ 77%（精确 76.8%）；≥ 5 连 ≈ 46%，≥ 3 连 ≈ 98% |
 | D1 trick-1089 | 四位数 | 结果不唯一，最常见 10890 和 9999（还有 10989、990） |
 | D2 mind-reading-five | 加 20；总是 7；变回原数 | 10；加 14；例如乘 2、加 10、除以 2、减 5 |
 | D3 scramble-and-nine | 藏起一位数字 | 9 减去其余数字和除以 9 的余数（余 0 时藏的是 0 或 9，分不清） |
 | D4 kaprekar-6174 | 三位数；两位数 | 495；不停在一个数，而是在 9 → 81 → 63 → 27 → 45 → 9 里绕圈 |
 | D5 collatz-hailstone | 20 以内比 9 久 | 18 和 19（各 20 步） |
 | D6 times-eleven | 85 × 11；123 × 11 | 935；1,353 |
+| D7 prime-spiral | 从 41 开始写螺旋，n² + n + 41 | n = 0 到 39 连续 40 个质数；n = 40 时是 1681 = 41² |
 | D8 fibonacci-next | 89 ÷ 55 | ≈ 1.618 |
 | D9 perfect-28 | 1–30 的盈数 | 12、18、20、24、30（都是偶数，6 的倍数居多） |
+| D10 missing-dollar | 自己编一个「钱不见了」的故事 | 开放题；诀窍是把已经包含在总数里的钱再加一次（或该减的去加）；对策是跟着每一块钱看它最后在哪 |
 | E1 tower-of-hanoi | 5 个盘；任意 n | 31；2^n − 1 |
+| E2 staircase-ways | 每次 1、2 或 3 级（10 级） | 274；规律变成前三个数相加 |
 | E3 growing-plus | 第 100 步；201 个点；100 个点 | 401；第 50 步；没有（4n + 1 总是奇数） |
+| E4 pascal-row-sum | 浅斜线相加 | 1、1、2、3、5、8……斐波那契数列 |
+| E5 tetris-shapes | 五连块：只转不翻；允许翻面 | 18 种；12 种 |
+| E6 star-strokes | 8 个点每次数 3 个；12 个点每次数 3 个 | 一笔画完（8 角星）；3 个正方形 |
+| E7 calendar-square | 3 × 3 的四个角；2 × 2 小方框 | 4 × 中间数；4 × 左上角 + 16 |
+| E8 cicada-primes | 17 年蝉对 6 年天敌；10–20 年里最倒霉的周期 | 102 年；12 和 18（每次出来都撞上） |
+| E9 frog-swap | 每边 4 只；每边 10 只 | 24 步；120 步 |
 | E10 four-weights | 只放一边；第五个砝码 | 1、2、4、8（到 15）；81，能称到 121 |
 | F1 river-crossing | 另一种 7 次；船能多带一样 | 第二趟带白菜而不是狼；3 次（先带狼和白菜，空船回，再带羊） |
 | F2 nine-balls-balance | 27 个；100 个；12 个不知轻重 | 3 次；5 次；3 次 |
 | F3 three-switches | 四个开关 | 1 号开 20 分钟、2 号开 5 分钟后都关，开 3 号：亮 = 3，烫 = 1，温 = 2，凉 = 4 |
+| F4 bridge-and-torch | 五个人 1、2、5、10、15 | 28 分钟（如 1+5 过 5、1 回 1、1+2 过 2、1 回 1、10+15 过 15、2 回 2、1+2 过 2）；一个个护送要 35 |
+| F5 four-fours | 0–10（到 20） | 全都能凑：0 = 44 − 44，1 = 44 ÷ 44，2 = 4 ÷ 4 + 4 ÷ 4，3 = (4 + 4 + 4) ÷ 4，4 = 4 + (4 − 4) × 4，5 = (4 × 4 + 4) ÷ 4，6 = 4 + (4 + 4) ÷ 4，7 = 44 ÷ 4 − 4，8 = 4 + 4 + 4 − 4，9 = 4 + 4 + 4 ÷ 4，10 = (44 − 4) ÷ 4；11 = 44 ÷ (√4 + √4)，13 = 44 ÷ 4 + √4，19 = 4! − 4 − 4 ÷ 4，0–20 全部可以 |
+| F6 water-jugs | 3 和 5 量 1、2、3、5；4 和 6 量 5 | 都能：1 升 4 步，2 升 2 步，3 升、5 升各 1 步；4 和 6 量不出 5（两壶里的水永远是偶数升） |
+| F7 four-queens | 5 × 5；6 × 6 | 10 种；4 种（比 5 × 5 还少） |
 | F8 knights-and-knaves | 「至少有一个是骗子」 | A 是骑士，B 是骗子 |
+| F9 nine-dots-four-lines | 三条线；一条线 | 点没有大小时三条线不行；点画得够大时，三条几乎平行、拉得很长的斜线可以；一条线是脑筋急转弯（很粗的笔或卷起纸），没有标准答案 |
+| F10 blindfold-coins | 20 枚正面；不知道正面个数 | 拿 20 枚全部翻面；不知道就无法保证（拿出的枚数必须等于正面个数） |
+| F11 fly-between-trains | 掉头几次；第一趟多远 | 无穷多次；第一趟 60 千米（48 分钟），之后 12、2.4……加起来 75 |
+| F12 guess-my-number | 1–1000；1–一百万 | 10 次；20 次 |
 

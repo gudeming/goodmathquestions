@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="t">
+  <title id="t">Three friends pay 30, get 3 back, and a bellboy keeps 2: where did the missing 1 go?</title>
+  <rect width="640" height="360" fill="#eff6ff"/>
+  <rect x="0" y="236" width="640" height="18" fill="#bfdbfe"/>
+  <g>
+    <rect x="33.0" y="166.0" width="44.0" height="70.0" rx="16.0" fill="#c084fc"/>
+    <circle cx="55" cy="152.0" r="17.0" fill="#fde68a"/>
+    <circle cx="49.0" cy="150.0" r="2.4" fill="#1e3a8a"/><circle cx="61.0" cy="150.0" r="2.4" fill="#1e3a8a"/>
+    <path d="M49.0 158.0 q6.0 5.0 12.0 0" fill="none" stroke="#1e3a8a" stroke-width="2.0" stroke-linecap="round"/>
+  </g>
+  <g>
+    <rect x="83.0" y="166.0" width="44.0" height="70.0" rx="16.0" fill="#ff6b9d"/>
+    <circle cx="105" cy="152.0" r="17.0" fill="#fde68a"/>
+    <circle cx="99.0" cy="150.0" r="2.4" fill="#1e3a8a"/><circle cx="111.0" cy="150.0" r="2.4" fill="#1e3a8a"/>
+    <path d="M99.0 158.0 q6.0 5.0 12.0 0" fill="none" stroke="#1e3a8a" stroke-width="2.0" stroke-linecap="round"/>
+  </g>
+  <g>
+    <rect x="133.0" y="166.0" width="44.0" height="70.0" rx="16.0" fill="#22d3ee"/>
+    <circle cx="155" cy="152.0" r="17.0" fill="#fde68a"/>
+    <circle cx="149.0" cy="150.0" r="2.4" fill="#1e3a8a"/><circle cx="161.0" cy="150.0" r="2.4" fill="#1e3a8a"/>
+    <path d="M149.0 158.0 q6.0 5.0 12.0 0" fill="none" stroke="#1e3a8a" stroke-width="2.0" stroke-linecap="round"/>
+  </g>
+  <g>
+    <rect x="308.0" y="166.0" width="44.0" height="70.0" rx="16.0" fill="#ef4444"/>
+    <circle cx="330" cy="152.0" r="17.0" fill="#fde68a"/>
+    <circle cx="324.0" cy="150.0" r="2.4" fill="#1e3a8a"/><circle cx="336.0" cy="150.0" r="2.4" fill="#1e3a8a"/>
+    <path d="M324.0 158.0 q6.0 5.0 12.0 0" fill="none" stroke="#1e3a8a" stroke-width="2.0" stroke-linecap="round"/>
+    <rect x="315.0" y="131.0" width="30.0" height="11.0" rx="3.0" fill="#1e40af"/>
+    <rect x="328.0" y="127.0" width="4.0" height="5.0" fill="#1e40af"/>
+  </g>
+  <rect x="342" y="196" width="14" height="14" rx="3" fill="#b91c1c"/>
+  <g>
+    <rect x="508.0" y="108.0" width="44.0" height="70.0" rx="16.0" fill="#3b82f6"/>
+    <circle cx="530.0" cy="94.0" r="17.0" fill="#fde68a"/>
+    <circle cx="524.0" cy="92.0" r="2.4" fill="#1e3a8a"/><circle cx="536.0" cy="92.0" r="2.4" fill="#1e3a8a"/>
+    <path d="M525.0 101.0 h10.0" stroke="#1e3a8a" stroke-width="2.0" stroke-linecap="round"/>
+  </g>
+  <rect x="455" y="168" width="150.0" height="70.0" rx="8.0" fill="#fb923c"/>
+  <rect x="449.0" y="160.0" width="162.0" height="12.0" rx="4.0" fill="#c2410c"/>
+  <circle cx="577.0" cy="154.0" r="7.0" fill="#fbbf24"/><rect x="569.0" y="156.0" width="16.0" height="4.0" fill="#d97706"/>
+  <path d="M150 104 C 260 20, 400 20, 520 82" fill="none" stroke="#16a34a" stroke-width="4" stroke-linecap="round"/>
+  <path d="M520.0 82.0 L517.6 68.3 L506.9 77.3 z" fill="#16a34a"/>
+  <g>
+    <rect x="306.0" y="30.0" width="48.0" height="28.0" rx="5.0" fill="#4ade80" stroke="#15803d" stroke-width="2"/>
+    <circle cx="330" cy="44" r="9.0" fill="#bbf7d0"/>
+  </g>
+  <text x="330" y="50.0" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="700" fill="#14532d">30</text>
+  <path d="M445 196 L372 196" fill="none" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+  <path d="M372.0 196.0 L384.0 203.0 L384.0 189.0 z" fill="#d97706"/>
+  <circle cx="408" cy="174" r="14" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+  <text x="408" y="179.6" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="700" fill="#78350f">5</text>
+  <circle cx="378" cy="226" r="12" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+  <text x="378" y="230.8" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#78350f">2</text>
+  <path d="M372 226 L360 212" fill="none" stroke="#b91c1c" stroke-width="3" stroke-linecap="round"/>
+  <path d="M358.0 210.0 L360.4 223.7 L371.1 214.7 z" fill="#b91c1c"/>
+  <path d="M300 128 L190 128" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round"/>
+  <path d="M190.0 128.0 L202.0 135.0 L202.0 121.0 z" fill="#d97706"/>
+  <circle cx="245" cy="127" r="10" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+  <text x="245" y="131.0" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#78350f">1</text>
+  <path d="M300 156 L190 156" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round"/>
+  <path d="M190.0 156.0 L202.0 163.0 L202.0 149.0 z" fill="#d97706"/>
+  <circle cx="245" cy="155" r="10" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+  <text x="245" y="159.0" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#78350f">1</text>
+  <path d="M300 184 L190 184" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round"/>
+  <path d="M190.0 184.0 L202.0 191.0 L202.0 177.0 z" fill="#d97706"/>
+  <circle cx="245" cy="183" r="10" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+  <text x="245" y="187.0" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#78350f">1</text>
+  <rect x="16" y="266" width="608" height="82" rx="16" fill="#ffffff" stroke="#bfdbfe" stroke-width="4"/>
+  <text x="115" y="316" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="700" fill="#1e3a8a">3 × 9 = 27</text>
+  <text x="300" y="316" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="700" fill="#1e3a8a">27 + 2 = 29</text>
+  <text x="480" y="316" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="700" fill="#1e3a8a">30 − 29 =</text>
+  <text x="578" y="326" text-anchor="middle" font-family="sans-serif" font-size="48" font-weight="700" fill="#ff6b9d">?</text>
+</svg>
