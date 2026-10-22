@@ -30,18 +30,45 @@ function expectProblem(bp: HeroQuestionBlueprint, pattern: RegExp): void {
   expect(errors.some((e) => pattern.test(e)), `expected ${pattern} in:\n${errors.join("\n")}`).toBe(true);
 }
 
+const BATCH_1_SLUGS = [
+  "gauss-sum",
+  "handshake-party",
+  "squares-on-chessboard",
+  "monty-hall",
+  "trick-1089",
+  "mind-reading-five",
+  "scramble-and-nine",
+  "kaprekar-6174",
+] as const;
+
+const BATCH_2_SLUGS = [
+  "chessboard-rice",
+  "fold-to-the-moon",
+  "pizza-cuts",
+  "fence-shaper",
+  "birthday-paradox",
+  "two-dice-sum",
+  "odd-even-game",
+  "rolls-until-six",
+  "someone-shares-my-birthday",
+  "tower-of-hanoi",
+  "growing-plus",
+  "four-weights",
+  "river-crossing",
+  "nine-balls-balance",
+  "three-switches",
+  "knights-and-knaves",
+] as const;
+
+const bySlug = (slug: string): HeroQuestionBlueprint => {
+  const bp = ALL_HERO_BLUEPRINTS.find((b) => b.slug === slug);
+  if (!bp) throw new Error(`no blueprint ${slug}`);
+  return bp;
+};
+
 describe("hero blueprints (batch 1)", () => {
   it("has the eight batch-1 questions", () => {
-    expect(ALL_HERO_BLUEPRINTS.map((bp) => bp.slug)).toEqual([
-      "gauss-sum",
-      "handshake-party",
-      "squares-on-chessboard",
-      "monty-hall",
-      "trick-1089",
-      "mind-reading-five",
-      "scramble-and-nine",
-      "kaprekar-6174",
-    ]);
+    expect(ALL_HERO_BLUEPRINTS.map((bp) => bp.slug)).toEqual(expect.arrayContaining([...BATCH_1_SLUGS]));
   });
 
   it.each(ALL_HERO_BLUEPRINTS.map((bp) => [bp.slug, bp] as const))("%s validates", (_slug, bp) => {
@@ -359,5 +386,103 @@ describe("cross-blueprint checks", () => {
     expect(message).toMatch(/Hero question validation failed \(1 blueprint/);
     expect(message).toMatch(/gauss-sum:\n {4}- ageGroup/);
     expect(message).toMatch(/hints: duplicate hint text/);
+  });
+});
+
+describe("hero blueprints (batch 2)", () => {
+  it("adds the sixteen batch-2 questions, and nothing else", () => {
+    const slugs = ALL_HERO_BLUEPRINTS.map((bp) => bp.slug);
+    expect(slugs).toEqual(expect.arrayContaining([...BATCH_2_SLUGS]));
+    expect(slugs).toHaveLength(BATCH_1_SLUGS.length + BATCH_2_SLUGS.length);
+  });
+
+  it("puts each question in its catalog world and slot (sortOrder = catalog number)", () => {
+    const slot = (slug: string) => `${bySlug(slug).collection}/${bySlug(slug).sortOrder}`;
+    expect(BATCH_2_SLUGS.map(slot)).toEqual([
+      "huge-numbers/2",
+      "huge-numbers/3",
+      "shapes-that-lie/2",
+      "shapes-that-lie/4",
+      "chance-and-luck/1",
+      "chance-and-luck/3",
+      "chance-and-luck/6",
+      "chance-and-luck/8",
+      "chance-and-luck/9",
+      "patterns-everywhere/1",
+      "patterns-everywhere/3",
+      "patterns-everywhere/10",
+      "impossible-puzzles/1",
+      "impossible-puzzles/2",
+      "impossible-puzzles/3",
+      "impossible-puzzles/8",
+    ]);
+  });
+
+  it("every world has questions now", () => {
+    for (const world of HERO_WORLDS) expect(world.blueprints.length, world.slug).toBeGreaterThan(0);
+  });
+
+  it("keeps the AGE_8_10 counts per world", () => {
+    const young = Object.fromEntries(
+      HERO_WORLDS.map((w) => [w.slug, w.blueprints.filter((bp) => bp.ageGroup === "AGE_8_10").length])
+    );
+    // huge-numbers, number-magic and impossible-puzzles reach 2 when A4, D6/D8 and F12 land (T2 scenes).
+    expect(young).toEqual({
+      "huge-numbers": 1,
+      "shapes-that-lie": 2,
+      "chance-and-luck": 2,
+      "number-magic": 1,
+      "patterns-everywhere": 2,
+      "impossible-puzzles": 1,
+    });
+  });
+
+  it("only A3 upgrades a legacy row in this batch", () => {
+    const upgrades = BATCH_2_SLUGS.map(bySlug).filter((bp) => bp.upgradesLegacyTitleEn !== undefined);
+    expect(upgrades.map((bp) => [bp.slug, bp.upgradesLegacyTitleEn])).toEqual([["fold-to-the-moon", "Paper Folding Challenge"]]);
+  });
+
+  it("uses illustration scenes only where no interactive scene exists yet", () => {
+    const illustrated = ALL_HERO_BLUEPRINTS.filter((bp) => bp.scene.type === "illustration").map((bp) => bp.slug);
+    expect(illustrated).toEqual(["three-switches", "knights-and-knaves"]);
+    for (const slug of illustrated) expect(bySlug(slug).rubricNotes).toMatch(/待替换为 \w+/);
+  });
+
+  it("names the likely mistake for the classic wrong answers", () => {
+    const fb = (slug: string, input: string) => {
+      const bp = bySlug(slug);
+      return wrongAnswerFeedbackFor(input, AnswerSpecSchema.parse(bp.answer), bp.wrongAnswers)?.feedback.en ?? null;
+    };
+    expect(fb("chessboard-rice", "42")).toMatch(/21 × 2/);
+    expect(fb("chessboard-rice", "2097152")).toMatch(/21 doublings/);
+    expect(fb("fold-to-the-moon", "coin")).toMatch(/added 0\.1 mm ten times/);
+    expect(fb("pizza-cuts", "8")).toMatch(/through the centre/);
+    expect(fb("pizza-cuts", "10")).toMatch(/pizza you started with/);
+    expect(fb("fence-shaper", "24")).toMatch(/how long the fence is/);
+    expect(fb("birthday-paradox", "183")).toMatch(/half of 365/);
+    expect(fb("birthday-paradox", "30")).toMatch(/^Too many/);
+    expect(fb("two-dice-sum", "same")).toMatch(/feels like every total/);
+    expect(fb("odd-even-game", "same")).toMatch(/one even die/);
+    expect(fb("rolls-until-six", "3.5")).toMatch(/DOTS/);
+    expect(fb("someone-shares-my-birthday", "23")).toMatch(/ANY two people/);
+    expect(fb("tower-of-hanoi", "14")).toMatch(/biggest disc/);
+    expect(fb("growing-plus", "40")).toMatch(/dot in the middle/);
+    expect(fb("four-weights", "1")).toMatch(/two pans/);
+    expect(fb("river-crossing", "5")).toMatch(/rows back alone/);
+    expect(fb("nine-balls-balance", "3")).toMatch(/THREE groups/);
+    expect(fb("three-switches", "impossible")).toMatch(/eyes alone/);
+    expect(fb("knights-and-knaves", "both-knaves")).toMatch(/can't be trusted/);
+  });
+
+  it("accepts estimates inside the window and the facts the copy relies on", () => {
+    const ok = (slug: string, input: string) => validateAnswerV2(input, AnswerSpecSchema.parse(bySlug(slug).answer)).isCorrect;
+    expect(["22", "23", "24"].every((v) => ok("birthday-paradox", v))).toBe(true);
+    expect(ok("birthday-paradox", "21")).toBe(false);
+    expect(ok("someone-shares-my-birthday", "253")).toBe(true);
+    expect(ok("someone-shares-my-birthday", "183")).toBe(false);
+    expect(ok("rolls-until-six", "6")).toBe(true);
+    expect(ok("rolls-until-six", "3.5")).toBe(false);
+    expect(ok("chessboard-rice", String(2 ** 20))).toBe(true);
+    expect(ok("four-weights", "40")).toBe(true);
   });
 });

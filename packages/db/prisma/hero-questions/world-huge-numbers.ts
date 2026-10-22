@@ -1,8 +1,9 @@
 /**
  * World A · Huge numbers & infinity (`huge-numbers`). Catalog: 02-hero-question-catalog.md §A.
- * Batch 1 has the questions whose scenes exist: A1 gauss-sum, A8 handshake-party.
- * TODO(phase-3 batch 2): A2-A7, A9, A10 once chessboard_doubling, fold_paper, scale_ladder,
- * zoom_number_line, hotel_shift and halving_bar scenes land.
+ * Batch 1: A1 gauss-sum, A8 handshake-party. Batch 2: A2 chessboard-rice, A3 fold-to-the-moon
+ * (upgrades the legacy "Paper Folding Challenge" row).
+ * TODO(phase-3 batch 3): A4, A5, A9 (scale_ladder), A6 (zoom_number_line), A7 (hotel_shift),
+ * A10 (halving_bar). A4 million-seconds is this world's second AGE_8_10 question.
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
@@ -153,4 +154,197 @@ export const handshakeParty: HeroQuestionBlueprint = {
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 1, retell 1: hint 3 nearly gives the method away; retelling is a nice fact rather than a jaw-dropper",
 };
 
-export const HUGE_NUMBERS: readonly HeroQuestionBlueprint[] = [gaussSum, handshakeParty];
+/** A2. The guess is about the whole board; the question pins down one square the child can reach in the scene. */
+export const chessboardRice: HeroQuestionBlueprint = {
+  slug: "chessboard-rice",
+  collection: "huge-numbers",
+  kind: "THREE_ACT",
+  ageGroup: "AGE_10_12",
+  difficulty: "MEDIUM",
+  category: "ARITHMETIC",
+  title: { en: "The King's Cheap Reward", zh: "国王的便宜奖赏" },
+  hook: {
+    en: "A king offers the inventor of chess any reward he likes. The inventor asks for rice: one grain on the first square of the board, two on the next, and double again on every square after that. The king laughs at such a cheap prize. Who do you think ends up sorry?",
+    zh: "国王要奖赏发明国际象棋的人，想要什么都行。那人只要米：棋盘第一格放一粒，第二格放两粒，之后每一格都比前一格多一倍。国王笑了：「这么便宜？」最后谁会后悔？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "bowl", en: "The whole board holds about a bowl of rice", zh: "整个棋盘大约一碗米" },
+      { id: "truck", en: "The whole board holds about a truckload", zh: "整个棋盘大约一卡车米" },
+      { id: "world", en: "The whole board holds more than all the rice in the world", zh: "整个棋盘比全世界的米还多" },
+    ],
+  },
+  scene: {
+    type: "chessboard_doubling",
+    squares: 64,
+    unitLabel: { en: "grains of rice", zh: "粒米" },
+    startAmount: 1,
+    showLogScale: true,
+    askSquare: 21,
+  },
+  prompt: {
+    en: "Square 1 gets 1 grain, and every square gets twice as many as the one before. How many grains go on square 21?",
+    zh: "第 1 格放 1 粒米，后面每一格都是前一格的 2 倍。第 21 格要放多少粒？",
+  },
+  answer: { type: "NUMERIC", value: 1048576 },
+  hints: [
+    { en: "Don't jump straight to square 21. Write down the first few squares: 1, 2, 4, 8, … What comes next?", zh: "先别急着跳到第 21 格。把前几格写出来：1、2、4、8……下一个是几？" },
+    { en: "Square 11 has 1,024 grains: that's 10 doublings after square 1. How many doublings does it take to get from square 1 to square 21?", zh: "第 11 格有 1,024 粒，从第 1 格到这里翻了 10 次倍。从第 1 格到第 21 格要翻几次倍？" },
+    { en: "Square 21 is 20 doublings after square 1. Ten doublings make 1,024, so twenty doublings make 1,024 × 1,024.", zh: "第 21 格比第 1 格多翻了 20 次倍。翻 10 次是 1,024，所以翻 20 次就是 1,024 × 1,024。" },
+  ],
+  wrongAnswers: [
+    {
+      match: "42",
+      feedback: {
+        en: "That's 21 × 2, as if each square got 2 more grains. But every square doubles the one before, so the numbers grow much faster: 1, 2, 4, 8, 16…",
+        zh: "这是 21 × 2，好像每格只多 2 粒。可是每一格都是前一格的两倍，数会长得快得多：1、2、4、8、16……",
+      },
+    },
+    {
+      match: "2097152",
+      feedback: {
+        en: "So close! That's 21 doublings. But the 1 grain on square 1 hasn't been doubled at all, so square 21 is only 20 doublings along.",
+        zh: "非常接近！这是翻了 21 次倍。可是第 1 格的 1 粒还没翻过倍，所以到第 21 格只翻了 20 次。",
+      },
+    },
+    {
+      match: "524288",
+      feedback: {
+        en: "Close, but one doubling short. Count again: square 2 is 1 doubling, square 3 is 2 doublings, so square 21 is…",
+        zh: "很接近，可是少翻了一次倍。再数一数：第 2 格翻了 1 次，第 3 格翻了 2 次，那第 21 格呢？",
+      },
+    },
+    {
+      match: "lt:1000",
+      feedback: {
+        en: "Much too small. Doubling sneaks up on you: square 11 alone already has 1,024 grains.",
+        zh: "太小了。翻倍长得比你想的快：光是第 11 格就已经有 1,024 粒了。",
+      },
+    },
+  ],
+  explanation: {
+    en: "Every square doubles the one before, so square 21 is 20 doublings after square 1. Ten doublings make 1,024, and ten more multiply that by 1,024 again. So square 21 holds 1,024 × 1,024 = 1,048,576 grains.",
+    zh: "每一格都是前一格的两倍，所以第 21 格比第 1 格多翻了 20 次倍。翻 10 次是 1,024，再翻 10 次就是再乘一个 1,024。所以第 21 格有 1,024 × 1,024 = 1,048,576 粒米。",
+  },
+  aha: {
+    en: "Just twenty doublings pass a million, and the board has 64 squares. Altogether it holds about 18 billion billion grains, more than a thousand years of the world's rice.",
+    zh: "只翻 20 次倍就超过了一百万，而棋盘有 64 格。全部加起来大约是 1800 亿亿粒，比全世界一千多年种的米还多。",
+  },
+  extension: {
+    en: "How many grains go on square 64? How many on the whole board? (Look at the totals for the first few squares: 1, 3, 7, 15… Compare each with the next square.)",
+    zh: "第 64 格有多少粒？整个棋盘一共多少粒？（看看前几格加起来是 1、3、7、15……和下一格比一比。）",
+  },
+  discussionPrompt: {
+    en: "At which square did you start to think the king was in trouble? What number made you change your mind?",
+    zh: "你到第几格开始觉得国王要糟了？是哪个数让你改变了想法？",
+  },
+  solutionTags: ["table", "pattern", "simulate"],
+  funFact: {
+    en: "The legend is very old, and nobody knows if it really happened. In some versions the king is so angry that he punishes the inventor instead of paying.",
+    zh: "这个传说非常古老，没人知道是不是真的。在有些版本里，国王发现付不起，干脆生气地惩罚了发明人。",
+  },
+  sortOrder: 2,
+  rubricNotes:
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: doubling twenty times by hand is long, so most kids lean on the scene or a table; the guess is about the board, the answer about square 21",
+};
+
+/**
+ * A3. Upgrades the legacy DRILL row "Paper Folding Challenge" in place. The guess is the
+ * question: picking the closest reference object (102.4 mm ≈ a thick book).
+ */
+export const foldToTheMoon: HeroQuestionBlueprint = {
+  slug: "fold-to-the-moon",
+  collection: "huge-numbers",
+  kind: "THREE_ACT",
+  ageGroup: "AGE_10_12",
+  difficulty: "MEDIUM",
+  category: "ARITHMETIC",
+  title: { en: "Fold Your Way to the Moon", zh: "折纸去月球" },
+  hook: {
+    en: "Every time you fold a sheet of paper in half, it gets twice as thick. Paper is very thin, so that doesn't sound like much. If you could fold it just ten times, how thick would it be?",
+    zh: "一张纸每对折一次，就会厚一倍。纸那么薄，听起来没什么大不了。如果能对折十次，它会有多厚？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "coin", en: "As thick as a coin", zh: "像一枚硬币那么厚" },
+      { id: "book", en: "As thick as a thick book", zh: "像一本厚书那么厚" },
+      { id: "person", en: "As tall as a person", zh: "像一个人那么高" },
+      { id: "building", en: "As tall as a building", zh: "像一座大楼那么高" },
+    ],
+  },
+  scene: {
+    type: "fold_paper",
+    thicknessMm: 0.1,
+    maxFolds: 42,
+    references: [
+      { heightMm: 2, emoji: "🪙", label: { en: "a coin", zh: "一枚硬币" } },
+      { heightMm: 100, emoji: "📕", label: { en: "a thick book", zh: "一本厚书" } },
+      { heightMm: 1_700, emoji: "🧍", label: { en: "a person", zh: "一个人" } },
+      { heightMm: 100_000, emoji: "🏢", label: { en: "a skyscraper", zh: "一座摩天楼" } },
+      { heightMm: 8_849_000, emoji: "🏔️", label: { en: "Mount Everest", zh: "珠穆朗玛峰" } },
+      { heightMm: 384_400_000_000, emoji: "🌕", label: { en: "the Moon", zh: "月球" } },
+    ],
+  },
+  prompt: {
+    en: "A sheet of paper is 0.1 mm thick. Fold it in half 10 times. Which is closest to how thick the folded stack is?",
+    zh: "一张纸厚 0.1 毫米。把它对折 10 次。折好的纸最接近下面哪一个的厚度？",
+  },
+  answer: { type: "CHOICE", correctId: "book" },
+  hints: [
+    { en: "Don't add 0.1 mm for each fold. Each fold doubles the number of layers. How many layers after 1 fold? After 2?", zh: "别每折一次就加 0.1 毫米。每折一次，纸的层数翻一倍。折 1 次有几层？折 2 次呢？" },
+    { en: "Keep doubling the layers: 2, 4, 8, 16, … Count until you have doubled 10 times.", zh: "层数一直翻倍：2、4、8、16……一直数到翻了 10 次为止。" },
+    { en: "After 10 folds there are 1,024 layers, each 0.1 mm thick. Multiply, then change millimetres into centimetres.", zh: "折 10 次以后有 1,024 层，每层 0.1 毫米。乘一下，再把毫米换成厘米。" },
+  ],
+  wrongAnswers: [
+    {
+      match: "choice:coin",
+      feedback: {
+        en: "You might have added 0.1 mm ten times and got 1 mm. But a fold doesn't add one more sheet: it doubles the whole stack every time.",
+        zh: "你可能把 0.1 毫米加了 10 次，得到 1 毫米。可是对折不是多加一张纸，而是每次把整叠纸翻一倍。",
+      },
+    },
+    {
+      match: "choice:person",
+      feedback: {
+        en: "Did you get 1,024 mm? 1,024 is the number of layers, and each layer is only 0.1 mm thick. Multiply before you compare.",
+        zh: "你算出来是 1,024 毫米吗？1,024 是层数，每层只有 0.1 毫米。先乘一下再比较。",
+      },
+    },
+    {
+      match: "choice:building",
+      feedback: {
+        en: "Doubling does get huge, just not yet! Ten folds multiply the thickness by 1,024. You'd need about 20 folds to pass a skyscraper.",
+        zh: "翻倍确实会变得超级大，只是还没到时候！折 10 次，厚度只乘了 1,024。要折 20 次左右才能超过一座摩天楼。",
+      },
+    },
+  ],
+  explanation: {
+    en: "Each fold doubles the layers, so 10 folds make 2 × 2 × … × 2 = 1,024 layers. 1,024 × 0.1 mm = 102.4 mm, which is about 10 cm. That's about as thick as a thick book.",
+    zh: "每折一次层数翻倍，折 10 次就是 10 个 2 相乘，等于 1,024 层。1,024 × 0.1 毫米 = 102.4 毫米，大约 10 厘米。差不多是一本厚书的厚度。",
+  },
+  aha: {
+    en: "Just 32 more folds, 42 in all, and the paper would reach past the Moon. Doubling isn't a bit faster than adding; it's a whole different kind of growing.",
+    zh: "再折 32 次，一共 42 次，纸就能超过月球。翻倍不是比加法快一点，而是完全不一样的增长。",
+  },
+  extension: {
+    en: "How many folds would it take to be taller than you? Taller than Mount Everest?",
+    zh: "要折几次才能比你还高？比珠穆朗玛峰还高呢？",
+  },
+  discussionPrompt: {
+    en: "Try folding a real sheet of paper in half again and again. How many times could you do it, and what stopped you?",
+    zh: "拿一张真的纸一直对折。你最多折了几次？是什么让你折不下去？",
+  },
+  solutionTags: ["table", "pattern", "simulate"],
+  funFact: {
+    en: "In 2002 a high-school student, Britney Gallivan, folded a very long strip of paper in half 12 times, beating the old saying that paper can't be folded more than 7 times.",
+    zh: "2002 年，美国高中生布兰妮·加利万用一条很长很长的纸带对折了 12 次，打破了「纸最多只能折 7 次」的说法。",
+  },
+  sortOrder: 3,
+  rubricNotes:
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 1, paths 1, wrong 2, hints 2, retell 2: the only real path is doubling (table or scene); extensions are 'more folds' rather than a new idea",
+  upgradesLegacyTitleEn: "Paper Folding Challenge",
+};
+
+export const HUGE_NUMBERS: readonly HeroQuestionBlueprint[] = [gaussSum, chessboardRice, foldToTheMoon, handshakeParty];
