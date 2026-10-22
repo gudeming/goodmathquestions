@@ -27,12 +27,13 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           command_timeout: 25m
-          # Pull first so the newest version of the deploy script is the one that runs.
+          # Sync to main first so the newest version of the deploy script is the one that runs;
+          # reset --hard so stray local edits on the box can never block a deploy.
           script: |
             set -e
             cd /opt/gmq
-            git checkout -- package-lock.json
-            git pull --ff-only origin main
+            git fetch --prune origin main
+            git reset --hard origin/main
             bash scripts/ec2-deploy.sh
 
       - name: Public health check
