@@ -1,4 +1,12 @@
 import type { SceneConfigInput, SceneConfigType } from "./schema";
+import { WOLF_GOAT_CABBAGE } from "./scenes/river";
+
+/** E3 growing plus: a centre dot and four arms of length n. */
+function plusStep(n: number): { cells: Array<[number, number]> } {
+  const cells: Array<[number, number]> = [[0, 0]];
+  for (let k = 1; k <= n; k++) cells.push([k, 0], [-k, 0], [0, k], [0, -k]);
+  return { cells };
+}
 
 /**
  * One valid sample config per scene type: used by the admin playground's editor and
@@ -19,6 +27,39 @@ export const SAMPLE_SCENE_CONFIGS: Record<SceneConfigType, SceneConfigInput> = {
     revealExtra: "nines_table",
   },
   monty_hall: { type: "monty_hall", doors: 3, rounds: 20, seed: 7 },
+  chessboard_doubling: { type: "chessboard_doubling", squares: 64, unitLabel: { en: "grains of rice", zh: "粒米" }, startAmount: 1, showLogScale: true, askSquare: 21 },
+  fold_paper: {
+    type: "fold_paper",
+    thicknessMm: 0.1,
+    maxFolds: 42,
+    references: [
+      { heightMm: 2, emoji: "🪙", label: { en: "a coin", zh: "一枚硬币" } },
+      { heightMm: 100, emoji: "📕", label: { en: "a thick book", zh: "一本厚书" } },
+      { heightMm: 1_700, emoji: "🧍", label: { en: "a person", zh: "一个人" } },
+      { heightMm: 100_000, emoji: "🏢", label: { en: "a skyscraper", zh: "一座摩天楼" } },
+      { heightMm: 8_849_000, emoji: "🏔️", label: { en: "Mount Everest", zh: "珠穆朗玛峰" } },
+      { heightMm: 384_400_000_000, emoji: "🌕", label: { en: "the Moon", zh: "月球" } },
+    ],
+  },
+  dice_lab: { type: "dice_lab", mode: "sum", dice: 2, rolls: 300, seed: 3 },
+  birthday_room: { type: "birthday_room", mode: "any_pair", maxPeople: 60, trials: 200, seed: 23 },
+  tower_of_hanoi: { type: "tower_of_hanoi", discs: 3, askDiscs: 4 },
+  river_crossing: { type: "river_crossing", ...WOLF_GOAT_CABBAGE },
+  fence_shaper: { type: "fence_shaper", perimeter: 24, integerOnly: true, wallSide: false },
+  visual_pattern: {
+    type: "visual_pattern",
+    steps: [plusStep(1), plusStep(2), plusStep(3)],
+    rule: { kind: "linear", a: 4, b: 1 },
+    askStep: 10,
+    colorRule: "arm",
+  },
+  pizza_cuts: { type: "pizza_cuts", maxCuts: 4 },
+  balance_lab: { type: "balance_lab", mode: "find_heavy", items: 9, seed: 5 },
+  illustration: {
+    type: "illustration",
+    asset: "three-switches",
+    caption: { en: "Three switches downstairs, one bulb upstairs. You may go up only once.", zh: "楼下三个开关，楼上一盏灯。你只能上楼一次。" },
+  },
   pizza_slice: { type: "pizza_slice", totalSlices: 8, eatenSlices: 3 },
   balance_scale: { type: "balance_scale", leftSide: { expression: "x + 9" }, rightSide: { value: 27 } },
   number_journey: { type: "number_journey", range: [0, 25], highlights: [21] },
@@ -55,5 +96,18 @@ export const TRICK_SAMPLES = {
     loopUntilFixed: true,
     maxLoops: 7,
     expectFixedPoint: 6174,
+  },
+} satisfies Record<string, SceneConfigInput>;
+
+/** Extra samples for the other modes of multi-mode scenes (C6, C8, C9, E10, F8). */
+export const MODE_SAMPLES = {
+  diceProduct: { type: "dice_lab", mode: "product", dice: 2, rolls: 300, seed: 6 },
+  diceUntilSix: { type: "dice_lab", mode: "until_target", dice: 1, target: 6, rolls: 300, seed: 8 },
+  birthdayMatchMe: { type: "birthday_room", mode: "match_me", maxPeople: 500, trials: 200, seed: 253 },
+  balanceWeights: { type: "balance_lab", mode: "weights", weights: [1, 3, 9, 27], target: 5 },
+  knightsAndKnaves: {
+    type: "illustration",
+    asset: "knights-and-knaves",
+    caption: { en: "A says: \u201cWe are both knaves.\u201d", zh: "A 说：「我们两个都是骗子。」" },
   },
 } satisfies Record<string, SceneConfigInput>;

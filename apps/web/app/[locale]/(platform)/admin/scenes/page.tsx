@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import {
   LEGACY_SCENE_TYPES,
+  MODE_SAMPLES,
   NEW_SCENE_TYPES,
   SAMPLE_SCENE_CONFIGS,
   TRICK_SAMPLES,
@@ -28,6 +29,11 @@ const PRESETS: Preset[] = [
   { id: "trick:mind-reading-five", label: "number_trick_stepper · D2 mind-reading (5)", config: TRICK_SAMPLES.mindReadingFive },
   { id: "trick:scramble-nine", label: "number_trick_stepper · D3 scramble (÷9)", config: TRICK_SAMPLES.scrambleNine },
   { id: "trick:kaprekar", label: "number_trick_stepper · D4 Kaprekar (6174)", config: TRICK_SAMPLES.kaprekar },
+  { id: "mode:dice-product", label: "dice_lab · C6 product parity", config: MODE_SAMPLES.diceProduct },
+  { id: "mode:dice-until-six", label: "dice_lab · C8 rolls until a six", config: MODE_SAMPLES.diceUntilSix },
+  { id: "mode:birthday-match-me", label: "birthday_room · C9 matches me", config: MODE_SAMPLES.birthdayMatchMe },
+  { id: "mode:balance-weights", label: "balance_lab · E10 weights 1-3-9-27", config: MODE_SAMPLES.balanceWeights },
+  { id: "mode:knights-and-knaves", label: "illustration · F8 knights and knaves", config: MODE_SAMPLES.knightsAndKnaves },
   ...LEGACY_SCENE_TYPES.map((t: SceneConfigType) => ({ id: t, label: `${t} (legacy)`, config: SAMPLE_SCENE_CONFIGS[t] })),
 ];
 

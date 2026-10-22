@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="t">
+  <title id="t">Two islanders, A and B. A speaks; is each a knight or a knave?</title>
+  <rect width="640" height="360" fill="#eff6ff"/>
+  <!-- sea and island -->
+  <rect x="0" y="270" width="640" height="90" fill="#22d3ee" opacity="0.35"/>
+  <ellipse cx="320" cy="290" rx="270" ry="46" fill="#fbbf24" opacity="0.55"/>
+  <!-- palm -->
+  <path d="M560 280 q-6 -70 6 -120" fill="none" stroke="#fb923c" stroke-width="8" stroke-linecap="round"/>
+  <path d="M566 160 q-40 -10 -60 14 M566 160 q40 -14 58 10 M566 160 q-14 -36 -44 -40 M566 160 q20 -34 50 -34" fill="none" stroke="#4ade80" stroke-width="8" stroke-linecap="round"/>
+  <!-- A -->
+  <g transform="translate(220 0)">
+    <rect x="-40" y="170" width="80" height="100" rx="30" fill="#c084fc"/>
+    <circle cx="0" cy="140" r="36" fill="#fde68a"/>
+    <circle cx="-12" cy="136" r="4" fill="#1e3a8a"/>
+    <circle cx="12" cy="136" r="4" fill="#1e3a8a"/>
+    <path d="M-10 154 q10 8 20 0" fill="none" stroke="#1e3a8a" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="0" cy="222" r="22" fill="#ffffff"/>
+    <text x="0" y="230" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="700" fill="#c084fc">A</text>
+  </g>
+  <!-- B -->
+  <g transform="translate(420 0)">
+    <rect x="-40" y="170" width="80" height="100" rx="30" fill="#3b82f6"/>
+    <circle cx="0" cy="140" r="36" fill="#fde68a"/>
+    <circle cx="-12" cy="136" r="4" fill="#1e3a8a"/>
+    <circle cx="12" cy="136" r="4" fill="#1e3a8a"/>
+    <path d="M-10 156 h20" fill="none" stroke="#1e3a8a" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="0" cy="222" r="22" fill="#ffffff"/>
+    <text x="0" y="230" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="700" fill="#3b82f6">B</text>
+  </g>
+  <!-- A's speech bubble -->
+  <path d="M70 30 h200 a18 18 0 0 1 18 18 v44 a18 18 0 0 1 -18 18 h-40 l-14 22 l-6 -22 h-140 a18 18 0 0 1 -18 -18 v-44 a18 18 0 0 1 18 -18 z" fill="#ffffff" stroke="#c084fc" stroke-width="4"/>
+  <!-- "We are both knaves": A is a knave, B is a knave -->
+  <g font-family="sans-serif" font-size="28" font-weight="700" text-anchor="middle">
+    <text x="112" y="82" fill="#c084fc">A</text>
+    <text x="146" y="82">🎭</text>
+    <text x="196" y="82" fill="#3b82f6">B</text>
+    <text x="230" y="82">🎭</text>
+  </g>
+  <!-- legend: knight (shield) always tells the truth, knave (mask) always lies -->
+  <g font-family="sans-serif" font-size="18" font-weight="700" text-anchor="middle">
+    <rect x="470" y="40" width="130" height="34" rx="17" fill="#4ade80"/>
+    <text x="535" y="63" fill="#ffffff">🛡️ = ✓</text>
+    <rect x="470" y="84" width="130" height="34" rx="17" fill="#f87171"/>
+    <text x="535" y="107" fill="#ffffff">🎭 = ✗</text>
+  </g>
+  <text x="320" y="128" text-anchor="middle" font-family="sans-serif" font-size="34" font-weight="700" fill="#ff6b9d">?</text>
+</svg>

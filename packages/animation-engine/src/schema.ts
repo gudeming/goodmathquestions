@@ -10,6 +10,11 @@
 import { z } from "zod";
 import { mulberry32 } from "./scenes/random";
 import { TRICK_CONSTRAINTS, TRICK_OPS, randomTrickInput, runTrick, trickEdgeInputs } from "./scenes/number-trick";
+import { thicknessAfter } from "./scenes/doubling";
+import { birthdayThreshold } from "./scenes/birthday";
+import { RIVER_MAX_ITEMS, shortestSolution } from "./scenes/river";
+import { countAtStep, cellKey } from "./scenes/pattern";
+import { weighableSet } from "./scenes/balance";
 
 const Bi = z.object({ en: z.string().min(1), zh: z.string().min(1) });
 const num = z.number().finite();
@@ -130,6 +135,129 @@ const MontyHallBase = z.object({
   seed: num.int().optional(),
 });
 
+
+/** A2: rice on a chessboard, doubling every square. */
+const ChessboardDoublingBase = z.object({
+  type: z.literal("chessboard_doubling"),
+  squares: num.int().min(8).max(64),
+  /** What is on the squares ("grains of rice" / "粒米"). */
+  unitLabel: Bi,
+  startAmount: num.int().min(1).max(1000).default(1),
+  showLogScale: z.boolean().default(true),
+  /** Square whose count the question asks for; reaching it proposes the answer (A2: 21). */
+  askSquare: num.int().min(1).max(64).optional(),
+});
+
+const FoldReference = z.object({ heightMm: num.positive(), label: Bi, emoji: z.string().min(1).max(8).optional() });
+
+/** A3: fold a sheet of paper again and again; compare its thickness to references. */
+const FoldPaperBase = z.object({
+  type: z.literal("fold_paper"),
+  thicknessMm: num.positive().max(10).default(0.1),
+  maxFolds: num.int().min(10).max(50).default(42),
+  references: z.array(FoldReference).min(1).max(8),
+});
+
+/** C3 / C6 / C8: roll dice and watch the histogram. */
+const DiceLabBase = z.object({
+  type: z.literal("dice_lab"),
+  mode: z.enum(["sum", "product", "until_target"]),
+  dice: num.int().min(1).max(3),
+  /** Face to wait for (until_target only). */
+  target: num.int().min(1).max(6).optional(),
+  /** Size of the big "roll many" button. */
+  rolls: num.int().min(10).max(1000).default(300),
+  seed: num.int().optional(),
+});
+
+/** C1 / C9: simulate rooms of people and look for shared birthdays. */
+const BirthdayRoomBase = z.object({
+  type: z.literal("birthday_room"),
+  mode: z.enum(["any_pair", "match_me"]),
+  /** Slider maximum; defaults to 60 (any_pair) / 500 (match_me) via `birthdayMaxPeople`. */
+  maxPeople: num.int().min(10).max(2000).optional(),
+  trials: num.int().min(10).max(1000).default(200),
+  seed: num.int().optional(),
+});
+
+/** E1: the tower of Hanoi. */
+const TowerOfHanoiBase = z.object({
+  type: z.literal("tower_of_hanoi"),
+  discs: num.int().min(3).max(6),
+  /** Disc count the question asks about (E1: 4); the reveal plays its optimal solution. */
+  askDiscs: num.int().min(3).max(8).optional(),
+});
+
+const RiverItem = z.object({
+  id: z.string().regex(/^[a-z0-9_-]{1,24}$/, "id must be lowercase letters, digits, _ or -"),
+  emoji: z.string().min(1).max(8),
+  label: Bi,
+});
+
+/** F1: ferry everything across without leaving a conflicting pair alone. */
+const RiverCrossingBase = z.object({
+  type: z.literal("river_crossing"),
+  items: z.array(RiverItem).min(2).max(RIVER_MAX_ITEMS),
+  /** Pairs that can't be left alone on a bank without the farmer. */
+  conflicts: z.array(z.tuple([z.string(), z.string()])).max(28),
+  boatCapacity: num.int().min(1).max(3).default(1),
+});
+
+/** B4: a fixed length of fence; find the rectangle with the most area. */
+const FenceShaperBase = z.object({
+  type: z.literal("fence_shaper"),
+  perimeter: num.int().min(8).max(200),
+  integerOnly: z.boolean().default(true),
+  /** One long side against a wall (only three sides fenced). */
+  wallSide: z.boolean().default(false),
+});
+
+const PatternCell = z.tuple([num.int().min(-30).max(30), num.int().min(-30).max(30)]);
+const PatternRuleSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("linear"), a: num.int(), b: num.int() }),
+  z.object({ kind: z.literal("quadratic"), a: num.int(), b: num.int(), c: num.int() }),
+]);
+
+/** E3 (and any "find the rule" picture): given steps, an explicit rule, build the next step. */
+const VisualPatternBase = z.object({
+  type: z.literal("visual_pattern"),
+  steps: z.array(z.object({ cells: z.array(PatternCell).min(1).max(400) })).min(3).max(6),
+  /** The rule is given explicitly; the scene never guesses it (catalog §2). */
+  rule: PatternRuleSchema,
+  askStep: num.int().min(4).max(30),
+  colorRule: z.enum(["arm", "ring", "none"]).optional(),
+});
+
+/** B2: cut a pizza with straight cuts; most pieces? */
+const PizzaCutsBase = z.object({
+  type: z.literal("pizza_cuts"),
+  maxCuts: num.int().min(2).max(6),
+});
+
+/** F2 / E10: a two-pan balance. */
+const BalanceLabBase = z.object({
+  type: z.literal("balance_lab"),
+  mode: z.enum(["find_heavy", "weights"]),
+  /** Number of balls, one of them heavy (find_heavy). */
+  items: num.int().min(3).max(27).optional(),
+  /** Available weights (weights mode), e.g. [1, 3, 9, 27]. */
+  weights: z.array(num.int().min(1).max(1000)).min(1).max(6).optional(),
+  /** Starting object weight on the slider (weights mode); must be measurable. */
+  target: num.int().min(1).optional(),
+  seed: num.int().optional(),
+});
+
+const AssetName = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "asset must be kebab-case without slashes or extension");
+
+/** Fallback: a static SVG from /public/scenes/<asset>.svg; reveal may swap the picture. */
+const IllustrationBase = z.object({
+  type: z.literal("illustration"),
+  asset: AssetName,
+  caption: Bi,
+  revealAsset: AssetName.optional(),
+  revealCaption: Bi.optional(),
+});
+
 // ---------------------------------------------------------------------------
 // Self-consistency checks (catalog §1.4)
 // ---------------------------------------------------------------------------
@@ -194,11 +322,99 @@ const checkTrick: Check<z.infer<typeof NumberTrickStepperBase>> = (c, ctx) => {
   }
 };
 
+
+const issue = (ctx: z.RefinementCtx, path: Array<string | number>, message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
+
+const checkChessboard: Check<z.infer<typeof ChessboardDoublingBase>> = (c, ctx) => {
+  if (c.askSquare !== undefined && c.askSquare > c.squares) issue(ctx, ["askSquare"], "askSquare must be on the board (<= squares)");
+};
+
+const checkFold: Check<z.infer<typeof FoldPaperBase>> = (c, ctx) => {
+  const top = thicknessAfter(c.maxFolds, c.thicknessMm);
+  c.references.forEach((r, i) => {
+    if (r.heightMm > top) issue(ctx, ["references", i, "heightMm"], `unreachable: ${c.maxFolds} folds only reach ${top} mm`);
+  });
+};
+
+const checkDice: Check<z.infer<typeof DiceLabBase>> = (c, ctx) => {
+  if (c.mode === "until_target" && c.target === undefined) issue(ctx, ["target"], "until_target needs a target face");
+  if (c.mode !== "until_target" && c.target !== undefined) issue(ctx, ["target"], "target is only used by until_target");
+  if (c.mode === "product" && c.dice < 2) issue(ctx, ["dice"], "product mode needs at least 2 dice");
+};
+
+const checkBirthday: Check<z.infer<typeof BirthdayRoomBase>> = (c, ctx) => {
+  if (c.maxPeople === undefined) return;
+  // The reveal marks the 50% crossing, so the slider must reach it.
+  const need = birthdayThreshold(c.mode);
+  if (c.maxPeople < need) issue(ctx, ["maxPeople"], `maxPeople must be >= ${need} so the 50% point is on the curve`);
+  if (c.mode === "any_pair" && c.maxPeople > 366) issue(ctx, ["maxPeople"], "any_pair maxPeople must be <= 366");
+};
+
+const checkRiver: Check<z.infer<typeof RiverCrossingBase>> = (c, ctx) => {
+  const ids = c.items.map((i) => i.id);
+  if (new Set(ids).size !== ids.length) {
+    issue(ctx, ["items"], "item ids must be unique");
+    return;
+  }
+  let ok = true;
+  c.conflicts.forEach(([a, b], i) => {
+    if (!ids.includes(a) || !ids.includes(b)) {
+      issue(ctx, ["conflicts", i], `unknown item in conflict [${a}, ${b}]`);
+      ok = false;
+    } else if (a === b) {
+      issue(ctx, ["conflicts", i], "an item can't conflict with itself");
+      ok = false;
+    }
+  });
+  if (ok && shortestSolution(c) === null) issue(ctx, ["conflicts"], "this puzzle has no solution");
+};
+
+const checkFence: Check<z.infer<typeof FenceShaperBase>> = (c, ctx) => {
+  if (c.perimeter % 2 !== 0) issue(ctx, ["perimeter"], "perimeter must be even");
+};
+
+const checkPattern: Check<z.infer<typeof VisualPatternBase>> = (c, ctx) => {
+  c.steps.forEach((s, i) => {
+    if (new Set(s.cells.map(cellKey)).size !== s.cells.length) issue(ctx, ["steps", i, "cells"], "duplicate cells");
+    const want = countAtStep(c.rule, i + 1);
+    if (s.cells.length !== want) issue(ctx, ["steps", i, "cells"], `step ${i + 1} has ${s.cells.length} cells but the rule gives ${want}`);
+  });
+  for (let n = 1; n <= c.askStep; n++) {
+    const v = countAtStep(c.rule, n);
+    if (v < 1 || v > 5000) {
+      issue(ctx, ["rule"], `rule gives ${v} cells at step ${n} (must be 1..5000)`);
+      break;
+    }
+  }
+};
+
+const checkBalance: Check<z.infer<typeof BalanceLabBase>> = (c, ctx) => {
+  if (c.mode === "find_heavy") {
+    if (c.items === undefined) issue(ctx, ["items"], "find_heavy needs items");
+    if (c.weights !== undefined || c.target !== undefined) issue(ctx, ["weights"], "weights/target are only used by the weights mode");
+    return;
+  }
+  if (!c.weights) {
+    issue(ctx, ["weights"], "weights mode needs weights");
+    return;
+  }
+  if (c.items !== undefined) issue(ctx, ["items"], "items is only used by find_heavy");
+  if (c.target !== undefined && !weighableSet(c.weights).includes(c.target)) issue(ctx, ["target"], `target ${c.target} can't be weighed with ${c.weights.join(", ")}`);
+};
+
 /** Per-type consistency checks, applied to the per-scene schemas and to the union. */
 const SCENE_REFINEMENTS: Partial<Record<string, Check<never>>> = {
   gauss_pairing: checkGauss as Check<never>,
   handshake_graph: checkHandshake as Check<never>,
   number_trick_stepper: checkTrick as Check<never>,
+  chessboard_doubling: checkChessboard as Check<never>,
+  fold_paper: checkFold as Check<never>,
+  dice_lab: checkDice as Check<never>,
+  birthday_room: checkBirthday as Check<never>,
+  river_crossing: checkRiver as Check<never>,
+  fence_shaper: checkFence as Check<never>,
+  visual_pattern: checkPattern as Check<never>,
+  balance_lab: checkBalance as Check<never>,
 };
 
 // Refined per-scene schemas (use these when validating a single known type).
@@ -207,8 +423,36 @@ export const HandshakeGraphSchema = HandshakeGraphBase.superRefine(checkHandshak
 export const GridSquaresSchema = GridSquaresBase;
 export const NumberTrickStepperSchema = NumberTrickStepperBase.superRefine(checkTrick);
 export const MontyHallSchema = MontyHallBase;
+export const ChessboardDoublingSchema = ChessboardDoublingBase.superRefine(checkChessboard);
+export const FoldPaperSchema = FoldPaperBase.superRefine(checkFold);
+export const DiceLabSchema = DiceLabBase.superRefine(checkDice);
+export const BirthdayRoomSchema = BirthdayRoomBase.superRefine(checkBirthday);
+export const TowerOfHanoiSchema = TowerOfHanoiBase;
+export const RiverCrossingSchema = RiverCrossingBase.superRefine(checkRiver);
+export const FenceShaperSchema = FenceShaperBase.superRefine(checkFence);
+export const VisualPatternSchema = VisualPatternBase.superRefine(checkPattern);
+export const PizzaCutsSchema = PizzaCutsBase;
+export const BalanceLabSchema = BalanceLabBase.superRefine(checkBalance);
+export const IllustrationSchema = IllustrationBase;
 
-export const NEW_SCENE_TYPES = ["gauss_pairing", "handshake_graph", "grid_squares", "number_trick_stepper", "monty_hall"] as const;
+export const NEW_SCENE_TYPES = [
+  "gauss_pairing",
+  "handshake_graph",
+  "grid_squares",
+  "number_trick_stepper",
+  "monty_hall",
+  "chessboard_doubling",
+  "fold_paper",
+  "dice_lab",
+  "birthday_room",
+  "tower_of_hanoi",
+  "river_crossing",
+  "fence_shaper",
+  "visual_pattern",
+  "pizza_cuts",
+  "balance_lab",
+  "illustration",
+] as const;
 
 export const SceneConfigSchema = z
   .discriminatedUnion("type", [
@@ -225,6 +469,17 @@ export const SceneConfigSchema = z
     GridSquaresBase,
     NumberTrickStepperBase,
     MontyHallBase,
+    ChessboardDoublingBase,
+    FoldPaperBase,
+    DiceLabBase,
+    BirthdayRoomBase,
+    TowerOfHanoiBase,
+    RiverCrossingBase,
+    FenceShaperBase,
+    VisualPatternBase,
+    PizzaCutsBase,
+    BalanceLabBase,
+    IllustrationBase,
   ])
   .superRefine((c, ctx) => {
     const check = SCENE_REFINEMENTS[c.type] as Check<typeof c> | undefined;
@@ -241,6 +496,17 @@ export type HandshakeGraphConfig = SceneConfigOf<"handshake_graph">;
 export type GridSquaresConfig = SceneConfigOf<"grid_squares">;
 export type NumberTrickStepperConfig = SceneConfigOf<"number_trick_stepper">;
 export type MontyHallConfig = SceneConfigOf<"monty_hall">;
+export type ChessboardDoublingConfig = SceneConfigOf<"chessboard_doubling">;
+export type FoldPaperConfig = SceneConfigOf<"fold_paper">;
+export type DiceLabConfig = SceneConfigOf<"dice_lab">;
+export type BirthdayRoomConfig = SceneConfigOf<"birthday_room">;
+export type TowerOfHanoiConfig = SceneConfigOf<"tower_of_hanoi">;
+export type RiverCrossingConfig = SceneConfigOf<"river_crossing">;
+export type FenceShaperConfig = SceneConfigOf<"fence_shaper">;
+export type VisualPatternConfig = SceneConfigOf<"visual_pattern">;
+export type PizzaCutsConfig = SceneConfigOf<"pizza_cuts">;
+export type BalanceLabConfig = SceneConfigOf<"balance_lab">;
+export type IllustrationConfig = SceneConfigOf<"illustration">;
 export type LegacySceneConfig = SceneConfigOf<LegacySceneType>;
 
 export const SCENE_TYPES: readonly SceneConfigType[] = [...LEGACY_SCENE_TYPES, ...NEW_SCENE_TYPES];
