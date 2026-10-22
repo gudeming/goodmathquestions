@@ -36,6 +36,14 @@ npx prisma generate --schema "$SCHEMA"
 npx prisma db execute --file packages/db/prisma/pre-push.sql --schema "$SCHEMA"
 npx prisma db push --schema "$SCHEMA" $DB_PUSH_FLAG
 
+echo "[3b/5] Syncing question content..."
+# Content lives in code: upsert collections + hero questions by slug and refresh
+# legacy questions by sortOrder. questions_only preserves users, XP, submissions,
+# classrooms, badges and sessions. Then drop any demo community-boost accounts
+# (no-op when there are none).
+SEED_MODE=questions_only npm run db:seed -w @gmq/db
+SEED_MODE=community_cleanup npm run db:seed -w @gmq/db
+
 echo "[4/5] Building..."
 # Cap the heap so a 2GB box (plus swap) can finish the Next.js build.
 NODE_OPTIONS="--max-old-space-size=1400" npx turbo build --filter=@gmq/web
