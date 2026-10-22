@@ -9,6 +9,7 @@ import { getLocalizedPath } from "@/lib/seo";
 import { SceneHost } from "@/components/scenes/SceneHost";
 import { CelebrationEffect } from "@/components/animations/CelebrationEffect";
 import { DiscussionSection } from "@/components/questions/DiscussionSection";
+import { guessOptionsFor } from "@/components/discussion/shared";
 import { MathText } from "@/components/ui/MathText";
 import { GuessHistogram } from "./GuessHistogram";
 import { answerOptions } from "./AnswerInput";
@@ -164,6 +165,9 @@ export function RevealStage({ question, locale, gaveUp, guess, solved, isLoggedI
         questionId={question.id}
         prompt={discussion || null}
         onPosted={(content) => track("comment_post", { length: [...content].length })}
+        guessValue={guess}
+        solutionTags={question.solutionTags}
+        guessOptions={guessOptionsFor(question.guessConfig, locale)}
       />
     </div>
   );

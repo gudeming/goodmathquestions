@@ -16,6 +16,10 @@ type CommunityBoostConfig = {
   randomCommentCount: number;
 };
 
+/**
+ * Generated "community boost" users. Mirrored in packages/api/src/moderation/bots.ts, which
+ * hides their comments from comment.list even when a database was never cleaned.
+ */
 const COMMUNITY_EMAIL_DOMAINS = ["@seed.gmq.local", "@community.gmq.local"];
 
 function parseBooleanFlag(value: string | undefined, fallback = false): boolean {
@@ -42,8 +46,20 @@ function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+/**
+ * LOCAL DEMO ONLY. The community boost fills the discussion with generated users and
+ * canned comments, which read as fake to kids (README §1.6). It is off unless
+ * SEED_COMMUNITY_BOOST=true, and it can never run with NODE_ENV=production: then the flag
+ * is ignored with a warning. To remove generated users anywhere, including production:
+ * `npm run db:seed:community:cleanup -w @gmq/db` (SEED_MODE=community_cleanup).
+ */
 function resolveCommunityBoostConfig(): CommunityBoostConfig {
-  const enabled = parseBooleanFlag(process.env.SEED_COMMUNITY_BOOST, false);
+  const requested = parseBooleanFlag(process.env.SEED_COMMUNITY_BOOST, false);
+  const isProduction = (process.env.NODE_ENV ?? "").trim().toLowerCase() === "production";
+  if (requested && isProduction) {
+    console.warn("⚠️ SEED_COMMUNITY_BOOST is ignored in production (local demo only); skipping the community boost.");
+  }
+  const enabled = requested && !isProduction;
   const randomUserCount = enabled
     ? parseIntWithBounds(process.env.SEED_RANDOM_USER_COUNT, 50, 0, 200)
     : 0;

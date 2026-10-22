@@ -10,7 +10,8 @@
     "db:push": "set -a; test -f ../../.env && . ../../.env; set +a; prisma db execute --file prisma/pre-push.sql --schema prisma/schema.prisma && prisma db push",
     "db:seed": "set -a; test -f ../../.env && . ../../.env; set +a; tsx prisma/seed.ts",
     "db:seed:questions": "set -a; test -f ../../.env && . ../../.env; set +a; SEED_MODE=questions_only tsx prisma/seed.ts",
-    "db:seed:community": "set -a; test -f ../../.env && . ../../.env; set +a; SEED_MODE=questions_only SEED_COMMUNITY_BOOST=true SEED_RANDOM_USER_COUNT=50 SEED_RANDOM_COMMENT_COUNT=500 tsx prisma/seed.ts",
+    "//db:seed:community:local-demo": "LOCAL DEMO ONLY: adds generated users + canned comments. Refuses to run with NODE_ENV=production. Production runs db:seed:community:cleanup instead.",
+    "db:seed:community:local-demo": "set -a; test -f ../../.env && . ../../.env; set +a; SEED_MODE=questions_only SEED_COMMUNITY_BOOST=true SEED_RANDOM_USER_COUNT=50 SEED_RANDOM_COMMENT_COUNT=500 tsx prisma/seed.ts",
     "db:seed:community:cleanup": "set -a; test -f ../../.env && . ../../.env; set +a; SEED_MODE=community_cleanup tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "test": "vitest run"
