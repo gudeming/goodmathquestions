@@ -1,9 +1,10 @@
 /**
  * World A · Huge numbers & infinity (`huge-numbers`). Catalog: 02-hero-question-catalog.md §A.
  * Batch 1: A1 gauss-sum, A8 handshake-party. Batch 2: A2 chessboard-rice, A3 fold-to-the-moon
- * (upgrades the legacy "Paper Folding Challenge" row).
- * TODO(phase-3 batch 3): A4, A5, A9 (scale_ladder), A6 (zoom_number_line), A7 (hotel_shift),
- * A10 (halving_bar). A4 million-seconds is this world's second AGE_8_10 question.
+ * (upgrades the legacy "Paper Folding Challenge" row). Batch 3: A4 million-seconds (this world's
+ * second AGE_8_10 question), A5 billion-heartbeats, A9 googol-vs-atoms (scale_ladder),
+ * A10 halfway-to-the-wall (halving_bar).
+ * TODO(phase-3): A6 (zoom_number_line), A7 (hotel_shift) once those Tier-3 scenes land.
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
@@ -347,4 +348,423 @@ export const foldToTheMoon: HeroQuestionBlueprint = {
   upgradesLegacyTitleEn: "Paper Folding Challenge",
 };
 
-export const HUGE_NUMBERS: readonly HeroQuestionBlueprint[] = [gaussSum, chessboardRice, foldToTheMoon, handshakeParty];
+/**
+ * A4. 10^6 s = 11.574 days. The scene climbs ÷ 60, ÷ 60, ÷ 24 and proposes "11.6"
+ * (rounded to one decimal), which the 11-12 window accepts.
+ */
+export const millionSeconds: HeroQuestionBlueprint = {
+  slug: "million-seconds",
+  collection: "huge-numbers",
+  kind: "ESTIMATION",
+  ageGroup: "AGE_8_10",
+  difficulty: "EASY",
+  category: "ARITHMETIC",
+  title: { en: "A Million Seconds From Now", zh: "一百万秒以后" },
+  hook: {
+    en: "Start a stopwatch right now and let it tick, one second at a time. When it finally reaches one million seconds, what will you be doing?",
+    zh: "现在按下秒表，让它一秒一秒地走。等它走到一百万秒的时候，你会在干什么？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "tonight", en: "Still today, around dinner time", zh: "还是今天，晚饭的时候" },
+      { id: "tomorrow", en: "Sometime tomorrow", zh: "明天的某个时候" },
+      { id: "weeks", en: "About two weeks from now", zh: "大约两周以后" },
+      { id: "year", en: "Sometime next year", zh: "明年的某个时候" },
+    ],
+  },
+  scene: {
+    type: "scale_ladder",
+    mode: "time",
+    start: 1_000_000,
+    references: [
+      { value: 23_400, emoji: "🏫", label: { en: "a school day", zh: "一天的课" } },
+      { value: 604_800, emoji: "📅", label: { en: "a week", zh: "一周" } },
+      { value: 4_838_400, emoji: "🏖️", label: { en: "a summer holiday", zh: "一个暑假" } },
+    ],
+  },
+  prompt: {
+    en: "About how many days is 1,000,000 seconds?",
+    zh: "1,000,000 秒大约是多少天？",
+  },
+  answer: { type: "ESTIMATE", min: 11, max: 12, truth: 11.57, unit: { en: "days", zh: "天" } },
+  hints: [
+    { en: "Don't try to count them. Climb in steps: first turn the seconds into minutes. How many seconds make one minute?", zh: "别真的去数。一步一步往上爬：先把秒换成分钟。1 分钟是多少秒？" },
+    { en: "1,000,000 ÷ 60 is about 16,667 minutes. Now turn the minutes into hours the same way.", zh: "1,000,000 ÷ 60 大约是 16,667 分钟。再用同样的办法，把分钟换成小时。" },
+    { en: "16,667 ÷ 60 is about 278 hours. A day has 24 hours, so how many days is 278 hours?", zh: "16,667 ÷ 60 大约是 278 小时。一天有 24 小时，278 小时是几天？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "gt:10000",
+      feedback: {
+        en: "That looks like minutes! 1,000,000 ÷ 60 ≈ 16,667 is the number of minutes. Keep climbing: minutes into hours, then hours into days.",
+        zh: "这看起来是分钟数！1,000,000 ÷ 60 ≈ 16,667 是分钟。继续往上爬：分钟换成小时，再换成天。",
+      },
+    },
+    {
+      match: "gt:100",
+      feedback: {
+        en: "That's a lot of days for a million seconds. If you got about 278, those are hours: one more step, because a day has 24 hours.",
+        zh: "一百万秒可没有这么多天。如果你算出来大约是 278，那是小时数：还差一步，一天有 24 小时。",
+      },
+    },
+    {
+      match: "lt:1",
+      feedback: {
+        en: "Less than a day? One day is 24 × 60 × 60 = 86,400 seconds, and a million is more than ten times that.",
+        zh: "不到一天？一天就有 24 × 60 × 60 = 86,400 秒，一百万比它的十倍还多。",
+      },
+    },
+    {
+      match: "lt:11",
+      feedback: {
+        en: "A bit short. A week is 604,800 seconds, so a million seconds is more than a week. Check your last division.",
+        zh: "有点少。一周是 604,800 秒，所以一百万秒比一周还长。检查一下最后一步除法。",
+      },
+    },
+    {
+      match: "gt:12",
+      feedback: {
+        en: "A bit long. A day is 86,400 seconds. How many of those fit into 1,000,000?",
+        zh: "有点多。一天是 86,400 秒。1,000,000 里面装得下几个 86,400？",
+      },
+    },
+  ],
+  explanation: {
+    en: "Climb one rung at a time: 1,000,000 ÷ 60 ≈ 16,667 minutes, and 16,667 ÷ 60 ≈ 278 hours. Then 278 ÷ 24 ≈ 11.6 days. So a million seconds is about eleven and a half days.",
+    zh: "一级一级往上爬：1,000,000 ÷ 60 ≈ 16,667 分钟，16,667 ÷ 60 ≈ 278 小时。再算 278 ÷ 24 ≈ 11.6 天。所以一百万秒大约是 11 天半。",
+  },
+  aha: {
+    en: "A million seconds is only about eleven and a half days, but a billion seconds is about 32 years. Million and billion sound like neighbours, yet one is a holiday and the other is half a lifetime.",
+    zh: "一百万秒只有大约 11 天半，十亿秒却差不多是 32 年。「百万」和「十亿」听起来像邻居，一个是一次假期，另一个是半辈子。",
+  },
+  extension: {
+    en: "About how many seconds old are you? At what age will you be one billion seconds old?",
+    zh: "你出生到现在大约过了多少秒？你会在几岁的时候满十亿秒？",
+  },
+  discussionPrompt: {
+    en: "Which rung of the climb surprised you most: seconds to minutes, minutes to hours, or hours to days? Why?",
+    zh: "往上爬的哪一级最让你意外：秒到分钟、分钟到小时，还是小时到天？为什么？",
+  },
+  solutionTags: ["table", "guess_check"],
+  funFact: {
+    en: "In 2007 a man in the USA counted out loud from 1 to a million. Big numbers take longer than a second to say, so it took him 89 days.",
+    zh: "2007 年，美国有个人从 1 大声数到了一百万。大的数一秒钟念不完，所以他一共数了 89 天。",
+  },
+  sortOrder: 4,
+  rubricNotes:
+    "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 1, paths 1, wrong 2, hints 2, retell 1: one real path (divide unit by unit, on paper or on the ladder); the extension is 'more seconds' rather than a new idea",
+};
+
+/**
+ * A5. 70 beats a minute → 36,792,000 a year; 10^9 / that = 27.18 years. The scene proposes "27".
+ * Wrong-answer windows: < 5 years is the 一亿 / 十亿 (10^8 vs 10^9) slip; 200-1000 is 10^10.
+ */
+export const billionHeartbeats: HeroQuestionBlueprint = {
+  slug: "billion-heartbeats",
+  collection: "huge-numbers",
+  kind: "ESTIMATION",
+  ageGroup: "AGE_10_12",
+  difficulty: "MEDIUM",
+  category: "ARITHMETIC",
+  title: { en: "Your Billionth Heartbeat", zh: "第十亿次心跳" },
+  hook: {
+    en: "Put two fingers on your neck and feel your heart. It beats about 70 times a minute, every minute, even while you sleep. One day it will beat for the billionth time. How old will you be?",
+    zh: "把两根手指放在脖子上，感觉一下心跳。它每分钟大约跳 70 下，睡觉的时候也不停。总有一天，它会跳到第十亿下。那时你几岁？",
+  },
+  guess: {
+    type: "slider",
+    min: 0,
+    max: 100,
+    step: 1,
+    unit: { en: "years old", zh: "岁" },
+  },
+  scene: {
+    type: "scale_ladder",
+    mode: "heartbeats",
+    start: 70,
+    target: 1_000_000_000,
+    references: [
+      { value: 6, emoji: "🎒", label: { en: "starting school", zh: "上小学" } },
+      { value: 18, emoji: "🎓", label: { en: "finishing school", zh: "高中毕业" } },
+      { value: 40, emoji: "🧑", label: { en: "a parent", zh: "爸爸妈妈" } },
+    ],
+  },
+  prompt: {
+    en: "Your heart beats 70 times a minute. About how old will you be when it beats for the 1,000,000,000th time?",
+    zh: "你的心每分钟跳 70 下。它跳到第 1,000,000,000 下的时候，你大约几岁？",
+  },
+  answer: { type: "ESTIMATE", min: 25, max: 30, truth: 27.2, unit: { en: "years old", zh: "岁" } },
+  hints: [
+    { en: "A billion is too big to think about all at once. Start small: how many times does your heart beat in one hour?", zh: "十亿太大了，一下子想不清楚。先从小的算：你的心一小时跳多少下？" },
+    { en: "70 × 60 = 4,200 beats an hour. Keep going: how many in a day (24 hours), and then in a year (365 days)?", zh: "70 × 60 = 4,200，这是一小时的心跳。继续算：一天（24 小时）跳多少下？一年（365 天）呢？" },
+    { en: "A year has about 36.8 million beats (4,200 × 24 × 365). How many of those years fit into 1,000,000,000 beats? Divide.", zh: "一年大约跳 3,680 万下（4,200 × 24 × 365）。1,000,000,000 下里能装下几年？除一下。" },
+  ],
+  wrongAnswers: [
+    {
+      match: "lt:1",
+      feedback: {
+        en: "Less than a year? In just one year your heart beats about 37 million times, and a billion is much more than that.",
+        zh: "不到一岁？光是一年，心就要跳大约 3,700 万下，十亿可比这多多了。",
+      },
+    },
+    {
+      match: "lt:5",
+      feedback: {
+        en: "Did you use a hundred million (100,000,000)? A billion has nine zeros: 1,000,000,000. That's ten times more, so the age is ten times bigger too.",
+        zh: "你是不是用了一亿（100,000,000）？十亿是 1 后面 9 个 0：1,000,000,000，是一亿的十倍，所以年龄也要大十倍。",
+      },
+    },
+    {
+      match: "lt:25",
+      feedback: {
+        en: "A little too young. One year is about 36.8 million beats. How many times does 36.8 million fit into a billion?",
+        zh: "有点小了。一年大约是 3,680 万下。十亿里面能装下几个 3,680 万？",
+      },
+    },
+    {
+      match: "gt:1000",
+      feedback: {
+        en: "Way too old! You probably skipped a step. A minute to an hour is × 60, an hour to a day is × 24, and a day to a year is × 365. Did you do all three?",
+        zh: "太老了！你可能漏了一步。每分钟到每小时要 × 60，每小时到每天要 × 24，每天到每年要 × 365。三步都做了吗？",
+      },
+    },
+    {
+      match: "gt:200",
+      feedback: {
+        en: "Did you get about 272? Count the zeros: a billion has nine zeros, not ten. With the right number the age is ten times smaller.",
+        zh: "你算出来大约是 272 岁吗？数一数 0：十亿是 9 个 0，不是 10 个。用对的数，年龄会小十倍。",
+      },
+    },
+    {
+      match: "gt:30",
+      feedback: {
+        en: "A little too old. Check each step, and use 70 beats a minute, not 60. A faster heart reaches a billion sooner.",
+        zh: "有点大了。检查每一步，记得用每分钟 70 下，不是 60 下。心跳得越快，越早到十亿。",
+      },
+    },
+  ],
+  explanation: {
+    en: "Climb the ladder: 70 beats a minute × 60 = 4,200 an hour, × 24 = 100,800 a day, and × 365 ≈ 36.8 million a year. Then 1,000,000,000 ÷ 36,800,000 ≈ 27. So your billionth heartbeat comes when you are about 27 years old.",
+    zh: "沿着梯子往上爬：每分钟 70 下，× 60 是每小时 4,200 下，× 24 是每天 100,800 下，× 365 大约是每年 3,680 万下。然后 1,000,000,000 ÷ 36,800,000 ≈ 27。所以第十亿下心跳，大约在你 27 岁的时候。",
+  },
+  aha: {
+    en: "A billion heartbeats takes about 27 years: long enough to grow up, finish school and start a job. That's how big a billion is.",
+    zh: "十亿下心跳要大约 27 年，够你长大、读完书、开始工作。十亿就是这么大。",
+  },
+  extension: {
+    en: "A mouse's heart beats about 500 times a minute, and an elephant's about 30. How long would each take to reach a billion beats? Compare that with how long they live.",
+    zh: "老鼠的心每分钟跳大约 500 下，大象大约 30 下。它们各要多久才能跳到十亿下？和它们的寿命比一比。",
+  },
+  discussionPrompt: {
+    en: "How did you turn 'beats a minute' into 'beats a year'? Which multiplication would you check twice, and why?",
+    zh: "你是怎么把「每分钟跳几下」变成「每年跳几下」的？哪一步乘法你会再检查一遍？为什么？",
+  },
+  solutionTags: ["table", "guess_check"],
+  funFact: {
+    en: "Many mammals, from mice to elephants, get very roughly a billion heartbeats in a whole life. Small animals just use theirs up much faster.",
+    zh: "从老鼠到大象，很多哺乳动物一辈子的心跳都大约在十亿下左右。小动物只是用得快得多。",
+  },
+  sortOrder: 5,
+  rubricNotes:
+    "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: multiplying into the millions is a stretch below 10; the ladder is the one path; the 一亿/十亿 slip gets its own feedback",
+};
+
+/**
+ * A9. 10^100 / 10^80 = 10^20. The catalog's first aha ("turn every atom into a universe and you
+ * still fall short") was wrong: that gives 10^160 > 10^100. The copy uses 10^20 universes instead
+ * (about 100 for every grain of sand on Earth, ~10^18, matching the scene's reference).
+ */
+export const googolVsAtoms: HeroQuestionBlueprint = {
+  slug: "googol-vs-atoms",
+  collection: "huge-numbers",
+  kind: "WOULD_YOU_RATHER",
+  ageGroup: "AGE_12_14",
+  difficulty: "MEDIUM",
+  category: "ARITHMETIC",
+  title: { en: "A Googol vs. the Universe", zh: "古戈尔和宇宙比大小" },
+  hook: {
+    en: "Write a 1 followed by a hundred zeros: that number is called a googol. Now imagine counting every atom in the whole universe, in every star and every planet. Which is bigger, and by how much?",
+    zh: "写一个 1，后面跟一百个 0，这个数叫古戈尔。再想象一下，把整个宇宙里的原子都数一遍，每颗星星、每颗行星都算上。哪个更大？大多少？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "atoms", en: "There are more atoms", zh: "原子更多" },
+      { id: "bit", en: "A googol is a bit bigger", zh: "古戈尔大一点点" },
+      { id: "absurd", en: "A googol is ridiculously bigger", zh: "古戈尔大得离谱" },
+    ],
+  },
+  scene: {
+    type: "scale_ladder",
+    mode: "powers",
+    start: 80,
+    target: 100,
+    labels: { start: { en: "atoms in the universe", zh: "宇宙里的原子" }, target: { en: "a googol", zh: "古戈尔" } },
+    references: [
+      { value: 18, emoji: "🏖️", label: { en: "grains of sand on Earth", zh: "地球上的沙粒" } },
+      { value: 22, emoji: "✨", label: { en: "stars in the universe", zh: "宇宙里的恒星" } },
+    ],
+  },
+  prompt: {
+    en: "Scientists estimate that the universe holds about \\(10^{80}\\) atoms (a 1 with 80 zeros). A googol is \\(10^{100}\\). Is a googol smaller, a bit bigger, or ridiculously bigger?",
+    zh: "科学家估计，宇宙里大约有 \\(10^{80}\\) 个原子（1 后面 80 个 0）。古戈尔是 \\(10^{100}\\)。古戈尔是更小、大一点点，还是大得离谱？",
+  },
+  answer: { type: "CHOICE", correctId: "absurd" },
+  hints: [
+    { en: "Don't compare 80 and 100 as if they were the numbers. They count ZEROS. What does one extra zero do to a number?", zh: "别把 80 和 100 当成那两个数来比，它们数的是 0 的个数。多一个 0，数会变成原来的几倍？" },
+    { en: "One extra zero means × 10, and two extra zeros mean × 100. So how many times bigger is a number with 20 extra zeros?", zh: "多一个 0 就是 × 10，多两个 0 就是 × 100。那多 20 个 0，是大多少倍？" },
+    { en: "20 extra zeros means × 100,000,000,000,000,000,000. Slide the scene's zeros across and ask yourself: is that 'a bit'?", zh: "多 20 个 0 就是 × 100,000,000,000,000,000,000。在场景里把 0 一个个加上去，再问问自己：这算「一点点」吗？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "choice:bit",
+      feedback: {
+        en: "100 zeros and 80 zeros look close, like 100 and 80. But every extra zero multiplies by 10, and 20 extra zeros multiply by 10 twenty times. That's a hundred billion billion times bigger.",
+        zh: "100 个 0 和 80 个 0 看起来差不多，就像 100 和 80。可是每多一个 0 就要乘 10，多 20 个 0 就是乘了 20 次 10，大了一万亿亿倍。",
+      },
+    },
+    {
+      match: "choice:atoms",
+      feedback: {
+        en: "The universe feels like the biggest thing there is, so it's natural to pick it. But its atoms come to about a 1 with 80 zeros, and a googol has 100 zeros. More zeros means bigger.",
+        zh: "宇宙感觉是最大的东西，选它很正常。可是宇宙里的原子大约是 1 后面 80 个 0，古戈尔有 100 个 0。0 越多，数越大。",
+      },
+    },
+  ],
+  explanation: {
+    en: "Each extra zero multiplies a number by 10. A googol has 20 more zeros than the number of atoms, so it is \\(10^{20}\\) times bigger. That's 100,000,000,000,000,000,000 times: ridiculously bigger.",
+    zh: "每多一个 0，数就变成原来的 10 倍。古戈尔比原子的数量多 20 个 0，所以大 \\(10^{20}\\) 倍。也就是 100,000,000,000,000,000,000 倍，大得离谱。",
+  },
+  aha: {
+    en: "To get a googol atoms you'd need \\(10^{20}\\) whole universes, about a hundred universes for every grain of sand on Earth. 'Only 20 more zeros' is a monster.",
+    zh: "要凑够一个古戈尔的原子，需要 \\(10^{20}\\) 个宇宙，相当于地球上每一粒沙子都配一百个宇宙。「只多 20 个 0」其实是个怪物。",
+  },
+  extension: {
+    en: "A googolplex is a 1 followed by a googol zeros. If you wrote one zero on every atom in the universe, could you write it down?",
+    zh: "古戈尔普勒克斯是 1 后面跟着一个古戈尔那么多个 0。如果在宇宙里的每个原子上写一个 0，你写得下它吗？",
+  },
+  discussionPrompt: {
+    en: "What picture would you use to explain 'ten to the power of twenty times bigger' to a friend in one sentence?",
+    zh: "你会用什么画面，用一句话向朋友解释「大 10 的 20 次方倍」？",
+  },
+  solutionTags: ["pattern", "algebra"],
+  funFact: {
+    en: "The name 'googol' was made up around 1920 by a nine-year-old boy, Milton Sirotta, when a mathematician in his family asked him to name a really big number.",
+    zh: "「古戈尔」这个名字是 1920 年前后一个 9 岁男孩米尔顿起的：他家里一位当数学家的长辈，请他给一个超级大的数取个名字。",
+  },
+  sortOrder: 9,
+  rubricNotes:
+    "16/20 — hook 2, guess 2, hands-on 1, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the powers scene shows the zeros but the answer comes from the 'each zero is × 10' idea, not from the scene; exponents are a 12+ idea",
+};
+
+/**
+ * A10. halving_bar: the scene's TINY_THINGS say the gap passes a hair at step 14, a bacterium at
+ * 20 and an atom only at step 34 (2^-34 m ≈ 5.8e-11 m < 1e-10 m), so maxSteps is 40 and the copy
+ * says 34.
+ */
+export const halfwayToTheWall: HeroQuestionBlueprint = {
+  slug: "halfway-to-the-wall",
+  collection: "huge-numbers",
+  kind: "PARADOX",
+  ageGroup: "AGE_12_14",
+  difficulty: "MEDIUM",
+  category: "FRACTIONS",
+  title: { en: "The Wall You Never Reach", zh: "永远走不到的墙" },
+  hook: {
+    en: "You stand facing a wall. You walk half of the way there, then half of what's left, then half of what's left again, and you never stop. Do you ever reach the wall? And how far do you walk altogether?",
+    zh: "你面对一面墙站着。先走一半的路，再走剩下的一半，再走剩下的一半……永远不停。你能走到墙吗？你一共走了多远？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "less", en: "Less than the full distance", zh: "比全程少一点" },
+      { id: "exact", en: "Exactly the full distance", zh: "正好是全程" },
+      { id: "more", en: "More than the full distance", zh: "比全程多" },
+      { id: "forever", en: "It grows forever", zh: "越加越多，没有尽头" },
+    ],
+  },
+  scene: { type: "halving_bar", ratio: 0.5, maxSteps: 40 },
+  prompt: {
+    en: "The wall is 1 metre away. If you keep going forever, what does 1/2 + 1/4 + 1/8 + 1/16 + … add up to?",
+    zh: "墙在 1 米外。如果永远走下去，1/2 + 1/4 + 1/8 + 1/16 + …… 加起来等于多少？",
+  },
+  answer: { type: "NUMERIC", value: 1, unit: { en: "m", zh: "米" } },
+  hints: [
+    { en: "Don't add the fractions one by one. Look at what is LEFT after each step instead. After the first step, how much is left?", zh: "别一个个去加分数。换个角度，看每一步之后还剩多少。走完第一步，还剩多少？" },
+    { en: "After 1 step, 1/2 m is left. After 2 steps, 1/4 m. After 3 steps, 1/8 m. What happens to the part left as you keep going?", zh: "走 1 步后剩 1/2 米，走 2 步后剩 1/4 米，走 3 步后剩 1/8 米。一直走下去，剩下的会怎样？" },
+    { en: "Walked + left = 1 metre, every single time. The part left gets smaller than any number you can name. So what must the walked part add up to?", zh: "走过的 + 剩下的 = 1 米，每一步都是这样。剩下的会比你说得出的任何数都小。那走过的加起来是多少？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "regex:^\\s*0?\\.9+\\s*$",
+      feedback: {
+        en: "0.999 is a good thought: it's what you've walked after many steps. But the steps never stop, and the gap to 1 shrinks below every number you can name. A gap smaller than everything is no gap at all.",
+        zh: "想到 0.999 很自然：走了很多步以后就是这么多。可是这些步永远不停，和 1 的差距会比你说得出的任何数都小。比什么都小的差距，就是没有差距。",
+      },
+    },
+    {
+      match: "2",
+      feedback: {
+        en: "Maybe you thought each step is as long as the one before. But each step is only half of what's left, so you can never walk past the wall.",
+        zh: "你可能以为每一步都和上一步一样长。可是每一步只走剩下的一半，所以你永远不会走过墙。",
+      },
+    },
+    {
+      match: "regex:^\\s*(∞|[Ii]nf|[Ff]orever|无限|无穷|永远)",
+      feedback: {
+        en: "Infinitely many steps, yes, but they get tiny very fast. Infinitely many numbers can still add up to an ordinary number: every piece fits inside the same 1-metre bar.",
+        zh: "步数确实是无限的，可是每一步很快就变得极小。无限多个数加起来，也可以是一个普通的数：每一小段都装在同一根 1 米长的条里。",
+      },
+    },
+    {
+      match: "lt:1",
+      feedback: {
+        en: "You've added up the first few steps, so you're a bit short. Keep going: the part left keeps halving, and nothing stops the total from closing in on the whole metre.",
+        zh: "你只加了前几步，所以还差一点。继续走：剩下的部分一直减半，没有什么能拦住总和一直贴近整整 1 米。",
+      },
+    },
+    {
+      match: "gt:1",
+      feedback: {
+        en: "More than the whole distance? Each step only covers half of the gap that's left, so you never pass the wall.",
+        zh: "比全程还长？每一步只走剩下那段的一半，所以你永远不会走过墙。",
+      },
+    },
+  ],
+  explanation: {
+    en: "After each step the part still to walk is 1/2, then 1/4, then 1/8 of a metre, and walked + left is always exactly 1. The part left halves forever, so it becomes smaller than any distance you can name: after 34 steps it is already smaller than an atom. A sum that never ends means the number its totals close in on, and here that is 1. So 1/2 + 1/4 + 1/8 + … = 1.",
+    zh: "每走一步，还剩 1/2 米、1/4 米、1/8 米……而走过的 + 剩下的永远正好是 1 米。剩下的一直减半，会比你说得出的任何距离都短：走 34 步以后，它就比一个原子还小了。一个永远加不完的和，在数学上就是指它越来越靠近的那个数，这里就是 1。所以 1/2 + 1/4 + 1/8 + …… = 1。",
+  },
+  aha: {
+    en: "Infinitely many pieces can add up to an ordinary number: they all fit inside one 1-metre bar. After just 34 halvings, the gap left is smaller than an atom.",
+    zh: "无限多段加起来，可以是一个普通的数：它们全都装在同一根 1 米长的条里。只要减半 34 次，剩下的缝就比一个原子还小。",
+  },
+  extension: {
+    en: "What does 1/3 + 1/9 + 1/27 + … add up to? Hint: it's a very simple fraction, and the bar picture still works.",
+    zh: "1/3 + 1/9 + 1/27 + …… 加起来是多少？提示：是一个很简单的分数，那根条的画法照样能用。",
+  },
+  discussionPrompt: {
+    en: "Draw one picture that would convince an 8-year-old that 1/2 + 1/4 + 1/8 + … is exactly 1. What would you draw?",
+    zh: "画一张图，让一个 8 岁的孩子一眼看懂为什么 1/2 + 1/4 + 1/8 + …… 正好是 1。你会画什么？",
+  },
+  solutionTags: ["draw", "pattern", "algebra"],
+  funFact: {
+    en: "The Greek thinker Zeno told stories like this about 2,400 years ago to argue that nothing can ever really move. It took mathematicians more than 2,000 years to explain clearly what was wrong with them.",
+    zh: "大约 2,400 年前，古希腊的芝诺就讲过这样的故事，想「证明」东西根本动不起来。数学家花了两千多年，才把他错在哪里讲清楚。",
+  },
+  sortOrder: 10,
+  rubricNotes:
+    "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 2, wrong 2, hints 1, retell 1: infinite sums are a 12+ idea; paths are the bar picture and the 'walked + left = 1' algebra; hint 3 nearly states the argument",
+};
+
+export const HUGE_NUMBERS: readonly HeroQuestionBlueprint[] = [
+  gaussSum,
+  chessboardRice,
+  foldToTheMoon,
+  millionSeconds,
+  billionHeartbeats,
+  handshakeParty,
+  googolVsAtoms,
+  halfwayToTheWall,
+];

@@ -6,7 +6,21 @@
  * and throws one aggregated error, so seed.ts can abort before touching the database.
  * Pure: no Prisma, no I/O.
  */
-import { countSquares, handshakes, isLegacySceneType, parseSceneConfig, type SceneConfig } from "@gmq/animation-engine";
+import {
+  countSquares,
+  handshakes,
+  hasEulerPath,
+  integerHypotenuse,
+  isLegacySceneType,
+  longestCollatz,
+  overlapTimes,
+  parseSceneConfig,
+  ratioDenominator,
+  scaleAnswer,
+  seriesLimit,
+  socksToGuarantee,
+  type SceneConfig,
+} from "@gmq/animation-engine";
 import {
   AnswerSpecSchema,
   BiSchema,
@@ -108,6 +122,21 @@ export function sceneTruth(scene: SceneConfig): number | null {
       return countSquares(scene.size);
     case "number_trick_stepper":
       return scene.expectFixedPoint ?? scene.expectDivisibleBy ?? null;
+    // Tier-2 scenes whose explore phase proposes the answer (onProposeAnswer).
+    case "scale_ladder":
+      return scene.mode === "powers" ? null : scaleAnswer(scene.mode, scene.start, scene.target);
+    case "halving_bar": {
+      const d = ratioDenominator(scene.ratio);
+      return d === null ? null : seriesLimit(d);
+    }
+    case "pythagoras_squares":
+      return integerHypotenuse(scene.a, scene.b);
+    case "clock_overlap":
+      return overlapTimes(scene.hours).length;
+    case "sock_drawer":
+      return socksToGuarantee(scene.colors, scene.guaranteeTwoPairs ? 2 : 1);
+    case "collatz_path":
+      return longestCollatz(scene.highlightRange[0], scene.highlightRange[1]);
     default:
       return null;
   }
@@ -220,11 +249,25 @@ function checkSceneAnswer(scene: SceneConfig, spec: AnswerSpec, errors: string[]
     }
     return;
   }
+  if (scene.type === "bridges_trace") {
+    // Euler's rule decides the walk; the copy convention is a CHOICE between "possible" and "impossible".
+    const want = hasEulerPath(scene) ? "possible" : "impossible";
+    if (spec.type === "CHOICE" && spec.correctId !== want) {
+      errors.push(`scene/answer: bridges_trace ${want === "possible" ? "has" : "has no"} Euler walk, so correctId must be "${want}"`);
+    }
+    return;
+  }
   const truth = sceneTruth(scene);
   if (truth === null) return;
+  if (spec.type === "ESTIMATE") {
+    // An estimate only has to bracket what the scene shows (e.g. 11.574 days in [11, 12]).
+    if (truth < spec.min || truth > spec.max) {
+      errors.push(`scene/answer: ${scene.type} asserts ${truth}, outside the accepted range [${spec.min}, ${spec.max}]`);
+    }
+    return;
+  }
   let answerTruth: number | null = null;
   if (spec.type === "NUMERIC") answerTruth = spec.value;
-  else if (spec.type === "ESTIMATE") answerTruth = spec.truth;
   else if (spec.type === "CHOICE") answerTruth = parseNumberV2(spec.correctId);
   if (answerTruth === null) {
     errors.push(`scene/answer: ${scene.type} asserts ${truth} but the ${spec.type} answer carries no number to compare`);

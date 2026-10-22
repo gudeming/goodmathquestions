@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseSceneConfig } from "@gmq/animation-engine";
+import { collatzSteps, parseSceneConfig, stepsToShrinkBelow } from "@gmq/animation-engine";
 import { AnswerSpecSchema, validateAnswerV2, wrongAnswerFeedbackFor } from "@gmq/math-engine";
 import { DEFAULT_HINTS } from "../us-k12-question-bank";
 import {
@@ -58,6 +58,24 @@ const BATCH_2_SLUGS = [
   "nine-balls-balance",
   "three-switches",
   "knights-and-knaves",
+] as const;
+
+const BATCH_3_SLUGS = [
+  "million-seconds",
+  "billion-heartbeats",
+  "googol-vs-atoms",
+  "halfway-to-the-wall",
+  "rope-around-earth",
+  "pythagoras-squares",
+  "seven-bridges",
+  "clock-hands-meet",
+  "coin-streak",
+  "socks-in-the-dark",
+  "pi-from-raindrops",
+  "collatz-hailstone",
+  "times-eleven",
+  "fibonacci-next",
+  "perfect-28",
 ] as const;
 
 const bySlug = (slug: string): HeroQuestionBlueprint => {
@@ -390,10 +408,8 @@ describe("cross-blueprint checks", () => {
 });
 
 describe("hero blueprints (batch 2)", () => {
-  it("adds the sixteen batch-2 questions, and nothing else", () => {
-    const slugs = ALL_HERO_BLUEPRINTS.map((bp) => bp.slug);
-    expect(slugs).toEqual(expect.arrayContaining([...BATCH_2_SLUGS]));
-    expect(slugs).toHaveLength(BATCH_1_SLUGS.length + BATCH_2_SLUGS.length);
+  it("adds the sixteen batch-2 questions", () => {
+    expect(ALL_HERO_BLUEPRINTS.map((bp) => bp.slug)).toEqual(expect.arrayContaining([...BATCH_2_SLUGS]));
   });
 
   it("puts each question in its catalog world and slot (sortOrder = catalog number)", () => {
@@ -420,21 +436,6 @@ describe("hero blueprints (batch 2)", () => {
 
   it("every world has questions now", () => {
     for (const world of HERO_WORLDS) expect(world.blueprints.length, world.slug).toBeGreaterThan(0);
-  });
-
-  it("keeps the AGE_8_10 counts per world", () => {
-    const young = Object.fromEntries(
-      HERO_WORLDS.map((w) => [w.slug, w.blueprints.filter((bp) => bp.ageGroup === "AGE_8_10").length])
-    );
-    // huge-numbers, number-magic and impossible-puzzles reach 2 when A4, D6/D8 and F12 land (T2 scenes).
-    expect(young).toEqual({
-      "huge-numbers": 1,
-      "shapes-that-lie": 2,
-      "chance-and-luck": 2,
-      "number-magic": 1,
-      "patterns-everywhere": 2,
-      "impossible-puzzles": 1,
-    });
   });
 
   it("only A3 upgrades a legacy row in this batch", () => {
@@ -484,5 +485,220 @@ describe("hero blueprints (batch 2)", () => {
     expect(ok("rolls-until-six", "3.5")).toBe(false);
     expect(ok("chessboard-rice", String(2 ** 20))).toBe(true);
     expect(ok("four-weights", "40")).toBe(true);
+  });
+});
+
+describe("hero blueprints (batch 3)", () => {
+  const spec = (slug: string) => AnswerSpecSchema.parse(bySlug(slug).answer);
+  const ok = (slug: string, input: string) => validateAnswerV2(input, spec(slug)).isCorrect;
+  const fb = (slug: string, input: string) => wrongAnswerFeedbackFor(input, spec(slug), bySlug(slug).wrongAnswers)?.feedback.en ?? null;
+
+  it("adds the fifteen batch-3 questions: 39 in all", () => {
+    const slugs = ALL_HERO_BLUEPRINTS.map((bp) => bp.slug);
+    expect(slugs).toEqual(expect.arrayContaining([...BATCH_3_SLUGS]));
+    expect(slugs).toHaveLength(BATCH_1_SLUGS.length + BATCH_2_SLUGS.length + BATCH_3_SLUGS.length);
+    expect(slugs).toHaveLength(39);
+  });
+
+  it("puts each question in its catalog world and slot (sortOrder = catalog number)", () => {
+    const slot = (slug: string) => `${bySlug(slug).collection}/${bySlug(slug).sortOrder}`;
+    expect(BATCH_3_SLUGS.map(slot)).toEqual([
+      "huge-numbers/4",
+      "huge-numbers/5",
+      "huge-numbers/9",
+      "huge-numbers/10",
+      "shapes-that-lie/3",
+      "shapes-that-lie/6",
+      "shapes-that-lie/7",
+      "shapes-that-lie/8",
+      "chance-and-luck/4",
+      "chance-and-luck/5",
+      "chance-and-luck/7",
+      "number-magic/5",
+      "number-magic/6",
+      "number-magic/8",
+      "number-magic/9",
+    ]);
+  });
+
+  it("uses the catalog ages, and every scene is an interactive Tier-2 scene", () => {
+    const ages = Object.fromEntries(BATCH_3_SLUGS.map((s) => [s, bySlug(s).ageGroup]));
+    for (const s of ["million-seconds", "socks-in-the-dark", "times-eleven", "fibonacci-next"]) expect(ages[s], s).toBe("AGE_8_10");
+    for (const s of ["googol-vs-atoms", "halfway-to-the-wall", "rope-around-earth", "pythagoras-squares", "pi-from-raindrops"]) expect(ages[s], s).toBe("AGE_12_14");
+    for (const s of ["billion-heartbeats", "seven-bridges", "clock-hands-meet", "coin-streak", "collatz-hailstone", "perfect-28"]) expect(ages[s], s).toBe("AGE_10_12");
+    for (const s of BATCH_3_SLUGS) expect(bySlug(s).scene.type, s).not.toBe("illustration");
+  });
+
+  it("AGE_8_10 counts per world (huge-numbers and number-magic grew this batch)", () => {
+    const young = Object.fromEntries(
+      HERO_WORLDS.map((w) => [w.slug, w.blueprints.filter((bp) => bp.ageGroup === "AGE_8_10").length])
+    );
+    // impossible-puzzles reaches 2 when F12 lands.
+    expect(young).toEqual({
+      "huge-numbers": 2,
+      "shapes-that-lie": 2,
+      "chance-and-luck": 3,
+      "number-magic": 3,
+      "patterns-everywhere": 2,
+      "impossible-puzzles": 1,
+    });
+  });
+
+  it("only D8 upgrades a legacy row in this batch", () => {
+    const upgrades = BATCH_3_SLUGS.map(bySlug).filter((bp) => bp.upgradesLegacyTitleEn !== undefined);
+    expect(upgrades.map((bp) => [bp.slug, bp.upgradesLegacyTitleEn])).toEqual([["fibonacci-next", "Sunflower Fibonacci Spiral"]]);
+  });
+
+  it("guess-is-the-question CHOICE items reuse the guess options", () => {
+    for (const [slug, correct] of [["googol-vs-atoms", "absurd"], ["seven-bridges", "impossible"], ["coin-streak", "same"]] as const) {
+      const bp = bySlug(slug);
+      expect(bp.choices, slug).toBeUndefined();
+      expect(bp.guess?.type, slug).toBe("choice");
+      expect(bp.answer, slug).toEqual({ type: "CHOICE", correctId: correct });
+    }
+  });
+
+  it("accepts the answers the scenes propose (onProposeAnswer)", () => {
+    expect(ok("million-seconds", "11.6")).toBe(true);
+    expect(ok("billion-heartbeats", "27")).toBe(true);
+    expect(ok("rope-around-earth", "16")).toBe(true);
+    expect(ok("clock-hands-meet", "22")).toBe(true);
+    expect(ok("socks-in-the-dark", "4")).toBe(true);
+    expect(ok("collatz-hailstone", "9")).toBe(true);
+    expect(ok("perfect-28", "28")).toBe(true);
+    // pi_darts proposes its own estimate with two decimals after 1,000 dots.
+    for (const v of ["3.05", "3.14", "3.20", "3.27"]) expect(ok("pi-from-raindrops", v), v).toBe(true);
+    expect(ok("halfway-to-the-wall", "1")).toBe(true);
+    expect(ok("times-eleven", "792")).toBe(true);
+    expect(ok("fibonacci-next", "55")).toBe(true);
+    expect(ok("pythagoras-squares", "10")).toBe(true);
+  });
+
+  it("keeps the estimate windows tight", () => {
+    expect(ok("million-seconds", "10.5")).toBe(false);
+    expect(ok("billion-heartbeats", "31.7")).toBe(false); // 60 beats a minute instead of 70
+    expect(ok("rope-around-earth", "32")).toBe(false); // 1 / π: the diameter
+    expect(ok("pi-from-raindrops", "0.785")).toBe(false);
+  });
+
+  it("names the likely mistake for the classic wrong answers", () => {
+    expect(fb("million-seconds", "16667")).toMatch(/minutes/);
+    expect(fb("million-seconds", "278")).toMatch(/hours/);
+    expect(fb("billion-heartbeats", "2.7")).toMatch(/hundred million/);
+    expect(fb("billion-heartbeats", "272")).toMatch(/nine zeros/);
+    expect(fb("googol-vs-atoms", "bit")).toMatch(/multiplies by 10/);
+    expect(fb("googol-vs-atoms", "atoms")).toMatch(/More zeros/);
+    expect(fb("halfway-to-the-wall", "0.999")).toMatch(/no gap at all/);
+    expect(fb("halfway-to-the-wall", "infinity")).toMatch(/Infinitely many/);
+    expect(fb("halfway-to-the-wall", "2")).toMatch(/half of what's left/);
+    expect(fb("rope-around-earth", "0.16")).toMatch(/metres/);
+    expect(fb("rope-around-earth", "100")).toMatch(/extra rope itself/);
+    expect(fb("rope-around-earth", "0")).toMatch(/doesn't depend/);
+    expect(fb("pythagoras-squares", "14")).toMatch(/squashed flat/);
+    expect(fb("pythagoras-squares", "100")).toMatch(/AREA/);
+    expect(fb("seven-bridges", "possible")).toMatch(/odd number/);
+    expect(fb("seven-bridges", "start")).toMatch(/wherever you start/);
+    expect(fb("clock-hands-meet", "24")).toMatch(/once every hour/);
+    expect(fb("clock-hands-meet", "21")).toMatch(/midnight/);
+    expect(fb("clock-hands-meet", "23")).toMatch(/both midnights/);
+    expect(fb("coin-streak", "tails")).toMatch(/no memory/);
+    expect(fb("coin-streak", "heads")).toMatch(/no luck/);
+    expect(fb("socks-in-the-dark", "2")).toMatch(/be sure/);
+    expect(fb("socks-in-the-dark", "3")).toMatch(/one of each colour/);
+    expect(fb("pi-from-raindrops", "785")).toMatch(/number of dots inside/);
+    expect(fb("pi-from-raindrops", "0.78")).toMatch(/multiply it by 4/);
+    expect(fb("collatz-hailstone", "7")).toMatch(/16 steps/);
+    expect(fb("collatz-hailstone", "19")).toMatch(/STEPS/);
+    expect(fb("times-eleven", "772")).toMatch(/SUM/);
+    expect(fb("times-eleven", "782")).toMatch(/7 \+ 2 is 9/);
+    expect(fb("fibonacci-next", "47")).toMatch(/21 and 34/);
+    expect(fb("fibonacci-next", "68")).toMatch(/doubled/);
+    expect(fb("perfect-28", "24")).toMatch(/abundant/);
+    expect(fb("perfect-28", "27")).toMatch(/1 \+ 3 \+ 9 = 13/);
+    expect(fb("perfect-28", "29")).toMatch(/prime/);
+  });
+
+  it("states the facts the copy relies on", () => {
+    // A10: the halving scene reaches an atom (1e-10 m) only at step 34, and maxSteps lets you get there.
+    expect(stepsToShrinkBelow(1e-10)).toBe(34);
+    const wall = bySlug("halfway-to-the-wall");
+    expect(wall.explanation.en).toMatch(/34 steps/);
+    expect(wall.aha.en).toMatch(/34 halvings/);
+    expect(wall.scene).toMatchObject({ type: "halving_bar", maxSteps: 40 });
+    // D5: 9 takes 19 steps, 7 takes 16, 27 takes 111; 18 and 19 beat 9 below 20 (extension).
+    expect([collatzSteps(9), collatzSteps(7), collatzSteps(27), collatzSteps(18), collatzSteps(19)]).toEqual([19, 16, 111, 20, 20]);
+    // D6 extension: 85 × 11 carries.
+    expect(85 * 11).toBe(935);
+    // C7: no seed, so every child's rain (and estimate) is different.
+    expect(bySlug("pi-from-raindrops").scene).not.toHaveProperty("seed");
+  });
+});
+
+describe("scene/answer cross-checks for the Tier-2 scenes", () => {
+  /** Rules that can't collide with a changed answer, so only the scene/answer problem is reported. */
+  const neutralRules = (b: HeroQuestionBlueprint) => {
+    b.wrongAnswers = [
+      { match: "regex:^never$", feedback: { en: "Placeholder feedback one.", zh: "占位反馈一。" } },
+      { match: "regex:^nope$", feedback: { en: "Placeholder feedback two.", zh: "占位反馈二。" } },
+    ];
+  };
+
+  it("pythagoras_squares must agree with the hypotenuse", () => {
+    const bp = bySlug("pythagoras-squares");
+    expectProblem(
+      broken(bp, (b) => {
+        neutralRules(b);
+        b.answer = { type: "NUMERIC", value: 14 };
+      }),
+      /pythagoras_squares asserts 10, answer is 14/
+    );
+  });
+
+  it("clock_overlap, sock_drawer and collatz_path must agree with the answer", () => {
+    const clock = bySlug("clock-hands-meet");
+    expectProblem(
+      broken(clock, (b) => {
+        neutralRules(b);
+        b.answer = { type: "NUMERIC", value: 24 };
+      }),
+      /clock_overlap asserts 22, answer is 24/
+    );
+    const socks = bySlug("socks-in-the-dark");
+    expectProblem(
+      broken(socks, (b) => {
+        b.scene = { type: "sock_drawer", colors: 5 };
+      }),
+      /sock_drawer asserts 6, answer is 4/
+    );
+    const collatz = bySlug("collatz-hailstone");
+    expectProblem(
+      broken(collatz, (b) => {
+        b.scene = { type: "collatz_path", maxStart: 200, highlightRange: [1, 7] };
+      }),
+      /collatz_path asserts 7, answer is 9/
+    );
+  });
+
+  it("an ESTIMATE window must contain what scale_ladder shows", () => {
+    const bp = bySlug("million-seconds");
+    expectProblem(
+      broken(bp, (b) => {
+        b.answer = { type: "ESTIMATE", min: 12, max: 14, truth: 13 };
+        b.wrongAnswers = b.wrongAnswers.filter((w) => !["lt:11", "gt:12"].includes(w.match));
+      }),
+      /scale_ladder asserts 11\.57\d*, outside the accepted range \[12, 14\]/
+    );
+  });
+
+  it("bridges_trace must agree with Euler's rule", () => {
+    const bp = bySlug("seven-bridges");
+    expectProblem(
+      broken(bp, (b) => {
+        b.answer = { type: "CHOICE", correctId: "possible" };
+        b.wrongAnswers = b.wrongAnswers.filter((w) => w.match !== "choice:possible");
+        b.wrongAnswers.push({ match: "choice:impossible", feedback: { en: "Placeholder feedback.", zh: "占位反馈。" } });
+      }),
+      /bridges_trace has no Euler walk, so correctId must be "impossible"/
+    );
   });
 });

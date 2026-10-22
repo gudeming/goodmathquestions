@@ -1,8 +1,9 @@
 /**
  * World B · Shapes that lie (`shapes-that-lie`). Catalog: 02-hero-question-catalog.md §B.
- * Batch 1: B1 squares-on-chessboard. Batch 2: B2 pizza-cuts, B4 fence-shaper.
- * TODO(phase-3 batch 3): B3 and B5-B11 once circle_rope, dissection_slide, pythagoras_squares,
- * bridges_trace, clock_overlap, tiling_lab, domino_tiling and mobius_cut land.
+ * Batch 1: B1 squares-on-chessboard. Batch 2: B2 pizza-cuts, B4 fence-shaper. Batch 3: B3
+ * rope-around-earth (circle_rope), B6 pythagoras-squares, B7 seven-bridges (bridges_trace),
+ * B8 clock-hands-meet (clock_overlap).
+ * TODO(phase-3): B5, B9-B11 once dissection_slide, tiling_lab, domino_tiling and mobius_cut land.
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
@@ -274,4 +275,420 @@ export const fenceShaper: HeroQuestionBlueprint = {
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: table and slider are really the same try-every-rectangle path; the wall and circle extensions lead to a real rule",
 };
 
-export const SHAPES_THAT_LIE: readonly HeroQuestionBlueprint[] = [squaresOnChessboard, pizzaCuts, fenceShaper];
+/** B3. gap = 1 / 2π m = 15.92 cm for any planet. The scene proposes "16" (cm) when the slider hits 1 m. */
+export const ropeAroundEarth: HeroQuestionBlueprint = {
+  slug: "rope-around-earth",
+  collection: "shapes-that-lie",
+  kind: "ESTIMATION",
+  ageGroup: "AGE_12_14",
+  difficulty: "HARD",
+  category: "GEOMETRY",
+  title: { en: "A Rope Around the Earth", zh: "绕地球的绳子" },
+  hook: {
+    en: "A rope is wrapped tightly around the Earth's equator, hugging the ground all the way round. You make the rope just one metre longer and lift it evenly, so it floats at the same height everywhere. What could crawl underneath?",
+    zh: "一根绳子紧紧贴着赤道，绕地球一圈。你把绳子只加长 1 米，再把它均匀地撑起来，让它在每个地方离地面都一样高。下面能钻过去什么？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "hair", en: "Nothing thicker than a hair", zh: "只有头发丝那么细的东西" },
+      { id: "finger", en: "A finger", zh: "一根手指" },
+      { id: "cat", en: "A cat, if it squeezes", zh: "一只猫（挤一挤）" },
+      { id: "car", en: "A car", zh: "一辆车" },
+    ],
+  },
+  scene: {
+    type: "circle_rope",
+    extraMetersMax: 10,
+    planets: [
+      { id: "basketball", label: { en: "a basketball", zh: "篮球" }, radiusM: 0.12, emoji: "🏀" },
+      { id: "earth", label: { en: "the Earth", zh: "地球" }, radiusM: 6_371_000, emoji: "🌍" },
+      { id: "sun", label: { en: "the Sun", zh: "太阳" }, radiusM: 696_340_000, emoji: "☀️" },
+    ],
+  },
+  prompt: {
+    en: "The rope around the equator is made 1 metre longer and lifted evenly all the way round. How high is the gap between the rope and the ground, in centimetres?",
+    zh: "绕赤道的绳子加长 1 米，再均匀地撑起来。绳子和地面之间的缝有多高？用厘米回答。",
+  },
+  answer: { type: "ESTIMATE", min: 15, max: 17, truth: 15.9, unit: { en: "cm", zh: "厘米" } },
+  hints: [
+    { en: "The Earth is so big that it gets in the way of thinking. Try the same thing with a basketball first, and compare them in the scene.", zh: "地球太大了，反而让人想不清楚。先换成一个篮球试试，在场景里比一比。" },
+    { en: "A rope around a circle is 2π × the radius long. If the rope is lifted by a gap g, the radius grows by g. How much longer does the rope get?", zh: "绕圆一圈的绳长 = 2π × 半径。绳子被撑高 g，半径就变大 g。绳子要长多少？" },
+    { en: "Extra rope = 2π × g, and the extra rope is 1 metre. So g = 1 ÷ 2π metres. Work it out and turn it into centimetres.", zh: "加长的绳子 = 2π × g，而加长的是 1 米。所以 g = 1 ÷ 2π 米。算出来，再换成厘米。" },
+  ],
+  wrongAnswers: [
+    {
+      match: "regex:^\\s*0?\\.1[5-7]",
+      feedback: {
+        en: "That's the right size, but in metres! The answer is asked in centimetres, and 1 m = 100 cm.",
+        zh: "大小算对了，可这是以米为单位！题目要的是厘米，1 米 = 100 厘米。",
+      },
+    },
+    {
+      match: "regex:^\\s*3[12](\\.\\d+)?\\s*$",
+      feedback: {
+        en: "That's 1 ÷ π, about 32 cm: how much longer the rope's DIAMETER gets. The gap is only on one side, so it's the radius you need: divide by 2π.",
+        zh: "这是 1 ÷ π，大约 32 厘米，是直径变长了多少。缝只是一边的高度，要看的是半径：除以 2π。",
+      },
+    },
+    {
+      match: "gt:90",
+      feedback: {
+        en: "100 cm is the extra rope itself. That metre is spread out around the whole circle, so the rope lifts much less than a metre.",
+        zh: "100 厘米是加长的那段绳子本身。这 1 米要分摊到整整一圈上，绳子被撑起来的高度要小得多。",
+      },
+    },
+    {
+      match: "lt:1",
+      feedback: {
+        en: "It feels like 1 metre spread over 40,000 km should vanish. But the gap doesn't depend on how big the Earth is at all. Add the same metre to the basketball and to the Earth in the scene.",
+        zh: "感觉 1 米分摊到 4 万千米上，应该几乎没有了。可是缝的大小和地球多大根本没关系。在场景里给篮球和地球都加 1 米试试。",
+      },
+    },
+    {
+      match: "lt:15",
+      feedback: {
+        en: "A bit low. Check the π step: the gap is 1 metre ÷ 2π, and 2π is about 6.28.",
+        zh: "有点低。检查 π 那一步：缝 = 1 米 ÷ 2π，而 2π 大约是 6.28。",
+      },
+    },
+    {
+      match: "gt:17",
+      feedback: {
+        en: "A bit high. The gap is 1 metre ÷ 2π, and 2π is about 6.28. How many centimetres is 100 ÷ 6.28?",
+        zh: "有点高。缝 = 1 米 ÷ 2π，2π 大约是 6.28。100 ÷ 6.28 是多少厘米？",
+      },
+    },
+  ],
+  explanation: {
+    en: "A circle's distance around is 2π × its radius, so lifting the rope by a gap g makes it 2π × g longer. The rope got 1 metre longer, so 2π × g = 1 m and g = 1 ÷ 2π ≈ 0.159 m. That's about 16 cm: a cat can squeeze under.",
+    zh: "圆的周长是 2π × 半径，所以绳子被撑高 g，就会变长 2π × g。绳子长了 1 米，所以 2π × g = 1 米，g = 1 ÷ 2π ≈ 0.159 米。也就是大约 16 厘米：一只猫挤一挤就能钻过去。",
+  },
+  aha: {
+    en: "The size of the Earth cancels out completely. A basketball, the Earth or the Sun: one extra metre of rope always lifts it about 16 cm.",
+    zh: "地球有多大，在算式里完全抵消了。篮球、地球还是太阳，多 1 米绳子，缝都是大约 16 厘米。",
+  },
+  extension: {
+    en: "How much longer would the rope need to be for a grown-up, 1.8 m tall, to walk underneath? Guess before you work it out.",
+    zh: "绳子要加长多少，一个 1.8 米高的大人才能从下面走过去？先猜再算。",
+  },
+  discussionPrompt: {
+    en: "Using only 'distance around = π × distance across', can you explain to a friend why the gap doesn't depend on how big the ball is?",
+    zh: "你能只用「周长 = π × 直径」，向朋友解释为什么缝的大小和球多大没关系吗？",
+  },
+  solutionTags: ["algebra", "draw", "guess_check"],
+  funFact: {
+    en: "Adding 1 metre to the 40,000 km equator is like adding much less than a hair's width to a 400-metre running track. Yet the gap is still 16 cm.",
+    zh: "给 4 万千米长的赤道加 1 米，就像给 400 米的跑道加上不到一根头发丝的粗细。可是缝照样有 16 厘米。",
+  },
+  sortOrder: 3,
+  rubricNotes:
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 2: needs C = 2πr, so 12+; the scene lets kids see that the ball's size doesn't matter before any algebra, but the algebra is the one real proof",
+};
+
+/** B6. 6² + 8² = 100 = 10²; the scene's tile reveal needs the perfect-square hypotenuse. */
+export const pythagorasSquares: HeroQuestionBlueprint = {
+  slug: "pythagoras-squares",
+  collection: "shapes-that-lie",
+  kind: "THREE_ACT",
+  ageGroup: "AGE_12_14",
+  difficulty: "MEDIUM",
+  category: "GEOMETRY",
+  title: { en: "The Secret of Three Squares", zh: "三个正方形的秘密" },
+  hook: {
+    en: "Draw a triangle with one square corner. On each of its three sides, build a square. Put the two smaller squares together and compare them with the biggest one. Which has more area?",
+    zh: "画一个有直角的三角形，在它的三条边上各搭一个正方形。把两个小正方形合在一起，和最大的那个比一比，谁的面积大？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "big", en: "The big square", zh: "大正方形更大" },
+      { id: "same", en: "Exactly the same", zh: "正好一样大" },
+      { id: "small", en: "The two small ones together", zh: "两个小的加起来更大" },
+    ],
+  },
+  scene: { type: "pythagoras_squares", a: 6, b: 8, lockRightAngle: true },
+  prompt: {
+    en: "A right triangle has two shorter sides of 6 and 8. How long is its longest side?",
+    zh: "一个直角三角形的两条直角边是 6 和 8。它最长的那条边（斜边）有多长？",
+  },
+  answer: { type: "NUMERIC", value: 10 },
+  hints: [
+    { en: "Think about the squares, not the sides. What is the area of the square on the side of 6? And on the side of 8?", zh: "先别想边，想正方形。边长 6 的正方形面积是多少？边长 8 的呢？" },
+    { en: "36 + 64 = 100. If the two small squares exactly fill the big one, what is the big square's area?", zh: "36 + 64 = 100。如果两个小正方形正好铺满大正方形，大正方形的面积是多少？" },
+    { en: "The big square's area is 100. Its side is the number that, multiplied by itself, gives 100.", zh: "大正方形的面积是 100。它的边长，就是自己乘自己等于 100 的那个数。" },
+  ],
+  wrongAnswers: [
+    {
+      match: "14",
+      feedback: {
+        en: "6 + 8 = 14 would only be right if the triangle were squashed flat into a line. Cutting across a corner is always shorter than walking around it.",
+        zh: "6 + 8 = 14，那得是三角形被压扁成一条直线才行。斜着抄近路，总比沿着两条边绕过去要短。",
+      },
+    },
+    {
+      match: "100",
+      feedback: {
+        en: "100 is the AREA of the big square, so you're one step away. Its side is the number that, times itself, makes 100.",
+        zh: "100 是大正方形的面积，你只差一步了。边长是自己乘自己等于 100 的那个数。",
+      },
+    },
+    {
+      match: "7",
+      feedback: {
+        en: "7 is halfway between 6 and 8. But the longest side of a right triangle is always longer than each of the other two.",
+        zh: "7 是 6 和 8 的平均数。可是直角三角形最长的边，一定比另外两条都长。",
+      },
+    },
+    {
+      match: "48",
+      feedback: {
+        en: "48 is 6 × 8. That's twice the triangle's area, not a length. Try building squares on the sides instead.",
+        zh: "48 是 6 × 8，那是三角形面积的两倍，不是边长。试试在边上搭正方形。",
+      },
+    },
+    {
+      match: "lt:8",
+      feedback: {
+        en: "The longest side can't be shorter than 8: it sits opposite the biggest angle, the right angle.",
+        zh: "最长的边不可能比 8 短：它对着最大的那个角，也就是直角。",
+      },
+    },
+  ],
+  explanation: {
+    en: "Build a square on each side: the squares on the short sides have areas 6 × 6 = 36 and 8 × 8 = 64. In a right triangle the two small squares together fill the big square exactly, so the big square's area is 36 + 64 = 100. Its side is 10, because 10 × 10 = 100.",
+    zh: "在每条边上搭正方形：两条直角边上的正方形面积是 6 × 6 = 36 和 8 × 8 = 64。直角三角形的两个小正方形加起来，正好铺满大正方形，所以大正方形的面积是 36 + 64 = 100。它的边长是 10，因为 10 × 10 = 100。",
+  },
+  aha: {
+    en: "The two small squares exactly fill the big one, but only when the corner is a perfect right angle. That's Pythagoras' theorem, and it is really a fact about area.",
+    zh: "两个小正方形正好铺满大正方形，可只有在正好是直角的时候才成立。这就是勾股定理，它说的其实是面积。",
+  },
+  extension: {
+    en: "What if the short sides are 5 and 12? Can you find other right triangles whose three sides are all whole numbers?",
+    zh: "如果两条直角边是 5 和 12 呢？你还能找到三条边都是整数的直角三角形吗？",
+  },
+  discussionPrompt: {
+    en: "Unlock the corner in the scene and drag it around. When do the two small squares beat the big one, and when do they lose?",
+    zh: "在场景里解锁顶点，拖来拖去。什么时候两个小正方形加起来更大？什么时候更小？",
+  },
+  solutionTags: ["draw", "algebra", "pattern"],
+  funFact: {
+    en: "A Babylonian clay tablet about 3,800 years old lists triangles like this one, more than 1,000 years before Pythagoras was born.",
+    zh: "一块大约 3,800 年前的古巴比伦泥板上就记着这样的三角形，比毕达哥拉斯出生早了 1,000 多年。中国古书里也有「勾三股四弦五」的说法。",
+  },
+  sortOrder: 6,
+  rubricNotes:
+    "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: needs squares and square roots; the area picture (scene tiles) is the main path, and the free-corner mode shows why the right angle matters",
+};
+
+/**
+ * B7. Königsberg: degrees north 3, south 3, island 5, east 3 → four odd lands, no Euler walk.
+ * A third option ("only from the right start") gives the second wrong answer a real misconception.
+ */
+export const sevenBridges: HeroQuestionBlueprint = {
+  slug: "seven-bridges",
+  collection: "shapes-that-lie",
+  kind: "PUZZLE",
+  ageGroup: "AGE_10_12",
+  difficulty: "MEDIUM",
+  category: "LOGIC",
+  title: { en: "The Seven Bridges Walk", zh: "走遍七座桥" },
+  hook: {
+    en: "An old city sits on a river with two islands, and seven bridges join all the land together. People liked to try a Sunday walk that crosses every bridge exactly once. Can it be done? Try it yourself.",
+    zh: "一座老城建在河边，河里有两个小岛，七座桥把陆地都连在一起。城里的人星期天喜欢试着散步，每座桥正好走一次。能做到吗？你自己试试。",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "possible", en: "Possible", zh: "能做到" },
+      { id: "start", en: "Possible, but only from the right starting place", zh: "能，但要从对的地方出发" },
+      { id: "impossible", en: "Impossible, wherever you start", zh: "从哪里出发都做不到" },
+    ],
+  },
+  scene: {
+    type: "bridges_trace",
+    nodes: [
+      { id: "north", x: 50, y: 12, label: { en: "North bank", zh: "北岸" } },
+      { id: "south", x: 50, y: 88, label: { en: "South bank", zh: "南岸" } },
+      { id: "island", x: 38, y: 50, label: { en: "Island", zh: "小岛" } },
+      { id: "east", x: 82, y: 50, label: { en: "East island", zh: "东岛" } },
+    ],
+    edges: [
+      ["north", "island"],
+      ["north", "island"],
+      ["south", "island"],
+      ["south", "island"],
+      ["north", "east"],
+      ["south", "east"],
+      ["island", "east"],
+    ],
+    layout: "konigsberg",
+    solvable: false,
+  },
+  prompt: {
+    en: "Is there a walk that crosses each of the seven bridges exactly once? You may start and finish anywhere.",
+    zh: "有没有一种走法，七座桥每座正好走一次？从哪里出发、在哪里结束都可以。",
+  },
+  answer: { type: "CHOICE", correctId: "impossible" },
+  hints: [
+    { en: "Stop walking for a moment and start counting. For each piece of land, how many bridges touch it?", zh: "先别走了，数一数。每块陆地连着几座桥？" },
+    { en: "Every time you walk THROUGH a piece of land, you use two bridges: one in, one out. So should a walk-through land have an odd or an even number of bridges?", zh: "每次「穿过」一块陆地，你都要用两座桥：一座进，一座出。那么被穿过的陆地，连着的桥数应该是奇数还是偶数？" },
+    { en: "Only the start and the finish of a walk can have an odd number of bridges. Count how many lands here have an odd number.", zh: "一条路线只有起点和终点可以连着奇数座桥。数一数，这里有几块陆地连着奇数座桥？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "choice:possible",
+      feedback: {
+        en: "It really feels like one more try will do it! But count the bridges at each piece of land: all four have an odd number, and a walk only has two ends.",
+        zh: "总觉得再试一次就成功了！可是数一数每块陆地的桥：四块都是奇数，而一条路线只有两个端点。",
+      },
+    },
+    {
+      match: "choice:start",
+      feedback: {
+        en: "Good thinking: in many puzzles like this the start does matter. Here, though, every land has an odd number of bridges, so wherever you start, at least two of them get stuck in the middle of your walk.",
+        zh: "想得好：在很多这样的谜题里，起点确实很重要。可是这里每块陆地都连着奇数座桥，不管从哪里出发，至少有两块会卡在路线中间。",
+      },
+    },
+  ],
+  explanation: {
+    en: "Each time your walk passes through a piece of land, it uses two bridges, one in and one out. So every land in the middle of the walk needs an even number of bridges, and only the start and the finish may have an odd number. Here the four lands have 5, 3, 3 and 3 bridges: four odd lands, but a walk has only two ends. So it is impossible.",
+    zh: "路线每穿过一块陆地，就要用两座桥，一进一出。所以在路线中间的陆地都要连着偶数座桥，只有起点和终点可以是奇数。这里四块陆地分别连着 5、3、3、3 座桥：四块都是奇数，可一条路线只有两个端点。所以做不到。",
+  },
+  aha: {
+    en: "You don't need to try every route: just count the bridges at each piece of land. Euler worked this out in 1736, and it started a new kind of math called graph theory.",
+    zh: "不用把每条路线都试一遍，只要数每块陆地连着几座桥。欧拉在 1736 年想通了这一点，还因此开创了一门新数学：图论。",
+  },
+  extension: {
+    en: "Take away one bridge, any one you like. Is the walk possible now? Does it matter which bridge you remove?",
+    zh: "拆掉一座桥，随便哪座。现在能走了吗？拆哪一座有区别吗？",
+  },
+  discussionPrompt: {
+    en: "Can you draw a map of islands and bridges that a friend CAN walk in one go? How did you know it works before you tried it?",
+    zh: "你能画一张有岛和桥的地图，让朋友能一次走完吗？还没试之前，你是怎么知道它一定行的？",
+  },
+  solutionTags: ["draw", "guess_check", "pattern"],
+  funFact: {
+    en: "The city was Königsberg, now called Kaliningrad. The same counting trick tells you whether you can draw a shape without lifting your pencil.",
+    zh: "这座城叫柯尼斯堡，就是今天的加里宁格勒。同样的数桥办法，还能判断一个图形能不能一笔画出来。",
+  },
+  sortOrder: 7,
+  rubricNotes:
+    "19/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 2: the scene is the puzzle; trying routes and counting bridges end in the same argument, so it's really one path",
+};
+
+/**
+ * B8. overlapTimes(24) counts [0, 1440): midnight once, next midnight excluded = 22.
+ * The prompt pins that convention down so 21 and 23 get their own feedback.
+ */
+export const clockHandsMeet: HeroQuestionBlueprint = {
+  slug: "clock-hands-meet",
+  collection: "shapes-that-lie",
+  kind: "THREE_ACT",
+  ageGroup: "AGE_10_12",
+  difficulty: "HARD",
+  category: "LOGIC",
+  title: { en: "When Clock Hands Meet", zh: "时针分针一天重合几次" },
+  hook: {
+    en: "At midnight, the hour hand and the minute hand of a clock lie exactly on top of each other. Then the minute hand races ahead while the hour hand creeps along. How many times in one whole day do they end up together?",
+    zh: "半夜 12 点，钟的时针和分针正好叠在一起。接着分针飞快地往前跑，时针慢慢地挪。一整天里，它们会叠在一起几次？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "12", en: "12 times", zh: "12 次" },
+      { id: "22", en: "22 times", zh: "22 次" },
+      { id: "24", en: "24 times", zh: "24 次" },
+      { id: "48", en: "48 times", zh: "48 次" },
+    ],
+  },
+  scene: { type: "clock_overlap", hours: 24, overlaps: 22 },
+  prompt: {
+    en: "Start at midnight, when the hands overlap, and count that as the first time. In the 24 hours before the next midnight, how many times do the hands overlap? (The next midnight starts a new day, so don't count it.)",
+    zh: "从半夜 12 点开始，那时两针重合，算第 1 次。到下一个半夜 12 点之前的 24 小时里，两针一共重合几次？（下一个半夜 12 点是新的一天，不算。）",
+  },
+  answer: { type: "NUMERIC", value: 22 },
+  hints: [
+    { en: "Don't do a whole day yet: look at just 12 hours. At 1 o'clock, where are the two hands? When does the minute hand catch up again?", zh: "先别算一整天，只看 12 个小时。1 点整的时候，两根针在哪里？分针什么时候再追上时针？" },
+    { en: "The minute hand catches the hour hand a little after 1:05, a little after 2:10, a little after 3:16 … What happens around 11 o'clock?", zh: "分针在 1:05 多一点、2:10 多一点、3:16 多一点……追上时针。到了 11 点左右会怎样？" },
+    { en: "Between 11 and 12 the minute hand doesn't catch up until exactly 12:00. So 12 hours hold only 11 meetings, counting the one at the start. Now do a whole day.", zh: "11 点到 12 点之间，分针要到 12 点整才追上。所以 12 小时里，算上开头那次，只重合 11 次。再算一整天。" },
+  ],
+  wrongAnswers: [
+    {
+      match: "24",
+      feedback: {
+        en: "It's natural to think 'once every hour'. But the hour hand keeps moving too, so each catch-up takes a bit more than an hour: about 1 hour 5 minutes. Look closely between 11 and 12 o'clock.",
+        zh: "很自然会想「每小时一次」。可是时针也在走，所以每次追上要比一小时多一点，大约 1 小时 5 分。仔细看看 11 点到 12 点之间。",
+      },
+    },
+    {
+      match: "12",
+      feedback: {
+        en: "12 is 'once an hour' for half a day. But the hands meet a little less often than once an hour, and a whole day has two trips of the hour hand round the clock.",
+        zh: "12 是半天里「每小时一次」。可是两针重合比每小时一次还少一点，而且一整天里时针要转两圈。",
+      },
+    },
+    {
+      match: "11",
+      feedback: {
+        en: "11 is exactly right for 12 hours! But a whole day is 24 hours, so the hour hand goes round twice.",
+        zh: "12 小时里正好是 11 次！可是一整天有 24 小时，时针要转两圈。",
+      },
+    },
+    {
+      match: "21",
+      feedback: {
+        en: "So close! You probably left out the overlap at midnight, where we started. It counts as the first one.",
+        zh: "很接近了！你可能没算开头半夜 12 点那一次。它算第 1 次。",
+      },
+    },
+    {
+      match: "23",
+      feedback: {
+        en: "So close! You may have counted both midnights. The next midnight starts a new day, so leave it out.",
+        zh: "很接近了！你可能把两个半夜 12 点都算上了。下一个半夜 12 点是新的一天，不算。",
+      },
+    },
+    {
+      match: "48",
+      feedback: {
+        en: "48 would be twice an hour. The minute hand laps the hour hand only about once an hour, and a little less.",
+        zh: "48 是每小时两次。分针大约一小时才追上时针一次，还不到一次。",
+      },
+    },
+  ],
+  explanation: {
+    en: "In 12 hours the minute hand goes round 12 times and the hour hand once, so the minute hand gains only 11 laps and catches the hour hand 11 times. They meet at 12:00, about 1:05, about 2:11 and so on, but the '11 o'clock' meeting slides all the way to 12:00. That makes 11 meetings every 12 hours, and 2 × 11 = 22 in a whole day.",
+    zh: "12 小时里，分针转 12 圈，时针转 1 圈，所以分针只比时针多转 11 圈，也就只追上 11 次。它们在 12:00、大约 1:05、大约 2:11……相遇，而「11 点那一次」一直滑到了 12:00。所以每 12 小时重合 11 次，一整天是 2 × 11 = 22 次。",
+  },
+  aha: {
+    en: "The hour hand is a moving target, so each catch-up takes 1 hour 5 minutes and 27 seconds, not one hour. Those extra minutes add up until a whole meeting disappears.",
+    zh: "时针也在往前走，所以分针每次要追 1 小时 5 分 27 秒，而不是 1 小时。多出来的几分钟一点点攒起来，最后整整吃掉了一次重合。",
+  },
+  extension: {
+    en: "How many times a day do the two hands point in exactly opposite directions, making one straight line through the centre?",
+    zh: "一天里，时针和分针有几次正好指向相反的方向，连成一条穿过中心的直线？",
+  },
+  discussionPrompt: {
+    en: "Which overlap surprised you most when you dragged the hands in the scene? Write down its time and explain why it lands there.",
+    zh: "你在场景里拖动分针时，哪一次重合最让你意外？写下它的时间，说说为什么会在那里。",
+  },
+  solutionTags: ["simulate", "table", "pattern"],
+  funFact: {
+    en: "Watch adverts usually set the hands to about 10:10. The hands look like a smile, and they don't cover the maker's name.",
+    zh: "手表广告里的指针通常停在 10:10 左右，看起来像在笑，也不会挡住表盘上的名字。",
+  },
+  sortOrder: 8,
+  rubricNotes:
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 1, retell 1: dragging the hands, a table of meeting times and the 'laps' argument all work; hint 3 gives away the 11-per-12-hours step",
+};
+
+export const SHAPES_THAT_LIE: readonly HeroQuestionBlueprint[] = [
+  squaresOnChessboard,
+  pizzaCuts,
+  ropeAroundEarth,
+  fenceShaper,
+  pythagorasSquares,
+  sevenBridges,
+  clockHandsMeet,
+];

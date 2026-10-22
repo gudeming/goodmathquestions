@@ -2,7 +2,8 @@
  * World C · Chance & luck (`chance-and-luck`). Catalog: 02-hero-question-catalog.md §C.
  * Batch 1: C2 monty-hall. Batch 2: C1 birthday-paradox, C3 two-dice-sum, C6 odd-even-game,
  * C8 rolls-until-six, C9 someone-shares-my-birthday (birthday_room / dice_lab).
- * TODO(phase-3 batch 3): C4 (coin_flips), C5 (sock_drawer), C7 (pi_darts), C10 (sequence_lineup).
+ * Batch 3: C4 coin-streak (coin_flips), C5 socks-in-the-dark (sock_drawer), C7 pi-from-raindrops (pi_darts).
+ * TODO(phase-3): C10 (sequence_lineup) once that Tier-3 scene lands.
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
@@ -535,11 +536,280 @@ export const someoneSharesMyBirthday: HeroQuestionBlueprint = {
     "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: needs repeated multiplication or the scene; best right after birthday-paradox, which the hook leans on",
 };
 
+/** C4. The guess is the question: the CHOICE answer reuses the guess options (as monty-hall). */
+export const coinStreak: HeroQuestionBlueprint = {
+  slug: "coin-streak",
+  collection: "chance-and-luck",
+  kind: "PARADOX",
+  ageGroup: "AGE_10_12",
+  difficulty: "EASY",
+  category: "PROBABILITY",
+  title: { en: "Ten Heads in a Row", zh: "连续十次正面之后" },
+  hook: {
+    en: "You flip a fair coin and it lands heads. And again. And again, until you've had ten heads in a row! One friend says tails is 'due' now. Another says the coin is 'on a hot streak'. Who is right about the next flip?",
+    zh: "你掷一枚公平的硬币，正面。再掷，正面。又是正面……一直到连续十次正面！一个朋友说：「下次该轮到反面了。」另一个朋友说：「它手气正旺，还会是正面。」下一次到底谁说得对？",
+  },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "tails", en: "Tails is more likely: it's due", zh: "反面更可能，该轮到它了" },
+      { id: "heads", en: "Heads is more likely: it's on a streak", zh: "正面更可能，它手气正旺" },
+      { id: "same", en: "Heads and tails are equally likely", zh: "正面反面一样可能" },
+    ],
+  },
+  scene: { type: "coin_flips", streak: 10, seed: 1024 },
+  prompt: {
+    en: "A fair coin has just landed heads 10 times in a row. On the 11th flip, is heads more likely, tails more likely, or are they equally likely?",
+    zh: "一枚公平的硬币刚刚连续 10 次正面朝上。第 11 次，是正面更可能、反面更可能，还是一样可能？",
+  },
+  answer: { type: "CHOICE", correctId: "same" },
+  hints: [
+    { en: "Think about the coin itself. Does it have a memory? Can it 'know' what it did the last ten times?", zh: "想想硬币本身。它有记忆吗？它能「知道」自己前十次是什么吗？" },
+    { en: "In the scene, fast-forward to a streak of 10 heads again and again. Each time, look only at the flip that comes right after the streak.", zh: "在场景里一次次快进，直到出现连续 10 次正面。每次都只看紧接着的那一次。" },
+    { en: "After many streaks, count how many of those next flips were heads and how many were tails. What are the two numbers getting close to?", zh: "等出现过很多次连正以后，数一数紧接着的那一次里，有几次正面、几次反面。这两个数越来越接近什么？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "choice:tails",
+      feedback: {
+        en: "Lots of grown-ups think this too! It feels like the coin owes us some tails to even things out. But the coin has no memory: every flip is a fresh 50-50, whatever happened before.",
+        zh: "很多大人也这么想！感觉硬币「欠」我们几次反面，要扯平。可是硬币没有记忆：不管之前发生了什么，每一次都是全新的一半对一半。",
+      },
+    },
+    {
+      match: "choice:heads",
+      feedback: {
+        en: "A streak can make a coin feel 'hot'. But a fair coin has no luck to build up or run out of. Ten heads is rare, yet the next flip doesn't know it happened.",
+        zh: "连胜会让人觉得硬币「手气旺」。可是公平的硬币没有运气可以攒，也没有运气会用完。十连正面很少见，但下一次根本不知道它发生过。",
+      },
+    },
+  ],
+  explanation: {
+    en: "A fair coin has the same chance of heads and tails on every flip, and nothing it did before can change that. Ten heads in a row is rare, about 1 time in 1,024, but it has already happened. The 11th flip is a brand-new flip, so heads and tails are still equally likely.",
+    zh: "公平的硬币每一次掷出正面和反面的机会都一样，之前发生了什么都改变不了。连续十次正面很少见，大约 1,024 次里才有 1 次，可它已经发生了。第 11 次是全新的一次，所以正面和反面还是一样可能。",
+  },
+  aha: {
+    en: "The coin has no memory. Ten heads in a row is rare, but once it has happened, the next flip is still just 50-50.",
+    zh: "硬币没有记忆。十连正面很少见，可一旦已经发生，下一次还是一半对一半。",
+  },
+  extension: {
+    en: "Before you start flipping, what is the chance of getting ten heads in a row? About how many flips does it usually take before a streak like that shows up?",
+    zh: "还没开始掷的时候，连续十次正面的机会是多少？一般要掷多少次，才会出现这样的连正？",
+  },
+  discussionPrompt: {
+    en: "Have you ever heard someone in a game say 'I'm due for a win'? Use what you saw in the scene to explain to them why chance doesn't work like that.",
+    zh: "你有没有在游戏里听人说过「下一把该轮到我赢了」？用你在场景里看到的结果，跟他解释为什么运气不是这样的。",
+  },
+  solutionTags: ["simulate", "table"],
+  funFact: {
+    en: "Real coins aren't quite perfect: a study of more than 350,000 flips found that a coin lands on the side it started on about 51% of the time.",
+    zh: "真实的硬币并不完美：一项掷了 35 万多次的研究发现，硬币落下时朝上的一面和抛起前一样的机会大约是 51%。",
+  },
+  sortOrder: 4,
+  rubricNotes:
+    "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 1, paths 1, wrong 2, hints 2, retell 1: simulation is the only path at this age; the extension stays with streak odds",
+};
+
+/** C5. Pigeonhole: colours + 1 = 4. The scene proposes "4" from worst-luck mode. */
+export const socksInTheDark: HeroQuestionBlueprint = {
+  slug: "socks-in-the-dark",
+  collection: "chance-and-luck",
+  kind: "PUZZLE",
+  ageGroup: "AGE_8_10",
+  difficulty: "EASY",
+  category: "LOGIC",
+  title: { en: "Socks in the Dark", zh: "黑暗中摸袜子" },
+  hook: {
+    en: "Your sock drawer is full of red, blue and green socks, all mixed up. Suddenly the lights go out! You can't see a thing, but you need two socks of the same colour. How many should you grab to be sure?",
+    zh: "你的袜子抽屉里塞满了红、蓝、绿三种颜色的袜子，全混在一起。突然停电了！你什么都看不见，可是需要两只同色的袜子。拿几只才能保证一定配成一双？",
+  },
+  guess: {
+    type: "slider",
+    min: 2,
+    max: 10,
+    step: 1,
+    unit: { en: "socks", zh: "只" },
+  },
+  scene: { type: "sock_drawer", colors: 3, seed: 4 },
+  prompt: {
+    en: "A drawer holds lots of socks in three colours. In the dark, what is the smallest number of socks you must take to be sure you have two of the same colour?",
+    zh: "抽屉里有很多三种颜色的袜子。在黑暗中，最少要拿几只，才能保证一定有两只同色的？",
+  },
+  answer: { type: "NUMERIC", value: 4 },
+  hints: [
+    { en: "Don't think about good luck. Think about the WORST luck. How could your socks keep refusing to match?", zh: "别想运气好的时候，想想运气最差的时候。你拿的袜子怎样才能一直配不成对？" },
+    { en: "Try worst-luck mode in the scene. After 3 socks, what is the unluckiest thing you could be holding?", zh: "在场景里试试「最倒霉模式」。拿了 3 只以后，手里最倒霉会是什么样？" },
+    { en: "The unluckiest 3 socks are one red, one blue and one green. Now take one more. What colour can it be, and does it match?", zh: "最倒霉的 3 只是一红、一蓝、一绿。再拿一只，它会是什么颜色？能配上吗？" },
+  ],
+  wrongAnswers: [
+    {
+      match: "2",
+      feedback: {
+        en: "With good luck, 2 socks might match! But the question says 'be sure'. Your 2 socks could be one red and one blue.",
+        zh: "运气好的话，2 只可能就配上了！可是题目说要「保证」。你拿的 2 只可能一红一蓝。",
+      },
+    },
+    {
+      match: "3",
+      feedback: {
+        en: "3 is the number of colours. With the worst luck, your 3 socks are one of each colour, and nothing matches yet.",
+        zh: "3 是颜色的数量。运气最差的时候，3 只正好每种颜色各一只，还没有配成对。",
+      },
+    },
+    {
+      match: "6",
+      feedback: {
+        en: "6 socks would work, but you can do it with fewer. Think about the worst luck: after 3 socks you hold one of each colour. What does the next sock do?",
+        zh: "6 只当然够了，但可以更少。想想最倒霉的情况：拿 3 只时每种颜色各一只。再拿一只会怎样？",
+      },
+    },
+    {
+      match: "gt:correct",
+      feedback: {
+        en: "That's enough socks, but not the fewest. Try worst-luck mode in the scene and stop the moment a pair is guaranteed.",
+        zh: "这么多肯定够，但不是最少的。在场景里试试「最倒霉模式」，一保证有一双就停下。",
+      },
+    },
+    {
+      match: "lt:correct",
+      feedback: {
+        en: "One sock on its own can never make a pair! You need at least two, and with bad luck, more.",
+        zh: "一只袜子自己可配不成一双！至少要两只，运气不好的话还要更多。",
+      },
+    },
+  ],
+  explanation: {
+    en: "Imagine the worst luck: your first three socks are one red, one blue and one green. The fourth sock has to be red, blue or green, so it matches one you already hold. With fewer than 4 you could still be unlucky, so 4 is the smallest number that is sure to work.",
+    zh: "想象最倒霉的情况：前三只正好是一红、一蓝、一绿。第四只只能是红、蓝、绿中的一种，所以一定能和手里的一只配上。少于 4 只的话，还是可能倒霉配不上，所以 4 是保证成功的最少只数。",
+  },
+  aha: {
+    en: "Think about the worst luck, not the best: one sock of each colour, and then the next one has to match. Mathematicians call this the pigeonhole principle.",
+    zh: "要想最倒霉的情况，而不是最走运的：每种颜色各一只，下一只就一定能配上。数学家把这叫做「鸽巢原理」。",
+  },
+  extension: {
+    en: "How many socks do you need to be sure of TWO matching pairs? And what if the drawer had five colours?",
+    zh: "要保证有两双同色的袜子，最少拿几只？如果抽屉里有五种颜色呢？",
+  },
+  discussionPrompt: {
+    en: "How many people must be in a room to be sure that two of them were born in the same month? Explain it with the worst luck, like the socks.",
+    zh: "一个房间里至少要有几个人，才能保证有两个人在同一个月出生？像袜子那样，用最倒霉的情况来解释。",
+  },
+  solutionTags: ["guess_check", "simulate", "draw"],
+  funFact: {
+    en: "The same idea proves that in a city of a million people, at least two have exactly the same number of hairs on their heads, because nobody has anywhere near a million hairs.",
+    zh: "同样的道理可以证明：一座有一百万人的城市里，一定有两个人的头发根数一模一样，因为没有人的头发多到一百万根。",
+  },
+  sortOrder: 5,
+  rubricNotes:
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: worst-case thinking is the one real path (the scene's worst-luck mode shows it); the extension and discussion lead to the general pigeonhole rule",
+};
+
+/**
+ * C7. pi_darts has no seed on purpose: every child gets a different rain, and the scene proposes
+ * its own estimate (toFixed(2)) after 1,000 dots. At 1,000 dots one standard deviation is about
+ * 0.05, so 3.0-3.3 holds roughly 99.5% of runs.
+ */
+export const piFromRaindrops: HeroQuestionBlueprint = {
+  slug: "pi-from-raindrops",
+  collection: "chance-and-luck",
+  kind: "ESTIMATION",
+  ageGroup: "AGE_12_14",
+  difficulty: "MEDIUM",
+  category: "PROBABILITY",
+  title: { en: "Finding π With Raindrops", zh: "用雨点算出 π" },
+  hook: {
+    en: "Draw a square and fit the biggest circle you can inside it. Now let 1,000 raindrops fall on the square, landing completely at random. About how many of them land inside the circle?",
+    zh: "画一个正方形，在里面画一个尽可能大的圆。让 1,000 个雨点完全随机地落在正方形上。大约有多少个会落在圆里？",
+  },
+  guess: {
+    type: "slider",
+    min: 0,
+    max: 1000,
+    step: 10,
+    unit: { en: "drops inside", zh: "个在圆里" },
+  },
+  scene: { type: "pi_darts", maxDrops: 5000 },
+  prompt: {
+    en: "Drop at least 1,000 dots in the scene. Then work out 4 × (dots inside the circle) ÷ (all the dots). What do you get? Round it to two decimal places.",
+    zh: "在场景里撒至少 1,000 个点。然后算一算：4 × 圆里的点数 ÷ 全部点数。你得到多少？保留两位小数。",
+  },
+  answer: { type: "ESTIMATE", min: 3.0, max: 3.3, truth: 3.14 },
+  hints: [
+    { en: "What matters isn't the number of dots but the SHARE that lands inside the circle. Which takes up more of the square: the circle, or the four corners?", zh: "关键不是点有多少，而是落在圆里的点占了多少。圆和四个角，哪个占正方形更多？" },
+    { en: "If the circle's radius is r, the square's side is 2r. So the square's area is 4r², and the circle's area is πr².", zh: "如果圆的半径是 r，正方形的边长就是 2r。所以正方形的面积是 4r²，圆的面积是 πr²。" },
+    { en: "Random dots land in each part in proportion to its area, so the share inside is about πr² ÷ 4r² = π/4. Multiply the share by 4.", zh: "随机的点落在哪一块的多少和面积成比例，所以圆里的比例大约是 πr² ÷ 4r² = π/4。把这个比例乘 4。" },
+  ],
+  wrongAnswers: [
+    {
+      match: "gt:500",
+      feedback: {
+        en: "That looks like the number of dots inside the circle. Divide it by the total number of dots, then multiply by 4.",
+        zh: "这看起来是圆里的点数。把它除以全部点数，再乘 4。",
+      },
+    },
+    {
+      match: "gt:50",
+      feedback: {
+        en: "Is that a percentage? About 78% of the dots land inside. Turn it into a share (0.78), then multiply by 4.",
+        zh: "这是百分比吗？大约 78% 的点落在圆里。把它变成比例（0.78），再乘 4。",
+      },
+    },
+    {
+      match: "lt:1",
+      feedback: {
+        en: "That's the share of dots inside the circle, about 0.78. You're one step away: multiply it by 4.",
+        zh: "这是圆里的点所占的比例，大约 0.78。还差一步：乘 4。",
+      },
+    },
+    {
+      match: "gt:3.3",
+      feedback: {
+        en: "Too high. Check that you divided by ALL the dots, not only the ones outside the circle. With more dots the answer settles near 3.14.",
+        zh: "太高了。检查一下，你除的是全部点数，而不只是圆外的点吗？点越多，结果越稳定在 3.14 附近。",
+      },
+    },
+    {
+      match: "lt:3",
+      feedback: {
+        en: "A bit low. Random dots wobble, especially when there are few of them. Drop a few thousand and watch where the estimate settles.",
+        zh: "有点低。随机的点会有起伏，点少的时候更明显。撒几千个点，看估计值停在哪里。",
+      },
+    },
+  ],
+  explanation: {
+    en: "The circle's area is πr² and the square's is 4r², so the circle covers π/4 of the square, about 0.785. Random dots spread out evenly, so about 0.785 of them land inside the circle. Four times that share is about 3.14, which is π. With 1,000 dots your answer usually lands between 3.0 and 3.3, and more dots bring it closer.",
+    zh: "圆的面积是 πr²，正方形是 4r²，所以圆占正方形的 π/4，大约 0.785。随机的点落得很均匀，所以大约 0.785 的点会落在圆里。这个比例乘 4，大约是 3.14，也就是 π。撒 1,000 个点时，结果通常在 3.0 到 3.3 之间，点越多越接近。",
+  },
+  aha: {
+    en: "Pure randomness can find an exact number: the circle covers π/4 of the square, so the dots spell out π. It's slow, though: you need about a hundred thousand dots to be fairly sure of even 3.14.",
+    zh: "纯粹的随机也能算出一个精确的数：圆占正方形的 π/4，所以这些点拼出了 π。只是很慢：要撒大约十万个点，才能比较有把握地得到 3.14。",
+  },
+  extension: {
+    en: "How many dots does it take before your estimate stays between 3.13 and 3.15? Guess first, then try 5,000 dots in the scene.",
+    zh: "要撒多少个点，估计值才能一直停在 3.13 到 3.15 之间？先猜，再在场景里撒 5,000 个点试试。",
+  },
+  discussionPrompt: {
+    en: "What estimate of π did you get, and with how many dots? Why do different people get different answers from the same rule?",
+    zh: "你算出的 π 是多少？用了多少个点？为什么同一个办法，每个人的结果都不一样？",
+  },
+  solutionTags: ["simulate", "algebra", "draw"],
+  funFact: {
+    en: "π never ends and never repeats. Computers have worked out more than 100 trillion of its digits.",
+    zh: "π 的小数永远写不完，也从不重复。计算机已经算出了它的 100 多万亿位。",
+  },
+  sortOrder: 7,
+  rubricNotes:
+    "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: needs the area of a circle; simulation plus the area ratio is one path; the estimate varies run to run (window 3.0-3.3 is about 3 standard deviations at 1,000 dots)",
+};
+
 export const CHANCE_AND_LUCK: readonly HeroQuestionBlueprint[] = [
   birthdayParadox,
   montyHall,
   twoDiceSum,
+  coinStreak,
+  socksInTheDark,
   oddEvenGame,
+  piFromRaindrops,
   rollsUntilSix,
   someoneSharesMyBirthday,
 ];
