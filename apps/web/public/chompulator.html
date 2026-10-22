@@ -850,6 +850,247 @@ body{
   padding:0 4px; margin:0 1px;
 }
 
+/* The speed lines behind the console are wider than a phone. overflow-x:hidden
+   on body still let the viewport pan ~145px sideways at 390px; clipping at the
+   body (with the root no longer "visible") removes the sideways scroll outright. */
+@supports (overflow-x:clip){
+  html{ overflow-x:clip; }
+  body{ overflow-x:clip; }
+}
+
+/* ============================================================
+   MODE STRIP — BASIC | SCI | BITS | FLOAT
+   ============================================================ */
+.modes{
+  display:inline-flex;
+  background:var(--paper);
+  border:var(--edge) solid var(--ink);
+  border-radius:14px;
+  box-shadow:0 5px 0 0 var(--ink);
+  overflow:hidden;
+}
+.mode-tab{
+  min-height:44px; padding:0 13px;
+  background:transparent; color:var(--ink);
+  border:0; border-left:3px solid var(--ink);
+  font-family:var(--display); font-size:.86rem; font-weight:900; letter-spacing:.04em;
+  cursor:pointer;
+}
+.mode-tab:first-child{ border-left:0; }
+.mode-tab:hover{ background:color-mix(in srgb, var(--shell) 30%, var(--paper)); }
+.mode-tab[aria-selected="true"]{ background:var(--ink); color:var(--shell); }
+.mode-tab:focus-visible{ outline:4px dashed var(--grape); outline-offset:-8px; }
+.mode-btn.send{ background:var(--aqua); font-size:.8rem; }
+.mode-btn[hidden]{ display:none; }
+
+/* ============================================================
+   MODE PANELS — shared pad look (smaller keys, more of them)
+   ============================================================ */
+.keys[hidden], .pad[hidden]{ display:none; }
+.pad{
+  position:relative; z-index:1;
+  display:flex; flex-direction:column; gap:clamp(9px,1.8vw,13px);
+  min-width:0;
+}
+.padgrid{ display:grid; gap:clamp(6px,1.3vw,9px); }
+.padgrid.c6{ grid-template-columns:repeat(6,minmax(0,1fr)); }
+.padgrid.c5{ grid-template-columns:repeat(5,minmax(0,1fr)); }
+.pad .key{
+  min-width:0; min-height:46px;
+  padding:6px 2px;
+  font-size:clamp(.8rem,2.9vw,1.12rem);
+  line-height:1.05;
+  border-width:4px; border-radius:12px;
+  box-shadow:0 5px 0 0 var(--ink);
+  white-space:nowrap; overflow:hidden;
+}
+.pad .key.num{ font-size:clamp(1.05rem,3.9vw,1.45rem); }
+.pad .key.down{ transform:translateY(5px); box-shadow:0 0 0 0 var(--ink); }
+.pad .key.w2{ grid-column:span 2; }
+.pad .key.w3{ grid-column:span 3; }
+.key[data-type="fn"]{ background:color-mix(in srgb, var(--aqua) 32%, var(--paper)); }
+.key[data-type="mem"]{ background:color-mix(in srgb, var(--grape) 24%, var(--paper)); }
+.pad .key[aria-pressed="true"]{ background:var(--punch); color:#FFF6E0; }
+.pad .key:disabled{
+  cursor:not-allowed; opacity:.3; filter:none;
+  transform:translateY(4px); box-shadow:0 1px 0 0 var(--ink);
+}
+.sci-pad .sep{ height:2px; margin:2px 6px; background:color-mix(in srgb, var(--ink) 30%, transparent); border-radius:2px; }
+
+/* readout extras */
+.out.ghost{ opacity:.5; }
+.out.long{ font-size:clamp(1.3rem,5.2vw,2.3rem); }
+.out .tag{
+  font-family:var(--mono); font-size:.3em; font-weight:700; letter-spacing:.12em;
+  color:var(--slime); text-shadow:none; align-self:flex-end; margin-bottom:.35em;
+}
+
+/* segmented controls + toggles used by BITS and FLOAT */
+.ctl-row{ display:flex; flex-wrap:wrap; gap:9px; align-items:center; }
+.seg{
+  display:inline-flex;
+  background:var(--paper);
+  border:4px solid var(--ink); border-radius:12px;
+  box-shadow:0 4px 0 0 var(--ink);
+  overflow:hidden;
+}
+.seg button{
+  min-height:44px; min-width:46px; padding:0 10px;
+  background:transparent; color:var(--ink);
+  border:0; border-left:3px solid var(--ink);
+  font-family:var(--mono); font-size:.8rem; font-weight:700; letter-spacing:.06em;
+  cursor:pointer;
+}
+.seg button:first-child{ border-left:0; }
+.seg button[aria-pressed="true"]{ background:var(--ink); color:var(--phosphor); }
+.seg button:focus-visible{ outline:3px dashed var(--grape); outline-offset:-6px; }
+.toggle-btn{
+  min-height:44px; padding:0 13px;
+  background:var(--paper); color:var(--ink);
+  border:4px solid var(--ink); border-radius:12px;
+  box-shadow:0 4px 0 0 var(--ink);
+  font-family:var(--mono); font-size:.78rem; font-weight:700; letter-spacing:.08em;
+  cursor:pointer;
+}
+.toggle-btn[aria-pressed="true"]{ background:var(--punch); color:#FFF6E0; }
+.toggle-btn:focus-visible{ outline:4px dashed var(--ink); outline-offset:3px; }
+
+/* ============================================================
+   BITS — every base at once + a bit grid
+   ============================================================ */
+.bases{
+  display:grid; gap:4px;
+  background:var(--screen);
+  border:var(--edge) solid var(--ink); border-radius:16px;
+  padding:7px;
+}
+.base-row{
+  display:flex; align-items:baseline; gap:10px;
+  width:100%; min-height:44px; padding:6px 10px;
+  background:transparent; color:var(--phosphor);
+  border:3px solid transparent; border-radius:11px;
+  font-family:var(--mono); text-align:left;
+  cursor:pointer;
+}
+.base-row .bname{
+  flex:0 0 3.3em;
+  font-size:.66rem; font-weight:700; letter-spacing:.14em; color:var(--slime);
+}
+.base-row .bval{
+  flex:1; min-width:0;
+  font-size:clamp(.86rem,3.1vw,1.1rem); font-weight:700;
+  overflow-wrap:anywhere; font-variant-numeric:tabular-nums;
+}
+.base-row:hover{ background:var(--screen-hi); }
+.base-row[aria-pressed="true"]{ border-color:var(--slime); background:var(--screen-hi); }
+.base-row[aria-pressed="true"] .bname::after{ content:" ◂"; }
+.base-row:focus-visible{ outline:3px dashed var(--phosphor); outline-offset:1px; }
+
+.bitgrid{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px 8px; }
+.bitgrid.spill{ animation:spill .55s ease; }
+@keyframes spill{ 20%{ transform:translateX(12px) rotate(1.2deg); } 55%{ transform:translateX(-8px); } }
+.nib{ display:flex; gap:8px; padding-right:0; }
+.bit{
+  width:32px; height:40px; padding:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  background:var(--paper); color:var(--ink);
+  border:3px solid var(--ink); border-radius:8px;
+  box-shadow:0 3px 0 0 var(--ink);
+  font-family:var(--mono); font-size:.95rem; font-weight:900; line-height:1;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.bit .bi{ font-size:.5rem; font-weight:700; opacity:.7; }
+.bit[aria-pressed="true"]{ background:var(--slime); }
+.bit.sign{ outline:3px solid var(--punch); outline-offset:1px; }
+.bit.sign[aria-pressed="true"]{ background:var(--punch); color:#FFF6E0; }
+.bit:active{ transform:translateY(2px); box-shadow:0 1px 0 0 var(--ink); }
+.bit:focus-visible{ outline:3px dashed var(--grape); outline-offset:2px; }
+@media (min-width:640px){ .bitgrid{ gap:10px 16px; } }
+
+/* ============================================================
+   FLOAT — the X-ray
+   ============================================================ */
+.fl-input{
+  width:100%; min-width:0; min-height:50px; padding:0 14px;
+  background:var(--screen); color:var(--phosphor);
+  border:var(--edge) solid var(--ink); border-radius:14px;
+  font-family:var(--mono); font-size:1.15rem; font-weight:700;
+}
+.fl-input:focus-visible{ outline:4px dashed var(--ink); outline-offset:3px; }
+.chips{ display:flex; flex-wrap:wrap; gap:7px; }
+.chip{
+  min-height:44px; padding:0 12px;
+  background:var(--paper); color:var(--ink);
+  border:4px solid var(--ink); border-radius:99px;
+  box-shadow:0 4px 0 0 var(--ink);
+  font-family:var(--mono); font-size:.76rem; font-weight:700;
+  cursor:pointer;
+}
+.chip:hover{ background:color-mix(in srgb, var(--aqua) 30%, var(--paper)); }
+.chip:active{ transform:translateY(3px); box-shadow:0 1px 0 0 var(--ink); }
+.chip:focus-visible{ outline:3px dashed var(--ink); outline-offset:3px; }
+
+.fl-width{ display:none; align-self:flex-start; }
+.fl-cols{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.fl-col{
+  min-width:0;
+  display:flex; flex-direction:column; gap:10px;
+  background:var(--screen); color:var(--phosphor);
+  border:var(--edge) solid var(--ink); border-radius:16px;
+  padding:10px 10px 12px;
+}
+.fl-head{ display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; }
+.fl-name{ font-size:1rem; font-weight:900; color:var(--shell); }
+.fl-sub{ font-family:var(--mono); font-size:.58rem; letter-spacing:.1em; color:var(--slime); }
+.fl-kind{
+  margin-left:auto;
+  font-family:var(--mono); font-size:.58rem; font-weight:700; letter-spacing:.1em;
+  background:var(--slime); color:var(--screen);
+  padding:2px 7px; border-radius:6px;
+}
+.fl-kind.special{ background:var(--punch); color:#FFF6E0; }
+.fl-field{ --f:var(--shell); }
+.fl-field.fs{ --f:var(--punch); }
+.fl-field.fx{ --f:var(--aqua); }
+.fl-cap{
+  display:block; margin-bottom:5px;
+  font-family:var(--mono); font-size:.56rem; font-weight:700; letter-spacing:.14em;
+  color:var(--f);
+}
+.fl-row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.fl-field .bit{ background:color-mix(in srgb, var(--f) 22%, var(--paper)); }
+.fl-field .bit[aria-pressed="true"]{ background:var(--f); color:var(--ink); }
+.ghost-bit{
+  width:32px; height:40px;
+  display:grid; place-items:center;
+  border:3px dashed var(--f); border-radius:8px;
+  color:var(--f); opacity:.8;
+  font-family:var(--mono); font-size:.9rem; font-weight:900;
+}
+.ghost-bit.off{ opacity:.35; }
+.fl-info{ margin:0; display:grid; gap:7px; font-family:var(--mono); font-size:.7rem; line-height:1.4; }
+.fl-info > div{ display:grid; grid-template-columns:6.6em minmax(0,1fr); gap:8px; align-items:baseline; }
+.fl-info dt{ font-size:.55rem; font-weight:700; letter-spacing:.12em; color:var(--slime); }
+.fl-info dd{ margin:0; min-width:0; overflow-wrap:anywhere; color:var(--phosphor); font-variant-numeric:tabular-nums; }
+.fl-info dd.long{ max-height:6.6em; overflow-y:auto; }
+.fl-info dd .dim{ color:var(--slime); opacity:.85; }
+.fl-info dd.bad{ color:var(--punch); }
+.fl-note{
+  margin:0;
+  font-family:var(--comic); font-size:.78rem; color:var(--on-shell); text-align:center;
+}
+@media (max-width:720px){
+  .fl-cols{ grid-template-columns:minmax(0,1fr); }
+  .fl-width{ display:inline-flex; }
+  .float-pad[data-show="32"] .fl-col[data-w="64"],
+  .float-pad[data-show="64"] .fl-col[data-w="32"]{ display:none; }
+}
+@media (max-width:600px){
+  .modes{ flex:1 1 100%; }
+  .mode-tab{ flex:1 1 0; padding:0 4px; }
+}
+
 @media (max-width:430px){
   .deck{ flex-direction:column; align-items:stretch; }
   .mascot{ align-self:center; margin-bottom:-14px; }
@@ -899,6 +1140,13 @@ body{
   </div>
 
   <div class="rail">
+    <div class="modes" id="modeTabs" role="tablist" aria-label="Calculator mode">
+      <button class="mode-tab" id="tab-basic" type="button" role="tab" aria-selected="true" aria-controls="keys" tabindex="0">BASIC</button>
+      <button class="mode-tab" id="tab-sci" type="button" role="tab" aria-selected="false" aria-controls="sciPad" tabindex="-1">SCI</button>
+      <button class="mode-tab" id="tab-bits" type="button" role="tab" aria-selected="false" aria-controls="bitsPanel" tabindex="-1">BITS</button>
+      <button class="mode-tab" id="tab-float" type="button" role="tab" aria-selected="false" aria-controls="floatPanel" tabindex="-1">FLOAT</button>
+    </div>
+    <button class="mode-btn send" id="toFloatBtn" type="button" aria-label="Send the number on screen to the float X-ray">→ FLOAT</button>
     <button class="mode-btn fight" id="fightBtn" aria-pressed="false">FIGHT!</button>
     <button class="mode-btn quiz" id="quizBtn" aria-pressed="false">QUIZ</button>
     <button class="reset-btn" id="resetBtn">RESET</button>
@@ -980,29 +1228,29 @@ body{
       </div>
     </div>
 
-    <div class="keys" id="keys">
+    <div class="keys" id="keys" role="tabpanel" aria-labelledby="tab-basic">
       <button class="key" data-k="ac"  data-type="util" aria-label="Clear all">AC</button>
       <button class="key" data-k="del" data-type="util" aria-label="Delete last digit">⌫</button>
       <button class="key" data-k="%"   data-type="util" aria-label="Percent">%</button>
       <button class="key" data-k="÷"   data-type="op"   aria-label="Divide">÷</button>
 
-      <button class="key" data-k="7">7</button>
-      <button class="key" data-k="8">8</button>
-      <button class="key" data-k="9">9</button>
+      <button class="key" data-k="7" aria-label="7">7</button>
+      <button class="key" data-k="8" aria-label="8">8</button>
+      <button class="key" data-k="9" aria-label="9">9</button>
       <button class="key" data-k="×" data-type="op" aria-label="Multiply">×</button>
 
-      <button class="key" data-k="4">4</button>
-      <button class="key" data-k="5">5</button>
-      <button class="key" data-k="6">6</button>
+      <button class="key" data-k="4" aria-label="4">4</button>
+      <button class="key" data-k="5" aria-label="5">5</button>
+      <button class="key" data-k="6" aria-label="6">6</button>
       <button class="key" data-k="−" data-type="op" aria-label="Subtract">−</button>
 
-      <button class="key" data-k="1">1</button>
-      <button class="key" data-k="2">2</button>
-      <button class="key" data-k="3">3</button>
+      <button class="key" data-k="1" aria-label="1">1</button>
+      <button class="key" data-k="2" aria-label="2">2</button>
+      <button class="key" data-k="3" aria-label="3">3</button>
       <button class="key" data-k="+" data-type="op" aria-label="Add">+</button>
 
       <button class="key" data-k="±" data-type="util" aria-label="Flip sign">±</button>
-      <button class="key" data-k="0">0</button>
+      <button class="key" data-k="0" aria-label="0">0</button>
       <button class="key" data-k="." aria-label="Decimal point">.</button>
       <button class="key" data-k="=" data-type="eq" aria-label="Equals">=</button>
 
@@ -1013,10 +1261,159 @@ body{
       <button class="key" data-k="mix" data-type="frac" aria-pressed="true" aria-label="Toggle mixed numbers">MIX<span class="sub" id="mixState">ON</span></button>
       <button class="key" data-k="show" data-type="frac" aria-pressed="false" aria-label="Switch answers between fraction and decimal">SHOW<span class="sub" id="showState">DEC</span></button>
     </div>
+
+    <div class="pad sci-pad" id="sciPad" role="tabpanel" aria-labelledby="tab-sci" hidden>
+      <div class="padgrid c6">
+        <button class="key" type="button" data-sk="2nd" data-type="util" aria-label="Second function: swap to inverse functions" aria-pressed="false">2nd</button>
+        <button class="key" type="button" data-sk="angle" data-type="util" aria-label="Angle unit: degrees. Press to change">DEG</button>
+        <button class="key" type="button" data-sk="mc" data-type="mem" aria-label="Memory clear">MC</button>
+        <button class="key" type="button" data-sk="mr" data-type="mem" aria-label="Memory recall">MR</button>
+        <button class="key" type="button" data-sk="m+" data-type="mem" aria-label="Add to memory">M+</button>
+        <button class="key" type="button" data-sk="m-" data-type="mem" aria-label="Subtract from memory">M−</button>
+        <button class="key" type="button" data-sk="sin" data-type="fn" aria-label="Sine">sin</button>
+        <button class="key" type="button" data-sk="cos" data-type="fn" aria-label="Cosine">cos</button>
+        <button class="key" type="button" data-sk="tan" data-type="fn" aria-label="Tangent">tan</button>
+        <button class="key" type="button" data-sk="sinh" data-type="fn" aria-label="Hyperbolic sine">sinh</button>
+        <button class="key" type="button" data-sk="cosh" data-type="fn" aria-label="Hyperbolic cosine">cosh</button>
+        <button class="key" type="button" data-sk="tanh" data-type="fn" aria-label="Hyperbolic tangent">tanh</button>
+        <button class="key" type="button" data-sk="ln" data-type="fn" aria-label="Natural log">ln</button>
+        <button class="key" type="button" data-sk="log" data-type="fn" aria-label="Log base 10">log₁₀</button>
+        <button class="key" type="button" data-sk="log2" data-type="fn" aria-label="Log base 2">log₂</button>
+        <button class="key" type="button" data-sk="sqrt" data-type="fn" aria-label="Square root">√</button>
+        <button class="key" type="button" data-sk="cbrt" data-type="fn" aria-label="Cube root">∛</button>
+        <button class="key" type="button" data-sk="yroot" data-type="fn" aria-label="Y-th root: type y, press this, then type x">ʸ√x</button>
+        <button class="key" type="button" data-sk="sq" data-type="fn" aria-label="Square">x²</button>
+        <button class="key" type="button" data-sk="cube" data-type="fn" aria-label="Cube">x³</button>
+        <button class="key" type="button" data-sk="pow" data-type="fn" aria-label="Power">xʸ</button>
+        <button class="key" type="button" data-sk="recip" data-type="fn" aria-label="One over x">1/x</button>
+        <button class="key" type="button" data-sk="fact" data-type="fn" aria-label="Factorial">n!</button>
+        <button class="key" type="button" data-sk="abs" data-type="fn" aria-label="Absolute value">|x|</button>
+        <button class="key" type="button" data-sk="(" data-type="op" aria-label="Open bracket">(</button>
+        <button class="key" type="button" data-sk=")" data-type="op" aria-label="Close bracket">)</button>
+        <button class="key" type="button" data-sk="pi" data-type="fn" aria-label="Pi">π</button>
+        <button class="key" type="button" data-sk="e" data-type="fn" aria-label="Euler&#x27;s number e">e</button>
+        <button class="key" type="button" data-sk="mod" data-type="op" aria-label="Modulo, the remainder">mod</button>
+        <button class="key" type="button" data-sk="pct" data-type="op" aria-label="Percent">%</button>
+      </div>
+      <div class="sep" aria-hidden="true"></div>
+      <div class="padgrid c5">
+        <button class="key num" type="button" data-sk="7" aria-label="7">7</button>
+        <button class="key num" type="button" data-sk="8" aria-label="8">8</button>
+        <button class="key num" type="button" data-sk="9" aria-label="9">9</button>
+        <button class="key" type="button" data-sk="del" data-type="util" aria-label="Delete last">⌫</button>
+        <button class="key" type="button" data-sk="ac" data-type="util" aria-label="Clear all">AC</button>
+        <button class="key num" type="button" data-sk="4" aria-label="4">4</button>
+        <button class="key num" type="button" data-sk="5" aria-label="5">5</button>
+        <button class="key num" type="button" data-sk="6" aria-label="6">6</button>
+        <button class="key num" type="button" data-sk="×" data-type="op" aria-label="Multiply">×</button>
+        <button class="key num" type="button" data-sk="÷" data-type="op" aria-label="Divide">÷</button>
+        <button class="key num" type="button" data-sk="1" aria-label="1">1</button>
+        <button class="key num" type="button" data-sk="2" aria-label="2">2</button>
+        <button class="key num" type="button" data-sk="3" aria-label="3">3</button>
+        <button class="key num" type="button" data-sk="+" data-type="op" aria-label="Add">+</button>
+        <button class="key num" type="button" data-sk="−" data-type="op" aria-label="Subtract or negative">−</button>
+        <button class="key num" type="button" data-sk="0" aria-label="0">0</button>
+        <button class="key num" type="button" data-sk="." aria-label="Decimal point">.</button>
+        <button class="key" type="button" data-sk="exp" data-type="fn" aria-label="Times ten to the power">EXP</button>
+        <button class="key" type="button" data-sk="ans" data-type="mem" aria-label="Last answer">Ans</button>
+        <button class="key num" type="button" data-sk="=" data-type="eq" aria-label="Equals">=</button>
+      </div>
+    </div>
+
+    <div class="pad bits-pad" id="bitsPanel" role="tabpanel" aria-labelledby="tab-bits" hidden>
+      <div class="ctl-row">
+        <div class="seg" id="wordSeg" role="group" aria-label="Word size in bits">
+          <button type="button" data-word="8" aria-pressed="true" aria-label="8 bits">8</button>
+          <button type="button" data-word="16" aria-pressed="false" aria-label="16 bits">16</button>
+          <button type="button" data-word="32" aria-pressed="false" aria-label="32 bits">32</button>
+          <button type="button" data-word="64" aria-pressed="false" aria-label="64 bits">64</button>
+        </div>
+        <button type="button" class="toggle-btn" id="signBtn" aria-pressed="false">UNSIGNED</button>
+      </div>
+      <div class="bases" id="bases" role="group" aria-label="The same number in every base. Pick a row to type in that base.">
+        <button type="button" class="base-row" data-base="DEC" aria-pressed="true"><span class="bname">DEC</span><span class="bval" id="bvDEC">0</span></button>
+        <button type="button" class="base-row" data-base="HEX" aria-pressed="false"><span class="bname">HEX</span><span class="bval" id="bvHEX">0</span></button>
+        <button type="button" class="base-row" data-base="BIN" aria-pressed="false"><span class="bname">BIN</span><span class="bval" id="bvBIN">0</span></button>
+        <button type="button" class="base-row" data-base="OCT" aria-pressed="false"><span class="bname">OCT</span><span class="bval" id="bvOCT">0</span></button>
+      </div>
+      <div class="bitgrid" id="bitGrid" role="group" aria-label="Bits, most significant on the left. Press one to flip it."></div>
+      <div class="padgrid c6" id="bitsKeys">
+        <button class="key" type="button" data-bk="A" data-type="fn" aria-label="Hex digit A">A</button>
+        <button class="key" type="button" data-bk="B" data-type="fn" aria-label="Hex digit B">B</button>
+        <button class="key" type="button" data-bk="C" data-type="fn" aria-label="Hex digit C">C</button>
+        <button class="key" type="button" data-bk="D" data-type="fn" aria-label="Hex digit D">D</button>
+        <button class="key" type="button" data-bk="E" data-type="fn" aria-label="Hex digit E">E</button>
+        <button class="key" type="button" data-bk="F" data-type="fn" aria-label="Hex digit F">F</button>
+        <button class="key num" type="button" data-bk="7" aria-label="7">7</button>
+        <button class="key num" type="button" data-bk="8" aria-label="8">8</button>
+        <button class="key num" type="button" data-bk="9" aria-label="9">9</button>
+        <button class="key num" type="button" data-bk="div" data-type="op" aria-label="Divide, whole numbers">÷</button>
+        <button class="key" type="button" data-bk="and" data-type="op" aria-label="Bitwise AND">AND</button>
+        <button class="key" type="button" data-bk="not" data-type="op" aria-label="Bitwise NOT, flip every bit">NOT</button>
+        <button class="key num" type="button" data-bk="4" aria-label="4">4</button>
+        <button class="key num" type="button" data-bk="5" aria-label="5">5</button>
+        <button class="key num" type="button" data-bk="6" aria-label="6">6</button>
+        <button class="key num" type="button" data-bk="mul" data-type="op" aria-label="Multiply">×</button>
+        <button class="key" type="button" data-bk="or" data-type="op" aria-label="Bitwise OR">OR</button>
+        <button class="key" type="button" data-bk="shl" data-type="op" aria-label="Shift left">&lt;&lt;</button>
+        <button class="key num" type="button" data-bk="1" aria-label="1">1</button>
+        <button class="key num" type="button" data-bk="2" aria-label="2">2</button>
+        <button class="key num" type="button" data-bk="3" aria-label="3">3</button>
+        <button class="key num" type="button" data-bk="sub" data-type="op" aria-label="Subtract">−</button>
+        <button class="key" type="button" data-bk="xor" data-type="op" aria-label="Bitwise exclusive OR">XOR</button>
+        <button class="key" type="button" data-bk="sar" data-type="op" aria-label="Shift right, arithmetic when signed">&gt;&gt;</button>
+        <button class="key" type="button" data-bk="ac" data-type="util" aria-label="Clear all">AC</button>
+        <button class="key num" type="button" data-bk="0" aria-label="0">0</button>
+        <button class="key" type="button" data-bk="del" data-type="util" aria-label="Delete last digit">⌫</button>
+        <button class="key num" type="button" data-bk="add" data-type="op" aria-label="Add">+</button>
+        <button class="key" type="button" data-bk="rol" data-type="op" aria-label="Rotate left">ROL</button>
+        <button class="key" type="button" data-bk="shr" data-type="op" aria-label="Logical shift right, zeros slide in">&gt;&gt;&gt;</button>
+        <button class="key" type="button" data-bk="neg" data-type="util" aria-label="Negate, two&#x27;s complement">±</button>
+        <button class="key w3" type="button" data-bk="=" data-type="eq" aria-label="Equals">=</button>
+        <button class="key" type="button" data-bk="ror" data-type="op" aria-label="Rotate right">ROR</button>
+        <button class="key" type="button" data-bk="mod" data-type="op" aria-label="Remainder">MOD</button>
+      </div>
+    </div>
+
+    <div class="pad float-pad" id="floatPanel" role="tabpanel" aria-labelledby="tab-float" hidden data-show="32">
+      <input id="floatIn" class="fl-input" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" value="0.1" aria-label="Number or sum to X-ray, like 0.1 or 0.1 + 0.2">
+      <div class="chips" id="floatDemos" role="group" aria-label="Try these numbers"></div>
+      <div class="padgrid c6" id="floatKeys">
+        <button class="key num" type="button" data-fk="7" aria-label="7">7</button>
+        <button class="key num" type="button" data-fk="8" aria-label="8">8</button>
+        <button class="key num" type="button" data-fk="9" aria-label="9">9</button>
+        <button class="key num" type="button" data-fk="/" data-type="op" aria-label="Divide">÷</button>
+        <button class="key" type="button" data-fk="(" data-type="op" aria-label="Open bracket">(</button>
+        <button class="key" type="button" data-fk=")" data-type="op" aria-label="Close bracket">)</button>
+        <button class="key num" type="button" data-fk="4" aria-label="4">4</button>
+        <button class="key num" type="button" data-fk="5" aria-label="5">5</button>
+        <button class="key num" type="button" data-fk="6" aria-label="6">6</button>
+        <button class="key num" type="button" data-fk="*" data-type="op" aria-label="Multiply">×</button>
+        <button class="key" type="button" data-fk="^" data-type="op" aria-label="Power">xʸ</button>
+        <button class="key" type="button" data-fk="del" data-type="util" aria-label="Delete last">⌫</button>
+        <button class="key num" type="button" data-fk="1" aria-label="1">1</button>
+        <button class="key num" type="button" data-fk="2" aria-label="2">2</button>
+        <button class="key num" type="button" data-fk="3" aria-label="3">3</button>
+        <button class="key num" type="button" data-fk="-" data-type="op" aria-label="Subtract or negative">−</button>
+        <button class="key" type="button" data-fk="e" data-type="fn" aria-label="Times ten to the power, like 1e39">EXP</button>
+        <button class="key" type="button" data-fk="ac" data-type="util" aria-label="Clear">AC</button>
+        <button class="key num" type="button" data-fk="0" aria-label="0">0</button>
+        <button class="key num" type="button" data-fk="." aria-label="Decimal point">.</button>
+        <button class="key" type="button" data-fk="π" data-type="fn" aria-label="Pi">π</button>
+        <button class="key num" type="button" data-fk="+" data-type="op" aria-label="Add">+</button>
+        <button class="key w2" type="button" data-fk="go" data-type="eq" aria-label="X-ray this number">X-RAY</button>
+      </div>
+      <div class="seg fl-width" id="floatWidth" role="group" aria-label="Which float to show">
+        <button type="button" data-show="32" aria-pressed="true">FLOAT32</button>
+        <button type="button" data-show="64" aria-pressed="false">FLOAT64</button>
+      </div>
+      <div class="fl-cols" id="floatCols"></div>
+      <p class="fl-note">Bigger numbers, bigger gaps: floats get sparser the further you go from zero.</p>
+    </div>
   </div>
 
   <section class="shelf">
-    <h2>STICKER SHELF <span class="tally" id="stickerCount">0 / 35</span></h2>
+    <h2>STICKER SHELF <span class="tally" id="stickerCount">0 / 40</span></h2>
     <div class="stickers" id="stickers"></div>
   </section>
 
@@ -1024,11 +1421,837 @@ body{
     Type on your keyboard too — <kbd>0</kbd>–<kbd>9</kbd> <kbd>+</kbd> <kbd>-</kbd> <kbd>*</kbd> <kbd>/</kbd> <kbd>Enter</kbd> <kbd>Backspace</kbd> <kbd>Esc</kbd> <kbd>F</kbd> fraction <kbd>M</kbd> mixed <kbd>D</kbd> decimal<br>
     Fractions are worked out exactly — <strong>1/3 + 1/3</strong> really is <strong>2/3</strong>, never 0.6666666.<br>
     Chain answers without a mistake to build a COMBO. Combos multiply your XP <em>and</em> your boss damage.<br>
-    Chompy evolves at levels 5, 10 and 15. New skins unlock at 3, 6 and 9. Your progress saves automatically.
+    Chompy evolves at levels 5, 10 and 15. New skins unlock at 3, 6 and 9. Your progress saves automatically.<br>
+    <strong>SCI</strong> <kbd>s</kbd> <kbd>c</kbd> <kbd>t</kbd> sin cos tan, <kbd>l</kbd> ln, <kbd>e</kbd>, <kbd>p</kbd> π, <kbd>^</kbd> <kbd>!</kbd> <kbd>(</kbd> <kbd>)</kbd> ·
+    <strong>BITS</strong> <kbd>A</kbd>–<kbd>F</kbd> in HEX, <kbd>&amp;</kbd> <kbd>|</kbd> <kbd>^</kbd> <kbd>~</kbd> <kbd>&lt;</kbd> <kbd>&gt;</kbd> ·
+    <strong>FLOAT</strong> type any number or sum, like 0.1 + 0.2
   </p>
 </div>
 
 <div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script id="chomp-engine">
+/* ============================================================
+   CHOMP ENGINE — pure maths, no DOM. Exposes window.ChompEngine
+   and nothing else. Unit-tested by
+   apps/web/components/tools/chompulator-engine.test.ts
+   ============================================================ */
+(function (root) {
+  "use strict";
+
+  /* =========================================================
+     SCI — tokenizer → shunting-yard → RPN → evaluator.
+     One parser, several number backends: plain doubles (SCI),
+     doubles rounded to float32 after every step, and exact
+     BigInt rationals (so FLOAT can say what you *meant*).
+     ========================================================= */
+  function ChompError(type, fn) { this.type = type; this.fn = fn || null; }
+  const fail = (type, fn) => { throw new ChompError(type, fn); };
+  const NOEXACT = { noexact: true };
+
+  // [text, token type, value]  f=function o=binary op c=constant p=postfix l/r=parens
+  const WORDS = [
+    ["sinh⁻¹", "f", "asinh"], ["cosh⁻¹", "f", "acosh"], ["tanh⁻¹", "f", "atanh"],
+    ["sin⁻¹", "f", "asin"], ["cos⁻¹", "f", "acos"], ["tan⁻¹", "f", "atan"],
+    ["asinh", "f", "asinh"], ["acosh", "f", "acosh"], ["atanh", "f", "atanh"],
+    ["asin", "f", "asin"], ["acos", "f", "acos"], ["atan", "f", "atan"],
+    ["sinh", "f", "sinh"], ["cosh", "f", "cosh"], ["tanh", "f", "tanh"],
+    ["sin", "f", "sin"], ["cos", "f", "cos"], ["tan", "f", "tan"],
+    ["log₁₀", "f", "log"], ["log10", "f", "log"], ["log₂", "f", "log2"], ["log2", "f", "log2"],
+    ["log", "f", "log"], ["ln", "f", "ln"], ["exp", "f", "exp"],
+    ["sqrt", "f", "sqrt"], ["cbrt", "f", "cbrt"], ["abs", "f", "abs"],
+    ["√", "f", "sqrt"], ["∛", "f", "cbrt"], ["ʸ√", "o", "yroot"], ["mod", "o", "mod"],
+    ["Ans", "c", "ans"], ["ans", "c", "ans"], ["pi", "c", "pi"], ["π", "c", "pi"], ["e", "c", "e"],
+    ["Infinity", "c", "inf"], ["∞", "c", "inf"], ["NaN", "c", "nan"],
+    ["⁻¹", "p", "recip"], ["²", "p", "sq"], ["³", "p", "cube"], ["!", "p", "fact"], ["%", "p", "pct"],
+    ["+", "o", "+"], ["-", "o", "-"], ["−", "o", "-"], ["×", "o", "*"], ["*", "o", "*"], ["·", "o", "*"],
+    ["÷", "o", "/"], ["/", "o", "/"], ["^", "o", "^"], ["(", "l", "("], [")", "r", ")"]
+  ].sort((a, b) => b[0].length - a[0].length);
+
+  const TRIG = { sin: 1, cos: 1, tan: 1, asin: 1, acos: 1, atan: 1 };
+
+  /**
+   * Splits an expression into tokens, classifies unary minus, inserts the
+   * implicit × in "2π" or "3(4)", and marks functions written with brackets.
+   * opts.lowerE: "1e39" is a number (FLOAT input) rather than 1 × e × 39.
+   * opts.special: allow Infinity / NaN literals.
+   */
+  function tokenize(src, opts) {
+    opts = opts || {};
+    const raw = [];
+    let i = 0;
+    const s = String(src);
+    const numRe = /^(?:\d+(?:\.\d*)?|\.\d+)/;
+    const expRe = opts.lowerE ? /^[eE][+\-−]?\d+/ : /^E[+\-−]?\d+/;
+    while (i < s.length) {
+      const ch = s[i];
+      if (ch === " " || ch === "\t" || ch === "\n" || ch === ",") { i++; continue; }
+      const rest = s.slice(i);
+      const m = numRe.exec(rest);
+      if (m) {
+        let text = m[0];
+        const ex = expRe.exec(rest.slice(text.length));
+        if (ex) text += ex[0];
+        i += text.length;
+        if (s[i] === ".") fail("syntax");
+        const norm = text.replace("−", "-");
+        raw.push({ t: "num", text: norm, v: Number(norm) });
+        continue;
+      }
+      const w = WORDS.find((x) => rest.startsWith(x[0]));
+      if (!w) fail("syntax");
+      if ((w[2] === "inf" || w[2] === "nan") && !opts.special) fail("syntax");
+      raw.push({ t: w[1], v: w[2], text: w[0] });
+      i += w[0].length;
+    }
+
+    const out = [];
+    for (const tok of raw) {
+      const prev = out[out.length - 1];
+      const prevVal = !!prev && (prev.t === "num" || prev.t === "c" || prev.t === "r" || prev.t === "p");
+      if (tok.t === "o" && (tok.v === "-" || tok.v === "+") && !prevVal) {
+        if (tok.v === "-") out.push({ t: "u", v: "neg", text: "−" });
+        continue;                                       // unary plus does nothing
+      }
+      if (tok.t === "num" && prev && prev.t === "num") fail("syntax");
+      if (prevVal && (tok.t === "c" || tok.t === "f" || tok.t === "l" || tok.t === "num")) {
+        out.push({ t: "o", v: "*", text: "×", implicit: true });
+      }
+      if ((tok.t === "o" || tok.t === "p" || tok.t === "r") && !prevVal) {
+        // a binary/postfix operator or ")" needs something on its left
+        fail("syntax");
+      }
+      out.push(Object.assign({}, tok));
+    }
+    for (let k = 0; k < out.length; k++) {
+      if (out[k].t === "f") out[k].call = !!out[k + 1] && out[k + 1].t === "l";
+    }
+    return out;
+  }
+
+  const PREC = { "+": 1, "-": 1, "*": 2, "/": 2, mod: 2, "^": 4, yroot: 4 };
+  const RIGHT = { "^": true, yroot: true };
+  const precOf = (t) => (t.t === "o" ? PREC[t.v] : 3);   // unary minus and bare functions sit at 3
+
+  /** Shunting-yard: infix tokens → reverse Polish. Unclosed "(" are closed for you. */
+  function toRPN(tokens) {
+    const out = [], st = [];
+    for (const tok of tokens) {
+      if (tok.t === "num" || tok.t === "c" || tok.t === "p") out.push(tok);
+      else if (tok.t === "f" || tok.t === "u" || tok.t === "l") st.push(tok);
+      else if (tok.t === "o") {
+        const p = PREC[tok.v];
+        while (st.length) {
+          const top = st[st.length - 1];
+          if (top.t === "l") break;
+          const tp = precOf(top);
+          if (tp > p || (tp === p && !RIGHT[tok.v])) out.push(st.pop());
+          else break;
+        }
+        st.push(tok);
+      } else if (tok.t === "r") {
+        while (st.length && st[st.length - 1].t !== "l") out.push(st.pop());
+        if (!st.length) fail("syntax");
+        st.pop();
+        const top = st[st.length - 1];
+        if (top && top.t === "f" && top.call) out.push(st.pop());
+      }
+    }
+    while (st.length) {
+      const t = st.pop();
+      if (t.t !== "l") out.push(t);
+    }
+    return out;
+  }
+
+  function run(rpn, B) {
+    const st = [];
+    const pop = () => { if (!st.length) fail("syntax"); return st.pop(); };
+    for (const tok of rpn) {
+      if (tok.t === "num") st.push(B.num(tok));
+      else if (tok.t === "c") st.push(B.konst(tok.v));
+      else if (tok.t === "o") { const b = pop(), a = pop(); st.push(B.bin(tok.v, a, b)); }
+      else if (tok.t === "u") st.push(B.neg(pop()));
+      else if (tok.t === "f") st.push(B.fn(tok.v, pop()));
+      else if (tok.t === "p") st.push(B.post(tok.v, pop()));
+    }
+    if (st.length !== 1) fail("syntax");
+    return st[0];
+  }
+
+  /** Snap float fuzz to a short clean decimal: sin 30° = 0.49999999999999994 → 0.5. */
+  function snap(v) {
+    if (!isFinite(v) || v === 0) return v;
+    const r = Number(v.toPrecision(10));
+    return Math.abs(v - r) <= Math.abs(v) * 1e-12 ? r : v;
+  }
+
+  // Lanczos approximation (g = 7), with reflection for z < 0.5.
+  const LG = 7;
+  const LC = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313,
+    -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6,
+    1.5056327351493116e-7];
+  function gamma(z) {
+    if (z < 0.5) return Math.PI / (Math.sin(Math.PI * z) * gamma(1 - z));
+    z -= 1;
+    let x = LC[0];
+    for (let i = 1; i < LG + 2; i++) x += LC[i] / (z + i);
+    const t = z + LG + 0.5;
+    return Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x;
+  }
+
+  const ANGLES = ["DEG", "RAD", "GRAD"];
+  const FULL = { DEG: 360, GRAD: 400 };
+
+  /** Double-precision backend. opts: angle, ans, snap (default true), ieee, round, literal. */
+  function numBackend(opts) {
+    const angle = ANGLES.includes(opts.angle) ? opts.angle : "DEG";
+    const doSnap = opts.snap !== false && !opts.ieee;
+    const ieee = !!opts.ieee;
+    const R = opts.round || ((x) => x);
+    const flags = { trig: false, fact: false };
+    const ok = (v, fn) => {
+      v = R(v);
+      if (ieee) return v;
+      if (Number.isNaN(v)) fail("domain", fn);
+      if (!isFinite(v)) fail("overflow", fn);
+      return v;
+    };
+    const sn = (v) => (doSnap ? snap(v) : v);
+
+    function trig(name, x) {
+      flags.trig = true;
+      if (!isFinite(x)) return ieee ? NaN : fail("domain", name);
+      let rad = x;
+      if (angle !== "RAD") {
+        const full = FULL[angle], q = full / 4;
+        let a = x % full;
+        if (a < 0) a += full;
+        if (a % q === 0) {                     // exact quarter turns — no fuzz at all
+          const k = a / q;
+          if (name === "sin") return [0, 1, 0, -1][k];
+          if (name === "cos") return [1, 0, -1, 0][k];
+          if (k % 2 === 1) return ieee ? (k === 1 ? Infinity : -Infinity) : fail("undefined", "tan");
+          return 0;
+        }
+        rad = a * (2 * Math.PI / full);
+      }
+      let v;
+      if (name === "sin") v = Math.sin(rad);
+      else if (name === "cos") v = Math.cos(rad);
+      else {
+        if (!ieee && Math.abs(Math.cos(rad)) < 1e-15) fail("undefined", "tan");
+        v = Math.tan(rad);
+      }
+      if (doSnap && Math.abs(v) < 1e-12 && Math.abs(rad) >= 1e-9) v = 0;
+      return sn(v);
+    }
+    function inv(name, x) {
+      flags.trig = true;
+      if ((name === "asin" || name === "acos") && !(x >= -1 && x <= 1)) return ieee ? NaN : fail("domain", name);
+      const r = name === "asin" ? Math.asin(x) : name === "acos" ? Math.acos(x) : Math.atan(x);
+      if (angle === "RAD") return sn(r);
+      return sn(r * (FULL[angle] / 2) / Math.PI);
+    }
+    function fact(x) {
+      flags.fact = true;
+      if (Number.isInteger(x)) {
+        if (x < 0) return ieee ? NaN : fail("domain", "fact");
+        if (x > 170) return ieee ? Infinity : fail("overflow", "fact");
+        let r = 1;
+        for (let k = 2; k <= x; k++) r *= k;
+        return r;
+      }
+      if (x > 171.6) return ieee ? Infinity : fail("overflow", "fact");
+      return sn(gamma(x + 1));
+    }
+
+    return {
+      flags,
+      num: (tok) => (opts.literal ? opts.literal(tok.text) : R(tok.v)),
+      konst(name) {
+        if (name === "pi") return R(Math.PI);
+        if (name === "e") return R(Math.E);
+        if (name === "ans") return R(typeof opts.ans === "number" ? opts.ans : 0);
+        if (name === "inf") return Infinity;
+        return NaN;
+      },
+      neg: (a) => -a,
+      bin(op, a, b) {
+        switch (op) {
+          case "+": return ok(a + b);
+          case "-": return ok(a - b);
+          case "*": return ok(a * b);
+          case "/":
+            if (b === 0 && !ieee) fail("divzero");
+            return ok(a / b);
+          case "mod": {
+            if (b === 0) return ieee ? NaN : fail("divzero", "mod");
+            let r = a % b;
+            if (r !== 0 && (r < 0) !== (b < 0)) r += b;
+            return ok(r, "mod");
+          }
+          case "^": {
+            if (a === 0 && b < 0 && !ieee) fail("divzero", "pow");
+            let v = Math.pow(a, b);
+            if (Number.isNaN(v) && a < 0 && isFinite(b) && b !== 0) {
+              const k = 1 / b;                              // (−8)^(1/3) = −2
+              if (Number.isInteger(k) && Math.abs(k % 2) === 1) v = -Math.pow(-a, b);
+            }
+            return ok(sn(v), "pow");
+          }
+          case "yroot": {                                    // a ʸ√ b  =  b^(1/a)
+            if (a === 0) return ieee ? NaN : fail("domain", "yroot");
+            if (b < 0) {
+              if (Number.isInteger(a) && Math.abs(a % 2) === 1) return ok(sn(-Math.pow(-b, 1 / a)), "yroot");
+              return ieee ? NaN : fail("domain", "yroot");
+            }
+            return ok(sn(Math.pow(b, 1 / a)), "yroot");
+          }
+        }
+        return fail("syntax");
+      },
+      fn(name, a) {
+        if (name === "sin" || name === "cos" || name === "tan") return ok(trig(name, a), name);
+        if (name === "asin" || name === "acos" || name === "atan") return ok(inv(name, a), name);
+        switch (name) {
+          case "sinh": return ok(Math.sinh(a), name);
+          case "cosh": return ok(Math.cosh(a), name);
+          case "tanh": return ok(Math.tanh(a), name);
+          case "asinh": return ok(sn(Math.asinh(a)), name);
+          case "acosh": if (a < 1 && !ieee) fail("domain", name); return ok(sn(Math.acosh(a)), name);
+          case "atanh": if (!(a > -1 && a < 1) && !ieee) fail("domain", name); return ok(sn(Math.atanh(a)), name);
+          case "ln": if (a <= 0 && !ieee) fail("domain", name); return ok(sn(Math.log(a)), name);
+          case "log": if (a <= 0 && !ieee) fail("domain", name); return ok(sn(Math.log10(a)), name);
+          case "log2": if (a <= 0 && !ieee) fail("domain", name); return ok(sn(Math.log2(a)), name);
+          case "exp": return ok(sn(Math.exp(a)), name);
+          case "sqrt": if (a < 0 && !ieee) fail("domain", name); return ok(Math.sqrt(a), name);
+          case "cbrt": return ok(Math.cbrt(a), name);
+          case "abs": return ok(Math.abs(a), name);
+        }
+        return fail("syntax");
+      },
+      post(name, a) {
+        switch (name) {
+          case "sq": return ok(a * a);
+          case "cube": return ok(a * a * a);
+          case "recip": if (a === 0 && !ieee) fail("divzero", "recip"); return ok(1 / a, "recip");
+          case "pct": return ok(a / 100);
+          case "fact": return ok(fact(a), "fact");
+        }
+        return fail("syntax");
+      }
+    };
+  }
+
+  /**
+   * Evaluates an expression with plain doubles.
+   * @returns {{ok:true, value:number, text:string, flags:object} | {ok:false, type:string, fn:string|null}}
+   * type ∈ syntax | domain | divzero | undefined | overflow | empty
+   */
+  function evaluate(src, opts) {
+    opts = opts || {};
+    try {
+      const toks = tokenize(src, opts);
+      if (!toks.length) return { ok: false, type: "empty", fn: null };
+      const B = numBackend(opts);
+      let v = run(toRPN(toks), B);
+      if (opts.snap !== false && !opts.ieee) {
+        v = snap(v);
+        if (Object.is(v, -0)) v = 0;
+      }
+      return { ok: true, value: v, text: fmtNum(v), flags: B.flags };
+    } catch (e) {
+      if (e instanceof ChompError) return { ok: false, type: e.type, fn: e.fn };
+      throw e;
+    }
+  }
+
+  /** Up to 12 significant digits; E-notation for |x| ≥ 1e12 or < 1e-9. */
+  function fmtNum(x) {
+    if (typeof x !== "number") return String(x);
+    if (Number.isNaN(x)) return "NaN";
+    if (!isFinite(x)) return x > 0 ? "Infinity" : "-Infinity";
+    if (x === 0) return "0";
+    const a = Math.abs(x);
+    const trim = (s) => (s.includes(".") ? s.replace(/0+$/, "").replace(/\.$/, "") : s);
+    if (a >= 1e12 || a < 1e-9) {
+      const parts = x.toExponential(11).split("e");
+      const m = trim(parts[0]);
+      const e = Number(parts[1]);
+      if (Math.abs(Number(m)) >= 10) return fmtNum(Number(m) / 10 * Math.pow(10, e + 1));
+      return m + "E" + e;
+    }
+    let s;
+    if (a < 1) {
+      const e = Math.floor(Math.log10(a));
+      s = x.toFixed(Math.min(100, 11 - e));
+    } else s = x.toPrecision(12);
+    if (/e/.test(s)) return fmtNum(Number(s));
+    return trim(s);
+  }
+
+  /* =========================================================
+     EXACT RATIONALS (BigInt) — for "what you meant" in FLOAT
+     ========================================================= */
+  const babs = (a) => (a < 0n ? -a : a);
+  function bgcd(a, b) { a = babs(a); b = babs(b); while (b) { const t = a % b; a = b; b = t; } return a || 1n; }
+  function Q(n, d) {
+    if (d === undefined) d = 1n;
+    if (d === 0n) throw NOEXACT;
+    if (d < 0n) { n = -n; d = -d; }
+    const g = bgcd(n, d);
+    return { n: n / g, d: d / g };
+  }
+  const blen = (x) => (x === 0n ? 0 : babs(x).toString(2).length);
+  const pow10 = (k) => 10n ** BigInt(k);
+
+  /** "12.5e-3" → exact {n, d}. */
+  function parseDecimal(text) {
+    const m = /^([+\-−]?)(\d*)(?:\.(\d*))?(?:[eE]([+\-−]?\d+))?$/.exec(String(text).trim());
+    if (!m || (m[2] === "" && (m[3] === undefined || m[3] === ""))) return null;
+    const neg = m[1] === "-" || m[1] === "−";
+    const frac = m[3] || "";
+    let n = BigInt((m[2] || "0") + frac);
+    let scale = frac.length - (m[4] ? Number(m[4].replace("−", "-")) : 0);
+    if (Math.abs(scale) > 2000) {
+      if (n === 0n) return { n: 0n, d: 1n };
+      if (scale > 0) return { n: neg ? -1n : 1n, d: pow10(2000) };       // underflows any float
+      return { n: (neg ? -1n : 1n) * pow10(2000), d: 1n };                // overflows any float
+    }
+    if (neg) n = -n;
+    return scale >= 0 ? Q(n, pow10(scale)) : Q(n * pow10(-scale), 1n);
+  }
+
+  function ratBackend() {
+    const guard = (r) => { if (blen(r.n) + blen(r.d) > 40000) throw NOEXACT; return r; };
+    const factBig = (k) => { let r = 1n; for (let i = 2n; i <= k; i++) r *= i; return r; };
+    return {
+      num: (tok) => { const r = parseDecimal(tok.text); if (!r) throw NOEXACT; return r; },
+      konst() { throw NOEXACT; },
+      neg: (a) => ({ n: -a.n, d: a.d }),
+      bin(op, a, b) {
+        if (op === "+") return guard(Q(a.n * b.d + b.n * a.d, a.d * b.d));
+        if (op === "-") return guard(Q(a.n * b.d - b.n * a.d, a.d * b.d));
+        if (op === "*") return guard(Q(a.n * b.n, a.d * b.d));
+        if (op === "/") { if (b.n === 0n) throw NOEXACT; return guard(Q(a.n * b.d, a.d * b.n)); }
+        if (op === "^") {
+          if (b.d !== 1n || babs(b.n) > 4096n) throw NOEXACT;
+          if (a.n === 0n && b.n < 0n) throw NOEXACT;
+          const k = babs(b.n);
+          const r = Q(a.n ** k, a.d ** k);
+          return guard(b.n < 0n ? Q(r.d, r.n) : r);
+        }
+        throw NOEXACT;
+      },
+      fn(name, a) { if (name === "abs") return { n: babs(a.n), d: a.d }; throw NOEXACT; },
+      post(name, a) {
+        if (name === "sq") return guard(Q(a.n * a.n, a.d * a.d));
+        if (name === "cube") return guard(Q(a.n ** 3n, a.d ** 3n));
+        if (name === "recip") { if (a.n === 0n) throw NOEXACT; return Q(a.d, a.n); }
+        if (name === "pct") return Q(a.n, a.d * 100n);
+        if (name === "fact" && a.d === 1n && a.n >= 0n && a.n <= 300n) return { n: factBig(a.n), d: 1n };
+        throw NOEXACT;
+      }
+    };
+  }
+
+  /** Exact decimal string of n/d, or null if it never ends. */
+  function ratToExact(n, d) {
+    let rest = d, a = 0, b = 0;
+    while (rest % 2n === 0n) { rest /= 2n; a++; }
+    while (rest % 5n === 0n) { rest /= 5n; b++; }
+    if (rest !== 1n) return null;
+    const k = Math.max(a, b);
+    const neg = n < 0n;
+    const scaled = babs(n) * pow10(k) / d;
+    let s = scaled.toString();
+    if (k > 0) {
+      s = s.padStart(k + 1, "0");
+      s = s.slice(0, s.length - k) + "." + s.slice(s.length - k);
+      s = s.replace(/0+$/, "").replace(/\.$/, "");
+    }
+    return (neg && scaled !== 0n ? "-" : "") + s;
+  }
+
+  /** n/d in E-notation with `sig` significant digits (truncated), e.g. "9.93410746257E-9". */
+  function ratToSci(n, d, sig) {
+    sig = sig || 12;
+    if (n === 0n) return "0";
+    const neg = n < 0n;
+    n = babs(n);
+    let e = n.toString().length - d.toString().length;
+    const digitsAt = (e0) => (e0 >= sig - 1 ? n / (d * pow10(e0 - sig + 1)) : n * pow10(sig - 1 - e0) / d);
+    let q = digitsAt(e);
+    if (q.toString().length > sig) { e++; q = digitsAt(e); }
+    else if (q.toString().length < sig) { e--; q = digitsAt(e); }
+    let s = q.toString();
+    let m = s[0] + (s.length > 1 ? "." + s.slice(1) : "");
+    m = m.includes(".") ? m.replace(/0+$/, "").replace(/\.$/, "") : m;
+    return (neg ? "-" : "") + m + "E" + e;
+  }
+
+  /** n/d as a plain decimal with up to `sig` significant digits, "…" if it goes on. */
+  function ratToPlain(n, d, sig) {
+    sig = sig || 20;
+    const ex = ratToExact(n, d);
+    if (ex !== null && ex.replace(/[-.]/g, "").replace(/^0+/, "").length <= sig) return ex;
+    const neg = n < 0n;
+    n = babs(n);
+    const whole = n / d;
+    let rem = n % d, frac = "", seen = whole === 0n ? 0 : whole.toString().length;
+    while (rem !== 0n && seen < sig && frac.length < 80) {
+      rem *= 10n;
+      const dg = rem / d;
+      rem %= d;
+      frac += dg.toString();
+      if (seen > 0 || dg !== 0n) seen++;
+    }
+    if (seen < sig && rem !== 0n) return ratToSci(neg ? -n : n, d, sig) + "…";
+    return (neg ? "-" : "") + whole.toString() + (frac ? "." + frac : "") + (rem !== 0n ? "…" : "");
+  }
+
+  /** E-notation from ratToSci, shown plainly when it is a friendly size. */
+  function prettySci(s) {
+    const v = Number(s);
+    if (v !== 0 && isFinite(v) && Math.abs(v) >= 1e-9 && Math.abs(v) < 1e12) return fmtNum(v);
+    return s;
+  }
+
+  /* =========================================================
+     FLOAT — IEEE 754 binary32 / binary64
+     ========================================================= */
+  const FMT = {
+    32: { W: 32, expBits: 8, manBits: 23, bias: 127 },
+    64: { W: 64, expBits: 11, manBits: 52, bias: 1023 }
+  };
+  const dv = new DataView(new ArrayBuffer(8));
+
+  function encodeBits(x, W) {
+    if (W === 32) { dv.setFloat32(0, x); return BigInt(dv.getUint32(0)); }
+    dv.setFloat64(0, x); return dv.getBigUint64(0);
+  }
+  function decodeBits(bits, W) {
+    if (W === 32) { dv.setUint32(0, Number(bits & 0xFFFFFFFFn)); return dv.getFloat32(0); }
+    dv.setBigUint64(0, bits & 0xFFFFFFFFFFFFFFFFn); return dv.getFloat64(0);
+  }
+
+  /** Correctly rounded (ties-to-even) bits of the exact rational n/d. */
+  function roundRational(n, d, W, negZero) {
+    const F = FMT[W];
+    const neg = n < 0n;
+    if (neg) n = -n;
+    const signBit = (neg || (n === 0n && negZero)) ? (1n << BigInt(W - 1)) : 0n;
+    if (n === 0n) return signBit;
+    const P = F.manBits + 1;
+    let e = blen(n) - blen(d);
+    if (e >= 0 ? n < (d << BigInt(e)) : (n << BigInt(-e)) < d) e--;
+    const emin = 1 - F.bias;
+    let shiftE = Math.max(e, emin) - F.manBits;
+    let num = n, den = d;
+    if (shiftE >= 0) den = d << BigInt(shiftE); else num = n << BigInt(-shiftE);
+    let m = num / den;
+    const r2 = 2n * (num - m * den);
+    if (r2 > den || (r2 === den && (m & 1n))) m++;
+    if (m >= (1n << BigInt(P))) { m >>= 1n; shiftE++; }
+    const allOnes = BigInt((1 << F.expBits) - 1);
+    let expField, mant;
+    if (m < (1n << BigInt(F.manBits))) { expField = 0n; mant = m; }
+    else { expField = BigInt(shiftE + F.manBits + F.bias); mant = m - (1n << BigInt(F.manBits)); }
+    if (expField >= allOnes) { expField = allOnes; mant = 0n; }   // overflow → Infinity
+    return signBit | (expField << BigInt(F.manBits)) | mant;
+  }
+
+  function fields(bits, W) {
+    const F = FMT[W];
+    const sign = Number((bits >> BigInt(W - 1)) & 1n);
+    const expField = Number((bits >> BigInt(F.manBits)) & BigInt((1 << F.expBits) - 1));
+    const mantissa = bits & ((1n << BigInt(F.manBits)) - 1n);
+    const allOnes = (1 << F.expBits) - 1;
+    const kind = expField === allOnes ? (mantissa === 0n ? "inf" : "nan")
+      : expField === 0 ? (mantissa === 0n ? "zero" : "subnormal") : "normal";
+    const implicit = kind === "normal" ? 1 : 0;
+    const realExp = kind === "normal" ? expField - F.bias : (kind === "subnormal" || kind === "zero") ? 1 - F.bias : null;
+    return { sign, expField, mantissa, kind, implicit, realExp };
+  }
+
+  // value = (−1)^s × M × 2^E with integer M (finite floats only)
+  function dyadic(bits, W) {
+    const F = FMT[W], f = fields(bits, W);
+    const M = (BigInt(f.implicit) << BigInt(F.manBits)) | f.mantissa;
+    return { neg: f.sign === 1, M, E: f.realExp - F.manBits };
+  }
+  function dyadicToQ(x) {
+    const n = x.neg ? -x.M : x.M;
+    return x.E >= 0 ? { n: n << BigInt(x.E), d: 1n } : { n, d: 1n << BigInt(-x.E) };
+  }
+  function dyadicToDecimal(x) {
+    if (x.M === 0n) return x.neg ? "-0" : "0";
+    if (x.E >= 0) return (x.neg ? "-" : "") + (x.M << BigInt(x.E)).toString();
+    const k = -x.E;
+    let s = (x.M * 5n ** BigInt(k)).toString().padStart(k + 1, "0");
+    s = s.slice(0, s.length - k) + "." + s.slice(s.length - k);
+    s = s.replace(/0+$/, "").replace(/\.$/, "");
+    return (x.neg ? "-" : "") + s;
+  }
+  function exact(bits, W) {
+    const f = fields(bits, W);
+    if (f.kind === "nan") return "NaN";
+    if (f.kind === "inf") return f.sign ? "-Infinity" : "Infinity";
+    return dyadicToDecimal(dyadic(bits, W));
+  }
+
+  function nextUpBits(bits, W) {
+    const f = fields(bits, W), signMask = 1n << BigInt(W - 1);
+    if (f.kind === "nan" || (f.kind === "inf" && !f.sign)) return bits;
+    if (f.kind === "zero") return 1n;
+    return f.sign ? bits - 1n : bits + 1n;
+  }
+  function nextDownBits(bits, W) {
+    const f = fields(bits, W), signMask = 1n << BigInt(W - 1);
+    if (f.kind === "nan" || (f.kind === "inf" && f.sign)) return bits;
+    if (f.kind === "zero") return signMask | 1n;
+    return f.sign ? bits + 1n : bits - 1n;
+  }
+  const nextUp = (x, W) => decodeBits(nextUpBits(encodeBits(x, W || 64), W || 64), W || 64);
+  const nextDown = (x, W) => decodeBits(nextDownBits(encodeBits(x, W || 64), W || 64), W || 64);
+
+  /** Fewest decimal digits that round back to exactly these bits. */
+  function shortest(bits, W) {
+    const x = decodeBits(bits, W);
+    if (Number.isNaN(x)) return "NaN";
+    if (!isFinite(x)) return x > 0 ? "Infinity" : "-Infinity";
+    if (x === 0) return Object.is(x, -0) ? "-0" : "0";
+    if (W === 64) return String(x);
+    for (let p = 1; p <= 9; p++) {
+      const s = x.toPrecision(p);
+      const q = parseDecimal(s);
+      if (q && roundRational(q.n, q.d, 32) === bits) return String(Number(s));
+    }
+    return String(x);
+  }
+
+  const SUP = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "-": "⁻" };
+  const sup = (n) => String(n).split("").map((c) => SUP[c] || c).join("");
+
+  /**
+   * Everything the X-ray shows about one bit pattern.
+   * ref: the exact value that was meant ({n, d} BigInt rational) or null.
+   */
+  function describe(bits, W, ref) {
+    const F = FMT[W];
+    bits = BigInt.asUintN(W, BigInt(bits));
+    const f = fields(bits, W);
+    const value = decodeBits(bits, W);
+    const finite = f.kind !== "inf" && f.kind !== "nan";
+    const mag = bits & ((1n << BigInt(W - 1)) - 1n);
+    const maxFinite = ((BigInt((1 << F.expBits) - 2)) << BigInt(F.manBits)) | ((1n << BigInt(F.manBits)) - 1n);
+    const d = { W, bits, value, finite, bias: F.bias, expBits: F.expBits, manBits: F.manBits };
+    Object.assign(d, f);
+    d.hex = "0x" + bits.toString(16).toUpperCase().padStart(W / 4, "0");
+    d.bin = bits.toString(2).padStart(W, "0");
+    d.expBin = d.bin.slice(1, 1 + F.expBits);
+    d.manBin = d.bin.slice(1 + F.expBits);
+    d.mantissaHex = "0x" + f.mantissa.toString(16).toUpperCase();
+    d.mantissaDec = f.mantissa.toString();
+    d.isMax = mag === maxFinite;
+    d.isMinSub = mag === 1n;
+    d.isMinNormal = mag === (1n << BigInt(F.manBits));
+    d.exact = exact(bits, W);
+    d.shortest = shortest(bits, W);
+    d.significand = finite ? (f.implicit + Number(f.mantissa) / Math.pow(2, F.manBits)) : null;
+    d.formula = finite
+      ? "(−1)" + sup(f.sign) + " × " + (f.implicit ? "1." : "0.") + "m × 2" + sup(f.realExp)
+      : null;
+
+    d.error = null;
+    if (ref) {
+      if (!finite) d.error = { overflow: f.kind === "inf", nan: f.kind === "nan" };
+      else {
+        const q = dyadicToQ(dyadic(bits, W));
+        const diff = Q(q.n * ref.d - ref.n * q.d, q.d * ref.d);
+        d.error = { zero: diff.n === 0n, exact: ratToExact(diff.n, diff.d), approx: prettySci(ratToSci(diff.n, diff.d, 6)) };
+        d.meant = ratToPlain(ref.n, ref.d, 24);
+        d.meantRepeats = ratToExact(ref.n, ref.d) === null;
+      }
+    }
+
+    const up = nextUpBits(bits, W), down = nextDownBits(bits, W);
+    d.up = { bits: up, value: decodeBits(up, W), shortest: shortest(up, W) };
+    d.down = { bits: down, value: decodeBits(down, W), shortest: shortest(down, W) };
+    d.gap = null;
+    const upF = fields(up, W);
+    if (finite && upF.kind !== "inf" && upF.kind !== "nan" && up !== bits) {
+      const a = dyadicToQ(dyadic(bits, W)), b = dyadicToQ(dyadic(up, W));
+      const g = Q(b.n * a.d - a.n * b.d, a.d * b.d);
+      d.gap = { exact: ratToExact(g.n, g.d), approx: prettySci(ratToSci(g.n, g.d, 6)) };
+    }
+    return d;
+  }
+
+  const encode = (x, W) => describe(encodeBits(Number(x), W), W, null);
+  const decode = (bits, W) => describe(BigInt(bits), W, null);
+
+  /**
+   * The X-ray pipeline: evaluate the text three ways — float64 arithmetic,
+   * float32 arithmetic (rounded after every step), and exact rationals.
+   */
+  function analyze(src, opts) {
+    opts = opts || {};
+    try {
+      const toks = tokenize(src, { lowerE: true, special: true });
+      if (!toks.length) return { ok: false, type: "empty" };
+      const rpn = toRPN(toks);
+      const base = { angle: opts.angle || "RAD", ans: opts.ans, ieee: true, snap: false };
+      const v64 = run(rpn, numBackend(base));
+      const lit32 = (text) => {
+        const q = parseDecimal(text);
+        return q ? decodeBits(roundRational(q.n, q.d, 32), 32) : Math.fround(Number(text));
+      };
+      const v32 = run(rpn, numBackend(Object.assign({}, base, { round: Math.fround, literal: lit32 })));
+      let ref = null;
+      try { ref = run(rpn, ratBackend()); } catch (e) { if (e !== NOEXACT && !(e instanceof ChompError)) throw e; ref = null; }
+      const literal = rpn.length === 1 && rpn[0].t === "num" ||
+        (rpn.length === 2 && rpn[0].t === "num" && rpn[1].t === "u");
+      return {
+        ok: true, src: String(src), literal, ref, value64: v64, value32: v32,
+        f32: describe(encodeBits(v32, 32), 32, ref),
+        f64: describe(encodeBits(v64, 64), 64, ref)
+      };
+    } catch (e) {
+      if (e instanceof ChompError) return { ok: false, type: e.type };
+      throw e;
+    }
+  }
+
+  /** The exact value of a finite bit pattern as {n, d}, or null for ∞ / NaN. */
+  function bitsToQ(bits, W) {
+    const f = fields(BigInt(bits), W);
+    if (f.kind === "inf" || f.kind === "nan") return null;
+    return dyadicToQ(dyadic(BigInt(bits), W));
+  }
+  /** Re-encode bits of one width at another (exact → correctly rounded). */
+  function convertBits(bits, from, to) {
+    const x = decodeBits(BigInt(bits), from);
+    const q = bitsToQ(bits, from);
+    if (!q) return encodeBits(x, to);
+    return roundRational(q.n, q.d, to, Object.is(x, -0));
+  }
+
+  /** n/d as text a person can type back: "0.75", or "1/3" when it never ends. */
+  function qToText(n, d) {
+    n = BigInt(n); d = BigInt(d);
+    const ex = ratToExact(n, d);
+    return ex !== null ? ex : n + "/" + d;
+  }
+
+  /* =========================================================
+     BITS — fixed-width integers, two's complement (BigInt)
+     ========================================================= */
+  const BASES = { DEC: 10, HEX: 16, BIN: 2, OCT: 8 };
+  const WORD_SIZES = [8, 16, 32, 64];
+  const bmask = (w) => (1n << BigInt(w)) - 1n;
+  function toSigned(u, w) {
+    const W = BigInt(w);
+    u = BigInt.asUintN(w, BigInt(u));
+    return u >= (1n << (W - 1n)) ? u - (1n << W) : u;
+  }
+  const interpret = (u, w, signed) => (signed ? toSigned(u, w) : BigInt.asUintN(w, BigInt(u)));
+  function wrap(v, w, signed) {
+    v = BigInt(v);
+    const W = BigInt(w);
+    const lo = signed ? -(1n << (W - 1n)) : 0n;
+    const hi = signed ? (1n << (W - 1n)) - 1n : (1n << W) - 1n;
+    return { value: BigInt.asUintN(w, v), overflow: v < lo || v > hi };
+  }
+  const DIGITS = { 2: /^[01]*$/, 8: /^[0-7]*$/, 10: /^-?\d*$/, 16: /^[0-9A-Fa-f]*$/ };
+  /**
+   * Text in a base → bit pattern. DEC text is a value (may be negative, checked
+   * against the signed/unsigned range); HEX/BIN/OCT text is the pattern itself.
+   */
+  function parse(text, base, w, signed) {
+    const b = typeof base === "number" ? base : BASES[base];
+    text = String(text).replace(/[\s_]/g, "");
+    if (!DIGITS[b] || !DIGITS[b].test(text)) return { ok: false, value: 0n, overflow: false };
+    if (text === "" || text === "-") return { ok: true, value: 0n, overflow: false };
+    if (b === 10) return Object.assign({ ok: true }, wrap(BigInt(text), w, signed));
+    const v = BigInt((b === 16 ? "0x" : b === 2 ? "0b" : "0o") + text);
+    return { ok: true, value: v & bmask(w), overflow: v > bmask(w) };
+  }
+  function format(u, base, w, signed) {
+    const b = typeof base === "number" ? base : BASES[base];
+    u = BigInt.asUintN(w, BigInt(u));
+    if (b === 10) return interpret(u, w, signed).toString(10);
+    return u.toString(b).toUpperCase();
+  }
+  const formatAll = (u, w, signed) => ({
+    DEC: format(u, 10, w, signed), HEX: format(u, 16, w, signed),
+    BIN: format(u, 2, w, signed), OCT: format(u, 8, w, signed)
+  });
+
+  /**
+   * One integer operation on bit patterns a, b.
+   * shl/shr/sar/rol/ror take b as a count. sar copies the sign bit when signed
+   * (arithmetic), shr always shifts in zeros (logical).
+   * @returns {{value: bigint, overflow: boolean, lost: boolean, error?: string}}
+   */
+  function op(name, a, b, w, signed) {
+    const M = bmask(w);
+    a = BigInt.asUintN(w, BigInt(a));
+    b = BigInt.asUintN(w, BigInt(b === undefined ? 0 : b));
+    const res = (value, extra) => Object.assign({ value: value & M, overflow: false, lost: false }, extra || {});
+    const count = () => {
+      const n = interpret(b, w, signed);
+      if (n < 0n) return -1;
+      return Number(n > BigInt(w) ? BigInt(w) : n);
+    };
+    switch (name) {
+      case "and": return res(a & b);
+      case "or": return res(a | b);
+      case "xor": return res(a ^ b);
+      case "not": return res(~a);
+      case "neg": { const r = wrap(-interpret(a, w, signed), w, signed); return res(r.value, { overflow: r.overflow }); }
+      case "shl": {
+        const n = count(); if (n < 0) return res(a, { error: "shift" });
+        const full = a << BigInt(n);
+        return res(full, { lost: (full >> BigInt(w)) !== 0n });
+      }
+      case "shr": case "sar": {
+        const n = count(); if (n < 0) return res(a, { error: "shift" });
+        const lost = (a & ((1n << BigInt(n)) - 1n)) !== 0n;
+        if (name === "sar" && signed) return res(BigInt.asUintN(w, toSigned(a, w) >> BigInt(n)), { lost });
+        return res(a >> BigInt(n), { lost });
+      }
+      case "rol": case "ror": {
+        let n = interpret(b, w, signed);
+        n = Number(((n % BigInt(w)) + BigInt(w)) % BigInt(w));
+        if (name === "ror") n = (w - n) % w;
+        return res(n === 0 ? a : ((a << BigInt(n)) | (a >> BigInt(w - n))));
+      }
+      case "add": case "sub": case "mul": case "div": case "mod": {
+        const A = interpret(a, w, signed), B = interpret(b, w, signed);
+        if ((name === "div" || name === "mod") && B === 0n) return res(0n, { error: "divzero" });
+        const R = name === "add" ? A + B : name === "sub" ? A - B : name === "mul" ? A * B : name === "div" ? A / B : A % B;
+        const r = wrap(R, w, signed);
+        return res(r.value, { overflow: r.overflow });
+      }
+    }
+    return res(a, { error: "op" });
+  }
+  const flip = (u, i, w) => BigInt.asUintN(w, BigInt(u) ^ (1n << BigInt(i)));
+  const bitAt = (u, i) => Number((BigInt(u) >> BigInt(i)) & 1n);
+
+  root.ChompEngine = Object.freeze({
+    version: 1,
+    sci: Object.freeze({ tokenize, toRPN, evaluate, format: fmtNum, snap, gamma, ANGLES }),
+    bits: Object.freeze({ BASES, WORD_SIZES, mask: bmask, toSigned, interpret, wrap, parse, format, formatAll, op, flip, bitAt }),
+    float: Object.freeze({
+      FORMATS: FMT, encodeBits, decodeBits, encode, decode, describe, fields, exact, roundRational,
+      parseDecimal, shortest, bitsToQ, convertBits, nextUp, nextDown, nextUpBits, nextDownBits, analyze, ratToExact, ratToSci, ratToPlain, prettySci, qToText, sup
+    })
+  });
+})(window);
+</script>
 
 <script>
 (() => {
@@ -1217,6 +2440,7 @@ body{
   };
 
   function renderOut() {
+    outEl.classList.remove("ghost", "long");
     if (errored) {
       outEl.innerHTML = `<span class="outin"><span class="w">OOPS!</span></span>`;
       outEl.setAttribute("aria-label", "Oops");
@@ -1302,7 +2526,12 @@ body{
     { id: "boss1",    name: "BOSS SLAYER",   hint: "beat a boss" },
     { id: "boss5",    name: "BOSS HUNTER",   hint: "beat 5 bosses" },
     { id: "quiz10",   name: "QUIZ WHIZ",     hint: "10 quiz streak" },
-    { id: "quiz25",   name: "UNTOUCHABLE",   hint: "25 quiz streak" }
+    { id: "quiz25",   name: "UNTOUCHABLE",   hint: "25 quiz streak" },
+    { id: "trig",     name: "TRIG TAMER",    hint: "SCI: sin, cos or tan" },
+    { id: "hex",      name: "HEX HERO",      hint: "BITS: type A–F" },
+    { id: "bits8",    name: "BIT WRANGLER",  hint: "flip 8 bits" },
+    { id: "spill",    name: "BIT SPILLER",   hint: "overflow a word" },
+    { id: "float",    name: "FLOAT WHISPERER", hint: "X-ray 0.1 + 0.2" }
   ];
   const unlocked = new Set();
 
@@ -1311,6 +2540,16 @@ body{
      entirely, so every access is guarded and failure is silent
      rather than fatal.
      --------------------------------------------------------- */
+  // Calculator modes added after v1 saves existed: stored under one extra
+  // "calc" key, so older saves load untouched and simply get these defaults.
+  const MODES = ["basic", "sci", "bits", "float"];
+  let calcMode = "basic", bootMode = "basic";
+  const CALC_DEFAULTS = {
+    angle: "DEG", word: 8, signed: false, base: "DEC", floatShow: "32",
+    mem: 0, sciSolves: 0, bitFlips: 0
+  };
+  const CALC = Object.assign({}, CALC_DEFAULTS);
+
   const SAVE_KEY = "chompulator.save.v1";
   let canSave = true;
 
@@ -1322,7 +2561,8 @@ body{
         questsDone: G.questsDone, best: G.best, bosses: G.bosses,
         quizBest: G.quizBest,
         stickers: [...unlocked],
-        skin, mixedMode, fracMode, sfxOn
+        skin, mixedMode, fracMode, sfxOn,
+        calc: Object.assign({ mode: calcMode }, CALC)
       }));
     } catch (e) { canSave = false; }
   }
@@ -1353,6 +2593,18 @@ body{
     if (typeof s.fracMode === "boolean") fracMode = s.fracMode;
     if (typeof s.sfxOn === "boolean") sfxOn = s.sfxOn;
     if (typeof s.skin === "string" && SKINS.some((k) => k.id === s.skin)) skin = s.skin;
+    const c = s.calc;
+    if (c && typeof c === "object") {
+      if (MODES.includes(c.mode)) bootMode = c.mode;
+      if (["DEG", "RAD", "GRAD"].includes(c.angle)) CALC.angle = c.angle;
+      if ([8, 16, 32, 64].includes(c.word)) CALC.word = c.word;
+      if (typeof c.signed === "boolean") CALC.signed = c.signed;
+      if (["DEC", "HEX", "BIN", "OCT"].includes(c.base)) CALC.base = c.base;
+      if (c.floatShow === "32" || c.floatShow === "64") CALC.floatShow = c.floatShow;
+      if (typeof c.mem === "number" && isFinite(c.mem)) CALC.mem = c.mem;
+      CALC.sciSolves = num(c.sciSolves, 0);
+      CALC.bitFlips = num(c.bitFlips, 0);
+    }
   }
 
   function wipeSave() {
@@ -1362,6 +2614,8 @@ body{
     G.pressed.clear(); G.flips.clear(); G.solveTimes = [];
     unlocked.clear();
     skin = "toy"; mixedMode = true; fracMode = false;
+    Object.assign(CALC, CALC_DEFAULTS);
+    resetModes();
     endBoss(false);
     if (quizMode) toggleQuiz();
     buildStickers(); tallyStickers(); applySkin(); buildSkins();
@@ -1633,7 +2887,9 @@ body{
      mouthful, more chews, slower jaw.
      ------------------------------------------------------- */
   function morselStats(r) {
-    const size = Math.max(1, digitCount(ratToText(r)));  // "355/113" counts as 6
+    return morselFor(Math.max(1, digitCount(ratToText(r))));  // "355/113" counts as 6
+  }
+  function morselFor(size) {
     return {
       size,
       scale:  Math.min(2.1, 0.72 + (size - 1) * 0.2),
@@ -1873,7 +3129,7 @@ body{
       pick.test = (n) => n === t;
     }
     G.quest = pick;
-    if (!quizMode) questGoal.textContent = pick.text;
+    if (!quizMode && calcMode === "basic") questGoal.textContent = pick.text;
   }
 
   $("questSkip").addEventListener("click", () => {
@@ -2091,6 +3347,7 @@ body{
   }
 
   function paintQuiz() {
+    if (calcMode !== "basic") return;
     $("questTag").textContent = quizMode ? "QUIZ" : "MISSION";
     $("hearts").hidden = !quizMode;
     if (!quizMode) { $("questGoal").textContent = G.quest ? G.quest.text : ""; return; }
@@ -2184,6 +3441,7 @@ body{
      SCREEN
      --------------------------------------------------------- */
   function paint() {
+    if (calcMode !== "basic") return;
     renderOut();
     let e = "";
     if (stored !== null && op) e = ratToText(stored) + " " + op + (fresh ? "" : " " + cur);
@@ -2470,7 +3728,7 @@ body{
     if (G.presses >= 100) unlock("cent");
 
     G.pressed.add(k);
-    if (G.pressed.size >= document.querySelectorAll(".key").length) unlock("masher");
+    if (G.pressed.size >= $("keys").querySelectorAll(".key").length) unlock("masher");
 
     if (/^\d$/.test(k)) { pressDigit(k); sfxKey(); return; }
     switch (k) {
@@ -2487,11 +3745,862 @@ body{
     }
   }
 
+
+  /* ---------------------------------------------------------
+     MODES — BASIC (the fraction calculator above), SCI, BITS
+     and FLOAT. All the maths for the new three lives in
+     window.ChompEngine; this section is screen, keys, Chompy.
+     --------------------------------------------------------- */
+  const CE = window.ChompEngine;
+  const ANGLES = CE.sci.ANGLES;
+  const MODE_INTRO = {
+    basic: "back to basics — fractions are my favourite snack!",
+    sci:   "science mode! sin, cos, logs… I can chew them all.",
+    bits:  "bits mode! every number is a row of light switches.",
+    float: "float X-ray! see how a computer REALLY stores a decimal."
+  };
+  const tabEls = MODES.map((m) => $("tab-" + m));
+  const panelEls = { basic: $("keys"), sci: $("sciPad"), bits: $("bitsPanel"), float: $("floatPanel") };
+
+  function setMode(m, opts) {
+    opts = opts || {};
+    if (!MODES.includes(m)) m = "basic";
+    if (m !== "basic") {
+      if (quizMode) toggleQuiz();
+      if (boss.active) endBoss(true);
+    }
+    const changed = m !== calcMode;
+    calcMode = m;
+    MODES.forEach((k, i) => {
+      const on = k === m;
+      tabEls[i].setAttribute("aria-selected", String(on));
+      tabEls[i].tabIndex = on ? 0 : -1;
+      panelEls[k].hidden = !on;
+    });
+    $("toFloatBtn").hidden = m === "float";
+    if (m === "float" && !fl.res) floatRun($("floatIn").value || "0.1", { quiet: true });
+    paintQuestRow();
+    paintScreen();
+    if (changed && !opts.silent) { say(MODE_INTRO[m]); sfxFrac(); }
+    if (changed) save();
+    requestAnimationFrame(sizeCanvas);   // the console just changed height
+  }
+
+  function paintScreen() {
+    if (calcMode === "basic") { outEl.classList.remove("ghost"); paint(); }
+    else if (calcMode === "sci") sciPaint();
+    else if (calcMode === "bits") bitsPaint();
+    else floatPaintScreen();
+  }
+
+  // The mission row doubles as a status line outside BASIC.
+  function paintQuestRow() {
+    const skip = $("questSkip");
+    if (calcMode === "basic") { skip.hidden = false; paintQuiz(); return; }
+    skip.hidden = true;
+    $("hearts").hidden = true;
+    let tag, goal;
+    if (calcMode === "sci") {
+      tag = "SCI";
+      goal = CALC.angle + (sci.second ? " · 2nd" : "") + (CALC.mem !== 0 ? " · M" : "");
+    } else if (calcMode === "bits") {
+      tag = "BITS";
+      goal = CALC.word + "-bit · " + (CALC.signed ? "signed" : "unsigned") + " · typing in " + CALC.base;
+    } else {
+      tag = "FLOAT";
+      goal = "IEEE 754 X-ray · " + (fl.built ? "built from bits" : "type a number");
+    }
+    $("questTag").textContent = tag;
+    $("questGoal").textContent = goal;
+  }
+
+  function outText(text, o) {
+    o = o || {};
+    outEl.classList.toggle("err", !!o.err);
+    outEl.classList.toggle("ghost", !!o.ghost);
+    outEl.classList.toggle("long", String(text).replace(/\s/g, "").length > 11);
+    outEl.innerHTML = `<span class="outin"><span class="w">${esc(text)}</span>` +
+      (o.tag ? `<span class="tag">${esc(o.tag)}</span>` : "") + `</span>`;
+    outEl.setAttribute("aria-label", o.label || text);
+  }
+
+  function shakeConsole() {
+    if (reduced) return;
+    consoleEl.classList.add("shake");
+    setTimeout(() => consoleEl.classList.remove("shake"), 360);
+  }
+
+  // Divide by zero in the new modes: same gag as BASIC, without touching BASIC's state.
+  function eatsZero() {
+    unlock("void");
+    mood("dizzy", 520);
+    sfxErr();
+    shakeConsole();
+    outText("OOPS!", { err: true, label: "Oops" });
+    say("you can't split nothing!");
+  }
+
+  // A small feed for Chompy: XP morsel + chew, no combo (combos belong to BASIC).
+  function feed(text, xp, fromEl) {
+    const st = morselFor(Math.max(1, digitCount(text)));
+    st.crit = false;
+    if (fromEl) { const p = atElement(fromEl); burst(p.x, p.y, 12, 0.8); }
+    if (reduced) { mood("chomp", 340); sfxChomp(); }
+    else flingMorsel(xp, st);
+    addXP(xp);
+  }
+
+  /* --- SCI: a real scientific calculator ------------------- */
+  const sci = { toks: [], done: false, err: null, ans: 0, second: false };
+  const SCI_FN = {
+    sin:  [["sin", "sin(", "Sine"], ["sin⁻¹", "sin⁻¹(", "Inverse sine"]],
+    cos:  [["cos", "cos(", "Cosine"], ["cos⁻¹", "cos⁻¹(", "Inverse cosine"]],
+    tan:  [["tan", "tan(", "Tangent"], ["tan⁻¹", "tan⁻¹(", "Inverse tangent"]],
+    sinh: [["sinh", "sinh(", "Hyperbolic sine"], ["sinh⁻¹", "sinh⁻¹(", "Inverse hyperbolic sine"]],
+    cosh: [["cosh", "cosh(", "Hyperbolic cosine"], ["cosh⁻¹", "cosh⁻¹(", "Inverse hyperbolic cosine"]],
+    tanh: [["tanh", "tanh(", "Hyperbolic tangent"], ["tanh⁻¹", "tanh⁻¹(", "Inverse hyperbolic tangent"]],
+    ln:   [["ln", "ln(", "Natural log"], ["eˣ", "e^(", "e to the power of"]],
+    log:  [["log₁₀", "log₁₀(", "Log base 10"], ["10ˣ", "10^(", "Ten to the power of"]],
+    log2: [["log₂", "log₂(", "Log base 2"], ["2ˣ", "2^(", "Two to the power of"]]
+  };
+  const SCI_INS = {
+    ".": ".", "+": "+", "−": "−", "×": "×", "÷": "÷", "pow": "^", "(": "(", ")": ")",
+    pi: "π", e: "e", ans: "Ans", mod: " mod ", pct: "%", sq: "²", cube: "³", recip: "⁻¹",
+    fact: "!", sqrt: "√(", cbrt: "∛(", yroot: "ʸ√", abs: "abs(", exp: "E"
+  };
+  // After "=", these carry on from the answer instead of starting fresh.
+  const SCI_CONT = new Set(["+", "−", "×", "÷", "^", " mod ", "ʸ√", "²", "³", "⁻¹", "!", "%"]);
+  const SCI_ERR = {
+    syntax: "huh? I can't chew that — check the brackets and signs.",
+    undefined: "tan(90°) shoots off to infinity — it's undefined!",
+    overflow: "too BIG even for my belly!",
+    empty: "type a sum first!"
+  };
+  const SCI_DOMAIN = {
+    asin: "sin⁻¹ only eats −1 to 1 — sine never goes past 1!",
+    acos: "cos⁻¹ only eats −1 to 1 — cosine never goes past 1!",
+    ln: "logs only eat numbers bigger than 0!", log: "logs only eat numbers bigger than 0!",
+    log2: "logs only eat numbers bigger than 0!",
+    sqrt: "no real square root of a negative number!",
+    acosh: "cosh⁻¹ needs a number that's 1 or more!",
+    atanh: "tanh⁻¹ needs a number between −1 and 1!",
+    fact: "! wants a whole number that's 0 or more!",
+    pow: "a negative number to that power isn't a real number!",
+    yroot: "that root of a negative isn't a real number!"
+  };
+  const ERR_TEXT = { syntax: "syntax error", domain: "domain error", undefined: "undefined", overflow: "too big!" };
+  const ANGLE_NAME = { DEG: "degrees", RAD: "radians", GRAD: "gradians" };
+
+  const sciKey = (k) => $("sciPad").querySelector(`[data-sk="${k}"]`);
+
+  function sciLabels() {
+    const n = sci.second ? 1 : 0;
+    for (const k in SCI_FN) {
+      const el = sciKey(k);
+      el.textContent = SCI_FN[k][n][0];
+      el.setAttribute("aria-label", SCI_FN[k][n][2]);
+    }
+    const two = sciKey("2nd");
+    two.setAttribute("aria-pressed", String(sci.second));
+    const ang = sciKey("angle");
+    ang.textContent = CALC.angle;
+    ang.setAttribute("aria-label", "Angle unit: " + ANGLE_NAME[CALC.angle] + ". Press to change");
+  }
+
+  const sciSrc = () => sci.toks.join("");
+
+  function sciPaint() {
+    const src = sciSrc();
+    if (sci.err) {
+      exprEl.textContent = src;
+      if (sci.err === "divzero") outText("OOPS!", { err: true, label: "Oops" });
+      else outText(ERR_TEXT[sci.err] || "error", { err: true });
+      return;
+    }
+    if (sci.done) {
+      exprEl.textContent = src + " =";
+      outText(CE.sci.format(sci.ans));
+      return;
+    }
+    exprEl.textContent = src;
+    if (!src) { outText(CE.sci.format(sci.ans), { ghost: true, label: "Answer so far " + CE.sci.format(sci.ans) }); return; }
+    // live preview, faded, when what's typed already makes sense
+    const r = CE.sci.evaluate(src, { angle: CALC.angle, ans: sci.ans });
+    if (r.ok) outText(r.text, { ghost: true, label: "Preview " + r.text });
+    else outText("…", { ghost: true, label: "Keep typing" });
+  }
+
+  function sciInsert(text) {
+    if (sci.done || sci.err) {
+      sci.toks = SCI_CONT.has(text) ? ["Ans"] : [];
+      sci.done = false; sci.err = null;
+    }
+    if (sciSrc().length > 90) { say("that's a long one — press ="); return; }
+    sci.toks.push(text);
+    sciPaint();
+  }
+
+  function sciEquals(fromEl) {
+    if (!sci.toks.length) { say(SCI_ERR.empty); return; }
+    if (sci.done) { say("already chewed that one — type a new sum!"); return; }
+    const src = sciSrc();
+    const r = CE.sci.evaluate(src, { angle: CALC.angle, ans: sci.ans });
+    if (!r.ok) return sciFail(r);
+    sci.ans = r.value;
+    sci.done = true; sci.err = null;
+    sciPaint();
+    CALC.sciSolves++;
+    const xp = Math.max(2, Math.min(12, 2 + digitCount(r.text)));
+    feed(r.text, xp, fromEl);
+    if (r.flags.trig) { unlock("trig"); say("trig tamed! " + CALC.angle + " mode."); }
+    else if (r.flags.fact) say("factorials grow FAST!");
+    else say(CHATTER[(Math.random() * CHATTER.length) | 0]);
+    save();
+  }
+
+  function sciFail(r) {
+    sci.err = r.type;
+    if (r.type === "divzero") { eatsZero(); exprEl.textContent = sciSrc(); return; }
+    mood("dizzy", 520);
+    sfxErr();
+    sciPaint();
+    say(r.type === "domain" ? (SCI_DOMAIN[r.fn] || "that's outside my menu — domain error!") : (SCI_ERR[r.type] || "hmm, that broke something!"));
+  }
+
+  // A number as text the parser reads back exactly: 1e-20 → 1E-20, −5 → (−5)
+  function sciLiteral(v) {
+    let s = String(v).replace("e+", "E").replace("e", "E");
+    if (v < 0 || Object.is(v, -0)) s = "(−" + s.slice(1) + ")";
+    return s;
+  }
+
+  function sciMem(k) {
+    if (k === "mc") { CALC.mem = 0; say("memory wiped!"); }
+    else if (k === "mr") { sciInsert(sciLiteral(CALC.mem)); say("remembered " + CE.sci.format(CALC.mem)); }
+    else {
+      let v = sci.ans;
+      if (!sci.done && sci.toks.length) {
+        const r = CE.sci.evaluate(sciSrc(), { angle: CALC.angle, ans: sci.ans });
+        if (!r.ok) { sciFail(r); return; }
+        v = r.value;
+      }
+      CALC.mem = CE.sci.snap(k === "m+" ? CALC.mem + v : CALC.mem - v);
+      say("memory now holds " + CE.sci.format(CALC.mem));
+    }
+    paintQuestRow();
+    save();
+  }
+
+  function sciPress(k, el) {
+    if (/^\d$/.test(k)) { sciInsert(k); sfxKey(); return; }
+    if (SCI_FN[k]) { sciInsert(SCI_FN[k][sci.second ? 1 : 0][1]); if (sci.second) { sci.second = false; sciLabels(); paintQuestRow(); } sfxKey(); return; }
+    if (SCI_INS[k]) { sciInsert(SCI_INS[k]); (SCI_CONT.has(SCI_INS[k]) ? sfxOp : sfxKey)(); return; }
+    switch (k) {
+      case "=": sciEquals(el || sciKey("=")); break;
+      case "ac": sci.toks = []; sci.done = false; sci.err = null; sciPaint(); say("clean slate!"); sfxOp(); break;
+      case "del":
+        sci.done = false; sci.err = null;
+        sci.toks.pop();
+        sciPaint(); sfxKey();
+        break;
+      case "2nd":
+        sci.second = !sci.second; sciLabels(); paintQuestRow(); sfxOp();
+        say(sci.second ? "2nd: the keys flipped to their undo buttons!" : "back to the normal keys");
+        break;
+      case "angle": {
+        CALC.angle = ANGLES[(ANGLES.indexOf(CALC.angle) + 1) % ANGLES.length];
+        sciLabels(); paintQuestRow(); sciPaint(); sfxOp(); save();
+        say({ DEG: "DEG: a full turn is 360°.", RAD: "RAD: a full turn is 2π ≈ 6.28 radians.", GRAD: "GRAD: a full turn is 400 gradians." }[CALC.angle]);
+        break;
+      }
+      case "mc": case "mr": case "m+": case "m-": sciMem(k); sfxKey(); break;
+    }
+  }
+
+  /* --- BITS: programmer mode -------------------------------- */
+  const bits = { value: 0n, entry: "0", fresh: true, pend: null, last: "" };
+  const BITS_LABEL = {
+    and: "AND", or: "OR", xor: "XOR", shl: "<<", sar: ">>", shr: ">>>", rol: "ROL", ror: "ROR",
+    add: "+", sub: "−", mul: "×", div: "÷", mod: "MOD"
+  };
+  const BASE_LINES = {
+    DEC: "DEC is base 10 — the usual way: ten digits, 0 to 9.",
+    HEX: "HEX is base 16: after 9 come A, B, C, D, E, F.",
+    BIN: "BIN is base 2: every digit is a switch — 0 off, 1 on.",
+    OCT: "OCT is base 8: digits 0–7, and each one is exactly 3 bits."
+  };
+  const OP_LINES = {
+    and: "AND: a bit stays 1 only if BOTH bits are 1.",
+    or: "OR: a bit is 1 if EITHER bit is 1.",
+    xor: "XOR: 1 where the bits are DIFFERENT.",
+    not: "NOT flips every single bit!",
+    shl: "<< slides every bit left — each step doubles the number!",
+    shr: ">>> is a LOGICAL shift: zeros always slide in from the left.",
+    rol: "ROL rotates: the bit that falls off the left comes back on the right.",
+    ror: "ROR rotates: the bit that falls off the right comes back on the left.",
+    neg: "± flips every bit and adds 1 — that's two's complement!"
+  };
+  const sarLine = () => (CALC.signed
+    ? ">> is ARITHMETIC: it copies the sign bit in, so negatives stay negative."
+    : ">> in unsigned mode slides in zeros, same as >>> (switch to SIGNED to see the difference).");
+  const bitsKeysEl = $("bitsKeys");
+  const bitsFmt = (u, base) => CE.bits.format(u, base || CALC.base, CALC.word, CALC.signed);
+  const groupFrom = (s, n, sep) => {
+    const neg = s.startsWith("-");
+    const d = neg ? s.slice(1) : s;
+    let out = "";
+    for (let i = d.length; i > 0; i -= n) out = d.slice(Math.max(0, i - n), i) + (out ? sep + out : "");
+    return (neg ? "-" : "") + out;
+  };
+
+  function buildBitGrid() {
+    const g = $("bitGrid");
+    g.innerHTML = "";
+    for (let n = CALC.word / 4 - 1; n >= 0; n--) {
+      const nib = document.createElement("div");
+      nib.className = "nib";
+      for (let i = n * 4 + 3; i >= n * 4; i--) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "bit";
+        b.dataset.i = String(i);
+        b.innerHTML = `<span class="bv">0</span><span class="bi">${i}</span>`;
+        nib.appendChild(b);
+      }
+      g.appendChild(nib);
+    }
+  }
+
+  function bitsKeyState() {
+    const allowed = { DEC: /^[0-9]$/, HEX: /^[0-9A-F]$/, OCT: /^[0-7]$/, BIN: /^[01]$/ }[CALC.base];
+    bitsKeysEl.querySelectorAll("[data-bk]").forEach((el) => {
+      const k = el.dataset.bk;
+      if (/^[0-9A-F]$/.test(k)) el.disabled = !allowed.test(k);
+    });
+    $("wordSeg").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.word) === CALC.word)));
+    $("bases").querySelectorAll(".base-row").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.base === CALC.base)));
+    const sb = $("signBtn");
+    sb.setAttribute("aria-pressed", String(CALC.signed));
+    sb.textContent = CALC.signed ? "SIGNED" : "UNSIGNED";
+    sb.setAttribute("aria-label", (CALC.signed ? "Signed, two's complement" : "Unsigned") + ". Press to switch");
+  }
+
+  function bitsPaint() {
+    const all = CE.bits.formatAll(bits.value, CALC.word, CALC.signed);
+    $("bvDEC").textContent = all.DEC;
+    $("bvHEX").textContent = groupFrom(all.HEX, 4, " ");
+    $("bvBIN").textContent = groupFrom(all.BIN, 4, " ");
+    $("bvOCT").textContent = all.OCT;
+    $("bitGrid").querySelectorAll(".bit").forEach((b) => {
+      const i = Number(b.dataset.i);
+      const on = CE.bits.bitAt(bits.value, i) === 1;
+      const isSign = CALC.signed && i === CALC.word - 1;
+      b.querySelector(".bv").textContent = on ? "1" : "0";
+      b.setAttribute("aria-pressed", String(on));
+      b.classList.toggle("sign", isSign);
+      b.setAttribute("aria-label", (isSign ? "Sign bit " : "Bit ") + i + (on ? ", on" : ", off"));
+    });
+    if (calcMode !== "bits") return;
+    if (bits.pend) exprEl.textContent = bitsFmt(bits.pend.a) + " " + BITS_LABEL[bits.pend.op] + (bits.fresh ? "" : " " + bits.entry);
+    else exprEl.textContent = bits.last;
+    const shown = bits.fresh ? bitsFmt(bits.value) : bits.entry;
+    outText(CALC.base === "BIN" || CALC.base === "HEX" ? groupFrom(shown, 4, " ") : shown,
+      { tag: CALC.base, label: shown + " in " + CALC.base });
+  }
+
+  function spill() {
+    toast("OVERFLOW", "chomp! a bit fell off the end");
+    unlock("spill");
+    sfxWrong();
+    const g = $("bitGrid");
+    if (!reduced) {
+      g.classList.remove("spill"); void g.offsetWidth; g.classList.add("spill");
+      setTimeout(() => g.classList.remove("spill"), 600);
+      const p = atElement(g);
+      burst(p.x + g.clientWidth / 2 - 10, p.y, 14, 0.7);
+    }
+    mood("chomp", 360);
+  }
+
+  function bitsDigit(d) {
+    const el = bitsKeysEl.querySelector(`[data-bk="${d}"]`);
+    if (el && el.disabled) { say(BASE_LINES[CALC.base]); sfxErr(); return; }
+    const next = (bits.fresh || bits.entry === "0") ? d : bits.entry === "-0" ? "-" + d : bits.entry + d;
+    const r = CE.bits.parse(next, CALC.base, CALC.word, CALC.signed);
+    if (!r.ok) return;
+    if (r.overflow) { say(CALC.word + " bits can't hold that — try a bigger word size!"); sfxErr(); shakeConsole(); return; }
+    bits.entry = next; bits.value = r.value; bits.fresh = false;
+    if (CALC.base === "HEX" && /[A-F]/.test(d)) unlock("hex");
+    bitsPaint();
+  }
+
+  function bitsRun(name, a, b) {
+    const r = CE.bits.op(name, a, b, CALC.word, CALC.signed);
+    if (r.error === "divzero") { eatsZero(); return null; }
+    if (r.error === "shift") { say("shift by 0 or more places!"); sfxErr(); return null; }
+    if (r.overflow || r.lost) spill();
+    return r.value;
+  }
+
+  function bitsOp(name) {
+    if (name === "not" || name === "neg") {
+      const v = bitsRun(name, bits.value, 0n);
+      if (v === null) return;
+      bits.last = (name === "not" ? "NOT " : "± ") + bitsFmt(bits.value) + " =";
+      bits.value = v; bits.fresh = true;
+      say(OP_LINES[name]);
+      bitsPaint();
+      return;
+    }
+    if (bits.pend && !bits.fresh) {
+      const v = bitsRun(bits.pend.op, bits.pend.a, bits.value);
+      if (v === null) { bits.pend = null; return; }
+      bits.value = v;
+    }
+    bits.pend = { op: name, a: bits.value };
+    bits.fresh = true;
+    say(name === "sar" ? sarLine() : (OP_LINES[name] || "now the second number!"));
+    bitsPaint();
+  }
+
+  function bitsEquals(fromEl) {
+    if (!bits.pend) { say("pick an operation first — AND, OR, <<, + …"); return; }
+    const { op, a } = bits.pend;
+    const b = bits.value;
+    const v = bitsRun(op, a, b);
+    bits.pend = null;
+    if (v === null) { bits.fresh = true; return; }
+    bits.last = bitsFmt(a) + " " + BITS_LABEL[op] + " " + bitsFmt(b) + " =";
+    bits.value = v; bits.fresh = true;
+    bitsPaint();
+    feed(bitsFmt(v), 4, fromEl);
+    save();
+  }
+
+  function bitsDel() {
+    if (bits.fresh) return;
+    let e = bits.entry.slice(0, -1);
+    if (e === "" || e === "-") { e = "0"; bits.fresh = true; }
+    const r = CE.bits.parse(e, CALC.base, CALC.word, CALC.signed);
+    bits.entry = e; bits.value = r.value;
+    bitsPaint();
+  }
+
+  function bitsFlip(i) {
+    bits.value = CE.bits.flip(bits.value, i, CALC.word);
+    bits.fresh = true;
+    CALC.bitFlips++;
+    if (CALC.bitFlips >= 8) unlock("bits8");
+    const signBit = CALC.signed && i === CALC.word - 1;
+    const worth = signBit ? "−2" + CE.float.sup(i) : "2" + CE.float.sup(i);
+    const val = (signBit ? -(2n ** BigInt(i)) : 2n ** BigInt(i)).toString();
+    say((signBit ? "the sign bit" : "bit " + i) + " is worth " + worth + " = " + val);
+    sfxKey();
+    bitsPaint();
+    save();
+  }
+
+  function setBase(b) {
+    if (!CE.bits.BASES[b]) return;
+    CALC.base = b;
+    bits.entry = bitsFmt(bits.value, b);
+    bits.fresh = true;
+    bitsKeyState(); paintQuestRow(); bitsPaint();
+    say(BASE_LINES[b]);
+    sfxOp();
+    save();
+  }
+
+  function setWord(w) {
+    if (!CE.bits.WORD_SIZES.includes(w) || w === CALC.word) return;
+    const v = CE.bits.interpret(bits.value, CALC.word, CALC.signed);
+    const r = CE.bits.wrap(v, w, CALC.signed);
+    if (bits.pend) bits.pend.a = CE.bits.wrap(CE.bits.interpret(bits.pend.a, CALC.word, CALC.signed), w, CALC.signed).value;
+    CALC.word = w;
+    bits.value = r.value; bits.fresh = true;
+    buildBitGrid(); bitsKeyState(); paintQuestRow(); bitsPaint();
+    if (r.overflow) spill();
+    else say(w + " bits hold " + (CALC.signed
+      ? "−" + (2n ** BigInt(w - 1)) + " to " + (2n ** BigInt(w - 1) - 1n)
+      : "0 to " + (2n ** BigInt(w) - 1n)));
+    sfxOp();
+    save();
+  }
+
+  function toggleSigned() {
+    CALC.signed = !CALC.signed;
+    bits.fresh = true;
+    bitsKeyState(); paintQuestRow(); bitsPaint();
+    say(CALC.signed
+      ? "SIGNED: the top bit is the sign — that's two's complement!"
+      : "UNSIGNED: every bit counts up, no negatives.");
+    sfxOp();
+    save();
+  }
+
+  function bitsPress(k, el) {
+    if (/^[0-9A-F]$/.test(k)) { bitsDigit(k); sfxKey(); return; }
+    if (BITS_LABEL[k] || k === "not") { bitsOp(k); sfxOp(); return; }
+    switch (k) {
+      case "=": bitsEquals(el || bitsKeysEl.querySelector('[data-bk="="]')); break;
+      case "neg": bitsOp("neg"); sfxKey(); break;
+      case "del": bitsDel(); sfxKey(); break;
+      case "ac": bits.value = 0n; bits.entry = "0"; bits.fresh = true; bits.pend = null; bits.last = ""; bitsPaint(); say("all switches off!"); sfxOp(); break;
+    }
+  }
+
+  /* --- FLOAT: the X-ray -------------------------------------- */
+  const fl = { res: null, bits: { 32: 0n, 64: 0n }, ref: null, built: 0, src: "0.1", cols: {} };
+  const DEMOS = [
+    { label: "0.1", src: "0.1", line: "0.1 in binary is 0.000110011001100… forever, so it has to be rounded." },
+    { label: "0.1 + 0.2", src: "0.1 + 0.2", line: "in float64, two rounded numbers make 0.30000000000000004 — not quite 0.3!" },
+    { label: "1/3", src: "1/3", line: "1/3 never ends in decimal OR binary, so every float is a tiny bit off." },
+    { label: "16777217", src: "16777217", line: "float32 has 24 bits of mantissa — 16777217 needs 25, so it becomes 16777216!" },
+    { label: "2⁵³ + 1", src: "2^53 + 1", line: "float64 runs out of mantissa at 2⁵³ — the +1 gets rounded away!" },
+    { label: "1e39", src: "1e39", line: "float32 tops out near 3.4E38 — 1E39 is too big, so it becomes Infinity!" },
+    { label: "−0", src: "-0", line: "−0 is real! It equals 0, but the sign bit is switched on." },
+    { label: "2⁻¹⁴⁹", src: "2^-149", line: "the tiniest float32: a subnormal with only the very last bit on." },
+    { label: "0 ÷ 0", src: "0/0", line: "0 ÷ 0 has no answer, so you get NaN: exponent all 1s, mantissa not 0." }
+  ];
+  const KIND_LINE = {
+    zero: "zero: every exponent and mantissa bit is off.",
+    subnormal: "subnormal: exponent bits all 0, so there's no hidden 1 — tiny numbers.",
+    inf: "Infinity: exponent bits all 1, mantissa all 0.",
+    nan: "NaN (not a number): exponent bits all 1, mantissa not 0."
+  };
+  const flIn = $("floatIn");
+
+  function buildFloatCol(W) {
+    const F = CE.float.FORMATS[W];
+    const col = document.createElement("section");
+    col.className = "fl-col";
+    col.dataset.w = String(W);
+    col.setAttribute("aria-label", "float" + W + (W === 32 ? ", single precision" : ", double precision"));
+    const bitBtn = (i, field) => `<button type="button" class="bit" data-w="${W}" data-i="${i}" aria-pressed="false" aria-label="float${W} ${field} bit ${i}"><span class="bv">0</span></button>`;
+    let ex = "", man = "";
+    for (let i = W - 2; i >= F.manBits; i--) ex += bitBtn(i, "exponent");
+    for (let i = F.manBits - 1; i >= 0; i--) man += bitBtn(i, "mantissa");
+    const row = (k, label, cls) => `<div><dt>${label}</dt><dd data-f="${k}"${cls ? ` class="${cls}"` : ""}></dd></div>`;
+    col.innerHTML =
+      `<header class="fl-head"><span class="fl-name">FLOAT${W}</span>` +
+      `<span class="fl-sub">${W === 32 ? "SINGLE · 4 BYTES" : "DOUBLE · 8 BYTES"}</span>` +
+      `<span class="fl-kind" data-f="kind"></span></header>` +
+      `<div class="fl-field fs"><span class="fl-cap">SIGN · 1 BIT</span><div class="fl-row">${bitBtn(W - 1, "sign")}</div></div>` +
+      `<div class="fl-field fx"><span class="fl-cap">EXPONENT · ${F.expBits} BITS</span><div class="fl-row">${ex}</div></div>` +
+      `<div class="fl-field fm"><span class="fl-cap">MANTISSA · ${F.manBits} BITS (+ HIDDEN BIT)</span>` +
+      `<div class="fl-row"><span class="ghost-bit" data-f="ghost" aria-hidden="true">1.</span>${man}</div></div>` +
+      `<dl class="fl-info">` +
+      row("hex", "HEX") + row("sign", "SIGN") + row("exp", "EXPONENT") + row("man", "MANTISSA") +
+      row("formula", "FORMULA") + row("exact", "STORED EXACTLY", "long") + row("meant", "YOU MEANT") +
+      row("err", "ROUNDING ERROR", "long") + row("down", "NEXT DOWN") + row("up", "NEXT UP") + row("gap", "GAP TO NEXT") +
+      `</dl>`;
+    const q = {};
+    col.querySelectorAll("[data-f]").forEach((el) => { q[el.dataset.f] = el; });
+    q.bits = [...col.querySelectorAll(".bit")];
+    fl.cols[W] = q;
+    return col;
+  }
+
+  const big = (s, n) => (s.length > n ? s.slice(0, n) + "…" : s);
+  const signed = (s) => (s.startsWith("-") ? "−" + s.slice(1) : "+" + s);
+
+  function paintFloatCol(W) {
+    const q = fl.cols[W];
+    const d = CE.float.describe(fl.bits[W], W, fl.built === W ? null : fl.ref);
+    const sup = CE.float.sup;
+    const special = d.kind !== "normal";
+    q.kind.textContent =
+      d.kind === "normal" ? "NORMAL" + (d.isMax ? " · LARGEST" : d.isMinNormal ? " · SMALLEST NORMAL" : "")
+      : d.kind === "subnormal" ? "SUBNORMAL" + (d.isMinSub ? " · SMALLEST" : "")
+      : d.kind === "zero" ? (d.sign ? "−0 · NEGATIVE ZERO" : "ZERO")
+      : d.kind === "inf" ? (d.sign ? "−INFINITY" : "INFINITY") : "NaN · NOT A NUMBER";
+    q.kind.classList.toggle("special", special);
+    q.bits.forEach((b) => {
+      const i = Number(b.dataset.i);
+      const on = d.bin[W - 1 - i] === "1";
+      b.firstChild.textContent = on ? "1" : "0";
+      b.setAttribute("aria-pressed", String(on));
+    });
+    q.ghost.textContent = d.implicit ? "1." : "0.";
+    q.ghost.classList.toggle("off", !d.implicit);
+    q.hex.textContent = d.hex;
+    q.sign.textContent = d.sign + (d.sign ? "  → negative" : "  → positive");
+    if (d.kind === "normal") {
+      q.exp.innerHTML = `${d.expBin} = <b>${d.expField}</b> <span class="dim">stored</span> − ${d.bias} <span class="dim">bias</span> = <b>${d.realExp}</b> <span class="dim">real</span>`;
+    } else if (d.kind === "subnormal" || d.kind === "zero") {
+      q.exp.innerHTML = `${d.expBin} = 0 <span class="dim">→ special: real exponent is fixed at ${1 - d.bias}, no hidden 1</span>`;
+    } else {
+      q.exp.innerHTML = `${d.expBin} = ${d.expField} <span class="dim">→ all ones means ∞ or NaN</span>`;
+    }
+    const sig = d.significand === null ? "" : CE.sci.format(d.significand);
+    q.man.innerHTML = `${d.mantissaHex} = ${esc(d.mantissaDec)} / 2${sup(d.manBits)}` +
+      (d.significand === null ? "" : ` <span class="dim">→ ${d.implicit ? "1" : "0"}.m = ${esc(sig)}</span>`);
+    q.formula.textContent = d.kind === "inf" ? "exponent all 1s + mantissa 0 = " + (d.sign ? "−∞" : "∞")
+      : d.kind === "nan" ? "exponent all 1s + mantissa ≠ 0 = NaN"
+      : "(−1)" + sup(d.sign) + " × " + sig + " × 2" + sup(d.realExp) + " = " + d.shortest;
+    q.exact.textContent = d.exact;
+    q.exact.title = d.exact.length > 60 ? d.exact.replace(/[-.]/g, "").length + " digits" : "";
+
+    if (fl.built === W) {
+      q.meant.textContent = "you built this one bit by bit";
+      q.err.textContent = "0 — bits are always exact";
+      q.err.classList.remove("bad");
+    } else if (!fl.ref) {
+      q.meant.textContent = fl.built ? "the float" + fl.built + " you built" : "a number that never ends (like π)";
+      q.err.textContent = "— no exact value to compare with";
+      q.err.classList.remove("bad");
+    } else {
+      q.meant.textContent = d.meant === undefined ? "—" : big(d.meant, 120) + (d.meantRepeats ? "  (goes on forever)" : "");
+      const e = d.error;
+      if (!e) q.err.textContent = "—";
+      else if (e.overflow) q.err.textContent = "∞ — too big, it overflowed!";
+      else if (e.nan) q.err.textContent = "NaN — not a number at all";
+      else if (e.zero) q.err.textContent = "0 — stored exactly!";
+      else q.err.textContent = (e.exact && e.exact.length <= 70 ? signed(e.exact) + "  ≈ " : "≈ ") + signed(e.approx);
+      q.err.classList.toggle("bad", !!e && (e.overflow || e.nan || !e.zero));
+    }
+    q.down.textContent = d.down.shortest;
+    q.up.textContent = d.up.shortest;
+    q.gap.textContent = d.gap ? (d.gap.exact && d.gap.exact.length <= 40 ? d.gap.exact : "≈ " + d.gap.approx) : "—";
+    return d;
+  }
+
+  function paintFloat() {
+    paintFloatCol(32);
+    paintFloatCol(64);
+    floatPaintScreen();
+    paintQuestRow();
+  }
+
+  function floatPaintScreen() {
+    if (calcMode !== "float") return;
+    if (!fl.res && !fl.built) { exprEl.textContent = ""; outText("0", { ghost: true }); return; }
+    const W = fl.built || 64;
+    const shown = CE.float.shortest(fl.bits[W], W);
+    exprEl.textContent = fl.built ? "built from float" + fl.built + " bits" : "X-RAY · " + fl.src;
+    outText(shown, { tag: "F" + W, label: shown + " stored as float" + W });
+  }
+
+  function floatRun(src, o) {
+    o = o || {};
+    src = String(src).trim();
+    if (flIn.value !== src) flIn.value = src;
+    const a = CE.float.analyze(src, { angle: CALC.angle, ans: sci.ans });
+    if (!a.ok) {
+      if (!o.live) {
+        outText(a.type === "empty" ? "?" : "can't read that", { err: true });
+        say(a.type === "empty" ? "type a number to X-ray!" : "I can't read that — try 0.1 or 0.1 + 0.2");
+        if (!o.quiet) sfxErr();
+      }
+      return false;
+    }
+    fl.res = a; fl.src = src; fl.ref = a.ref; fl.built = 0;
+    fl.bits[32] = a.f32.bits; fl.bits[64] = a.f64.bits;
+    paintFloat();
+    if (src.replace(/\s+/g, "") === "0.1+0.2") unlock("float");
+    if (o.line) say(o.line);
+    else if (!o.live && !o.quiet) {
+      const k = a.f32.kind !== "normal" ? a.f32.kind : a.f64.kind;
+      say(KIND_LINE[k] || (a.f32.error && a.f32.error.zero ? "stored exactly — no rounding at all!" : "see the tiny rounding error? that's float life."));
+    }
+    if (o.xp) feed(a.f64.shortest, 2, o.fromEl || null);
+    return true;
+  }
+
+  function floatToggle(W, i) {
+    fl.bits[W] = BigInt.asUintN(W, fl.bits[W] ^ (1n << BigInt(i)));
+    const other = W === 32 ? 64 : 32;
+    fl.ref = CE.float.bitsToQ(fl.bits[W], W);
+    fl.bits[other] = CE.float.convertBits(fl.bits[W], W, other);
+    fl.built = W;
+    fl.res = fl.res || { built: true };
+    const d = paintFloatCol(W);
+    paintFloatCol(other);
+    flIn.value = d.shortest;
+    floatPaintScreen();
+    paintQuestRow();
+    const F = CE.float.FORMATS[W];
+    if (KIND_LINE[d.kind] && d.kind !== "normal") say(KIND_LINE[d.kind]);
+    else if (i === W - 1) say("sign bit: same size, opposite side of zero!");
+    else if (i >= F.manBits) say("exponent bit: the number jumps by a power of 2!");
+    else say("mantissa bit " + i + ": a nudge worth 2" + CE.float.sup(i - F.manBits) + " × 2" + CE.float.sup(d.realExp));
+    CALC.bitFlips++;
+    if (CALC.bitFlips >= 8) unlock("bits8");
+    sfxKey();
+    save();
+  }
+
+  function floatPress(k, el) {
+    if (k === "go") { floatRun(flIn.value, { xp: true, fromEl: el }); return; }
+    if (k === "ac") { flIn.value = ""; sfxOp(); say("type a number to X-ray!"); return; }
+    if (k === "del") { flIn.value = flIn.value.slice(0, -1); sfxKey(); floatRun(flIn.value, { live: true }); return; }
+    if (fl.built) { flIn.value = ""; fl.built = 0; }
+    flIn.value += k;
+    sfxKey();
+    floatRun(flIn.value, { live: true });
+  }
+
+  function setFloatShow(w) {
+    CALC.floatShow = w === "64" ? "64" : "32";
+    $("floatPanel").dataset.show = CALC.floatShow;
+    $("floatWidth").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.show === CALC.floatShow)));
+  }
+
+  /* --- → FLOAT: X-ray whatever is on screen ---------------- */
+  function sendToFloat() {
+    let src = null;
+    if (calcMode === "basic") {
+      if (errored) { say("nothing to X-ray yet!"); return; }
+      const r = curToRat();
+      if (lastWasEquals && r) src = approx ? String(ratVal(r)) : CE.float.qToText(r.n, r.d);
+      else src = cur.replace(/[/.]$/, "") || "0";
+    } else if (calcMode === "sci") {
+      if (!sci.done && !sci.err && sci.toks.length) src = sciSrc();
+      else src = String(sci.ans);
+    } else if (calcMode === "bits") {
+      src = CE.bits.format(bits.value, 10, CALC.word, CALC.signed);
+    }
+    if (src === null) return;
+    setMode("float", { silent: true });
+    if (floatRun(src, { quiet: true })) say("X-ray time! here's how " + src + " really looks inside.");
+    sfxFrac();
+  }
+
+  /* --- wiring for the new modes --------------------------- */
+  $("modeTabs").addEventListener("click", (e) => {
+    const t = e.target.closest('[role="tab"]');
+    if (t) setMode(t.id.replace("tab-", ""));
+  });
+  $("modeTabs").addEventListener("keydown", (e) => {
+    const i = tabEls.indexOf(document.activeElement);
+    if (i < 0) return;
+    let j = null;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") j = (i + 1) % tabEls.length;
+    else if (e.key === "ArrowLeft" || e.key === "ArrowUp") j = (i + tabEls.length - 1) % tabEls.length;
+    else if (e.key === "Home") j = 0;
+    else if (e.key === "End") j = tabEls.length - 1;
+    if (j === null) return;
+    e.preventDefault();
+    e.stopPropagation();
+    tabEls[j].focus();
+    setMode(MODES[j]);
+  });
+  $("toFloatBtn").addEventListener("click", sendToFloat);
+
+  function padClick(pad, attr, fn) {
+    pad.addEventListener("click", (e) => {
+      const btn = e.target.closest("[" + attr + "]");
+      if (!btn || btn.disabled || !pad.contains(btn)) return;
+      lookAt(btn);
+      const k = btn.getAttribute(attr);
+      if (k !== "=" && k !== "go") { const p = atElement(btn); burst(p.x, p.y, 5, 0.5); }
+      fn(k, btn);
+    });
+  }
+  padClick($("sciPad"), "data-sk", sciPress);
+  padClick(bitsKeysEl, "data-bk", bitsPress);
+  padClick($("floatKeys"), "data-fk", floatPress);
+
+  $("bitGrid").addEventListener("click", (e) => {
+    const b = e.target.closest(".bit");
+    if (b) bitsFlip(Number(b.dataset.i));
+  });
+  $("bases").addEventListener("click", (e) => {
+    const b = e.target.closest(".base-row");
+    if (b) setBase(b.dataset.base);
+  });
+  $("wordSeg").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-word]");
+    if (b) setWord(Number(b.dataset.word));
+  });
+  $("signBtn").addEventListener("click", toggleSigned);
+
+  $("floatCols").addEventListener("click", (e) => {
+    const b = e.target.closest(".bit");
+    if (b) floatToggle(Number(b.dataset.w), Number(b.dataset.i));
+  });
+  $("floatWidth").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-show]");
+    if (b) { setFloatShow(b.dataset.show); sfxOp(); save(); }
+  });
+  flIn.addEventListener("input", () => { fl.built = 0; floatRun(flIn.value, { live: true }); });
+  flIn.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); floatRun(flIn.value, { xp: true, fromEl: $("floatKeys").querySelector('[data-fk="go"]') }); }
+    else if (e.key === "Escape") { flIn.value = ""; }
+  });
+  (function buildDemos() {
+    const wrap = $("floatDemos");
+    DEMOS.forEach((d) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip";
+      b.textContent = d.label;
+      b.setAttribute("aria-label", "X-ray " + d.label);
+      b.addEventListener("click", () => { floatRun(d.src, { line: d.line, xp: true, fromEl: b }); sfxFrac(); });
+      wrap.appendChild(b);
+    });
+    const cols = $("floatCols");
+    cols.appendChild(buildFloatCol(32));
+    cols.appendChild(buildFloatCol(64));
+  })();
+
+  // Keyboard per mode; returns true when the key was used.
+  const SCI_KEYMAP = {
+    "+": "+", "-": "−", "*": "×", "x": "×", "/": "÷", "^": "pow", "(": "(", ")": ")",
+    "!": "fact", "%": "pct", ".": ".", ",": ".", "Enter": "=", "=": "=",
+    "Backspace": "del", "Escape": "ac", s: "sin", c: "cos", t: "tan", l: "ln", e: "e", p: "pi"
+  };
+  const BITS_KEYMAP = {
+    "&": "and", "|": "or", "^": "xor", "~": "not", "<": "shl", ">": "sar",
+    "+": "add", "-": "sub", "*": "mul", "/": "div", "%": "mod",
+    "Enter": "=", "=": "=", "Backspace": "del", "Escape": "ac", n: "neg"
+  };
+  function flashIn(root, attr, k) {
+    const el = root.querySelector(`[${attr}="${k}"]`);
+    if (!el) return;
+    el.classList.add("down");
+    setTimeout(() => el.classList.remove("down"), 110);
+    lookAt(el);
+  }
+  function modeKey(e) {
+    if (calcMode === "sci") {
+      const k = /^\d$/.test(e.key) ? e.key : SCI_KEYMAP[e.key];
+      if (!k) return false;
+      flashIn($("sciPad"), "data-sk", k);
+      sciPress(k);
+      return true;
+    }
+    if (calcMode === "bits") {
+      let k = /^[0-9]$/.test(e.key) ? e.key : /^[a-fA-F]$/.test(e.key) ? e.key.toUpperCase() : BITS_KEYMAP[e.key];
+      if (!k) return false;
+      flashIn(bitsKeysEl, "data-bk", k);
+      bitsPress(k);
+      return true;
+    }
+    if (calcMode === "float") {
+      if (e.key === "Enter") { floatPress("go", $("floatKeys").querySelector('[data-fk="go"]')); return true; }
+      if (e.key === "Backspace") { floatPress("del"); return true; }
+      if (e.key === "Escape") { floatPress("ac"); return true; }
+      if (/^[0-9.+\-*/^()e]$/.test(e.key)) { flashIn($("floatKeys"), "data-fk", e.key); floatPress(e.key); return true; }
+      return false;
+    }
+    return false;
+  }
+
+  function resetModes() {
+    sci.toks = []; sci.done = false; sci.err = null; sci.ans = 0; sci.second = false;
+    bits.value = 0n; bits.entry = "0"; bits.fresh = true; bits.pend = null; bits.last = "";
+    fl.res = null; fl.built = 0;
+    flIn.value = "0.1";
+    sciLabels(); buildBitGrid(); bitsKeyState(); bitsPaint(); setFloatShow(CALC.floatShow);
+    setMode("basic", { silent: true });
+  }
+
   /* ---------------------------------------------------------
      WIRING
      --------------------------------------------------------- */
   const keyEls = new Map();
-  document.querySelectorAll(".key").forEach((btn) => {
+  $("keys").querySelectorAll(".key").forEach((btn) => {
     keyEls.set(btn.dataset.k, btn);
     btn.addEventListener("click", () => {
       lookAt(btn);
@@ -2522,12 +4631,19 @@ body{
 
   window.addEventListener("keydown", (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const tgt = e.target;
+    if (tgt && (tgt.tagName === "INPUT" || tgt.tagName === "TEXTAREA" || tgt.isContentEditable)) return;
+    if (calcMode !== "basic") {
+      if (e.key === "Enter" && document.activeElement && document.activeElement.tagName === "BUTTON") return;
+      if (modeKey(e)) e.preventDefault();
+      return;
+    }
     let k = null;
     if (/^\d$/.test(e.key)) k = e.key;
     else if (KEYMAP[e.key]) k = KEYMAP[e.key];
     if (!k) return;
     // Space/Enter on a focused button is the browser's job — don't double-fire.
-    if (e.key === "Enter" && document.activeElement && document.activeElement.classList.contains("key")) return;
+    if (e.key === "Enter" && document.activeElement && document.activeElement.tagName === "BUTTON") return;
     e.preventDefault();
     flash(k);
     handle(k);
@@ -2544,11 +4660,15 @@ body{
   });
 
   $("fightBtn").addEventListener("click", () => {
+    if (calcMode !== "basic") setMode("basic", { silent: true });
     if (boss.active) { endBoss(true); sfxOp(); }
     else startBoss();
   });
 
-  $("quizBtn").addEventListener("click", toggleQuiz);
+  $("quizBtn").addEventListener("click", () => {
+    if (calcMode !== "basic") setMode("basic", { silent: true });
+    toggleQuiz();
+  });
 
   // Two-step reset — no browser confirm dialog, which embeds can block.
   let armed = null;
@@ -2599,6 +4719,12 @@ body{
   $("sfxState").textContent = sfxOn ? "ON" : "OFF";
   render();
   paint();
+  sciLabels();
+  buildBitGrid();
+  bitsKeyState();
+  bitsPaint();
+  setFloatShow(CALC.floatShow);
+  if (bootMode !== "basic") setMode(bootMode, { silent: true });
   say(G.level > 1 ? "welcome back!" : "feed me!");
   if (!canSave) say("(progress won't save here)");
   // canvas needs the final laid-out size
