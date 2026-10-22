@@ -52,15 +52,25 @@ describe("getUSK12Blueprints", () => {
       if (bp.animationConfig) expect(bank[i].animationConfig).toBe(bp.animationConfig);
     });
   });
+
+  it("never guesses a scene: questions without an authored config get {}", () => {
+    const withoutConfig = blueprints.flatMap((bp, i) => (bp.animationConfig ? [] : [bank[i]]));
+    expect(withoutConfig.length).toBeGreaterThan(400);
+    for (const q of withoutConfig) expect(q.animationConfig).toEqual({});
+    // GEOMETRY used to be keyword-inferred (e.g. "angle" -> a 60/60/60 triangle).
+    expect(bank.filter((q) => JSON.stringify(q.animationConfig) === '{"type":"triangle_angles","angles":[60,60,60]}')).toEqual([]);
+    expect(bank.some((q) => q.animationConfig.type === "number_journey" && JSON.stringify(q.animationConfig) === '{"type":"number_journey","range":[0,20],"highlights":[]}')).toBe(false);
+  });
 });
 
 // Same five questions as packages/math-engine/src/rubric.test.ts, scored from the real bank.
 describe("rubric flags on real bank entries", () => {
   it.each<[string, RubricFlag[]]>([
     ["Multiply in Parts", ["DEFAULT_HINTS", "COMPUTE_PREFIX", "NUMBERS_FIRST", "DEFAULT_FUN_FACT", "NO_WRONG_FEEDBACK"]],
-    ["Cheetah vs. Human Sprint", ["DEFAULT_HINTS", "INFERRED_SCENE", "EMPTY_NUMBER_LINE", "NUMBERS_FIRST", "ONE_STEP", "NO_WRONG_FEEDBACK"]],
-    ["Math Mind-Reading Trick", ["DEFAULT_HINTS", "INFERRED_SCENE", "EMPTY_NUMBER_LINE", "NO_WRONG_FEEDBACK", "HERO_CANDIDATE"]],
-    ["Paper Folding Challenge", ["DEFAULT_HINTS", "INFERRED_SCENE", "EMPTY_NUMBER_LINE", "NUMBERS_FIRST", "NO_WRONG_FEEDBACK", "HERO_CANDIDATE"]],
+    // INFERRED_SCENE now means "no authored scene" (config is {}); the blank number line is gone.
+    ["Cheetah vs. Human Sprint", ["DEFAULT_HINTS", "INFERRED_SCENE", "NUMBERS_FIRST", "ONE_STEP", "NO_WRONG_FEEDBACK"]],
+    ["Math Mind-Reading Trick", ["DEFAULT_HINTS", "INFERRED_SCENE", "NO_WRONG_FEEDBACK", "HERO_CANDIDATE"]],
+    ["Paper Folding Challenge", ["DEFAULT_HINTS", "INFERRED_SCENE", "NUMBERS_FIRST", "NO_WRONG_FEEDBACK", "HERO_CANDIDATE"]],
     ["Derivative Power Rule", ["DEFAULT_HINTS", "COMPUTE_PREFIX", "NUMBERS_FIRST", "AGE_OUT_OF_RANGE", "DEFAULT_FUN_FACT", "NO_WRONG_FEEDBACK"]],
   ])("%s", (title, expected) => {
     expect(flagsFor(title)).toEqual(expected);

@@ -20,6 +20,7 @@ import {
   getUSK12Blueprints,
   type SeedQuestion,
 } from "../packages/db/prisma/us-k12-question-bank";
+import { ALL_HERO_BLUEPRINTS } from "../packages/db/prisma/hero-questions";
 
 /** seed.ts passes `questions.length` (56 hand-written questions) so the bank's sortOrders match the DB. */
 const SEED_INLINE_QUESTION_COUNT = 56;
@@ -72,6 +73,8 @@ function auditBank(): AuditRow[] {
     if (blueprint.titleEn !== question.titleEn) {
       throw new Error(`Bank/blueprint misaligned at index ${i}: "${blueprint.titleEn}" vs "${question.titleEn}"`);
     }
+    // "inferred" is the rubric's name for "no authored scene". Since Phase 2 nothing is
+    // inferred any more: such questions get `{}` and render no animation card.
     const sceneSource: SceneSource = blueprint.animationConfig ? "explicit" : "inferred";
     const { score, flags } = scoreQuestionHeuristically({ ...question, sceneSource });
     const recommendation: Recommendation = flags.includes("HERO_CANDIDATE") ? "HERO_CANDIDATE" : "DRILL";
@@ -114,9 +117,8 @@ function toSummary(rows: readonly AuditRow[]): string {
   const inRange = rows.filter((r) => !r.flags.includes("AGE_OUT_OF_RANGE"));
   const inRangeScores = inRange.map((r) => r.score);
   const meanInRange = inRangeScores.reduce((s, x) => s + x, 0) / Math.max(1, inRangeScores.length);
-  const explicitGeometry = rows.filter(
-    (r) => r.question.category === "GEOMETRY" && r.sceneSource === "explicit"
-  ).length;
+  const explicitScenes = rows.filter((r) => r.sceneSource === "explicit").length;
+  const upgraded = ALL_HERO_BLUEPRINTS.filter((bp) => bp.upgradesLegacyTitleEn !== undefined);
   const compute23x6 = rows.find((r) => r.question.contentEn.startsWith("Compute 23 × 6"));
   const inRangeAtHeroBar = inRange.filter((r) => r.score >= HERO_RUBRIC_BAR).length;
 
@@ -178,8 +180,10 @@ function toSummary(rows: readonly AuditRow[]): string {
   out.push(
     `Every question ships the same two generic hints (\`DEFAULT_HINTS\` ${flagCount("DEFAULT_HINTS")}/${total}) and no wrong-answer feedback, ` +
       `so rubric items 8 and 9 score 0 across the whole bank. ` +
-      `${flagCount("INFERRED_SCENE")} questions (${pct(flagCount("INFERRED_SCENE"), total)}) have no authored scene, and ` +
-      `${flagCount("EMPTY_NUMBER_LINE")} (${pct(flagCount("EMPTY_NUMBER_LINE"), total)}) render the blank 0–20 number line. ` +
+      `${flagCount("INFERRED_SCENE")} questions (${pct(flagCount("INFERRED_SCENE"), total)}) have no authored scene (\`INFERRED_SCENE\`); ` +
+      `since keyword inference was removed (Phase 2) they get an empty config and show no animation, ` +
+      `so \`EMPTY_NUMBER_LINE\` (the blank 0–20 number line) is down to ${flagCount("EMPTY_NUMBER_LINE")}. ` +
+      `The other ${explicitScenes} keep their authored legacy scene. ` +
       `${flagCount("NUMBERS_FIRST")} open with a number in the first 40 characters, ${flagCount("COMPUTE_PREFIX")} open with "Compute/Solve/Find/What is…", ` +
       `and ${flagCount("ONE_STEP")} are a single operation on at most two numbers. ` +
       `${flagCount("AGE_OUT_OF_RANGE")} questions are AGE_14_16/AGE_16_18 and belong in the drill library regardless of quality. ` +
@@ -191,11 +195,22 @@ function toSummary(rows: readonly AuditRow[]): string {
       `and ${inRangeAtHeroBar} of ${inRange.length} in-range questions reach ${HERO_RUBRIC_BAR}/20, because the penalties cannot see a "story wrapper" (rubric anti-pattern 1): ` +
       `a story-wrapped calculation and a real puzzle can score the same. ` +
       (compute23x6 ? `"Compute 23 × 6." scores ${compute23x6.score} here against 3/20 by hand. ` : "") +
-      `\`INFERRED_SCENE\` also under-counts what users see: seed.ts \`normalizeAnimationConfig()\` re-infers every GEOMETRY config from keywords, ` +
-      `so the ${explicitGeometry} GEOMETRY questions with an authored config still render a keyword-guessed scene in production. ` +
+      `\`INFERRED_SCENE\` keeps the rubric's name but now means "no authored scene": neither the bank nor seed.ts guesses a scene from keywords any more. ` +
       `\`HERO_CANDIDATE\` is a keyword match (${"`trick|always|no matter|impossible|how many ways|pattern|magic|fold|double`"}); it misses good questions without those words ` +
       `(e.g. Sudoku Number Logic, Cicada Underground Mystery, Tower Shadow Trick) and the list still needs the human 10-item rubric before anything is promoted.`
   );
+  out.push("");
+
+  out.push("## Upgraded to hero questions");
+  out.push("");
+  out.push(
+    "These legacy rows were taken over in place by a hero blueprint (`packages/db/prisma/hero-questions/`); " +
+      "the seed keeps their database id. The rows above still score the legacy copy from the bank."
+  );
+  out.push("");
+  out.push("| Legacy title | Hero slug |");
+  out.push("|---|---|");
+  for (const bp of upgraded) out.push(`| ${mdCell(bp.upgradesLegacyTitleEn ?? "")} | \`${bp.slug}\` |`);
   out.push("");
   return out.join("\n");
 }

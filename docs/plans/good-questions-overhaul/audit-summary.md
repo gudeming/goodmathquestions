@@ -10,7 +10,7 @@ Questions audited: **511**.
 |---|---:|---:|
 | `DEFAULT_HINTS` | 511 | 100.0% |
 | `INFERRED_SCENE` | 472 | 92.4% |
-| `EMPTY_NUMBER_LINE` | 419 | 82.0% |
+| `EMPTY_NUMBER_LINE` | 0 | 0.0% |
 | `COMPUTE_PREFIX` | 33 | 6.5% |
 | `NUMBERS_FIRST` | 415 | 81.2% |
 | `ONE_STEP` | 66 | 12.9% |
@@ -31,20 +31,20 @@ Questions audited: **511**.
 
 | sortOrder | Title | Category | Age | Heuristic score | Other flags |
 |---:|---|---|---|---:|---|
-| 230 | Skate Trick Sequence | ALGEBRA | AGE_12_14 | 15 | DEFAULT_HINTS, INFERRED_SCENE, EMPTY_NUMBER_LINE, NUMBERS_FIRST, NO_WRONG_FEEDBACK |
-| 275 | Power-Up Score Doubling | NUMBER_THEORY | AGE_10_12 | 15 | DEFAULT_HINTS, INFERRED_SCENE, EMPTY_NUMBER_LINE, NUMBERS_FIRST, NO_WRONG_FEEDBACK |
-| 283 | Viral Video Daily Views | ALGEBRA | AGE_12_14 | 16 | DEFAULT_HINTS, INFERRED_SCENE, EMPTY_NUMBER_LINE, NO_WRONG_FEEDBACK |
-| 288 | Paper Folding Challenge | NUMBER_THEORY | AGE_12_14 | 15 | DEFAULT_HINTS, INFERRED_SCENE, EMPTY_NUMBER_LINE, NUMBERS_FIRST, NO_WRONG_FEEDBACK |
-| 310 | Math Mind-Reading Trick | ALGEBRA | AGE_12_14 | 16 | DEFAULT_HINTS, INFERRED_SCENE, EMPTY_NUMBER_LINE, NO_WRONG_FEEDBACK |
+| 230 | Skate Trick Sequence | ALGEBRA | AGE_12_14 | 15 | DEFAULT_HINTS, INFERRED_SCENE, NUMBERS_FIRST, NO_WRONG_FEEDBACK |
+| 275 | Power-Up Score Doubling | NUMBER_THEORY | AGE_10_12 | 15 | DEFAULT_HINTS, INFERRED_SCENE, NUMBERS_FIRST, NO_WRONG_FEEDBACK |
+| 283 | Viral Video Daily Views | ALGEBRA | AGE_12_14 | 16 | DEFAULT_HINTS, INFERRED_SCENE, NO_WRONG_FEEDBACK |
+| 288 | Paper Folding Challenge | NUMBER_THEORY | AGE_12_14 | 15 | DEFAULT_HINTS, INFERRED_SCENE, NUMBERS_FIRST, NO_WRONG_FEEDBACK |
+| 310 | Math Mind-Reading Trick | ALGEBRA | AGE_12_14 | 16 | DEFAULT_HINTS, INFERRED_SCENE, NO_WRONG_FEEDBACK |
 | 341 | Origami Right-Triangle Angles | GEOMETRY | AGE_8_10 | 16 | DEFAULT_HINTS, INFERRED_SCENE, NO_WRONG_FEEDBACK |
-| 357 | Piano Keys Black and White | NUMBER_THEORY | AGE_10_12 | 15 | DEFAULT_HINTS, INFERRED_SCENE, EMPTY_NUMBER_LINE, NUMBERS_FIRST, NO_WRONG_FEEDBACK |
-| 387 | Sunflower Fibonacci Spiral | NUMBER_THEORY | AGE_10_12 | 16 | DEFAULT_HINTS, INFERRED_SCENE, EMPTY_NUMBER_LINE, NO_WRONG_FEEDBACK |
-| 543 | Firefly Flash Fibonacci | NUMBER_THEORY | AGE_10_12 | 15 | DEFAULT_HINTS, INFERRED_SCENE, EMPTY_NUMBER_LINE, LONG_FUN_FACT, NO_WRONG_FEEDBACK |
-| 544 | Piano Key Pattern | NUMBER_THEORY | AGE_12_14 | 14 | DEFAULT_HINTS, INFERRED_SCENE, EMPTY_NUMBER_LINE, NUMBERS_FIRST, LONG_FUN_FACT, NO_WRONG_FEEDBACK |
-| 545 | Guitar String Frequency | ALGEBRA | AGE_12_14 | 15 | DEFAULT_HINTS, INFERRED_SCENE, EMPTY_NUMBER_LINE, LONG_FUN_FACT, NO_WRONG_FEEDBACK |
-| 554 | Domino Chain Reaction | ALGEBRA | AGE_10_12 | 15 | DEFAULT_HINTS, INFERRED_SCENE, EMPTY_NUMBER_LINE, LONG_FUN_FACT, NO_WRONG_FEEDBACK |
-| 555 | Origami Paper Folds | NUMBER_THEORY | AGE_10_12 | 14 | DEFAULT_HINTS, INFERRED_SCENE, EMPTY_NUMBER_LINE, NUMBERS_FIRST, LONG_FUN_FACT, NO_WRONG_FEEDBACK |
-| 564 | Video Game Difficulty Curve | ALGEBRA | AGE_12_14 | 15 | DEFAULT_HINTS, INFERRED_SCENE, EMPTY_NUMBER_LINE, LONG_FUN_FACT, NO_WRONG_FEEDBACK |
+| 357 | Piano Keys Black and White | NUMBER_THEORY | AGE_10_12 | 15 | DEFAULT_HINTS, INFERRED_SCENE, NUMBERS_FIRST, NO_WRONG_FEEDBACK |
+| 387 | Sunflower Fibonacci Spiral | NUMBER_THEORY | AGE_10_12 | 16 | DEFAULT_HINTS, INFERRED_SCENE, NO_WRONG_FEEDBACK |
+| 543 | Firefly Flash Fibonacci | NUMBER_THEORY | AGE_10_12 | 15 | DEFAULT_HINTS, INFERRED_SCENE, LONG_FUN_FACT, NO_WRONG_FEEDBACK |
+| 544 | Piano Key Pattern | NUMBER_THEORY | AGE_12_14 | 14 | DEFAULT_HINTS, INFERRED_SCENE, NUMBERS_FIRST, LONG_FUN_FACT, NO_WRONG_FEEDBACK |
+| 545 | Guitar String Frequency | ALGEBRA | AGE_12_14 | 15 | DEFAULT_HINTS, INFERRED_SCENE, LONG_FUN_FACT, NO_WRONG_FEEDBACK |
+| 554 | Domino Chain Reaction | ALGEBRA | AGE_10_12 | 15 | DEFAULT_HINTS, INFERRED_SCENE, LONG_FUN_FACT, NO_WRONG_FEEDBACK |
+| 555 | Origami Paper Folds | NUMBER_THEORY | AGE_10_12 | 14 | DEFAULT_HINTS, INFERRED_SCENE, NUMBERS_FIRST, LONG_FUN_FACT, NO_WRONG_FEEDBACK |
+| 564 | Video Game Difficulty Curve | ALGEBRA | AGE_12_14 | 15 | DEFAULT_HINTS, INFERRED_SCENE, LONG_FUN_FACT, NO_WRONG_FEEDBACK |
 
 ## DRILL by category
 
@@ -74,6 +74,14 @@ Questions audited: **511**.
 
 ## What the numbers say
 
-Every question ships the same two generic hints (`DEFAULT_HINTS` 511/511) and no wrong-answer feedback, so rubric items 8 and 9 score 0 across the whole bank. 472 questions (92.4%) have no authored scene, and 419 (82.0%) render the blank 0–20 number line. 415 open with a number in the first 40 characters, 33 open with "Compute/Solve/Find/What is…", and 66 are a single operation on at most two numbers. 139 questions are AGE_14_16/AGE_16_18 and belong in the drill library regardless of quality. Only 14 questions pass the keyword pre-screen for a human look, consistent with the plan's cap of 15 legacy questions to upgrade in Phase 3.
+Every question ships the same two generic hints (`DEFAULT_HINTS` 511/511) and no wrong-answer feedback, so rubric items 8 and 9 score 0 across the whole bank. 472 questions (92.4%) have no authored scene (`INFERRED_SCENE`); since keyword inference was removed (Phase 2) they get an empty config and show no animation, so `EMPTY_NUMBER_LINE` (the blank 0–20 number line) is down to 0. The other 39 keep their authored legacy scene. 415 open with a number in the first 40 characters, 33 open with "Compute/Solve/Find/What is…", and 66 are a single operation on at most two numbers. 139 questions are AGE_14_16/AGE_16_18 and belong in the drill library regardless of quality. Only 14 questions pass the keyword pre-screen for a human look, consistent with the plan's cap of 15 legacy questions to upgrade in Phase 3.
 
-Caveats: the heuristic score is coarse. In-range questions average 14.4/20 (median of all 511: 14), and 316 of 372 in-range questions reach 14/20, because the penalties cannot see a "story wrapper" (rubric anti-pattern 1): a story-wrapped calculation and a real puzzle can score the same. "Compute 23 × 6." scores 14 here against 3/20 by hand. `INFERRED_SCENE` also under-counts what users see: seed.ts `normalizeAnimationConfig()` re-infers every GEOMETRY config from keywords, so the 4 GEOMETRY questions with an authored config still render a keyword-guessed scene in production. `HERO_CANDIDATE` is a keyword match (`trick|always|no matter|impossible|how many ways|pattern|magic|fold|double`); it misses good questions without those words (e.g. Sudoku Number Logic, Cicada Underground Mystery, Tower Shadow Trick) and the list still needs the human 10-item rubric before anything is promoted.
+Caveats: the heuristic score is coarse. In-range questions average 14.4/20 (median of all 511: 14), and 316 of 372 in-range questions reach 14/20, because the penalties cannot see a "story wrapper" (rubric anti-pattern 1): a story-wrapped calculation and a real puzzle can score the same. "Compute 23 × 6." scores 14 here against 3/20 by hand. `INFERRED_SCENE` keeps the rubric's name but now means "no authored scene": neither the bank nor seed.ts guesses a scene from keywords any more. `HERO_CANDIDATE` is a keyword match (`trick|always|no matter|impossible|how many ways|pattern|magic|fold|double`); it misses good questions without those words (e.g. Sudoku Number Logic, Cicada Underground Mystery, Tower Shadow Trick) and the list still needs the human 10-item rubric before anything is promoted.
+
+## Upgraded to hero questions
+
+These legacy rows were taken over in place by a hero blueprint (`packages/db/prisma/hero-questions/`); the seed keeps their database id. The rows above still score the legacy copy from the bank.
+
+| Legacy title | Hero slug |
+|---|---|
+| Math Mind-Reading Trick | `mind-reading-five` |

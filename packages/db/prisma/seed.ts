@@ -1,14 +1,12 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { buildUSK12QuestionBank } from "./us-k12-question-bank";
+import { buildHeroQuestions, HERO_WORLDS, heroQuestionData, type HeroQuestionBlueprint } from "./hero-questions";
 import { KNOWLEDGE_POINT_TAXONOMY } from "@gmq/math-engine";
 
 const prisma = new PrismaClient();
 
 type SeedQuestionLike = {
-  category: string;
-  titleEn: string;
-  contentEn: string;
   animationConfig?: Record<string, unknown>;
 };
 
@@ -382,88 +380,85 @@ async function cleanupCommunityBoostUsers() {
   console.log(`🧹 Community cleanup complete (users removed: ${targetCount}).`);
 }
 
-function inferGeometryAnimationConfigFromText(q: SeedQuestionLike): Record<string, unknown> {
-  const text = `${q.titleEn} ${q.contentEn}`.toLowerCase();
-  const nums = (q.contentEn.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
-
-  const isTriangleTopic =
-    text.includes("triangle") ||
-    text.includes("angle") ||
-    text.includes("hypotenuse") ||
-    text.includes("pythag") ||
-    text.includes("sin(") ||
-    text.includes("cos(") ||
-    text.includes("tan(");
-
-  if (isTriangleTopic) {
-    return { type: "triangle_angles", angles: [60, 60, 60] };
-  }
-
-  if (
-    text.includes("circle") ||
-    text.includes("radius") ||
-    text.includes("diameter") ||
-    text.includes("circumference")
-  ) {
-    const marker = nums.find((n) => n > 0) ?? 10;
-    return {
-      type: "number_journey",
-      range: [0, Math.max(20, Math.ceil(marker * 4))],
-      highlights: [marker],
-    };
-  }
-
-  if (
-    text.includes("rectangle") ||
-    text.includes("rectangular") ||
-    text.includes("garden") ||
-    text.includes("fence") ||
-    text.includes("perimeter") ||
-    text.includes("area")
-  ) {
-    const a = nums.find((n) => n > 0) ?? 8;
-    const b = nums.find((n, i) => i > 0 && n > 0) ?? 5;
-    return { type: "number_combine", numbers: [a, b, a, b], operation: "add" };
-  }
-
-  if (
-    text.includes("volume") ||
-    text.includes("box") ||
-    text.includes("tank") ||
-    text.includes("aquarium")
-  ) {
-    const dims = nums.filter((n) => n > 0).slice(0, 3);
-    return {
-      type: "number_combine",
-      numbers: dims.length === 3 ? dims : [5, 4, 3],
-      operation: "multiply",
-    };
-  }
-
-  if (
-    text.includes("midpoint") ||
-    text.includes("coordinate") ||
-    text.includes("distance") ||
-    text.includes("(")
-  ) {
-    const max = Math.max(10, ...nums.map((n) => Math.abs(n)));
-    return {
-      type: "number_journey",
-      range: [-max, max],
-      highlights: nums.slice(0, 4),
-    };
-  }
-
-  return { type: "number_journey", range: [0, 50], highlights: nums.slice(0, 3) };
+/**
+ * The question's authored scene config, or `{}` (no scene). No keyword inference: GEOMETRY
+ * used to be re-guessed from text ("angle" -> a 60/60/60 triangle), which README §0.3 rule 2
+ * forbids. An empty config means the question page shows no animation card.
+ */
+function normalizeAnimationConfig(q: SeedQuestionLike): Record<string, unknown> {
+  return q.animationConfig && Object.keys(q.animationConfig).length > 0 ? q.animationConfig : {};
 }
 
-function normalizeAnimationConfig(q: SeedQuestionLike): Record<string, unknown> {
-  if (q.category !== "GEOMETRY") {
-    return q.animationConfig ?? { type: "number_journey", range: [0, 20], highlights: [] };
+/** Upsert the six worlds by slug. Safe in every mode: Collection rows hold no user data. */
+async function seedCollections(): Promise<Map<string, string>> {
+  const ids = new Map<string, string>();
+  for (const world of HERO_WORLDS) {
+    const data = {
+      titleEn: world.title.en,
+      titleZh: world.title.zh,
+      descEn: world.description.en,
+      descZh: world.description.zh,
+      emoji: world.emoji,
+      colorToken: world.colorToken,
+      sortOrder: world.sortOrder,
+    };
+    const row = await prisma.collection.upsert({
+      where: { slug: world.slug },
+      update: data,
+      create: { slug: world.slug, ...data },
+      select: { id: true },
+    });
+    ids.set(world.slug, row.id);
   }
+  console.log(`  ✓ ${HERO_WORLDS.length} collections upserted`);
+  return ids;
+}
 
-  // Geometry questions are normalized by text semantics to avoid mismatched shapes.
-  return inferGeometryAnimationConfigFromText(q);
+/**
+ * Upsert hero questions by slug. A blueprint with `upgradesLegacyTitleEn` takes over that
+ * legacy row in place (same id, so submissions, comments and links survive) the first time;
+ * afterwards the row is found by its slug. Tags are reset so the grade-tag pass below
+ * re-derives them from the hero age group.
+ */
+async function seedHeroQuestions(
+  blueprints: readonly HeroQuestionBlueprint[],
+  collectionIds: ReadonlyMap<string, string>
+): Promise<{ created: number; updated: number; upgraded: number }> {
+  const worldOrder = new Map(HERO_WORLDS.map((w) => [w.slug, w.sortOrder] as const));
+  const counts = { created: 0, updated: 0, upgraded: 0 };
+
+  for (const bp of blueprints) {
+    const collectionId = collectionIds.get(bp.collection);
+    const worldSortOrder = worldOrder.get(bp.collection);
+    if (!collectionId || worldSortOrder === undefined) throw new Error(`Hero question ${bp.slug}: unknown collection ${bp.collection}`);
+    const data = heroQuestionData(bp, { collectionId, worldSortOrder });
+
+    const bySlug = await prisma.question.findUnique({ where: { slug: bp.slug }, select: { id: true } });
+    if (bySlug) {
+      await prisma.question.update({ where: { id: bySlug.id }, data: { ...data, tags: { deleteMany: {} } } });
+      counts.updated++;
+      continue;
+    }
+
+    if (bp.upgradesLegacyTitleEn) {
+      const legacy = await prisma.question.findMany({
+        where: { titleEn: bp.upgradesLegacyTitleEn, slug: null },
+        select: { id: true },
+        take: 2,
+      });
+      if (legacy.length > 1) throw new Error(`Hero question ${bp.slug}: legacy title "${bp.upgradesLegacyTitleEn}" is ambiguous`);
+      if (legacy.length === 1) {
+        await prisma.question.update({ where: { id: legacy[0].id }, data: { ...data, tags: { deleteMany: {} } } });
+        counts.upgraded++;
+        continue;
+      }
+      console.warn(`  ⚠️ ${bp.slug}: legacy row "${bp.upgradesLegacyTitleEn}" not found; creating a new question`);
+    }
+
+    await prisma.question.create({ data });
+    counts.created++;
+  }
+  return counts;
 }
 
 async function main() {
@@ -475,6 +470,8 @@ async function main() {
 
   const modeLabel = cleanupOnly ? "community_cleanup" : questionsOnly ? "questions_only" : "full";
   console.log(`🌱 Seeding database... (mode: ${modeLabel})`);
+  // Validate hero blueprints before touching the database: a bad blueprint aborts the seed.
+  const heroBlueprints = cleanupOnly ? [] : buildHeroQuestions();
   if (cleanupRequested || cleanupOnly) {
     await cleanupCommunityBoostUsers();
     if (cleanupOnly) {
@@ -1838,7 +1835,14 @@ async function main() {
     });
   }
 
+  // Legacy rows upgraded to hero questions are owned by their blueprint from now on
+  // (seedHeroQuestions below); re-applying the legacy copy would only be overwritten again.
+  const upgradedLegacyTitles = new Set(
+    heroBlueprints.flatMap((bp) => (bp.upgradesLegacyTitleEn ? [bp.upgradesLegacyTitleEn] : []))
+  );
+
   for (const q of allQuestions) {
+    if (upgradedLegacyTitles.has(q.titleEn)) continue;
     const questionTags = ((q as { tags?: string[] }).tags ?? []).map((tag) => ({
       tag: { connect: { nameEn: tag } },
     }));
@@ -1885,6 +1889,12 @@ async function main() {
     }
   }
 
+  const collectionIds = await seedCollections();
+  const heroCounts = await seedHeroQuestions(heroBlueprints, collectionIds);
+  console.log(
+    `  ✓ ${heroBlueprints.length} hero questions (created ${heroCounts.created}, updated ${heroCounts.updated}, upgraded legacy ${heroCounts.upgraded})`
+  );
+
   // Attach grade-level focus tags so students can directly pick Grade 4-8 challenge tracks.
   const gradeTagRules: Array<{
     tagName: string;
@@ -1917,7 +1927,7 @@ async function main() {
     });
   }
 
-  console.log(`✅ Synced ${allQuestions.length} questions`);
+  console.log(`✅ Synced ${allQuestions.length - upgradedLegacyTitles.size} legacy + ${heroBlueprints.length} hero questions`);
 
   if (questionsOnly) {
     await seedCommunityBoost(communityBoostConfig);

@@ -38,7 +38,7 @@ export interface SeedQuestion {
   tags?: string[];
 }
 
-/** Raw authored question before seed defaults (hints, inferred scene, fallback fun fact) are applied. */
+/** Raw authored question before seed defaults (hints, empty scene, fallback fun fact) are applied. */
 export interface Blueprint {
   titleEn: string;
   titleZh: string;
@@ -56,46 +56,15 @@ export interface Blueprint {
   standards?: string[];
 }
 
-function inferGeometryAnimationConfig(q: Blueprint): Record<string, unknown> {
-  const text = `${q.titleEn} ${q.contentEn}`.toLowerCase();
-  const nums = (q.contentEn.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
-
-  if (text.includes("circle") || text.includes("radius") || text.includes("diameter") || text.includes("circumference")) {
-    const diameter = nums.find((n) => n > 0 && n < 100) ?? 10;
-    return { type: "number_journey", range: [0, Math.max(20, Math.ceil(diameter * 4))], highlights: [diameter] };
-  }
-
-  if (text.includes("rectangle") || text.includes("garden") || text.includes("wall") || text.includes("panel") || text.includes("fence")) {
-    const a = nums.find((n) => n > 0) ?? 8;
-    const b = nums.find((n, i) => i > 0 && n > 0) ?? 6;
-    return { type: "number_combine", numbers: [a, b], operation: "multiply" };
-  }
-
-  if (text.includes("volume") || text.includes("box") || text.includes("tank") || text.includes("aquarium") || text.includes("rain")) {
-    const dims = nums.filter((n) => n > 0).slice(0, 3);
-    return { type: "number_combine", numbers: dims.length === 3 ? dims : [5, 4, 3], operation: "multiply" };
-  }
-
-  if (text.includes("midpoint") || text.includes("coordinate") || text.includes("(") || text.includes("distance")) {
-    const max = Math.max(10, ...nums.map((n) => Math.abs(n)));
-    return { type: "number_journey", range: [-max, max], highlights: nums.slice(0, 4) };
-  }
-
-  if (text.includes("triangle") || text.includes("angle") || text.includes("hypotenuse")) {
-    return { type: "triangle_angles", angles: [60, 60, 60] };
-  }
-
-  return { type: "number_journey", range: [0, 50], highlights: nums.slice(0, 3) };
-}
-
+/**
+ * Scene config for a bank question: the blueprint's authored config, or `{}` (no scene).
+ *
+ * Keyword inference ("contains angle -> 60/60/60 triangle", "anything else -> blank 0-20
+ * number line") was removed in Phase 2 (README §0.3 rule 2): an unverified scene is worse
+ * than none, and the question page renders no animation card for `{}`.
+ */
 function inferAnimationConfig(q: Blueprint): Record<string, unknown> {
-  if (q.animationConfig) return q.animationConfig;
-
-  if (q.category === "GEOMETRY") {
-    return inferGeometryAnimationConfig(q);
-  }
-
-  return { type: "number_journey", range: [0, 20], highlights: [] };
+  return q.animationConfig && Object.keys(q.animationConfig).length > 0 ? q.animationConfig : {};
 }
 
 export const DEFAULT_HINTS: ReadonlyArray<{ readonly en: string; readonly zh: string }> = [
@@ -9492,7 +9461,7 @@ const ALL_BLUEPRINTS: readonly Blueprint[] = [
 
 /**
  * Read-only access to the raw blueprints, index-aligned with `buildUSK12QuestionBank()`.
- * Audit tooling uses it to tell explicit scene configs from inferred ones; seed.ts does not.
+ * Audit tooling uses it to tell authored scene configs from questions with no scene; seed.ts does not.
  */
 export function getUSK12Blueprints(): ReadonlyArray<Readonly<Blueprint>> {
   return ALL_BLUEPRINTS;
