@@ -152,11 +152,16 @@ rm -rf "$BUILD_DIR" "$FAILED_NEXT"
 mkdir -p "$BUILD_DIR"
 # Source: a real copy (tens of MB), so nothing the build writes (tsbuildinfo,
 # next-env.d.ts, ...) can leak into the live tree through a shared inode.
-tar -C "$APP_DIR" \
+# --ignore-failed-read: a stray unreadable file in the app dir (e.g. a root-owned
+# .env.bak) must not abort the deploy; backups and alternate env files are not
+# needed by the build and are excluded outright. Only .env itself is copied.
+tar -C "$APP_DIR" --ignore-failed-read --warning=no-file-changed \
   --exclude=node_modules --exclude=.git --exclude=.deploy --exclude=.turbo \
   --exclude=.next --exclude=.next.prev --exclude=.next.failed \
   --exclude=playwright-report --exclude=test-results --exclude=cdk.out \
+  --exclude='.env.*' --exclude='*.bak' --exclude='*.orig' --exclude='*.swp' \
   -cf - . | tar -C "$BUILD_DIR" -xf -
+[[ -f "$BUILD_DIR/.env" ]] || cp "$APP_DIR/.env" "$BUILD_DIR/.env"
 # node_modules: hard links (GNU cp -al), so ~500 MB costs only directory entries.
 # Relative workspace symlinks (node_modules/@gmq/* -> ../../packages/*) then
 # resolve inside the build dir.
