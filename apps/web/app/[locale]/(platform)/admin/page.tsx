@@ -119,6 +119,21 @@ export default function AdminDashboard() {
           </motion.div>
         </Link>
 
+        <Link href="/admin/scenes">
+          <motion.div
+            className="card-fun text-center cursor-pointer"
+            whileHover={{ scale: 1.03 }}
+          >
+            <div className="text-4xl mb-3">🎬</div>
+            <h3 className="font-heading font-bold text-gray-800">
+              {isZh ? "场景实验室" : "Scene Playground"}
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              {isZh ? "编辑场景配置，预览三个相位" : "Edit scene configs, preview all three phases"}
+            </p>
+          </motion.div>
+        </Link>
+
         <motion.div
           className="card-fun text-center opacity-60"
           title="Coming in Phase 4"

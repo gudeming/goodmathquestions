@@ -222,7 +222,7 @@ export class SceneBuilder {
   }
 
   private static buildTriangleScene(config: AnimationConfig): AnimationScene {
-    const angles = config.angles || [60, 60, 60];
+    const angles: number[] = config.angles || [60, 60, 60];
 
     return {
       type: "triangle_angles",
@@ -250,7 +250,7 @@ export class SceneBuilder {
             },
           ],
         },
-        ...angles.map((angle, i) => ({
+        ...angles.map((angle: number, i: number) => ({
           id: `angle-label-${i}`,
           type: "text" as const,
           position: { x: 50 + i * 50, y: 150 + (i === 1 ? -120 : 0) },

@@ -4,6 +4,6 @@ import { defineConfig } from "vitest/config";
 // Each package also runs on its own via `npm test -w <pkg>` / `turbo test`.
 export default defineConfig({
   test: {
-    projects: ["packages/math-engine", "packages/animation-engine", "packages/db", "packages/api"],
+    projects: ["packages/math-engine", "packages/animation-engine", "packages/db", "packages/api", "apps/web"],
   },
 });
