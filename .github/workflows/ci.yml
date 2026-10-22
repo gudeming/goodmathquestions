@@ -85,22 +85,31 @@ jobs:
       - name: Seed questions
         run: SEED_MODE=questions_only npm run db:seed -w @gmq/db
 
+      # The guards read vitest's JSON report, not the console: with CI set, vitest
+      # colours project labels (an ANSI " api " badge instead of "|api|"), so a grep
+      # of the human output matched nothing and failed every run.
       - name: Unit + integration tests
         run: |
           set -o pipefail
-          npm test 2>&1 | tee vitest.log
+          npm test -- --reporter=default --reporter=json --outputFile.json=vitest-results.json 2>&1 | tee vitest.log
           # The API suites skip themselves when Postgres/Redis are unreachable; in CI that is a failure.
           if grep -q "SKIPPING integration tests" vitest.log; then
             echo "::error::API integration tests were skipped (services unreachable)"; exit 1
           fi
-          if grep -E "\|api\|.*skipped" vitest.log; then
-            echo "::error::API integration tests reported skipped tests"; exit 1
-          fi
-          ran=$(grep -cE "\|api\| src/test/.*\.test\.ts" vitest.log || true)
-          echo "api test files run: $ran"
-          if [ "$ran" -lt 5 ]; then
-            echo "::error::expected the api vitest project to run its integration suites"; exit 1
-          fi
+          node -e '
+            const r = require("./vitest-results.json");
+            const api = r.testResults.filter((f) => f.name.includes("/packages/api/src/"));
+            const tests = api.flatMap((f) => f.assertionResults);
+            const notPassed = tests.filter((t) => t.status !== "passed");
+            console.log(`api test files run: ${api.length}, tests: ${tests.length}, not passed: ${notPassed.length}`);
+            for (const t of notPassed.slice(0, 20)) console.log(`  ${t.status}: ${t.fullName}`);
+            if (notPassed.length > 0) {
+              console.log("::error::API integration tests reported skipped/todo/failed tests"); process.exit(1);
+            }
+            if (api.length < 5) {
+              console.log("::error::expected the api vitest project to run its integration suites"); process.exit(1);
+            }
+          '
 
       - name: Typecheck
         run: |
@@ -162,5 +171,6 @@ jobs:
             apps/web/test-results/
             next-start.log
             vitest.log
+            vitest-results.json
           retention-days: 14
           if-no-files-found: ignore
