@@ -1,5 +1,5 @@
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { locales, type Locale } from "@gmq/i18n";
 import { TRPCProvider } from "@/lib/trpc-provider";
@@ -16,6 +16,8 @@ export default async function LocaleLayout({
     notFound();
   }
 
+  // Lets static rendering / ISR work for pages under this layout (next-intl otherwise reads headers()).
+  setRequestLocale(locale);
   const messages = await getMessages({ locale });
 
   return (
