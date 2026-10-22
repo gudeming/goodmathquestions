@@ -70,10 +70,13 @@ else
   if [[ "$MODE" == "--init" ]]; then
     DB_PUSH_FLAG=--accept-data-loss
   else
-    log "[1/7] Pulling latest code..."
-    # npm install may have rewritten the lockfile; on the server it is only a build artifact.
-    git checkout -- package-lock.json
-    git pull --ff-only origin main
+    log "[1/7] Syncing to origin/main..."
+    # The server is a deploy target, never a place to edit tracked files: discard any
+    # stray local change (a hand-edited script, a lockfile rewritten by npm install)
+    # instead of letting it block the deploy. .env, node_modules, .next and .deploy
+    # are untracked and untouched.
+    git fetch --prune origin main
+    git reset --hard origin/main
     # Never auto-drop production data: a destructive schema change stops the deploy
     # here, before the running app is touched, and must be applied by hand.
     DB_PUSH_FLAG=
