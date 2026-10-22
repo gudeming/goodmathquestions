@@ -6,7 +6,8 @@
     "dev": "set -a; test -f ../../.env && . ../../.env; set +a; NODE_ENV=development next dev --port 3000",
     "build": "set -a; test -f ../../.env && . ../../.env; set +a; NODE_ENV=production next build",
     "start": "set -a; test -f ../../.env && . ../../.env; set +a; NODE_ENV=production next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@gmq/animation-engine": "*",
@@ -36,6 +37,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@playwright/test": "~1.63.0",
     "@types/bcryptjs": "^2.4.0",
     "@types/canvas-confetti": "^1.6.0",
     "@types/katex": "^0.16.8",

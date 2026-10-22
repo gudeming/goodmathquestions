@@ -1,0 +1,219 @@
+/**
+ * Phase 0 question audit (docs/plans/good-questions-overhaul/01-question-rubric.md §3.3).
+ *
+ * Runs the machine rubric over every question from buildUSK12QuestionBank() and writes:
+ *   docs/plans/good-questions-overhaul/audit-2026-10.csv
+ *   docs/plans/good-questions-overhaul/audit-summary.md
+ *
+ * Usage: npm run audit:questions   (no database needed)
+ */
+import { writeFileSync } from "node:fs";
+import path from "node:path";
+import {
+  RUBRIC_FLAGS,
+  scoreQuestionHeuristically,
+  type RubricFlag,
+  type SceneSource,
+} from "@gmq/math-engine";
+import {
+  buildUSK12QuestionBank,
+  getUSK12Blueprints,
+  type SeedQuestion,
+} from "../packages/db/prisma/us-k12-question-bank";
+
+/** seed.ts passes `questions.length` (56 hand-written questions) so the bank's sortOrders match the DB. */
+const SEED_INLINE_QUESTION_COUNT = 56;
+const EXPECTED_QUESTION_COUNT = 511;
+const AUDIT_DATE = "2026-10";
+/** Human rubric bar for publishing a hero question (01-question-rubric.md §1). */
+const HERO_RUBRIC_BAR = 14;
+const AGE_ORDER = ["AGE_8_10", "AGE_10_12", "AGE_12_14", "AGE_14_16", "AGE_16_18"] as const;
+
+const OUT_DIR = path.resolve(__dirname, "..", "docs", "plans", "good-questions-overhaul");
+const CSV_PATH = path.join(OUT_DIR, `audit-${AUDIT_DATE}.csv`);
+const SUMMARY_PATH = path.join(OUT_DIR, "audit-summary.md");
+
+type Recommendation = "HERO_CANDIDATE" | "DRILL";
+
+interface AuditRow {
+  question: SeedQuestion;
+  sceneSource: SceneSource;
+  flags: RubricFlag[];
+  score: number;
+  recommendation: Recommendation;
+}
+
+const CSV_HEADER = [
+  "sortOrder",
+  "titleEn",
+  "category",
+  "ageGroup",
+  "difficulty",
+  "flags",
+  "heuristicScore",
+  "recommendation",
+] as const;
+
+/** RFC 4180: quote when the field has a comma, quote, or newline; double inner quotes. */
+function csvField(value: string | number): string {
+  const text = String(value);
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function auditBank(): AuditRow[] {
+  const questions = buildUSK12QuestionBank(SEED_INLINE_QUESTION_COUNT);
+  const blueprints = getUSK12Blueprints();
+  if (questions.length !== blueprints.length) {
+    throw new Error(`Bank/blueprint length mismatch: ${questions.length} vs ${blueprints.length}`);
+  }
+
+  return questions.map((question, i) => {
+    const blueprint = blueprints[i];
+    if (blueprint.titleEn !== question.titleEn) {
+      throw new Error(`Bank/blueprint misaligned at index ${i}: "${blueprint.titleEn}" vs "${question.titleEn}"`);
+    }
+    const sceneSource: SceneSource = blueprint.animationConfig ? "explicit" : "inferred";
+    const { score, flags } = scoreQuestionHeuristically({ ...question, sceneSource });
+    const recommendation: Recommendation = flags.includes("HERO_CANDIDATE") ? "HERO_CANDIDATE" : "DRILL";
+    return { question, sceneSource, flags, score, recommendation };
+  });
+}
+
+function toCsv(rows: readonly AuditRow[]): string {
+  const lines = rows.map(({ question: q, flags, score, recommendation }) =>
+    [q.sortOrder, q.titleEn, q.category, q.ageGroup, q.difficulty, flags.join("|"), score, recommendation]
+      .map(csvField)
+      .join(",")
+  );
+  return [CSV_HEADER.join(","), ...lines].join("\n") + "\n";
+}
+
+function countBy<T>(items: readonly T[], key: (item: T) => string): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const item of items) counts.set(key(item), (counts.get(key(item)) ?? 0) + 1);
+  return counts;
+}
+
+function pct(n: number, total: number): string {
+  return `${((n / total) * 100).toFixed(1)}%`;
+}
+
+function mdCell(text: string): string {
+  return text.replace(/\|/g, "\\|");
+}
+
+function toSummary(rows: readonly AuditRow[]): string {
+  const total = rows.length;
+  const flagCount = (flag: RubricFlag): number => rows.filter((r) => r.flags.includes(flag)).length;
+  const heroes = rows.filter((r) => r.recommendation === "HERO_CANDIDATE");
+  const drills = rows.filter((r) => r.recommendation === "DRILL");
+  const drillByCategory = [...countBy(drills, (r) => r.question.category)].sort((a, b) => b[1] - a[1]);
+  const ageCounts = countBy(rows, (r) => r.question.ageGroup);
+  const byAge = AGE_ORDER.map((age): [string, number] => [age, ageCounts.get(age) ?? 0]);
+  const scores = rows.map((r) => r.score).sort((a, b) => a - b);
+  const inRange = rows.filter((r) => !r.flags.includes("AGE_OUT_OF_RANGE"));
+  const inRangeScores = inRange.map((r) => r.score);
+  const meanInRange = inRangeScores.reduce((s, x) => s + x, 0) / Math.max(1, inRangeScores.length);
+  const explicitGeometry = rows.filter(
+    (r) => r.question.category === "GEOMETRY" && r.sceneSource === "explicit"
+  ).length;
+  const compute23x6 = rows.find((r) => r.question.contentEn.startsWith("Compute 23 × 6"));
+  const inRangeAtHeroBar = inRange.filter((r) => r.score >= HERO_RUBRIC_BAR).length;
+
+  const out: string[] = [];
+  out.push(`# Question audit summary (${AUDIT_DATE})`);
+  out.push("");
+  out.push(
+    "Generated by `npm run audit:questions` (`scripts/audit-questions.ts`) from `buildUSK12QuestionBank()`. " +
+      "Rules: `01-question-rubric.md` §3. The heuristic score is triage only; the human rubric score is the one that counts. " +
+      `Per-question rows: \`audit-${AUDIT_DATE}.csv\`.`
+  );
+  out.push("");
+  out.push(`Questions audited: **${total}**.`);
+  out.push("");
+
+  out.push("## Flags");
+  out.push("");
+  out.push("| Flag | Questions | Share |");
+  out.push("|---|---:|---:|");
+  for (const flag of RUBRIC_FLAGS) out.push(`| \`${flag}\` | ${flagCount(flag)} | ${pct(flagCount(flag), total)} |`);
+  out.push("");
+
+  out.push("## Recommendations");
+  out.push("");
+  out.push("| Recommendation | Questions |");
+  out.push("|---|---:|");
+  out.push(`| \`HERO_CANDIDATE\` | ${heroes.length} |`);
+  out.push(`| \`DRILL\` | ${drills.length} |`);
+  out.push("");
+
+  out.push("## HERO_CANDIDATE list (for human review in Phase 3)");
+  out.push("");
+  out.push("| sortOrder | Title | Category | Age | Heuristic score | Other flags |");
+  out.push("|---:|---|---|---|---:|---|");
+  for (const r of heroes) {
+    const other = r.flags.filter((f) => f !== "HERO_CANDIDATE").join(", ");
+    out.push(
+      `| ${r.question.sortOrder} | ${mdCell(r.question.titleEn)} | ${r.question.category} | ${r.question.ageGroup} | ${r.score} | ${other} |`
+    );
+  }
+  out.push("");
+
+  out.push("## DRILL by category");
+  out.push("");
+  out.push("| Category | DRILL questions |");
+  out.push("|---|---:|");
+  for (const [category, n] of drillByCategory) out.push(`| ${category} | ${n} |`);
+  out.push("");
+
+  out.push("## Age groups");
+  out.push("");
+  out.push("| Age group | Questions |");
+  out.push("|---|---:|");
+  for (const [age, n] of byAge) out.push(`| ${age} | ${n} |`);
+  out.push("");
+
+  out.push("## What the numbers say");
+  out.push("");
+  out.push(
+    `Every question ships the same two generic hints (\`DEFAULT_HINTS\` ${flagCount("DEFAULT_HINTS")}/${total}) and no wrong-answer feedback, ` +
+      `so rubric items 8 and 9 score 0 across the whole bank. ` +
+      `${flagCount("INFERRED_SCENE")} questions (${pct(flagCount("INFERRED_SCENE"), total)}) have no authored scene, and ` +
+      `${flagCount("EMPTY_NUMBER_LINE")} (${pct(flagCount("EMPTY_NUMBER_LINE"), total)}) render the blank 0–20 number line. ` +
+      `${flagCount("NUMBERS_FIRST")} open with a number in the first 40 characters, ${flagCount("COMPUTE_PREFIX")} open with "Compute/Solve/Find/What is…", ` +
+      `and ${flagCount("ONE_STEP")} are a single operation on at most two numbers. ` +
+      `${flagCount("AGE_OUT_OF_RANGE")} questions are AGE_14_16/AGE_16_18 and belong in the drill library regardless of quality. ` +
+      `Only ${heroes.length} questions pass the keyword pre-screen for a human look, consistent with the plan's cap of 15 legacy questions to upgrade in Phase 3.`
+  );
+  out.push("");
+  out.push(
+    `Caveats: the heuristic score is coarse. In-range questions average ${meanInRange.toFixed(1)}/20 (median of all ${total}: ${scores[Math.floor(total / 2)]}), ` +
+      `and ${inRangeAtHeroBar} of ${inRange.length} in-range questions reach ${HERO_RUBRIC_BAR}/20, because the penalties cannot see a "story wrapper" (rubric anti-pattern 1): ` +
+      `a story-wrapped calculation and a real puzzle can score the same. ` +
+      (compute23x6 ? `"Compute 23 × 6." scores ${compute23x6.score} here against 3/20 by hand. ` : "") +
+      `\`INFERRED_SCENE\` also under-counts what users see: seed.ts \`normalizeAnimationConfig()\` re-infers every GEOMETRY config from keywords, ` +
+      `so the ${explicitGeometry} GEOMETRY questions with an authored config still render a keyword-guessed scene in production. ` +
+      `\`HERO_CANDIDATE\` is a keyword match (${"`trick|always|no matter|impossible|how many ways|pattern|magic|fold|double`"}); it misses good questions without those words ` +
+      `(e.g. Sudoku Number Logic, Cicada Underground Mystery, Tower Shadow Trick) and the list still needs the human 10-item rubric before anything is promoted.`
+  );
+  out.push("");
+  return out.join("\n");
+}
+
+function main(): void {
+  const rows = auditBank();
+  if (rows.length !== EXPECTED_QUESTION_COUNT) {
+    throw new Error(`Expected ${EXPECTED_QUESTION_COUNT} questions, got ${rows.length}`);
+  }
+  writeFileSync(CSV_PATH, toCsv(rows), "utf8");
+  writeFileSync(SUMMARY_PATH, toSummary(rows), "utf8");
+
+  const heroes = rows.filter((r) => r.recommendation === "HERO_CANDIDATE");
+  const flagCounts = RUBRIC_FLAGS.map((f) => `${f}=${rows.filter((r) => r.flags.includes(f)).length}`);
+  console.log(`Audited ${rows.length} questions.`);
+  console.log(`Flags: ${flagCounts.join(", ")}`);
+  console.log(`HERO_CANDIDATE (${heroes.length}): ${heroes.map((r) => r.question.titleEn).join("; ")}`);
+  console.log(`Wrote ${path.relative(process.cwd(), CSV_PATH)} and ${path.relative(process.cwd(), SUMMARY_PATH)}`);
+}
+
+main();

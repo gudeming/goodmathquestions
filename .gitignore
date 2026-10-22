@@ -26,6 +26,12 @@ build/
 npm-debug.log*
 .run/
 
+# Test artifacts
+test-results/
+playwright-report/
+blob-report/
+coverage/
+
 # Turbo
 .turbo
 

@@ -38,7 +38,8 @@ export interface SeedQuestion {
   tags?: string[];
 }
 
-interface Blueprint {
+/** Raw authored question before seed defaults (hints, inferred scene, fallback fun fact) are applied. */
+export interface Blueprint {
   titleEn: string;
   titleZh: string;
   contentEn: string;
@@ -97,7 +98,7 @@ function inferAnimationConfig(q: Blueprint): Record<string, unknown> {
   return { type: "number_journey", range: [0, 20], highlights: [] };
 }
 
-const DEFAULT_HINTS = [
+export const DEFAULT_HINTS: ReadonlyArray<{ readonly en: string; readonly zh: string }> = [
   {
     en: "Break the problem into smaller steps.",
     zh: "把问题拆成更小的步骤。",
@@ -9466,30 +9467,39 @@ const STORY_QUESTIONS_BATCH_18: Blueprint[] = [
   },
 ];
 
+const ALL_BLUEPRINTS: readonly Blueprint[] = [
+  ...BLUEPRINTS,
+  ...HIGH_SCHOOL_EXTENSIONS,
+  ...STORY_QUESTIONS_BATCH_1,
+  ...STORY_QUESTIONS_BATCH_2,
+  ...STORY_QUESTIONS_BATCH_3,
+  ...STORY_QUESTIONS_BATCH_4,
+  ...STORY_QUESTIONS_BATCH_5,
+  ...STORY_QUESTIONS_BATCH_6,
+  ...STORY_QUESTIONS_BATCH_7,
+  ...STORY_QUESTIONS_BATCH_8,
+  ...STORY_QUESTIONS_BATCH_9,
+  ...STORY_QUESTIONS_BATCH_10,
+  ...STORY_QUESTIONS_BATCH_11,
+  ...STORY_QUESTIONS_BATCH_12,
+  ...STORY_QUESTIONS_BATCH_13,
+  ...STORY_QUESTIONS_BATCH_14,
+  ...STORY_QUESTIONS_BATCH_15,
+  ...STORY_QUESTIONS_BATCH_16,
+  ...STORY_QUESTIONS_BATCH_17,
+  ...STORY_QUESTIONS_BATCH_18,
+];
+
+/**
+ * Read-only access to the raw blueprints, index-aligned with `buildUSK12QuestionBank()`.
+ * Audit tooling uses it to tell explicit scene configs from inferred ones; seed.ts does not.
+ */
+export function getUSK12Blueprints(): ReadonlyArray<Readonly<Blueprint>> {
+  return ALL_BLUEPRINTS;
+}
+
 export function buildUSK12QuestionBank(startSortOrder: number): SeedQuestion[] {
-  const allBlueprints = [
-    ...BLUEPRINTS,
-    ...HIGH_SCHOOL_EXTENSIONS,
-    ...STORY_QUESTIONS_BATCH_1,
-    ...STORY_QUESTIONS_BATCH_2,
-    ...STORY_QUESTIONS_BATCH_3,
-    ...STORY_QUESTIONS_BATCH_4,
-    ...STORY_QUESTIONS_BATCH_5,
-    ...STORY_QUESTIONS_BATCH_6,
-    ...STORY_QUESTIONS_BATCH_7,
-    ...STORY_QUESTIONS_BATCH_8,
-    ...STORY_QUESTIONS_BATCH_9,
-    ...STORY_QUESTIONS_BATCH_10,
-    ...STORY_QUESTIONS_BATCH_11,
-    ...STORY_QUESTIONS_BATCH_12,
-    ...STORY_QUESTIONS_BATCH_13,
-    ...STORY_QUESTIONS_BATCH_14,
-    ...STORY_QUESTIONS_BATCH_15,
-    ...STORY_QUESTIONS_BATCH_16,
-    ...STORY_QUESTIONS_BATCH_17,
-    ...STORY_QUESTIONS_BATCH_18,
-  ];
-  return allBlueprints.map((q, index) => {
+  return ALL_BLUEPRINTS.map((q, index) => {
     const { standards, ...question } = q;
     return {
       ...question,
