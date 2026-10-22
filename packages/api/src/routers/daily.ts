@@ -1,6 +1,22 @@
+import { z } from "zod";
 import { Prisma, type PrismaClient } from "@gmq/db";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { publicQuestionSelect, toPublicQuestion, type PublicQuestion } from "../lib/question-public";
+import { cacheGetJson, cacheSetJson } from "../lib/cache";
+import { identityFromContext } from "../lib/identity";
+import { listSolvedHeroes } from "./user";
+
+/** Redis key holding the chosen question id for one UTC day. */
+export const dailyKey = (dateString: string) => `daily:${dateString}`;
+/** Redis key holding the Guess row count for a question. */
+export const dailyGuessCountKey = (questionId: string) => `daily:guesses:${questionId}`;
+export const DAILY_GUESS_COUNT_TTL_SEC = 60;
+
+/** Seconds from `now` until the next 00:00 UTC (at least 1, so the key always expires). */
+export function secondsUntilUtcMidnight(now: Date): number {
+  const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+  return Math.max(1, Math.ceil((next - now.getTime()) / 1000));
+}
 
 /** Candidates for the daily puzzle: published hero (non-DRILL) questions. */
 const dailyCandidateWhere = {
@@ -86,7 +102,99 @@ export async function getOrCreateDailyPuzzle(db: Db, now: Date): Promise<PublicQ
   }
 }
 
+type TodayDb = Db & Pick<PrismaClient, "guess">;
+
+export type DailyPuzzleResult = PublicQuestion & {
+  /** Everyone who made an Act 1 guess on this question (cached DAILY_GUESS_COUNT_TTL_SEC). */
+  guessCount: number;
+};
+
+/** Guess rows for one question, cached briefly: it is shown on every landing view. */
+export async function cachedGuessCount(db: Pick<PrismaClient, "guess">, questionId: string): Promise<number> {
+  const key = dailyGuessCountKey(questionId);
+  const cached = await cacheGetJson(key);
+  if (typeof cached === "number" && Number.isFinite(cached)) return cached;
+  const count = await db.guess.count({ where: { questionId } });
+  await cacheSetJson(key, count, DAILY_GUESS_COUNT_TTL_SEC);
+  return count;
+}
+
+/**
+ * Today's puzzle via Redis: the day's question id is cached until midnight UTC,
+ * so a warm call costs one GET plus a primary-key read. A cached id whose question
+ * was unpublished or deleted falls through to getOrCreateDailyPuzzle (the DB stays
+ * the source of truth; Redis down = the uncached path).
+ */
+export async function getTodayPuzzle(db: TodayDb, now: Date): Promise<DailyPuzzleResult | null> {
+  const { dateString } = utcDay(now);
+  const key = dailyKey(dateString);
+
+  let question: PublicQuestion | null = null;
+  const cachedId = await cacheGetJson(key);
+  if (typeof cachedId === "string" && cachedId !== "") {
+    const row = await db.question.findUnique({
+      where: { id: cachedId, ...dailyCandidateWhere },
+      select: publicQuestionSelect,
+    });
+    question = row ? toPublicQuestion(row) : null;
+  }
+  if (!question) {
+    question = await getOrCreateDailyPuzzle(db, now);
+    if (!question) return null;
+    await cacheSetJson(key, question.id, secondsUntilUtcMidnight(now));
+  }
+
+  return { ...question, guessCount: await cachedGuessCount(db, question.id) };
+}
+
+export interface SurprisePick {
+  id: string;
+  slug: string | null;
+  /** True when the caller had solved every hero question, so any one was picked. */
+  allSolved: boolean;
+}
+
+type SurpriseDb = Pick<PrismaClient, "question" | "submission">;
+
+/**
+ * A random published hero question, preferring ones `userId` has not solved
+ * (guests: any). `excludeId` (e.g. the question on screen) is skipped when
+ * something else is available. `random` is injectable for tests.
+ */
+export async function pickSurprise(
+  db: SurpriseDb,
+  userId: string | null,
+  excludeId: string | null,
+  random: () => number = Math.random
+): Promise<SurprisePick | null> {
+  const solved = userId ? (await listSolvedHeroes(db, userId)).ids : [];
+  const pickFrom = async (notIn: string[]) => {
+    const where: Prisma.QuestionWhereInput = notIn.length > 0 ? { ...dailyCandidateWhere, id: { notIn } } : dailyCandidateWhere;
+    const count = await db.question.count({ where });
+    if (count === 0) return null;
+    const skip = Math.min(count - 1, Math.floor(random() * count));
+    return db.question.findFirst({ where, orderBy: dailyCandidateOrder, skip, select: { id: true, slug: true } });
+  };
+
+  const exclude = excludeId ? [excludeId] : [];
+  const fresh = (await pickFrom([...solved, ...exclude])) ?? (exclude.length > 0 ? await pickFrom(solved) : null);
+  if (fresh) return { ...fresh, allSolved: false };
+  const any = (await pickFrom(exclude)) ?? (exclude.length > 0 ? await pickFrom([]) : null);
+  return any ? { ...any, allSolved: solved.length > 0 } : null;
+}
+
 export const dailyRouter = createTRPCRouter({
-  /** Today's (UTC) puzzle, or null until hero questions exist. */
-  today: publicProcedure.query(({ ctx }) => getOrCreateDailyPuzzle(ctx.db, new Date())),
+  /** Today's (UTC) puzzle with its guess count, or null until hero questions exist. */
+  today: publicProcedure.query(({ ctx }) => getTodayPuzzle(ctx.db, new Date())),
+
+  /**
+   * "Surprise me": a random published hero question the caller has not solved.
+   * A mutation because every call should roll again (no query caching).
+   */
+  surprise: publicProcedure
+    .input(z.object({ excludeId: z.string().min(1).max(64).optional() }).optional())
+    .mutation(({ ctx, input }) => {
+      const who = identityFromContext(ctx);
+      return pickSurprise(ctx.db, who?.kind === "user" ? who.userId : null, input?.excludeId ?? null);
+    }),
 });

@@ -5,26 +5,34 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { MathText } from "@/components/ui/MathText";
 import { pick, type Bi, type Locale } from "./types";
+import type { Track } from "./useTrack";
 
 interface HintLadderProps {
   hints: Bi[];
   revealed: number;
   onReveal: () => void;
   locale: Locale;
+  /** Analytics for the question; fires `hint_reveal` with the 1-based hint index. */
+  track?: Track;
 }
 
 /** Hints shown one at a time; the count is owned by the flow (persisted, sent as hintsUsed). */
-export function HintLadder({ hints, revealed, onReveal, locale }: HintLadderProps) {
+export function HintLadder({ hints, revealed, onReveal, locale, track }: HintLadderProps) {
   const t = useTranslations("questions");
   const reduced = useReducedMotion();
   const lastRef = useRef<HTMLLIElement>(null);
   const prev = useRef(revealed);
 
-  // Move focus to a newly revealed hint so keyboard and screen reader users land on it.
+  // Move focus to a newly revealed hint so keyboard and screen reader users land on it,
+  // and report it. Only increases count: restoring a persisted count on load starts at
+  // that count, so a refresh doesn't re-send old reveals.
   useEffect(() => {
-    if (revealed > prev.current) lastRef.current?.focus();
+    if (revealed > prev.current) {
+      lastRef.current?.focus();
+      if (revealed <= hints.length) track?.("hint_reveal", { index: revealed });
+    }
     prev.current = revealed;
-  }, [revealed]);
+  }, [revealed, hints.length, track]);
 
   if (hints.length === 0) return null;
   const shown = Math.min(revealed, hints.length);

@@ -6,6 +6,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { MathText } from "@/components/ui/MathText";
+import { localePath, type Locale } from "@/components/worlds/types";
 
 const DIFFICULTY_COLORS: Record<string, string> = {
   EASY: "bg-fun-green text-white",
@@ -30,9 +31,22 @@ const CATEGORY_ICONS: Record<string, string> = {
 
 const DIFFICULTY_ORDER = ["EASY", "MEDIUM", "HARD", "CHALLENGE"] as const;
 
-export default function QuestionsPage() {
+const AGE_RANGES: Record<string, string> = {
+  AGE_8_10: "8-10",
+  AGE_10_12: "10-12",
+  AGE_12_14: "12-14",
+  AGE_14_16: "14-16",
+  AGE_16_18: "16-18",
+};
+
+/**
+ * Practice: the legacy DRILL bank with its filters. Hero puzzles live on home
+ * and in the worlds; this page is deliberately secondary.
+ */
+export default function PracticePage() {
   const t = useTranslations("questions");
-  const locale = useLocale();
+  const tp = useTranslations("practice");
+  const locale: Locale = useLocale() === "zh" ? "zh" : "en";
   const isZh = locale === "zh";
 
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
@@ -40,6 +54,7 @@ export default function QuestionsPage() {
   const [selectedAge, setSelectedAge] = useState<string | null>(null);
 
   const { data, isLoading, error } = trpc.question.list.useQuery({
+    kind: "DRILL",
     limit: 50,
     difficulty: selectedDifficulty || undefined,
     category: selectedCategory || undefined,
@@ -50,6 +65,17 @@ export default function QuestionsPage() {
 
   return (
     <div>
+      {/* Nudge towards the hero puzzles */}
+      <Link
+        href={localePath(locale, "/home")}
+        className="mb-8 flex flex-wrap items-center justify-center gap-2 rounded-card bg-gradient-to-r from-fun-yellow/30 to-fun-orange/20 px-5 py-3 text-center font-heading text-gray-800 shadow-sm transition-shadow hover:shadow-md"
+        data-testid="practice-banner"
+      >
+        <span aria-hidden>📅</span>
+        <span>{tp("bannerText")}</span>
+        <span className="font-bold text-primary-700 underline underline-offset-4">{tp("bannerLink")} →</span>
+      </Link>
+
       {/* Page Header */}
       <motion.div
         className="text-center mb-10"
@@ -57,11 +83,9 @@ export default function QuestionsPage() {
         animate={{ opacity: 1, y: 0 }}
       >
         <h1 className="text-4xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-fun-purple mb-2">
-          {t("title")} 🧮
+          {tp("title")} ✏️
         </h1>
-        <p className="text-gray-500 font-body">
-          {isZh ? "选择一道有趣的题目开始吧！" : "Pick a fun question and start solving!"}
-        </p>
+        <p className="text-gray-500 font-body">{tp("intro")}</p>
       </motion.div>
 
       {/* Filters */}
@@ -150,7 +174,7 @@ export default function QuestionsPage() {
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
                 >
-                  {isZh ? `${age.label}岁` : `Age ${age.label}`}
+                  {tp("age", { range: age.label })}
                 </button>
               ))}
             </div>
@@ -167,7 +191,7 @@ export default function QuestionsPage() {
                 }}
                 className="text-sm text-primary-500 hover:text-primary-700 font-heading underline"
               >
-                {isZh ? "清除筛选" : "Clear filters"}
+                {tp("clearFilters")}
               </button>
             </div>
           )}
@@ -184,7 +208,7 @@ export default function QuestionsPage() {
           >
             🧮
           </motion.div>
-          <p className="text-gray-500 font-heading">{isZh ? "加载中..." : "Loading questions..."}</p>
+          <p className="text-gray-500 font-heading">{tp("loading")}</p>
         </div>
       )}
 
@@ -193,7 +217,7 @@ export default function QuestionsPage() {
         <div className="text-center py-20">
           <div className="text-5xl mb-4">😅</div>
           <p className="text-gray-500 font-heading">
-            {isZh ? "加载失败，请重试" : "Failed to load. Please try again."}
+            {tp("loadFailed")}
           </p>
         </div>
       )}
@@ -207,7 +231,7 @@ export default function QuestionsPage() {
         >
           <div className="text-5xl mb-4">🔍</div>
           <p className="text-gray-500 font-heading text-lg">
-            {isZh ? "没有找到符合条件的题目" : "No questions match your filters"}
+            {tp("noMatch")}
           </p>
           <button
             onClick={() => {
@@ -217,7 +241,7 @@ export default function QuestionsPage() {
             }}
             className="mt-4 btn-secondary text-sm"
           >
-            {isZh ? "查看所有题目" : "Show all questions"}
+            {tp("showAll")}
           </button>
         </motion.div>
       )}
@@ -234,7 +258,7 @@ export default function QuestionsPage() {
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Link href={`/questions/${question.id}`}>
+              <Link href={localePath(locale, `/questions/${question.id}`)}>
                 <div className="card-fun cursor-pointer h-full flex flex-col group">
                   {/* Category & Difficulty */}
                   <div className="flex justify-between items-center mb-3">
@@ -265,15 +289,7 @@ export default function QuestionsPage() {
                   {/* Age Group Tag */}
                   <div className="mb-3">
                     <span className="text-xs bg-primary-50 text-primary-600 px-2 py-1 rounded-full font-heading">
-                      {question.ageGroup === "AGE_8_10"
-                        ? isZh ? "8-10岁" : "Ages 8-10"
-                        : question.ageGroup === "AGE_10_12"
-                        ? isZh ? "10-12岁" : "Ages 10-12"
-                        : question.ageGroup === "AGE_12_14"
-                        ? isZh ? "12-14岁" : "Ages 12-14"
-                        : question.ageGroup === "AGE_14_16"
-                        ? isZh ? "14-16岁" : "Ages 14-16"
-                        : isZh ? "16-18岁" : "Ages 16-18"}
+                      {tp("ages", { range: AGE_RANGES[question.ageGroup] ?? "16-18" })}
                     </span>
                   </div>
 

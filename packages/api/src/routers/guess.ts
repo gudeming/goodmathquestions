@@ -6,6 +6,7 @@ import { createTRPCRouter, publicProcedure, type TRPCContext } from "../trpc";
 import { identityFromContext, resolveIdentity, type Identity } from "../lib/identity";
 import { RATE_LIMITS, consumeRateLimit } from "../lib/rate-limit";
 import { cacheDel, cacheGetJson, cacheSetJson } from "../lib/cache";
+import { touchStreak } from "../lib/streak";
 
 export const HISTOGRAM_BUCKETS = 10;
 export const HISTOGRAM_TTL_SEC = 60;
@@ -190,6 +191,8 @@ export const guessRouter = createTRPCRouter({
 
       await cacheDel(histogramKey(input.questionId));
       await cacheSetJson(ownGuessKey(input.questionId, who.key), value, OWN_GUESS_TTL_SEC);
+      // A guess is "thinking": it keeps the daily streak alive (touchStreak never throws).
+      if (who.kind === "user") await touchStreak(ctx.db, who.userId);
       return { ok: true as const, value };
     }),
 

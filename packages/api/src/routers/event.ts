@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { identityFromContext } from "../lib/identity";
 import { RATE_LIMITS, consumeRateLimit } from "../lib/rate-limit";
+import { touchStreak } from "../lib/streak";
 
 export const EVENT_NAMES = [
   "question_view",
@@ -11,8 +12,12 @@ export const EVENT_NAMES = [
   "reveal_seen",
   "extension_open",
   "comment_post",
+  "hint_reveal",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
+
+/** Events that count as "thinking" for the daily streak (guesses count via guess.submit). */
+const STREAK_EVENTS: ReadonlySet<EventName> = new Set<EventName>(["scene_interact"]);
 
 export const MAX_EVENT_PROPS_BYTES = 2048;
 
@@ -58,6 +63,7 @@ export const eventRouter = createTRPCRouter({
       } catch (err) {
         console.error("[event] failed to record", input.name, err instanceof Error ? err.message : err);
       }
+      if (who.kind === "user" && STREAK_EVENTS.has(input.name)) await touchStreak(ctx.db, who.userId);
       return { ok: true as const };
     }),
 });

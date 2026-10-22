@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
@@ -12,6 +12,7 @@ export default function LoginClient() {
   const t = useTranslations("auth");
   const tc = useTranslations("common");
   const router = useRouter();
+  const locale = useLocale();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -35,7 +36,8 @@ export default function LoginClient() {
         return;
       }
 
-      router.push("/questions");
+      // Signed-in kids land on their home: today's puzzle and the worlds.
+      router.push(locale === "zh" ? "/zh/home" : "/home");
       router.refresh();
     } catch {
       setError("Network error. Please try again.");

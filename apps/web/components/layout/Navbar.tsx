@@ -4,9 +4,17 @@ import { useTranslations, useLocale } from "next-intl";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { trpc } from "@/lib/trpc";
+
+interface NavLink {
+  href: string;
+  label: string;
+  icon: string;
+  /** Standalone tools served from /public: plain <a>, no locale prefix. */
+  external?: boolean;
+}
 
 export function Navbar() {
   const t = useTranslations("common");
@@ -54,6 +62,55 @@ export function Navbar() {
 
   const isLoggedIn = !!session?.user;
 
+  // Path without the locale prefix, for "is this link the current page".
+  const barePath = (() => {
+    const segments = (pathname || "/").split("/").filter(Boolean);
+    if (segments[0] === "en" || segments[0] === "zh") segments.shift();
+    return `/${segments.join("/")}`;
+  })();
+  const isActive = (href: string) => (href === "/" ? barePath === "/" : barePath === href || barePath.startsWith(`${href}/`));
+
+  // Primary: where to play today. Signed-in kids get their home; guests get the landing's daily puzzle.
+  const primaryLinks: NavLink[] = [
+    isLoggedIn ? { href: "/home", label: t("home"), icon: "🏠" } : { href: "/", label: t("todayPuzzle"), icon: "📅" },
+    { href: "/worlds", label: t("worlds"), icon: "🗺️" },
+    { href: "/questions", label: t("practice"), icon: "✏️" },
+  ];
+  // Secondary: everything else stays reachable under "More".
+  const secondaryLinks: NavLink[] = [
+    { href: "/leaderboard", label: t("leaderboard"), icon: "🏆" },
+    { href: "/mastery", label: t("mastery"), icon: "🎯" },
+    { href: "/ohmygame", label: t("ohmygame"), icon: "⚔️" },
+    { href: "/bytelab", label: t("bytelab"), icon: "💾", external: true },
+    { href: "/chompulator", label: t("chompulator"), icon: "🍔", external: true },
+  ];
+  const hrefOf = (link: NavLink) => (link.external ? link.href : toCurrentLocalePath(link.href));
+
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
+  const moreActive = secondaryLinks.some((l) => !l.external && isActive(l.href));
+
+  // Close "More" on outside click, Escape, and navigation.
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onPointer = (e: PointerEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMoreOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [moreOpen]);
+  useEffect(() => {
+    setMoreOpen(false);
+    setMobileOpen(false);
+  }, [pathname]);
+
   return (
     <motion.nav
       className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-primary-100 shadow-sm"
@@ -63,7 +120,7 @@ export function Navbar() {
     >
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo */}
-        <Link href={toCurrentLocalePath("/")} className="flex items-center gap-2 group">
+        <Link href={toCurrentLocalePath(isLoggedIn ? "/home" : "/")} className="flex items-center gap-2 group">
           <motion.span
             className="text-3xl"
             whileHover={{ rotate: 20 }}
@@ -78,42 +135,60 @@ export function Navbar() {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-5">
-          <Link
-            href={toCurrentLocalePath("/questions")}
-            className="font-heading font-medium text-gray-600 hover:text-primary-600 transition-colors"
-          >
-            {t("questions")}
-          </Link>
-          <Link
-            href={toCurrentLocalePath("/leaderboard")}
-            className="font-heading font-medium text-gray-600 hover:text-primary-600 transition-colors"
-          >
-            {t("leaderboard")}
-          </Link>
-          <Link
-            href={toCurrentLocalePath("/mastery")}
-            className="font-heading font-medium text-gray-600 hover:text-primary-600 transition-colors"
-          >
-            {t("mastery")}
-          </Link>
-          <Link
-            href={toCurrentLocalePath("/ohmygame")}
-            className="font-heading font-medium text-gray-600 hover:text-fun-pink transition-colors"
-          >
-            ⚔️ {t("ohmygame")}
-          </Link>
-          <a
-            href="/bytelab"
-            className="font-heading font-medium text-gray-600 hover:text-primary-600 transition-colors"
-          >
-            💾 {t("bytelab")}
-          </a>
-          <a
-            href="/chompulator"
-            className="font-heading font-medium text-gray-600 hover:text-primary-600 transition-colors"
-          >
-            🍔 {t("chompulator")}
-          </a>
+          <ul className="flex items-center gap-5" aria-label={t("mainNav")}>
+            {primaryLinks.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={hrefOf(link)}
+                  aria-current={isActive(link.href) ? "page" : undefined}
+                  className={`font-heading font-semibold transition-colors ${
+                    isActive(link.href) ? "text-primary-700" : "text-gray-700 hover:text-primary-600"
+                  }`}
+                >
+                  <span aria-hidden>{link.icon}</span> {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          <div className="relative" ref={moreRef}>
+            <button
+              type="button"
+              onClick={() => setMoreOpen((open) => !open)}
+              aria-expanded={moreOpen}
+              aria-controls="nav-more-menu"
+              className={`font-heading font-medium text-sm transition-colors ${
+                moreActive ? "text-primary-700" : "text-gray-500 hover:text-primary-600"
+              }`}
+            >
+              {t("more")} ▾
+            </button>
+            {moreOpen && (
+              <ul
+                id="nav-more-menu"
+                className="absolute right-0 mt-3 w-52 rounded-card border border-primary-100 bg-white py-2 shadow-xl"
+              >
+                {secondaryLinks.map((link) => (
+                  <li key={link.href}>
+                    {link.external ? (
+                      <a href={link.href} className="block px-4 py-2 font-heading text-sm text-gray-600 hover:bg-primary-50 hover:text-primary-700">
+                        <span aria-hidden>{link.icon}</span> {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        href={hrefOf(link)}
+                        aria-current={isActive(link.href) ? "page" : undefined}
+                        onClick={() => setMoreOpen(false)}
+                        className="block px-4 py-2 font-heading text-sm text-gray-600 hover:bg-primary-50 hover:text-primary-700"
+                      >
+                        <span aria-hidden>{link.icon}</span> {link.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           {/* Language Toggle */}
           <button
@@ -159,8 +234,11 @@ export function Navbar() {
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden text-2xl"
+          type="button"
+          className="md:hidden text-2xl min-h-[44px] min-w-[44px]"
           onClick={() => setMobileOpen(!mobileOpen)}
+          aria-expanded={mobileOpen}
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
         >
           {mobileOpen ? "✕" : "☰"}
         </button>
@@ -173,40 +251,38 @@ export function Navbar() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
         >
-          <Link
-            href={toCurrentLocalePath("/questions")}
-            className="block font-heading text-gray-600 py-2"
-            onClick={() => setMobileOpen(false)}
-          >
-            {t("questions")}
-          </Link>
-          <Link
-            href={toCurrentLocalePath("/leaderboard")}
-            className="block font-heading text-gray-600 py-2"
-            onClick={() => setMobileOpen(false)}
-          >
-            {t("leaderboard")}
-          </Link>
-          <Link
-            href={toCurrentLocalePath("/mastery")}
-            className="block font-heading text-gray-600 py-2"
-            onClick={() => setMobileOpen(false)}
-          >
-            {t("mastery")}
-          </Link>
-          <Link
-            href={toCurrentLocalePath("/ohmygame")}
-            className="block font-heading text-gray-600 py-2"
-            onClick={() => setMobileOpen(false)}
-          >
-            ⚔️ {t("ohmygame")}
-          </Link>
-          <a href="/bytelab" className="block font-heading text-gray-600 py-2">
-            💾 {t("bytelab")}
-          </a>
-          <a href="/chompulator" className="block font-heading text-gray-600 py-2">
-            🍔 {t("chompulator")}
-          </a>
+          <ul className="space-y-1" aria-label={t("mainNav")}>
+            {primaryLinks.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={hrefOf(link)}
+                  aria-current={isActive(link.href) ? "page" : undefined}
+                  className={`block py-2 font-heading text-lg font-semibold ${isActive(link.href) ? "text-primary-700" : "text-gray-700"}`}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <span aria-hidden>{link.icon}</span> {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="border-t border-gray-100 pt-3">
+            <p className="mb-1 font-heading text-xs font-semibold uppercase tracking-wide text-gray-400">{t("more")}</p>
+            <ul className="grid grid-cols-2 gap-x-4">
+              {secondaryLinks.map((link) => (
+                <li key={link.href}>
+                  {link.external ? (
+                    <a href={link.href} className="block py-2 font-heading text-sm text-gray-600">
+                      <span aria-hidden>{link.icon}</span> {link.label}
+                    </a>
+                  ) : (
+                    <Link href={hrefOf(link)} className="block py-2 font-heading text-sm text-gray-600" onClick={() => setMobileOpen(false)}>
+                      <span aria-hidden>{link.icon}</span> {link.label}
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
           <button
             onClick={switchLocale}
             className="block w-full text-left font-heading text-gray-600 py-2"

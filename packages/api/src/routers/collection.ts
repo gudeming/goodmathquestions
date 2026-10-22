@@ -4,7 +4,7 @@ import type { Prisma } from "@gmq/db";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
 /** Hero questions only: legacy DRILL questions never count towards a world. */
-const heroQuestionWhere = {
+export const heroQuestionWhere = {
   isPublished: true,
   kind: { not: "DRILL" },
 } satisfies Prisma.QuestionWhereInput;
@@ -23,6 +23,25 @@ const collectionSelect = {
 } satisfies Prisma.CollectionSelect;
 
 type CollectionRow = Prisma.CollectionGetPayload<{ select: typeof collectionSelect }>;
+
+/**
+ * What a hero question card shows on home / world pages: the hook, never the
+ * prompt or anything that gives the answer away.
+ */
+export const heroCardSelect = {
+  id: true,
+  slug: true,
+  kind: true,
+  titleEn: true,
+  titleZh: true,
+  hookEn: true,
+  hookZh: true,
+  ageGroup: true,
+  collectionId: true,
+  sortOrder: true,
+} satisfies Prisma.QuestionSelect;
+
+export type HeroCard = Prisma.QuestionGetPayload<{ select: typeof heroCardSelect }>;
 
 function toPublicCollection({ _count, ...rest }: CollectionRow) {
   return { ...rest, questionCount: _count.questions };

@@ -1,15 +1,18 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 import { FloatingMathSymbols } from "@/components/animations/FloatingMathSymbols";
 import { FeatureCard } from "@/components/landing/FeatureCard";
 import { StatsCounter } from "@/components/landing/StatsCounter";
+import { TodayPuzzleCard } from "@/components/home/TodayPuzzleCard";
+import { localePath, type Locale, type TodayPuzzle } from "@/components/worlds/types";
 
-export default function LandingClient() {
+export default function LandingClient({ today }: { today: TodayPuzzle | null }) {
   const t = useTranslations();
+  const locale: Locale = useLocale() === "zh" ? "zh" : "en";
 
   return (
     <div className="min-h-screen overflow-hidden relative">
@@ -22,10 +25,11 @@ export default function LandingClient() {
       {/* Hero Section */}
       <section className="relative pt-20 pb-32 px-4">
         <div className="max-w-6xl mx-auto text-center">
+          {/* No opacity fade: the server-rendered hero must be visible before hydration (LCP). */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            initial={{ y: 16 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
             {/* Animated Logo / Mascot */}
             <motion.div
@@ -50,7 +54,7 @@ export default function LandingClient() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Link href="/signup" className="btn-primary text-xl px-10 py-4 inline-block">
+                <Link href={localePath(locale, "/signup")} className="btn-primary text-xl px-10 py-4 inline-block">
                   {t("landing.ctaStart")} 🚀
                 </Link>
               </motion.div>
@@ -58,40 +62,19 @@ export default function LandingClient() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Link href="/questions" className="btn-secondary text-xl px-10 py-4 inline-block">
-                  {t("landing.ctaExplore")} 🔍
+                <Link href={localePath(locale, "/worlds")} className="btn-secondary text-xl px-10 py-4 inline-block">
+                  {t("landing.ctaExplore")} 🗺️
                 </Link>
               </motion.div>
             </div>
           </motion.div>
+        </div>
+      </section>
 
-          {/* Animated math equation showcase */}
-          <motion.div
-            className="mt-16 flex justify-center gap-8 flex-wrap"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 1 }}
-          >
-            {["2 + 2 = ?", "π × r²", "x² + y² = z²", "∑ n = n(n+1)/2"].map(
-              (eq, i) => (
-                <motion.div
-                  key={eq}
-                  className="bg-white/80 backdrop-blur-sm rounded-bubble px-6 py-3 shadow-lg
-                             font-mono text-xl text-primary-700 border-2 border-primary-100"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 + i * 0.2 }}
-                  whileHover={{
-                    scale: 1.1,
-                    borderColor: "#22d3ee",
-                    boxShadow: "0 10px 30px rgba(34, 211, 238, 0.3)",
-                  }}
-                >
-                  {eq}
-                </motion.div>
-              )
-            )}
-          </motion.div>
+      {/* Today's Puzzle: the reason to come back every day */}
+      <section className="relative -mt-16 px-4 pb-20">
+        <div className="mx-auto max-w-4xl">
+          <TodayPuzzleCard puzzle={today} locale={locale} />
         </div>
       </section>
 
@@ -104,12 +87,12 @@ export default function LandingClient() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            ✨ Why Kids Love Us ✨
+            {t("landing.whyTitle")}
           </motion.h2>
 
           <div className="grid md:grid-cols-3 gap-8">
             <FeatureCard
-              icon="🎬"
+              icon="🧩"
               title={t("landing.featureAnimate")}
               description={t("landing.featureAnimateDesc")}
               color="from-fun-cyan to-primary-500"
@@ -177,7 +160,7 @@ export default function LandingClient() {
             </p>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
-                href="/signup"
+                href={localePath(locale, "/signup")}
                 className="bg-white text-primary-600 font-heading font-bold
                            text-xl px-10 py-4 rounded-bubble shadow-lg
                            hover:shadow-xl transition-all duration-200 inline-block"

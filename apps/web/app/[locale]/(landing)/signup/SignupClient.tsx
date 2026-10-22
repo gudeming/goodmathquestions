@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 
@@ -54,8 +55,20 @@ export default function SignupClient() {
         return;
       }
 
-      // Auto-login after signup
-      router.push("/login");
+      // Auto-login after signup, then straight to home (today's puzzle + worlds).
+      // If the sign-in step fails, the account exists: send them to log in by hand.
+      const prefix = locale === "zh" ? "/zh" : "";
+      const login = await signIn("credentials", {
+        username: form.username,
+        password: form.password,
+        redirect: false,
+      });
+      if (login?.error) {
+        router.push(`${prefix}/login`);
+        return;
+      }
+      router.push(`${prefix}/home`);
+      router.refresh();
     } catch {
       setError("Network error. Please try again.");
     } finally {

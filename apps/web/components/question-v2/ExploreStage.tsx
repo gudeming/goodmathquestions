@@ -172,7 +172,7 @@ export function ExploreStage({ question, locale, flow, isLoggedIn, sessionLoadin
           locale={locale}
         />
 
-        <HintLadder hints={hints} revealed={state.hintsRevealed} onReveal={revealHint} locale={locale} />
+        <HintLadder hints={hints} revealed={state.hintsRevealed} onReveal={revealHint} locale={locale} track={track} />
       </div>
     </div>
   );

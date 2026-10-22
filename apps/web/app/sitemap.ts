@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { locales, type Locale } from "@gmq/i18n";
 import { getLocalizedUrl, getSiteUrl } from "@/lib/seo";
 import { listHeroSlugs } from "@/lib/question-server";
+import { listLiveWorldSlugs } from "@/lib/discovery-server";
 
 const PUBLIC_PATHS = ["/"] as const;
 
@@ -39,6 +40,27 @@ async function heroEntries(): Promise<MetadataRoute.Sitemap> {
   });
 }
 
+/** /worlds plus every world that has published hero questions. DB down drops only these. */
+async function worldEntries(now: Date): Promise<MetadataRoute.Sitemap> {
+  let slugs: string[];
+  try {
+    slugs = await listLiveWorldSlugs();
+  } catch (err) {
+    console.error("[sitemap] could not list worlds:", err instanceof Error ? err.message : err);
+    return [];
+  }
+  const paths = ["/worlds", ...slugs.map((slug) => `/worlds/${slug}`)];
+  return paths.flatMap((path) =>
+    locales.map((locale) => ({
+      url: getLocalizedUrl(locale, path),
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: path === "/worlds" ? 0.9 : 0.8,
+      alternates: { languages: languageAlternates(path) },
+    }))
+  );
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
@@ -59,5 +81,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }))
   );
 
-  return [...localizedEntries, ...(await heroEntries()), ...toolEntries];
+  const [worlds, heroes] = await Promise.all([worldEntries(now), heroEntries()]);
+  return [...localizedEntries, ...worlds, ...heroes, ...toolEntries];
 }

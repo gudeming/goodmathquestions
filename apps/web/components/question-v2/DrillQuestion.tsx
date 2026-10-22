@@ -222,7 +222,7 @@ export function DrillQuestion({ question, locale, track }: DrillQuestionProps) {
             </div>
           )}
 
-          <HintLadder hints={hints} revealed={hintsRevealed} onReveal={() => setHintsRevealed((n) => Math.min(hints.length, n + 1))} locale={locale} />
+          <HintLadder hints={hints} revealed={hintsRevealed} onReveal={() => setHintsRevealed((n) => Math.min(hints.length, n + 1))} locale={locale} track={track} />
 
           {funFact && (
             <div className="rounded-card border-2 border-fun-yellow/30 bg-gradient-to-r from-fun-yellow/20 to-fun-orange/20 p-6">
