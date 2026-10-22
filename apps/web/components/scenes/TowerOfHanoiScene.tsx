@@ -57,6 +57,8 @@ export default function TowerOfHanoiScene({ config, phase, locale, reducedMotion
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
   const [shake, setShake] = useState<{ peg: number; key: number } | null>(null);
   const [message, setMessage] = useState("");
+  /** The child's fewest moves per tower size (the formula waits for the reveal). */
+  const [bestSoFar, setBestSoFar] = useState<Record<number, number>>({});
   const dragging = useRef<{ from: number } | null>(null);
   const completedRef = useRef(false);
   const proposedRef = useRef(false);
@@ -96,10 +98,12 @@ export default function TowerOfHanoiScene({ config, phase, locale, reducedMotion
     events.state({ moves: m, discs: n });
     if (isHanoiSolved(next, n)) {
       const best = minMoves(n);
+      const prevBest = bestSoFar[n];
+      setBestSoFar({ ...bestSoFar, [n]: prevBest === undefined ? m : Math.min(prevBest, m) });
       setMessage(
-        m === best
-          ? tr(locale, `Perfect! ${m} moves, the minimum for ${n} discs: 2^${n} − 1 = ${best}.`, `完美！${m} 步，正是 ${n} 个盘的最少步数：2^${n} − 1 = ${best}。`)
-          : tr(locale, `Solved in ${m} moves. The minimum for ${n} discs is 2^${n} − 1 = ${best}.`, `用了 ${m} 步完成。${n} 个盘最少要 2^${n} − 1 = ${best} 步。`),
+        prevBest === undefined || m < prevBest
+          ? tr(locale, `Solved in ${m} moves: your best with ${n} discs so far.`, `${m} 步完成：这是你搬 ${n} 个盘的最好成绩。`)
+          : tr(locale, `Solved in ${m} moves. Your best with ${n} discs is still ${prevBest}.`, `${m} 步完成。你搬 ${n} 个盘的最好成绩还是 ${prevBest} 步。`),
       );
       if (!completedRef.current) {
         completedRef.current = true;
@@ -172,8 +176,8 @@ export default function TowerOfHanoiScene({ config, phase, locale, reducedMotion
     if (phase === "reveal")
       return tr(
         locale,
-        `Move ${revealN - 1} discs out of the way, move the biggest, move the ${revealN - 1} back on top. One more disc doubles the work, plus 1.`,
-        `先把上面 ${revealN - 1} 个搬开，再搬最大的，再把 ${revealN - 1} 个搬回来。每多一个盘，步数翻倍再加 1。`,
+        `Move ${revealN - 1} discs out of the way, move the biggest, move the ${revealN - 1} back on top. One more disc doubles the work, plus 1: 2^${revealN} − 1 = ${minMoves(revealN)} moves.`,
+        `先把上面 ${revealN - 1} 个搬开，再搬最大的，再把 ${revealN - 1} 个搬回来。每多一个盘，步数翻倍再加 1：2^${revealN} − 1 = ${minMoves(revealN)} 步。`,
       );
     if (message) return message;
     return lifted === null ? tr(locale, "Tap (or drag) a peg's top disc, then tap where it goes.", "点（或拖）一根柱子最上面的盘，再点要放的柱子。") : tr(locale, "Now tap the peg to put it on.", "再点要放上去的柱子。");
@@ -260,6 +264,7 @@ export default function TowerOfHanoiScene({ config, phase, locale, reducedMotion
       {interactive && (
         <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
           <Counter label={tr(locale, "moves", "步数")} value={moves} tone={solved ? "green" : "primary"} />
+          <Counter label={tr(locale, "best so far", "最好成绩")} value={bestSoFar[n] ?? "–"} tone="pink" />
           <SceneButton onClick={() => restart(n)} variant="ghost" disabled={moves === 0}>
             {tr(locale, "Reset", "重来")}
           </SceneButton>

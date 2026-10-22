@@ -104,7 +104,12 @@ export default function BirthdayRoomScene({ config, phase, locale, reducedMotion
     <SceneFrame label={label} inert={phase === "hook"}>
       <div className="flex min-h-0 flex-1 gap-2">
         <div className="min-h-0 w-[40%] shrink-0">
-          <RoomView room={phase === "hook" ? null : room} people={phase === "hook" ? 23 : (last?.n ?? n)} mode={mode} locale={locale} reducedMotion={reducedMotion} />
+          {phase === "reveal" && mode === "match_me" ? (
+            // The reveal talks about "lines to you": draw them on a room small enough to show as dots.
+            <RoomView room={room && room.birthdays.length <= DOT_CAP ? room : null} people={Math.min(last?.n ?? n, DOT_CAP - 1)} mode={mode} locale={locale} reducedMotion={reducedMotion} />
+          ) : (
+            <RoomView room={phase === "hook" ? null : room} people={phase === "hook" ? 23 : (last?.n ?? n)} mode={mode} locale={locale} reducedMotion={reducedMotion} />
+          )}
         </div>
         <div className="min-h-0 min-w-0 flex-1">
           <Chart mode={mode} max={max} tried={shownTried} reveal={phase === "reveal"} progress={progress} threshold={threshold} current={interactive ? n : null} locale={locale} />
@@ -168,10 +173,15 @@ function RoomView({ room, people, mode, locale, reducedMotion }: { room: Birthda
   const cols = Math.ceil(Math.sqrt(count));
   const rows = Math.ceil(count / cols);
   const cell = Math.min((W - 8) / cols, (H - 8) / rows);
-  const pos = (i: number) => [4 + (i % cols) * cell + cell / 2, 4 + Math.floor(i / cols) * cell + cell / 2] as const;
+  // match_me: "you" (person 0) sits in the middle of the room, with a line to everyone else.
+  const mid = Math.min(count - 1, Math.floor(rows / 2) * cols + Math.floor(cols / 2));
+  const slot = (i: number) => (mode !== "match_me" ? i : i === 0 ? mid : i === mid ? 0 : i);
+  const pos = (i: number) => [4 + (slot(i) % cols) * cell + cell / 2, 4 + Math.floor(slot(i) / cols) * cell + cell / 2] as const;
   const r = Math.max(2, cell * 0.32);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={aria} className="h-full w-full">
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={mode === "match_me" ? `${aria}. ${tr(locale, `${count - 1} lines to you`, `${count - 1} 条连到你的线`)}` : aria} className="h-full w-full">
+      {mode === "match_me" &&
+        Array.from({ length: count - 1 }, (_, k) => k + 1).map((i) => <line key={`l${i}`} x1={pos(0)[0]} y1={pos(0)[1]} x2={pos(i)[0]} y2={pos(i)[1]} className="stroke-fun-purple/25" strokeWidth={0.8} />)}
       {Array.from({ length: count }, (_, i) => {
         const [x, y] = pos(i);
         const inPair = pair !== null && (pair[0] === i || pair[1] === i);

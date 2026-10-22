@@ -18,6 +18,7 @@ const REVEAL_MS = 6000;
 const SERIES_TERMS = 4;
 
 const km = (v: number, locale: SceneLocale) => formatNumber(Math.round(v * 100) / 100, locale);
+const kmUnit = (locale: SceneLocale) => tr(locale, "km", "千米");
 const clock = (h: number, locale: SceneLocale) => {
   const mins = Math.round(h * 60 * 10) / 10;
   return mins < 60 ? tr(locale, `${formatNumber(mins, locale)} min`, `${formatNumber(mins, locale)} 分钟`) : tr(locale, `${formatNumber(Math.round(h * 100) / 100, locale)} h`, `${formatNumber(Math.round(h * 100) / 100, locale)} 小时`);
@@ -106,7 +107,7 @@ export default function TrainsFlyScene({ config, phase, locale, reducedMotion, o
   return (
     <SceneFrame label={label} inert={phase === "hook"}>
       <div className="flex justify-center">
-        <Counter label={tr(locale, "the fly has flown", "苍蝇已经飞了")} value={phase === "hook" ? "? km" : `${km(at.flown, locale)} km`} tone={t >= T - 1e-9 && phase !== "hook" ? "green" : "pink"} />
+        <Counter label={tr(locale, "the fly has flown", "苍蝇已经飞了")} value={phase === "hook" ? `? ${kmUnit(locale)}` : `${km(at.flown, locale)} ${kmUnit(locale)}`} tone={t >= T - 1e-9 && phase !== "hook" ? "green" : "pink"} />
       </div>
       <div className="min-h-0 flex-1">
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" role="group" aria-label={label} className="h-full w-full">
@@ -115,7 +116,7 @@ export default function TrainsFlyScene({ config, phase, locale, reducedMotion, o
             <line key={i} x1={X0 + (i * (X1 - X0)) / 10} x2={X0 + (i * (X1 - X0)) / 10} y1={RAIL_Y + 4} y2={RAIL_Y + 12} className="stroke-gray-300" strokeWidth={2} />
           ))}
           <text x={X0} y={H - 2} textAnchor="middle" className="fill-gray-400 text-[8px]">0</text>
-          <text x={X1} y={H - 2} textAnchor="middle" className="fill-gray-400 text-[8px]">{km(config.distanceKm, locale)} km</text>
+          <text x={X1} y={H - 2} textAnchor="middle" className="fill-gray-400 text-[8px]">{km(config.distanceKm, locale)} {kmUnit(locale)}</text>
           <text x={4} y={12} className="fill-gray-600 text-[11px] font-bold">
             ⏱ {clock(t, locale)}
           </text>
@@ -196,7 +197,7 @@ function Series({ legs, total, show, locale }: { legs: ReturnType<typeof flyLegs
       ))}
       <span className={`transition-opacity duration-300 ${visible > SERIES_TERMS ? "opacity-100" : "opacity-0"}`}>
         {" + … = "}
-        <b className="text-fun-pink">{km(total, locale)} km</b>
+        <b className="text-fun-pink">{km(total, locale)} {kmUnit(locale)}</b>
       </span>
     </p>
   );

@@ -6,18 +6,21 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import type { AnimationScene, SceneConfigOf, SceneProps } from "@gmq/animation-engine";
 import { useLegacyScene } from "./useLegacyScene";
+import { tr, type SceneLocale } from "../primitives";
 
-export default function BalanceScaleScene({ config, phase }: SceneProps<SceneConfigOf<"balance_scale">>) {
+export default function BalanceScaleScene({ config, phase, locale }: SceneProps<SceneConfigOf<"balance_scale">>) {
   const scene = useLegacyScene(config);
-  return <BalanceScaleAnimation scene={scene} revealSolution={phase === "reveal"} />;
+  return <BalanceScaleAnimation scene={scene} revealSolution={phase === "reveal"} locale={locale} />;
 }
 
 function BalanceScaleAnimation({
   scene,
   revealSolution,
+  locale,
 }: {
   scene: AnimationScene;
   revealSolution: boolean;
+  locale: SceneLocale;
 }) {
   const rightValue =
     typeof scene.metadata?.rightValue === "number" ? scene.metadata.rightValue : null;
@@ -52,7 +55,7 @@ function BalanceScaleAnimation({
       </svg>
 
       <div className="w-full max-w-sm mt-3 space-y-2">
-        <label className="text-xs text-gray-500 font-heading">Adjust value to balance:</label>
+        <label className="text-xs text-gray-500 font-heading">{tr(locale, "Adjust value to balance:", "调整数值，让天平平衡：")}</label>
         <input
           className="w-full rounded-lg border border-gray-200 px-3 py-2 text-center font-mono"
           type="number"
@@ -60,7 +63,7 @@ function BalanceScaleAnimation({
           onChange={(e) => setGuess(Number(e.target.value || 0))}
         />
         <p className={`text-sm font-heading ${balanced ? "text-fun-green" : "text-gray-500"}`}>
-          {balanced ? "Balanced!" : "Not balanced yet"}
+          {balanced ? tr(locale, "Balanced!", "平衡了！") : tr(locale, "Not balanced yet", "还没平衡")}
         </p>
       </div>
     </div>

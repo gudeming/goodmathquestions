@@ -37,6 +37,8 @@ function SquareGrid({ u, along, out, side }: { u: Vec; along: Vec; out: Vec; sid
 export default function PythagorasSquaresScene({ config, phase, locale, reducedMotion, onEvent }: SceneProps<PythagorasSquaresConfig>) {
   const events = useSceneEvents(onEvent);
   const [locked, setLocked] = useState(config.lockRightAngle);
+  // Areas stay hidden until the child drags a corner or asks for them (the hook must not answer the guess).
+  const [showAreas, setShowAreas] = useState(false);
   const [pb, setPb] = useState<Vec>([config.b, 0]);
   const [pa, setPa] = useState<Vec>([0, config.a]);
   const [view, setView] = useState(() => viewFor({ o: [0, 0], pb: [config.b, 0], pa: [0, config.a] }));
@@ -54,12 +56,17 @@ export default function PythagorasSquaresScene({ config, phase, locale, reducedM
   const c = integerHypotenuse(config.a, config.b) ?? Math.hypot(config.a, config.b);
   const moves = useMemo(() => (reveal ? tileMoves(config.a, config.b) : []), [reveal, config.a, config.b]);
   const shownView = reveal || phase === "hook" ? viewFor(tri) : view;
+  // The asked-about triangle (a, b, right angle): its big square stays "?" until the reveal.
+  const canonical = right && Math.abs(sq.sideA - config.a) < 1e-9 && Math.abs(sq.sideB - config.b) < 1e-9;
+  const areasOn = reveal || (phase === "explore" && showAreas);
+  const hideC = !reveal && canonical;
   const span = Number(shownView.split(" ")[3]);
   const fs = span / 16;
 
   const place = (which: "a" | "b", raw: Vec, refit: boolean) => {
     if (phase !== "explore") return;
     events.interact();
+    setShowAreas(true);
     let nextA = pa;
     let nextB = pb;
     if (which === "b") nextB = [Math.max(1, Math.min(LEG_MAX, Math.round(raw[0]))), 0];
@@ -125,6 +132,8 @@ export default function PythagorasSquaresScene({ config, phase, locale, reducedM
 
   const message = (() => {
     if (phase === "hook") return tr(locale, "Two small squares or one big one: which has more?", "两个小正方形和一个大正方形，谁大？");
+    if (!reveal && !showAreas) return tr(locale, "Drag a pink corner, or press “Show areas”.", "拖动粉色顶点，或者点「显示面积」。");
+    if (!reveal && hideC) return tr(locale, `Right angle: the small squares are ${f(sq.areaA)} and ${f(sq.areaB)}. The big one? Drag a corner to compare other triangles.`, `直角：两个小正方形是 ${f(sq.areaA)} 和 ${f(sq.areaB)}。大的呢？拖动顶点，比比别的三角形。`);
     if (reveal)
       return progress > 0.85
         ? tr(locale, `${config.a * config.a} + ${config.b * config.b} = ${c * c} tiles: the small squares fill the big one exactly. c = √${c * c} = ${c}.`, `${config.a * config.a} + ${config.b * config.b} = ${c * c} 块：两个小正方形正好铺满大正方形。c = √${c * c} = ${c}。`)
@@ -166,13 +175,13 @@ export default function PythagorasSquaresScene({ config, phase, locale, reducedM
   return (
     <SceneFrame label={label} inert={phase === "hook"}>
       <div className="flex min-h-0 flex-1 gap-2">
-        <svg ref={svgRef} viewBox={shownView} role={phase === "explore" ? "group" : "img"} aria-label={`${label}: ${f(sq.areaA)}, ${f(sq.areaB)}, ${f(sq.areaC)}`} className="h-full min-w-0 flex-1 touch-none overflow-visible">
+        <svg ref={svgRef} viewBox={shownView} role={phase === "explore" ? "group" : "img"} aria-label={areasOn ? `${label}: ${f(sq.areaA)}, ${f(sq.areaB)}, ${hideC ? "?" : f(sq.areaC)}` : label} className="h-full min-w-0 flex-1 touch-none overflow-visible">
           <polygon points={pts(sqA.corners)} className="fill-fun-pink/60" opacity={reveal ? 1 - segment(progress, 0.1, 0.2) * 0.75 : 1} />
           <polygon points={pts(sqB.corners)} className="fill-primary-400/60" opacity={reveal ? 1 - segment(progress, 0.1, 0.2) * 0.75 : 1} />
           <polygon points={pts(sqC.corners)} className={reveal ? "fill-white stroke-fun-purple" : "fill-fun-purple/50"} strokeWidth={0.08} />
-          {!reveal && <SquareGrid {...sqA} u={sqA.corners[0]} />}
-          {!reveal && <SquareGrid {...sqB} u={sqB.corners[0]} />}
-          {!reveal && <SquareGrid {...sqC} u={sqC.corners[0]} />}
+          {phase === "explore" && <SquareGrid {...sqA} u={sqA.corners[0]} />}
+          {phase === "explore" && <SquareGrid {...sqB} u={sqB.corners[0]} />}
+          {phase === "explore" && !hideC && <SquareGrid {...sqC} u={sqC.corners[0]} />}
           {reveal &&
             moves.map((m, k) => {
               const start = 0.15 + (k / moves.length) * 0.55;
@@ -182,17 +191,28 @@ export default function PythagorasSquaresScene({ config, phase, locale, reducedM
             })}
           <polygon points={pts([tri.o, tri.pb, tri.pa])} className="fill-fun-yellow stroke-gray-700" strokeWidth={0.1} strokeLinejoin="round" />
           {right && <polyline points={pts([[0.8, 0], [0.8, 0.8], [0, 0.8]])} fill="none" className="stroke-gray-700" strokeWidth={0.08} />}
-          {!reveal && areaText(sqA.corners, `${f(sq.areaA)}`)}
-          {!reveal && areaText(sqB.corners, `${f(sq.areaB)}`)}
-          {areaText(sqC.corners, reveal && progress > 0.85 ? `${c}² = ${c * c}` : `${f(sq.areaC)}`)}
+          {!reveal && areasOn && areaText(sqA.corners, `${f(sq.areaA)}`)}
+          {!reveal && areasOn && areaText(sqB.corners, `${f(sq.areaB)}`)}
+          {areasOn && areaText(sqC.corners, reveal ? (progress > 0.85 ? `${c}² = ${c * c}` : "?") : hideC ? "?" : `${f(sq.areaC)}`)}
           {phase === "explore" && handle("b", tri.pb)}
           {phase === "explore" && handle("a", tri.pa)}
         </svg>
-        <AreaBars a2={reveal ? config.a ** 2 : sq.areaA} b2={reveal ? config.b ** 2 : sq.areaB} c2={reveal ? c * c : sq.areaC} equal={reveal || equal} angle={reveal ? 90 : sq.angle} locale={locale} format={f} />
+        {areasOn && <AreaBars a2={reveal ? config.a ** 2 : sq.areaA} b2={reveal ? config.b ** 2 : sq.areaB} c2={reveal ? c * c : sq.areaC} hideC={hideC || (reveal && progress <= 0.85)} equal={reveal || equal} angle={reveal ? 90 : sq.angle} locale={locale} format={f} />}
       </div>
       <SceneMessage>{message}</SceneMessage>
       {phase === "explore" && (
         <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+          {!showAreas && (
+            <SceneButton
+              onClick={() => {
+                events.interact();
+                setShowAreas(true);
+              }}
+              variant="accent"
+            >
+              {tr(locale, "Show areas", "显示面积")}
+            </SceneButton>
+          )}
           <SceneButton onClick={toggleLock} variant={locked ? "primary" : "ghost"} ariaPressed={locked}>
             {locked ? tr(locale, "🔒 Right angle", "🔒 锁定直角") : tr(locale, "🔓 Free corner", "🔓 自由顶点")}
           </SceneButton>
@@ -214,22 +234,23 @@ export default function PythagorasSquaresScene({ config, phase, locale, reducedM
 }
 
 /** a² + b² (stacked) next to c², with the corner angle. */
-function AreaBars({ a2, b2, c2, equal, angle, locale, format }: { a2: number; b2: number; c2: number; equal: boolean; angle: number; locale: SceneLocale; format: (v: number) => string }) {
-  const top = Math.max(a2 + b2, c2, 1);
+function AreaBars({ a2, b2, c2, hideC, equal, angle, locale, format }: { a2: number; b2: number; c2: number; hideC: boolean; equal: boolean; angle: number; locale: SceneLocale; format: (v: number) => string }) {
+  const top = Math.max(a2 + b2, hideC ? 0 : c2, 1);
   const H = 150;
   const h = (v: number) => (v / top) * H;
   const base = 170;
   return (
-    <svg viewBox="0 0 110 200" role="img" aria-label={tr(locale, `a² + b² = ${format(a2 + b2)}, c² = ${format(c2)}`, `a² + b² = ${format(a2 + b2)}，c² = ${format(c2)}`)} className="h-full w-[28%] shrink-0">
+    <svg viewBox="0 0 110 200" role="img" aria-label={hideC ? tr(locale, `a² = ${format(a2)}, b² = ${format(b2)}, c² = ?`, `a² = ${format(a2)}，b² = ${format(b2)}，c² = ?`) : tr(locale, `a² + b² = ${format(a2 + b2)}, c² = ${format(c2)}`, `a² + b² = ${format(a2 + b2)}，c² = ${format(c2)}`)} className="h-full w-[28%] shrink-0">
       <rect x={14} y={base - h(b2)} width={30} height={h(b2)} rx={3} className="fill-primary-400" />
       <rect x={14} y={base - h(b2) - h(a2)} width={30} height={h(a2)} rx={3} className="fill-fun-pink" />
-      <rect x={64} y={base - h(c2)} width={30} height={h(c2)} rx={3} className="fill-fun-purple" />
+      {/* A hidden c² gets no bar at all: any height would hint at the comparison. */}
+      {!hideC && <rect x={64} y={base - h(c2)} width={30} height={h(c2)} rx={3} className="fill-fun-purple" />}
       <text x={29} y={base + 12} textAnchor="middle" className="fill-gray-600 text-[10px]">a² + b²</text>
       <text x={79} y={base + 12} textAnchor="middle" className="fill-gray-600 text-[10px]">c²</text>
-      <text x={29} y={base - h(a2 + b2) - 4} textAnchor="middle" className="fill-gray-800 text-[10px] font-bold">{format(a2 + b2)}</text>
-      <text x={79} y={base - h(c2) - 4} textAnchor="middle" className="fill-gray-800 text-[10px] font-bold">{format(c2)}</text>
-      <text x={54} y={base - Math.max(h(a2 + b2), h(c2)) / 2} textAnchor="middle" className={`text-[14px] font-bold ${equal ? "fill-green-600" : "fill-fun-red"}`}>
-        {equal ? "=" : a2 + b2 > c2 ? ">" : "<"}
+      <text x={29} y={base - h(a2 + b2) - 4} textAnchor="middle" className="fill-gray-800 text-[10px] font-bold">{hideC ? `${format(a2)} + ${format(b2)}` : format(a2 + b2)}</text>
+      <text x={79} y={base - (hideC ? H / 2 : h(c2) + 4)} textAnchor="middle" className="fill-gray-800 text-[10px] font-bold">{hideC ? "?" : format(c2)}</text>
+      <text x={54} y={base - Math.max(h(a2 + b2), hideC ? 0 : h(c2)) / 2} textAnchor="middle" className={`text-[14px] font-bold ${hideC ? "fill-gray-400" : equal ? "fill-green-600" : "fill-fun-red"}`}>
+        {hideC ? "?" : equal ? "=" : a2 + b2 > c2 ? ">" : "<"}
       </text>
       <text x={54} y={196} textAnchor="middle" className="fill-gray-500 text-[10px]">∠ {format(angle)}°</text>
     </svg>

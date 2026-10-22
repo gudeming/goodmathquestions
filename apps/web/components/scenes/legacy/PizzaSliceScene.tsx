@@ -6,13 +6,14 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import type { AnimationScene, SceneConfigOf, SceneProps } from "@gmq/animation-engine";
 import { useLegacyScene } from "./useLegacyScene";
+import { tr, type SceneLocale } from "../primitives";
 
-export default function PizzaSliceScene({ config, phase }: SceneProps<SceneConfigOf<"pizza_slice">>) {
+export default function PizzaSliceScene({ config, phase, locale }: SceneProps<SceneConfigOf<"pizza_slice">>) {
   const scene = useLegacyScene(config);
-  return <PizzaAnimation scene={scene} />;
+  return <PizzaAnimation scene={scene} locale={locale} />;
 }
 
-function PizzaAnimation({ scene }: { scene: AnimationScene }) {
+function PizzaAnimation({ scene, locale }: { scene: AnimationScene; locale: SceneLocale }) {
   const total = Number(scene.metadata?.totalSlices ?? 8);
   const eaten = Number(scene.metadata?.eatenSlices ?? 0);
   const [selected, setSelected] = useState<number[]>([]);
@@ -65,10 +66,10 @@ function PizzaAnimation({ scene }: { scene: AnimationScene }) {
         })}
       </svg>
       <p className="text-sm font-heading text-gray-600 mt-2">
-        Click remaining slices: {selected.length} selected
+        {tr(locale, `Click remaining slices: ${selected.length} selected`, `点剩下的披萨块：已选 ${selected.length} 块`)}
       </p>
       <p className="text-xs text-gray-400">
-        Remaining fraction: {total - eaten}/{total}
+        {tr(locale, `Remaining fraction: ${total - eaten}/${total}`, `还剩：${total - eaten}/${total}`)}
       </p>
     </div>
   );

@@ -3,7 +3,9 @@
 import { motion } from "framer-motion";
 import { useRef, useState, type KeyboardEvent } from "react";
 import {
+  RICE_GRAIN_MG,
   RICE_REFERENCES,
+  WORLD_RICE_TONNES_PER_YEAR,
   grainsOnSquare,
   groupDigits,
   log10Digits,
@@ -91,13 +93,16 @@ export default function ChessboardDoublingScene({ config, phase, locale, reduced
     if (phase === "hook") return tr(locale, `1, 2, 4, 8, … what lands on square ${squares}?`, `1、2、4、8……第 ${squares} 格会有多少？`);
     if (phase === "reveal") {
       const years = worldRiceYears(totalGrains(squares, start));
-      const yearsText = years >= 1 ? formatNumber(Math.round(years), locale) : years.toPrecision(2);
+      // Round down to a safe figure ("more than 900 years"); the assumptions are printed with it.
+      const floorTo = years >= 100 ? 100 : years >= 10 ? 10 : 1;
+      const yearsText = years >= 1 ? formatNumber(Math.floor(years / floorTo) * floorTo, locale) : years.toPrecision(2);
+      const mt = formatNumber(WORLD_RICE_TONNES_PER_YEAR / 1e6, locale);
       return progress < 0.75
         ? tr(locale, `Fast-forward to square ${squares}…`, `快进到第 ${squares} 格……`)
         : tr(
             locale,
-            `All ${squares} squares: ${showGrains(totalGrains(squares, start))} ${unit}, about ${yearsText} years of the world's rice.`,
-            `${squares} 格加起来：${showGrains(totalGrains(squares, start))} ${unit}，大约是全世界 ${yearsText} 年的大米产量。`,
+            `All ${squares} squares: ${showGrains(totalGrains(squares, start))} ${unit}. At ${RICE_GRAIN_MG} mg a grain and ${mt} million tonnes a year, that's ${years >= 1 ? "more than " : ""}${yearsText} years of the world's rice.`,
+            `${squares} 格加起来：${showGrains(totalGrains(squares, start))} ${unit}。每粒按 ${RICE_GRAIN_MG} 毫克、全世界每年约 ${formatNumber(WORLD_RICE_TONNES_PER_YEAR / 1e8, locale)} 亿吨算，${years >= 1 ? "超过" : "大约是"}全世界 ${yearsText} 年的大米产量。`,
           );
     }
     if (filled === 0) return tr(locale, "Tap the first square to put the rice down.", "点第一格，放下米粒。");

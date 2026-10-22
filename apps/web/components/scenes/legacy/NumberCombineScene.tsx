@@ -6,18 +6,21 @@ import { motion } from "framer-motion";
 import { linearScale } from "./linear";
 import type { AnimationScene, SceneConfigOf, SceneProps } from "@gmq/animation-engine";
 import { useLegacyScene } from "./useLegacyScene";
+import { tr, type SceneLocale } from "../primitives";
 
-export default function NumberCombineScene({ config, phase }: SceneProps<SceneConfigOf<"number_combine">>) {
+export default function NumberCombineScene({ config, phase, locale }: SceneProps<SceneConfigOf<"number_combine">>) {
   const scene = useLegacyScene(config);
-  return <NumberCombineAnimation scene={scene} revealSolution={phase === "reveal"} />;
+  return <NumberCombineAnimation scene={scene} revealSolution={phase === "reveal"} locale={locale} />;
 }
 
 function ProfessionalNumberCombineDiagram({
   numbers,
   operation,
+  locale,
 }: {
   numbers: number[];
   operation: string;
+  locale: SceneLocale;
 }) {
   const isPerimeterRect =
     operation === "add" &&
@@ -51,7 +54,7 @@ function ProfessionalNumberCombineDiagram({
           <text x={36 + w / 2} y={24 + h + 40} textAnchor="middle" className="fill-slate-700 text-[12px] font-semibold">{a}</text>
           <text x={36 + w + 34} y={24 + h / 2 + 4} textAnchor="middle" className="fill-slate-700 text-[12px] font-semibold">{b}</text>
           <text x={170} y={42} className="fill-slate-500 text-[12px]">
-            {isPerimeterRect ? "Perimeter model" : "Area model"}
+            {isPerimeterRect ? tr(locale, "Perimeter model", "周长模型") : tr(locale, "Area model", "面积模型")}
           </text>
         </svg>
       </div>
@@ -68,7 +71,7 @@ function ProfessionalNumberCombineDiagram({
         <text x={90} y={146} className="fill-slate-700 text-[12px] font-semibold">{l}</text>
         <text x={156} y={112} className="fill-slate-700 text-[12px] font-semibold">{w}</text>
         <text x={28} y={96} className="fill-slate-700 text-[12px] font-semibold">{h}</text>
-        <text x={208} y={42} className="fill-slate-500 text-[12px]">Volume prism model</text>
+        <text x={208} y={42} className="fill-slate-500 text-[12px]">{tr(locale, "Volume prism model", "体积（长方体）模型")}</text>
       </svg>
     </div>
   );
@@ -76,9 +79,11 @@ function ProfessionalNumberCombineDiagram({
 function NumberCombineAnimation({
   scene,
   revealSolution,
+  locale,
 }: {
   scene: AnimationScene;
   revealSolution: boolean;
+  locale: SceneLocale;
 }) {
   const numbers = (scene.metadata?.numbers as number[]) ?? [];
   const operation = String(scene.metadata?.operation ?? "add");
@@ -90,7 +95,7 @@ function NumberCombineAnimation({
 
   return (
     <div className="space-y-4">
-      <ProfessionalNumberCombineDiagram numbers={numbers} operation={operation} />
+      <ProfessionalNumberCombineDiagram numbers={numbers} operation={operation} locale={locale} />
       <div className="grid grid-cols-4 gap-2">
         {numbers.map((n, i) => (
           <motion.div
@@ -105,9 +110,9 @@ function NumberCombineAnimation({
         ))}
       </div>
       <div className="rounded-xl bg-primary-50 p-3 text-center">
-        <p className="text-xs uppercase tracking-wide text-gray-500">Operation: {operation}</p>
+        <p className="text-xs uppercase tracking-wide text-gray-500">{tr(locale, "Operation", "运算")}: {operation === "multiply" ? tr(locale, "multiply", "乘法") : operation === "add" ? tr(locale, "add", "加法") : operation}</p>
         <p className="text-xl font-heading font-bold text-primary-700">
-          Result: {revealSolution ? result : "?"}
+          {tr(locale, "Result", "结果")}: {revealSolution ? result : "?"}
         </p>
       </div>
     </div>

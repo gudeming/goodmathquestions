@@ -75,8 +75,9 @@ export default function CycleTimelineScene({ config, phase, locale, reducedMotio
       return progress >= 0.9
         ? tr(locale, "Prime cycles dodge the predator: they only meet at a multiple of both numbers.", "质数周期最能躲开天敌：只有到了两个数的公倍数才会撞上。")
         : tr(locale, `Every ${rows[revealRow].a} and every ${rows[revealRow].b}: they meet every ${rows[revealRow].every} years.`, `每 ${rows[revealRow].a} 年和每 ${rows[revealRow].b} 年：每 ${rows[revealRow].every} 年撞一次。`);
+    // The first shared year is the answer: the child reads it off the timeline (★); the text only counts.
     return first
-      ? tr(locale, `First together: year ${first}. ${hits.length} time${hits.length === 1 ? "" : "s"} in ${years} years.`, `第一次同时出现：第 ${first} 年。${years} 年里共 ${hits.length} 次。`)
+      ? tr(locale, `Red lamps: both in the same year, ${hits.length} time${hits.length === 1 ? "" : "s"} in ${years} years. Which year is the first ★?`, `红灯：两个同一年出现，${years} 年里共 ${hits.length} 次。第一个 ★ 是哪一年？`)
       : tr(locale, `They never meet in ${years} years!`, `${years} 年里一次也没撞上！`);
   })();
 
@@ -106,7 +107,7 @@ export default function CycleTimelineScene({ config, phase, locale, reducedMotio
                       {both && <rect x={x - 6} y={y + 1} width={12} height={23} rx={6} className="fill-fun-red/25" />}
                       <circle cx={x} cy={y + 7} r={4.2} className={both ? "fill-fun-red" : litA ? "fill-fun-green" : "fill-gray-200"} />
                       <circle cx={x} cy={y + 18} r={4.2} className={both ? "fill-fun-red" : litB ? "fill-fun-orange" : "fill-gray-200"} />
-                      {(year % 5 === 0 || both) && (
+                      {(year % 5 === 0 || (both && phase === "reveal")) && (
                         <text x={x} y={y + 29} textAnchor="middle" className={`text-[6.5px] tabular-nums ${both ? "fill-fun-red font-bold" : "fill-gray-400"}`}>
                           {year}
                         </text>

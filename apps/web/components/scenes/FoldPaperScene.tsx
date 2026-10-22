@@ -19,7 +19,7 @@ const REVEAL_MS = 4800;
 
 /** A3: fold a sheet in half again and again; the ruler is logarithmic so the Moon fits. */
 export default function FoldPaperScene({ config, phase, locale, reducedMotion, onEvent }: SceneProps<FoldPaperConfig>) {
-  const { thicknessMm, maxFolds, references } = config;
+  const { thicknessMm, maxFolds, references, labels } = config;
   const events = useSceneEvents(onEvent);
   const [folds, setFolds] = useState(0);
   const completedRef = useRef(false);
@@ -59,7 +59,7 @@ export default function FoldPaperScene({ config, phase, locale, reducedMotion, o
   const pretend = shown > REAL_FOLD_LIMIT;
 
   const message = (() => {
-    if (phase === "hook") return tr(locale, "Fold a sheet of paper 10 times. How thick is it?", "一张纸折 10 次，会有多厚？");
+    if (phase === "hook") return labels?.hook ? bi(locale, labels.hook) : tr(locale, "Fold a sheet of paper in half, again and again. How thick does it get?", "一张纸对折、再对折……会变得多厚？");
     if (phase === "reveal") {
       if (progress < 0.8) return tr(locale, `Fast-forward to ${maxFolds} folds…`, `快进到折 ${maxFolds} 次……`);
       const top = sorted[sorted.length - 1];

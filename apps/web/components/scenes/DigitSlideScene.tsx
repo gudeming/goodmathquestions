@@ -3,13 +3,15 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { timesElevenSteps, type DigitSlideConfig, type ElevenStep, type SceneProps } from "@gmq/animation-engine";
-import { SceneButton, SceneFrame, SceneMessage, tr, type SceneLocale } from "./primitives";
+import { SceneButton, SceneFrame, SceneMessage, bi, tr, type SceneLocale } from "./primitives";
 import { useSceneEvents } from "./useSceneEvents";
 import { segment, useRevealProgress } from "./useRevealProgress";
 
 const STAGE_MS = 800;
 const REVEAL_MS = 3600;
-const DEFAULT_EXAMPLES = [45, 63, 72, 85];
+const DEFAULT_EXAMPLES = [45, 63, 26, 85];
+/** How many worked examples the default hook line shows. */
+const HOOK_EXAMPLES = 3;
 const HISTORY = 5;
 
 type Slots = { left: string; middle: string; right: string; carry: boolean; joined: boolean };
@@ -80,7 +82,11 @@ export default function DigitSlideScene({ config, phase, locale, reducedMotion, 
   const label = tr(locale, "A two-digit number times 11, in one second", "一秒算出两位数乘 11");
 
   const message = (() => {
-    if (phase === "hook") return tr(locale, "45 × 11 = 495. 63 × 11 = 693. See the pattern?", "45 × 11 = 495，63 × 11 = 693。发现规律了吗？");
+    if (phase === "hook") {
+      if (config.labels?.hook) return bi(locale, config.labels.hook);
+      const worked = examples.slice(0, HOOK_EXAMPLES).map((e) => `${e} × 11 = ${e * 11}`);
+      return tr(locale, `${worked.join(". ")}. See the pattern?`, `${worked.join("，")}。发现规律了吗？`);
+    }
     if (phase === "reveal")
       return progress > 0.75
         ? tr(locale, `× 11 = × 10 + × 1. Shifted one place, the digits ${left} and ${right} land in the same column, so the middle digit is ${left} + ${right}.`, `× 11 = × 10 + × 1。错开一位相加，${left} 和 ${right} 落在同一列，所以中间是 ${left} + ${right}。`)

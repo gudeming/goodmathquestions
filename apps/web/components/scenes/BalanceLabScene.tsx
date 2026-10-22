@@ -286,7 +286,8 @@ function Weights({ config, phase, locale, reducedMotion, onEvent, onProposeAnswe
   const weights = config.weights ?? [1, 3, 9, 27];
   const events = useSceneEvents(onEvent);
   const reach = useMemo(() => contiguousReach(weights), [weights]);
-  const maxTarget = useMemo(() => Math.max(1, ...weighableSet(weights)), [weights]);
+  // The slider runs past the heaviest weighable amount (to the next ten) so its end doesn't give the answer away.
+  const sliderMax = useMemo(() => Math.ceil((Math.max(1, ...weighableSet(weights)) + 1) / 10) * 10, [weights]);
   const [target, setTarget] = useState(config.target ?? 1);
   const [place, setPlace] = useState<Place[]>(() => weights.map(() => "off"));
   const [found, setFound] = useState<number[]>([]);
@@ -322,18 +323,17 @@ function Weights({ config, phase, locale, reducedMotion, onEvent, onProposeAnswe
   const item = (i: number): Item => ({ key: String(i), label: `${weights[i]}`, ariaLabel: tr(locale, `${weights[i]} g weight, ${shownPlace[i]}`, `${weights[i]} 克砝码`), fillClass: "fill-fun-orange", square: true });
   const objectItem: Item = { key: "object", label: `${target}g`, ariaLabel: tr(locale, `Object, ${target} g`, `物品，${target} 克`), fillClass: "fill-primary-500", square: true };
   const idx = (p: Place) => shownPlace.flatMap((s, i) => (s === p ? [i] : []));
-  const foundCount = found.filter((v) => v <= reach).length;
 
   if (phase === "reveal") return <TernaryTable weights={weights} reach={reach} progress={progress} locale={locale} />;
 
   return (
-    <SceneFrame label={tr(locale, `Weigh 1 to ${reach} with ${weights.join(", ")}`, `用 ${weights.join("、")} 称出 1 到 ${reach}`)} inert={phase === "hook"}>
+    <SceneFrame label={tr(locale, `Weigh whole grams with ${weights.join(", ")}`, `用 ${weights.join("、")} 称出整数克`)} inert={phase === "hook"}>
       <div className="min-h-0 flex-1">
         <Scale tilt={tilt} left={[objectItem, ...idx("beside").map(item)]} right={idx("opposite").map(item)} tray={idx("off").map(item)} interactive={phase === "explore"} reducedMotion={reducedMotion} locale={locale} onItem={tapWeight} onDragStart={drag.onDragStart} onDrop={drag.onDrop} />
       </div>
       <SceneMessage>
         {phase === "hook"
-          ? tr(locale, `${weights.length} weights, two pans. Heaviest whole weight you can measure?`, `${weights.length} 个砝码，两个盘。最重能称出几克？`)
+          ? tr(locale, `${weights.length} weights, two pans. From 1 g up, with no gaps: how far can you go?`, `${weights.length} 个砝码，两个盘。从 1 克往上一克不漏，能称到几克？`)
           : tilt === "balanced"
             ? tr(locale, `Balanced: ${target} g measured!`, `平衡了：称出了 ${target} 克！`)
             : tr(locale, "Tap a weight: off → other pan → object's pan.", "点砝码：不用 → 对面盘 → 物品这边。")}
@@ -342,13 +342,12 @@ function Weights({ config, phase, locale, reducedMotion, onEvent, onProposeAnswe
         <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
           <label className="flex min-h-[44px] items-center gap-2 text-xs text-gray-600 sm:text-sm">
             {tr(locale, "object", "物品")}
-            <input type="range" min={1} max={maxTarget} value={target} onChange={(e) => commit(Number(e.target.value), place)} aria-label={tr(locale, "Object weight in grams", "物品重量（克）")} className="h-11 w-24 accent-primary-500 sm:w-36" />
+            <input type="range" min={1} max={sliderMax} value={target} onChange={(e) => commit(Number(e.target.value), place)} aria-label={tr(locale, "Object weight in grams", "物品重量（克）")} className="h-11 w-24 accent-primary-500 sm:w-36" />
           </label>
-          <div className="flex items-center gap-1" aria-label={tr(locale, `Found ${foundCount} of ${reach}`, `已找到 ${foundCount} / ${reach}`)}>
-            <div className="h-3 w-20 overflow-hidden rounded-full bg-gray-100 sm:w-28">
-              <div className="h-full bg-fun-green transition-all" style={{ width: `${(foundCount / reach) * 100}%` }} />
-            </div>
-            <span className="text-xs tabular-nums text-gray-600">{foundCount}/{reach}</span>
+          {/* Reached weights as a growing strip: no denominator before the reveal. */}
+          <div className="flex items-center gap-1" aria-label={tr(locale, `Weighed so far: ${found.join(", ") || "none"}`, `已称出：${found.join("、") || "还没有"}`)}>
+            <div className="flex max-w-[7rem] flex-wrap gap-px sm:max-w-[10rem]">{found.map((v) => <span key={v} title={`${v} g`} className="h-2.5 w-1.5 rounded-sm bg-fun-green" />)}</div>
+            <span className="text-xs tabular-nums text-gray-600">{tr(locale, `${found.length} found`, `已称出 ${found.length} 种`)}</span>
           </div>
           <SceneButton onClick={() => commit(target, weights.map(() => "off"))} variant="ghost">{tr(locale, "Clear", "清空")}</SceneButton>
         </div>

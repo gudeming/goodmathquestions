@@ -38,15 +38,22 @@ export function scientific(digits: string, significant = 2): string {
   return `${mantissa} × 10^${d.length - 1}`;
 }
 
+/** A typical grain of milled rice weighs 20–30 mg; 25 mg gives 40,000 grains per kg. */
+export const RICE_GRAIN_MG = 25;
+export const RICE_GRAINS_PER_KG = 1_000_000 / RICE_GRAIN_MG;
+/** World rice production, roughly 500 million tonnes a year (2020s). */
+export const WORLD_RICE_TONNES_PER_YEAR = 500_000_000;
+
 /**
- * Rice comparisons for the doubling scene (approximate grain counts; ~25,000 grains per kg).
- * A bowl ~ 200 g, a truck ~ 20 t, world annual production ~ 500 Mt (2020s).
+ * Rice comparisons for the doubling scene (approximate grain counts at 40,000 grains per kg).
+ * A bowl ~ 200 g, a sack 50 kg, a truck ~ 20 t, the world's annual harvest ~ 500 Mt.
+ * The full board (2^64 − 1 grains) comes to about 920 years of the world's rice.
  */
 export const RICE_REFERENCES = [
-  { id: "bowl", grains: 5_000, label: { en: "a bowl of rice", zh: "一碗米" } },
-  { id: "sack", grains: 1_250_000, label: { en: "a 50 kg sack", zh: "一袋 50 公斤的米" } },
-  { id: "truck", grains: 500_000_000, label: { en: "a truck of rice", zh: "一卡车米" } },
-  { id: "world", grains: 1.25e16, label: { en: "the world's rice for a year", zh: "全世界一年的大米" } },
+  { id: "bowl", grains: 0.2 * RICE_GRAINS_PER_KG, label: { en: "a bowl of rice", zh: "一碗米" } },
+  { id: "sack", grains: 50 * RICE_GRAINS_PER_KG, label: { en: "a 50 kg sack", zh: "一袋 50 公斤的米" } },
+  { id: "truck", grains: 20_000 * RICE_GRAINS_PER_KG, label: { en: "a truck of rice", zh: "一卡车米" } },
+  { id: "world", grains: WORLD_RICE_TONNES_PER_YEAR * 1000 * RICE_GRAINS_PER_KG, label: { en: "the world's rice for a year", zh: "全世界一年的大米" } },
 ] as const;
 
 /** How many years of world rice production a grain count represents. */

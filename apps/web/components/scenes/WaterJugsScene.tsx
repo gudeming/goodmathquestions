@@ -97,7 +97,7 @@ export default function WaterJugsScene({ config, phase, locale, reducedMotion, o
     if (solved)
       return history.length === solution.length
         ? tr(locale, `${target} litres in ${history.length} steps: the fewest possible!`, `${history.length} 步量出 ${target} 升：最少步数！`)
-        : tr(locale, `${target} litres in ${history.length} steps! The fewest possible is ${solution.length}.`, `${history.length} 步量出 ${target} 升！最少可以 ${solution.length} 步。`);
+        : tr(locale, `${target} litres in ${history.length} steps! Can you do it in fewer?`, `${history.length} 步量出 ${target} 升！能用更少的步数吗？`);
     return tr(locale, "Fill, empty or pour. Get one jug to hold exactly the target.", "装满、倒空或互相倒，让一个壶里正好是目标的量。");
   })();
 

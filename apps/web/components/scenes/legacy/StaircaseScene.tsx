@@ -5,13 +5,14 @@
 import { useState } from "react";
 import type { AnimationScene, SceneConfigOf, SceneProps } from "@gmq/animation-engine";
 import { useLegacyScene } from "./useLegacyScene";
+import { tr, type SceneLocale } from "../primitives";
 
-export default function StaircaseScene({ config, phase }: SceneProps<SceneConfigOf<"staircase">>) {
+export default function StaircaseScene({ config, phase, locale }: SceneProps<SceneConfigOf<"staircase">>) {
   const scene = useLegacyScene(config);
-  return <StaircaseAnimation scene={scene} />;
+  return <StaircaseAnimation scene={scene} locale={locale} />;
 }
 
-function StaircaseAnimation({ scene }: { scene: AnimationScene }) {
+function StaircaseAnimation({ scene, locale }: { scene: AnimationScene; locale: SceneLocale }) {
   const totalStairs = Number(scene.metadata?.totalStairs ?? 4);
   const stepOptions = (scene.metadata?.stepOptions as number[]) ?? [1, 2];
   const [position, setPosition] = useState(0);
@@ -39,7 +40,7 @@ function StaircaseAnimation({ scene }: { scene: AnimationScene }) {
             onClick={() => step(size)}
             disabled={position >= totalStairs}
           >
-            +{size} step
+            {tr(locale, `+${size} step${size > 1 ? "s" : ""}`, `上 ${size} 级`)}
           </button>
         ))}
         <button
@@ -47,10 +48,10 @@ function StaircaseAnimation({ scene }: { scene: AnimationScene }) {
           className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600"
           onClick={() => setPosition(0)}
         >
-          Reset
+          {tr(locale, "Reset", "重来")}
         </button>
       </div>
-      <p className="text-xs text-gray-500">Reached stair {position} / {totalStairs}</p>
+      <p className="text-xs text-gray-500">{tr(locale, `Reached stair ${position} / ${totalStairs}`, `到了第 ${position} 级 / 共 ${totalStairs} 级`)}</p>
     </div>
   );
 }

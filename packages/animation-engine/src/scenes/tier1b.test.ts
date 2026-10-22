@@ -19,10 +19,10 @@ describe("chessboard doubling", () => {
   it("groups digits", () => expect(groupDigits("1048576")).toBe("1,048,576"));
   it("estimates log10 beyond 2^53", () => expect(log10Digits(totalGrains(64))).toBeCloseTo(19.266, 2));
   it("prints scientific form", () => expect(scientific(totalGrains(64))).toBe("1.8 × 10^19"));
-  it("the board is about 1,500 years of world rice", () => {
+  it("the board is more than 500 (about 920) years of world rice at 25 mg a grain", () => {
     const years = worldRiceYears(totalGrains(64));
-    expect(years).toBeGreaterThan(1000);
-    expect(years).toBeLessThan(2000);
+    expect(years).toBeGreaterThan(900);
+    expect(years).toBeLessThan(950);
   });
 });
 

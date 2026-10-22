@@ -85,9 +85,8 @@ export default function GuessGameScene({ config, phase, locale, reducedMotion, o
     const list = record({ value: g, reply }, narrow(range[0], range[1], g, reply));
     if (reply === "correct") {
       setNote(
-        list.length <= bound
-          ? tr(locale, `Got it: ${g}, in ${list.length} guesses! Halving never needs more than ${bound}.`, `猜中了：${g}，用了 ${list.length} 次！每次猜中间，最多 ${bound} 次。`)
-          : tr(locale, `Got it: ${g}, in ${list.length} guesses. Guessing the middle never needs more than ${bound}.`, `猜中了：${g}，用了 ${list.length} 次。每次猜中间，最多只要 ${bound} 次。`),
+        // The worst-case bound is the question's answer: it is stated in the reveal, not here.
+        tr(locale, `Got it: ${g}, in ${list.length} guess${list.length === 1 ? "" : "es"}! Could you always do it in that many?`, `猜中了：${g}，用了 ${list.length} 次！每次都能这么快吗？`),
       );
     } else if (wasted) {
       setNote(tr(locale, `You already knew it was between ${range[0]} and ${range[1]}!`, `你已经知道它在 ${range[0]} 和 ${range[1]} 之间了！`));
@@ -106,7 +105,7 @@ export default function GuessGameScene({ config, phase, locale, reducedMotion, o
       return;
     }
     const list = record({ value: g, reply }, next);
-    if (reply === "correct") setNote(tr(locale, `Found it in ${list.length} guesses, never more than ${bound}.`, `${list.length} 次就猜中了，绝不会超过 ${bound} 次。`));
+    if (reply === "correct") setNote(tr(locale, `Found it in ${list.length} guess${list.length === 1 ? "" : "es"}.`, `${list.length} 次就猜中了。`));
     else setNote("");
   };
 
@@ -205,8 +204,8 @@ export default function GuessGameScene({ config, phase, locale, reducedMotion, o
             </>
           ) : (
             <>
-              <SceneButton onClick={() => answer("higher")} variant="ghost">{tr(locale, "Higher ↑", "大了 ↑")}</SceneButton>
-              <SceneButton onClick={() => answer("lower")} variant="ghost">{tr(locale, "Lower ↓", "小了 ↓")}</SceneButton>
+              <SceneButton onClick={() => answer("higher")} variant="ghost">{tr(locale, "My number is higher ↑", "我的数更大 ↑")}</SceneButton>
+              <SceneButton onClick={() => answer("lower")} variant="ghost">{tr(locale, "My number is lower ↓", "我的数更小 ↓")}</SceneButton>
               <SceneButton onClick={() => answer("correct")} variant="accent">{tr(locale, "Yes!", "对了！")}</SceneButton>
             </>
           )}

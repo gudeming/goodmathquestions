@@ -4,18 +4,21 @@
 // frozen per 03-scene-catalog.md §5. Only the SceneProps adapter below is new.
 import type { AnimationScene, SceneConfigOf, SceneProps } from "@gmq/animation-engine";
 import { useLegacyScene } from "./useLegacyScene";
+import { tr, type SceneLocale } from "../primitives";
 
-export default function TriangleAnglesScene({ config, phase }: SceneProps<SceneConfigOf<"triangle_angles">>) {
+export default function TriangleAnglesScene({ config, phase, locale }: SceneProps<SceneConfigOf<"triangle_angles">>) {
   const scene = useLegacyScene(config);
-  return <TriangleAnimation scene={scene} revealSolution={phase === "reveal"} />;
+  return <TriangleAnimation scene={scene} revealSolution={phase === "reveal"} locale={locale} />;
 }
 
 function TriangleAnimation({
   scene,
   revealSolution,
+  locale,
 }: {
   scene: AnimationScene;
   revealSolution: boolean;
+  locale: SceneLocale;
 }) {
   const triangle = scene.objects.find((o) => o.id === "triangle");
   const angles = (scene.metadata?.angles as number[]) ?? triangle?.properties?.angles ?? [60, 60, 60];
@@ -60,7 +63,7 @@ function TriangleAnimation({
         <text x="42" y="172" className="fill-blue-700 font-bold text-sm">{displayAngles[0]}{displayAngles[0] === "?" ? "" : "°"}</text>
         <text x="154" y="172" className="fill-pink-600 font-bold text-sm">{displayAngles[2]}{displayAngles[2] === "?" ? "" : "°"}</text>
       </svg>
-      <p className="text-xs text-gray-500">Sum of angles in a triangle = 180°</p>
+      <p className="text-xs text-gray-500">{tr(locale, "Sum of angles in a triangle = 180°", "三角形的内角和 = 180°")}</p>
     </div>
   );
 }

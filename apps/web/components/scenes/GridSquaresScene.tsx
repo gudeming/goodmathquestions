@@ -55,7 +55,12 @@ export default function GridSquaresScene({ config, phase, locale, reducedMotion,
     setFound(next);
     const sizeFound = perSize[k] + 1;
     const sizeTotal = squaresOfSize(n, k);
-    setMessage(tr(locale, `${k}×${k}: ${sizeFound} of ${sizeTotal}`, `${k}×${k}：${sizeFound} / ${sizeTotal}`));
+    // Totals per size are the answer's building blocks: only the child's own count is shown before the reveal.
+    setMessage(
+      sizeFound === sizeTotal
+        ? tr(locale, `${k}×${k}: ${sizeFound} found, and that's every spot!`, `${k}×${k}：找到 ${sizeFound} 个，所有位置都数到了！`)
+        : tr(locale, `${k}×${k}: ${sizeFound} found so far`, `${k}×${k}：已经找到 ${sizeFound} 个`),
+    );
     events.state({ size: k, found: sizeFound, sizeTotal, allFound: next.length, total, sizeComplete: sizeFound === sizeTotal });
     if (next.length === total && !completedRef.current) {
       completedRef.current = true;
@@ -95,7 +100,7 @@ export default function GridSquaresScene({ config, phase, locale, reducedMotion,
 
   const stages = n;
   const progress = useRevealProgress(phase === "reveal", stages * STAGE_MS + 800, reducedMotion, () => events.emit("reveal_done"));
-  const label = tr(locale, `A ${n}×${n} board`, `${n}×${n} 的棋盘`);
+  const label = tr(locale, `${n === 8 ? "An" : "A"} ${n}×${n} board`, `${n}×${n} 的棋盘`);
 
   // Reveal: sweep every size; the table fills as each size finishes.
   const sweepEnd = (stages * STAGE_MS) / (stages * STAGE_MS + 800);
@@ -166,7 +171,7 @@ export default function GridSquaresScene({ config, phase, locale, reducedMotion,
                 <span>
                   {size}×{size}
                 </span>
-                <span className={v === tot ? "font-bold text-green-600" : "text-gray-500"}>{v === null ? "?" : phase === "reveal" ? v : `${v}/${tot}`}</span>
+                <span className={v === tot ? "font-bold text-green-600" : "text-gray-500"}>{v === null ? "?" : phase === "explore" && v === tot ? `${v} ✓` : v}</span>
               </div>
             );
           })}

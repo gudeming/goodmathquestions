@@ -222,6 +222,8 @@ const FoldPaperBase = z.object({
   thicknessMm: num.positive().max(10).default(0.1),
   maxFolds: num.int().min(10).max(50).default(42),
   references: z.array(FoldReference).min(1).max(8),
+  /** Optional scene copy; the hook line defaults to a generic "fold it again and again" question. */
+  labels: z.object({ hook: Bi.optional() }).optional(),
 });
 
 /** C3 / C6 / C8: roll dice and watch the histogram. */

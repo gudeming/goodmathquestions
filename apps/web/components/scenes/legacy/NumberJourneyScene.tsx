@@ -6,18 +6,21 @@ import { useMemo, useState } from "react";
 import { linearScale } from "./linear";
 import type { AnimationScene, SceneConfigOf, SceneProps } from "@gmq/animation-engine";
 import { useLegacyScene } from "./useLegacyScene";
+import { tr, type SceneLocale } from "../primitives";
 
-export default function NumberJourneyScene({ config, phase }: SceneProps<SceneConfigOf<"number_journey">>) {
+export default function NumberJourneyScene({ config, phase, locale }: SceneProps<SceneConfigOf<"number_journey">>) {
   const scene = useLegacyScene(config);
-  return <NumberJourneyAnimation scene={scene} revealSolution={phase === "reveal"} />;
+  return <NumberJourneyAnimation scene={scene} revealSolution={phase === "reveal"} locale={locale} />;
 }
 
 function NumberJourneyAnimation({
   scene,
   revealSolution,
+  locale,
 }: {
   scene: AnimationScene;
   revealSolution: boolean;
+  locale: SceneLocale;
 }) {
   const range = (scene.metadata?.range as [number, number]) ?? [0, 20];
   const highlights = revealSolution ? (scene.metadata?.highlights as number[]) ?? [] : [];
@@ -85,9 +88,9 @@ function NumberJourneyAnimation({
       </div>
 
       <div className="flex items-center justify-between text-sm">
-        <span className="font-heading text-gray-500">Current: {current}</span>
+        <span className="font-heading text-gray-500">{tr(locale, "Current", "当前")}: {current}</span>
         <span className="font-heading text-gray-500">
-          Targets: {revealSolution ? highlights.join(", ") : "?"}
+          {tr(locale, "Targets", "目标")}: {revealSolution ? highlights.join(", ") : "?"}
         </span>
       </div>
     </div>

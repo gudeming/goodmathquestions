@@ -5,13 +5,14 @@
 import { useState } from "react";
 import type { AnimationScene, SceneConfigOf, SceneProps } from "@gmq/animation-engine";
 import { useLegacyScene } from "./useLegacyScene";
+import { tr, type SceneLocale } from "../primitives";
 
-export default function MagicSquareScene({ config, phase }: SceneProps<SceneConfigOf<"magic_square">>) {
+export default function MagicSquareScene({ config, phase, locale }: SceneProps<SceneConfigOf<"magic_square">>) {
   const scene = useLegacyScene(config);
-  return <MagicSquareAnimation scene={scene} />;
+  return <MagicSquareAnimation scene={scene} locale={locale} />;
 }
 
-function MagicSquareAnimation({ scene }: { scene: AnimationScene }) {
+function MagicSquareAnimation({ scene, locale }: { scene: AnimationScene; locale: SceneLocale }) {
   const size = Number(scene.metadata?.size ?? 3);
   const target = Number(scene.metadata?.targetSum ?? 15);
   const known = (scene.metadata?.known ?? {}) as Record<string, number>;
@@ -45,7 +46,7 @@ function MagicSquareAnimation({ scene }: { scene: AnimationScene }) {
           );
         })}
       </div>
-      <p className="text-xs text-gray-500">Try to make each row/column sum to {target}</p>
+      <p className="text-xs text-gray-500">{tr(locale, `Try to make each row/column sum to ${target}`, `让每一行、每一列的和都等于 ${target}`)}</p>
     </div>
   );
 }

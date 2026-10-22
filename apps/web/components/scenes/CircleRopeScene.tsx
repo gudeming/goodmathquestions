@@ -39,8 +39,12 @@ export default function CircleRopeScene({ config, phase, locale, reducedMotion, 
   const planet = planets.find((p) => p.id === planetId) ?? planets[0];
 
   const progress = useRevealProgress(phase === "reveal", REVEAL_MS, reducedMotion, () => events.emit("reveal_done"));
-  const shownExtra = phase === "reveal" ? (extra > 0 ? extra : 1) : phase === "hook" ? 1 : extra;
+  // The reveal always uses the question's canonical extra rope, not wherever the slider was left.
+  const canonicalExtra = config.revealExtraMeters ?? 1;
+  const shownExtra = phase === "explore" ? extra : canonicalExtra;
   const gap = ropeGap(shownExtra);
+  const hook = phase === "hook";
+  const triedOther = phase === "reveal" && extra > 0 && Math.abs(extra - canonicalExtra) > 1e-9;
 
   const update = (nextExtra: number, nextPlanet: string) => {
     if (phase !== "explore") return;
@@ -67,7 +71,7 @@ export default function CircleRopeScene({ config, phase, locale, reducedMotion, 
   const label = tr(locale, "A rope hugs a ball. Make it longer: how big is the gap?", "绳子紧贴着球。把绳子加长，缝有多大？");
 
   const message = (() => {
-    if (phase === "hook") return tr(locale, "Add 1 m to a rope around the Earth. What fits under it?", "绕地球一圈的绳子加长 1 米，下面能钻过什么？");
+    if (hook) return tr(locale, `Add ${formatNumber(canonicalExtra, locale)} m to a rope around the Earth. What fits under it?`, `绕地球一圈的绳子加长 ${formatNumber(canonicalExtra, locale)} 米，下面能钻过什么？`);
     if (phase === "reveal")
       return progress > 0.6
         ? tr(locale, `Rope = 2π × radius, so 2π × (radius + gap) = rope + ${formatNumber(shownExtra, locale)}: gap = ${formatNumber(shownExtra, locale)} ÷ 2π ≈ ${formatMetres(gap, locale)}. The radius cancels out!`, `绳长 = 2π × 半径，所以 2π ×（半径 + 缝）= 绳长 + ${formatNumber(shownExtra, locale)}：缝 = ${formatNumber(shownExtra, locale)} ÷ 2π ≈ ${formatMetres(gap, locale)}。半径被消掉了！`)
@@ -96,6 +100,11 @@ export default function CircleRopeScene({ config, phase, locale, reducedMotion, 
             <text x={180} y={194} textAnchor="middle" className="fill-gray-700 text-[12px] font-bold" opacity={segment(progress, 0.6, 0.8)}>
               {tr(locale, "gap", "缝")} = {formatNumber(shownExtra, locale)} ÷ 2π
             </text>
+            {triedOther && (
+              <text x={180} y={12} textAnchor="middle" className="fill-gray-500 text-[10px]" opacity={segment(progress, 0.6, 0.8)}>
+                {tr(locale, `You tried: ${formatNumber(extra, locale)} m → gap ${formatMetres(ropeGap(extra), locale)}`, `你刚才试的：${formatNumber(extra, locale)} 米 → 缝 ${formatMetres(ropeGap(extra), locale)}`)}
+              </text>
+            )}
           </svg>
         ) : (
           <>
@@ -104,7 +113,7 @@ export default function CircleRopeScene({ config, phase, locale, reducedMotion, 
               <text x={60} y={160} textAnchor="middle" className="fill-gray-500 text-[9px]">{tr(locale, "rope", "绳长")} {formatMetres(circumference(planet.radiusM), locale)}</text>
               <text x={60} y={174} textAnchor="middle" className="fill-fun-pink text-[10px] font-bold">+ {formatNumber(shownExtra, locale)} m</text>
             </svg>
-            <CloseUp gap={gap} fits={fits} tooBig={tooBig} locale={locale} />
+            <CloseUp gap={gap} fits={hook ? null : fits} tooBig={hook ? null : tooBig} hidden={hook} locale={locale} />
           </>
         )}
       </div>
@@ -133,14 +142,14 @@ export default function CircleRopeScene({ config, phase, locale, reducedMotion, 
             </label>
           </>
         )}
-        <Counter label={tr(locale, "gap", "缝")} value={formatMetres(gap, locale)} tone="pink" />
+        <Counter label={tr(locale, "gap", "缝")} value={hook ? "?" : formatMetres(gap, locale)} tone="pink" />
       </div>
     </SceneFrame>
   );
 }
 
 /** Close-up of the ground: the rope at the gap height, with the biggest thing that fits and the next one that doesn't. */
-function CloseUp({ gap, fits, tooBig, locale }: { gap: number; fits: GapThing | null; tooBig: GapThing | null; locale: SceneLocale }) {
+function CloseUp({ gap, fits, tooBig, hidden, locale }: { gap: number; fits: GapThing | null; tooBig: GapThing | null; hidden: boolean; locale: SceneLocale }) {
   const groundY = 180;
   const plotH = 150;
   // Scale to the gap and the thing that fits; a much taller thing is only named, not drawn.
@@ -157,13 +166,13 @@ function CloseUp({ gap, fits, tooBig, locale }: { gap: number; fits: GapThing | 
     );
   };
   return (
-    <svg viewBox="0 0 240 200" role="img" aria-label={tr(locale, `Close-up: the gap is ${formatMetres(gap, locale)}`, `放大看：缝是 ${formatMetres(gap, locale)}`)} className="h-full min-w-0 flex-1">
+    <svg viewBox="0 0 240 200" role="img" aria-label={hidden ? tr(locale, "Close-up: how big is the gap?", "放大看：缝有多大？") : tr(locale, `Close-up: the gap is ${formatMetres(gap, locale)}`, `放大看：缝是 ${formatMetres(gap, locale)}`)} className="h-full min-w-0 flex-1">
       <rect x={0} y={groundY} width={240} height={20} className="fill-green-200" />
       {fits && thing(fits, 20, true)}
       {tooBig && tooBig.metres <= top && thing(tooBig, 110, false)}
       <line x1={0} x2={240} y1={ropeY} y2={ropeY} className="stroke-amber-700" strokeWidth={3} strokeDasharray="8 3" style={{ transition: "y1 250ms, y2 250ms" }} />
       <line x1={226} x2={226} y1={ropeY} y2={groundY} className="stroke-fun-pink" strokeWidth={1.5} />
-      <text x={222} y={Math.max(12, (ropeY + groundY) / 2)} textAnchor="end" className="fill-fun-pink text-[11px] font-bold">{formatMetres(gap, locale)}</text>
+      <text x={222} y={Math.max(12, (ropeY + groundY) / 2)} textAnchor="end" className="fill-fun-pink text-[11px] font-bold">{hidden ? "?" : formatMetres(gap, locale)}</text>
       <text x={4} y={12} className="fill-gray-400 text-[9px]">🔍 {tr(locale, "close-up", "放大")}</text>
       {fits && <text x={20} y={196} className="fill-green-700 text-[9px] font-bold">✓ {bi(locale, fits.label)}</text>}
       {tooBig && <text x={120} y={196} className="fill-red-600 text-[9px]">✗ {bi(locale, tooBig.label)}</text>}

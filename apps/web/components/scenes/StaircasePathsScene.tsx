@@ -183,8 +183,10 @@ export default function StaircasePathsScene({ config, phase, locale, reducedMoti
       {explore && (
         <div className="flex flex-wrap justify-center gap-1 text-[10px] tabular-nums sm:text-xs" aria-label={tr(locale, "Ways found for each number of steps", "每种楼梯找到的走法")}>
           {Array.from({ length: MAX_STEPS }, (_, i) => i + 1).map((k) => (
+            // Only the child's own count per staircase: the totals (and askN's answer) wait for the reveal.
             <span key={k} className={`rounded-full px-1.5 py-0.5 ${k === n ? "bg-primary-500 text-white" : (found[k]?.length ?? 0) === total(k) ? "bg-fun-green/30 text-green-800" : "bg-gray-100 text-gray-600"}`}>
-              {k}: {found[k]?.length ?? 0}/{total(k)}
+              {k}: {found[k]?.length ?? 0}
+              {(found[k]?.length ?? 0) === total(k) ? " ✓" : ""}
             </span>
           ))}
         </div>

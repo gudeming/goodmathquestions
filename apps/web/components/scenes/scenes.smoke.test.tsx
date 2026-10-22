@@ -266,11 +266,10 @@ describe("tier-2 batch 3a content", () => {
     expect(h).toContain("Island: 5 bridges");
     expect(h).toContain("North bank: 3 bridges");
   });
-  it("pythagoras shows the three areas", () => {
+  it("pythagoras keeps the areas hidden until asked (no 36 / 64 / 100 up front)", () => {
     const h = html(PythagorasSquaresScene as AnyScene, SAMPLE_SCENE_CONFIGS.pythagoras_squares);
-    expect(h).toContain(">36<");
-    expect(h).toContain(">64<");
-    expect(h).toContain(">100<");
+    expect(h).toContain("Show areas");
+    for (const v of [">36<", ">64<", ">100<"]) expect(h).not.toContain(v);
   });
   it("clock starts with midnight found", () => expect(html(ClockOverlapScene as AnyScene, SAMPLE_SCENE_CONFIGS.clock_overlap)).toContain("12:00 am"));
   it("socks reveal sets up three boxes", () => expect(html(SockDrawerScene as AnyScene, SAMPLE_SCENE_CONFIGS.sock_drawer, "reveal")).toContain("3 boxes, 4 socks"));
@@ -293,12 +292,18 @@ describe("tier-2 batch 3b content", () => {
     for (const a of ["60°", "90°", "108°", "120°"]) expect(h).toContain(a);
   });
   it("domino board shows 62 cells for the mutilated board", () => expect(html(DominoTilingScene as AnyScene, SAMPLE_SCENE_CONFIGS.domino_tiling)).toMatch(/30|32/));
-  it("calendar window starts on 17 with 9 × 17 = 153", () => {
+  it("calendar window starts on 17 with its total hidden and no × 9 rule", () => {
     const h = html(CalendarGridScene as AnyScene, SAMPLE_SCENE_CONFIGS.calendar_grid);
-    expect(h).toContain("153");
-    expect(h).toContain("17 × 9");
+    expect(h).toContain("9 + 10 + 11 + 16 + 17 + 18 + 23 + 24 + 25 = ?");
+    expect(h).toContain("middle date");
+    expect(h).not.toContain("153");
+    expect(h).not.toContain("× 9");
   });
-  it("cycle timeline calls out year 78", () => expect(html(CycleTimelineScene as AnyScene, SAMPLE_SCENE_CONFIGS.cycle_timeline)).toContain("78"));
+  it("cycle timeline marks the first shared year without printing it", () => {
+    const h = html(CycleTimelineScene as AnyScene, SAMPLE_SCENE_CONFIGS.cycle_timeline);
+    expect(h).toContain("★");
+    expect(h).not.toContain(">78<");
+  });
   it("queens counts 0 of 2", () => expect(html(QueensBoardScene as AnyScene, SAMPLE_SCENE_CONFIGS.queens_board)).toContain("0/2"));
   it("guess bar spans 1..100", () => expect(html(GuessGameScene as AnyScene, SAMPLE_SCENE_CONFIGS.guess_game)).toContain("1–100"));
   it("expression shows the target and the four 4s", () => {

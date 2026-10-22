@@ -58,12 +58,12 @@ export default function FibSpiralScene({ config, phase, locale, reducedMotion, o
 
   const label = tr(locale, "Fibonacci squares and the spiral they make", "斐波那契正方形和它们卷出的螺旋");
   const message = (() => {
-    if (phase === "hook") return "1, 1, 2, 3, 5, 8, … ?";
+    if (phase === "hook") return tr(locale, "1, 1, 2, 3, 5, 8, … ?", "1、1、2、3、5、8……？");
     if (phase === "reveal")
       return progress > 0.5
         ? tr(locale, `Each ratio gets closer to ${GOLDEN_RATIO.toFixed(3)}, the golden ratio. Sunflowers pack their seeds with the same turn: count the spirals and you get Fibonacci numbers.`, `相邻两数的比越来越接近 ${GOLDEN_RATIO.toFixed(3)}（黄金比）。向日葵用同样的角度排种子：数一数螺旋，又是斐波那契数。`)
         : tr(locale, "Square after square…", "一个接一个的正方形……");
-    if (count === START) return tr(locale, "Press Next: the new square sits along the long side.", "点「下一个」：新正方形贴着长边放。");
+    if (count === START) return tr(locale, "Press “Next square”: the new square sits along the long side.", "点「下一个」：新正方形贴着长边放。");
     if (asking && prev.length === 2) return tr(locale, `How big is the new square? It spans ${prev[0]} + ${prev[1]}…`, `新正方形有多大？它横跨 ${prev[0]} + ${prev[1]}……`);
     return prev.length === 2 ? `${prev[0]} + ${prev[1]} = ${newest.size}` : "";
   })();

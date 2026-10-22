@@ -47,6 +47,8 @@ export const HalvingBarBase = z.object({
 export const CircleRopeBase = z.object({
   type: z.literal("circle_rope"),
   extraMetersMax: num.min(1).max(100).default(10),
+  /** Extra rope the reveal uses for every ball (the question's canonical value; default 1 m). */
+  revealExtraMeters: num.positive().max(100).optional(),
   planets: z.array(z.object({ id: Id, label: Bi, radiusM: num.positive().max(1e13), emoji: Emoji.optional() })).min(1).max(4).optional(),
 });
 
@@ -114,6 +116,8 @@ export const DigitSlideBase = z.object({
   multiplier: z.literal(11).default(11),
   /** Quick-pick numbers (two-digit). */
   examples: z.array(int.min(10).max(99)).min(1).max(6).optional(),
+  /** Optional scene copy; the hook line defaults to the first examples worked out ("45 × 11 = 495. …"). */
+  labels: z.object({ hook: Bi.optional() }).optional(),
 });
 
 /** D8: Fibonacci squares and the golden spiral. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { convergence, mulberry32, piEstimate, throwDarts, type Dart, type PiDartsConfig, type Rng, type SceneProps } from "@gmq/animation-engine";
 import { Counter, SceneButton, SceneFrame, SceneMessage, formatNumber, tr, type SceneLocale } from "./primitives";
 import { useSceneEvents } from "./useSceneEvents";
@@ -11,6 +11,10 @@ const REVEAL_MS = 3600;
 /** Proposing the estimate needs at least this many darts (C7 accepts 3.0–3.3 after 1000). */
 const PROPOSE_AT = 1000;
 const BATCHES = [10, 100, 1000];
+/** The proposed estimate follows the readout, at most this often (trailing edge kept). */
+const PROPOSE_THROTTLE_MS = 500;
+/** One rounding everywhere: the readout shows what gets proposed. */
+const DECIMALS = 2;
 
 function dotsPath(darts: readonly Dart[], inside: boolean): string {
   let d = "";
@@ -24,8 +28,31 @@ export default function PiDartsScene({ config, phase, locale, reducedMotion, onE
   const events = useSceneEvents(onEvent);
   const rngRef = useRef<Rng | null>(null);
   const [darts, setDarts] = useState<Dart[]>([]);
-  const proposed = useRef(false);
+  const completed = useRef(false);
+  const lastProposal = useRef<{ at: number; value: string | null }>({ at: 0, value: null });
+  const proposeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rng = () => (rngRef.current ??= mulberry32(config.seed ?? (Date.now() >>> 0)));
+
+  useEffect(
+    () => () => {
+      if (proposeTimer.current) clearTimeout(proposeTimer.current);
+    },
+    [],
+  );
+
+  /** Propose the current estimate (2 dp) whenever it changes, throttled. */
+  const propose = (value: string) => {
+    const send = () => {
+      proposeTimer.current = null;
+      if (lastProposal.current.value === value) return;
+      lastProposal.current = { at: Date.now(), value };
+      onProposeAnswer?.(value);
+    };
+    if (proposeTimer.current) clearTimeout(proposeTimer.current);
+    const wait = PROPOSE_THROTTLE_MS - (Date.now() - lastProposal.current.at);
+    if (wait <= 0) send();
+    else proposeTimer.current = setTimeout(send, wait);
+  };
 
   const drop = (count: number) => {
     if (phase !== "explore") return;
@@ -37,10 +64,12 @@ export default function PiDartsScene({ config, phase, locale, reducedMotion, onE
     const inside = next.filter((d) => d.inside).length;
     const est = piEstimate(inside, next.length);
     events.state({ darts: next.length, inside, estimate: Number(est.toFixed(4)) });
-    if (next.length >= PROPOSE_AT && !proposed.current) {
-      proposed.current = true;
-      onProposeAnswer?.(est.toFixed(2));
-      events.emit("completed", { moves: next.length, estimate: Number(est.toFixed(4)) });
+    if (next.length >= PROPOSE_AT) {
+      propose(est.toFixed(DECIMALS));
+      if (!completed.current) {
+        completed.current = true;
+        events.emit("completed", { moves: next.length, estimate: Number(est.toFixed(4)) });
+      }
     }
   };
 
@@ -63,10 +92,10 @@ export default function PiDartsScene({ config, phase, locale, reducedMotion, onE
     if (phase === "hook") return tr(locale, "Rain on a square. Can the raindrops find π?", "雨点落在正方形上，雨点能算出 π 吗？");
     if (phase === "reveal")
       return progress > 0.7
-        ? tr(locale, `Circle ÷ square = πr² ÷ 4r² = π/4. So 4 × ${fmt(inside)}/${fmt(shown.length)} ≈ ${est.toFixed(3)}. More dots → closer to π = 3.14159…`, `圆 ÷ 正方形 = πr² ÷ 4r² = π/4。所以 4 × ${fmt(inside)}/${fmt(shown.length)} ≈ ${est.toFixed(3)}。点越多越接近 π = 3.14159……`)
+        ? tr(locale, `Circle ÷ square = πr² ÷ 4r² = π/4. So 4 × ${fmt(inside)}/${fmt(shown.length)} ≈ ${est.toFixed(DECIMALS)}. More dots → closer to π = 3.14159…`, `圆 ÷ 正方形 = πr² ÷ 4r² = π/4。所以 4 × ${fmt(inside)}/${fmt(shown.length)} ≈ ${est.toFixed(DECIMALS)}。点越多越接近 π = 3.14159……`)
         : tr(locale, "Keep it raining…", "继续下雨……");
     if (darts.length === 0) return tr(locale, "Drop some dots. Count how many land inside the circle.", "撒一些点，数数有多少落在圆里。");
-    return tr(locale, `${fmt(inside)} of ${fmt(darts.length)} inside: 4 × ${fmt(inside)} ÷ ${fmt(darts.length)} = ${est.toFixed(3)}`, `${fmt(darts.length)} 个里有 ${fmt(inside)} 个在圆内：4 × ${fmt(inside)} ÷ ${fmt(darts.length)} = ${est.toFixed(3)}`);
+    return tr(locale, `${fmt(inside)} of ${fmt(darts.length)} inside: 4 × ${fmt(inside)} ÷ ${fmt(darts.length)} ≈ ${est.toFixed(DECIMALS)}`, `${fmt(darts.length)} 个里有 ${fmt(inside)} 个在圆内：4 × ${fmt(inside)} ÷ ${fmt(darts.length)} ≈ ${est.toFixed(DECIMALS)}`);
   })();
 
   return (
@@ -81,7 +110,7 @@ export default function PiDartsScene({ config, phase, locale, reducedMotion, onE
         <div className="flex w-[40%] shrink-0 flex-col">
           <p className="text-center font-bold tabular-nums text-gray-800" aria-live="polite">
             <span className="text-xs text-gray-500">π ≈ </span>
-            <span className="text-xl sm:text-2xl">{shown.length ? est.toFixed(3) : "?"}</span>
+            <span className="text-xl sm:text-2xl">{shown.length && phase !== "hook" ? est.toFixed(DECIMALS) : "?"}</span>
           </p>
           <div className="min-h-0 flex-1">
             <ConvergenceChart curve={curve} maxN={maxDrops} reveal={phase === "reveal"} locale={locale} />

@@ -170,7 +170,8 @@ export default function PascalTriangleScene({ config, phase, locale, reducedMoti
               })}
               {rowShown(r) && (
                 <text x={SUM_X} y={Y(r)} dy="0.35em" textAnchor="middle" className={`${r === askRow && askLit ? "fill-fun-pink text-[10px]" : "fill-primary-600 text-[8px]"} font-bold tabular-nums`}>
-                  {fmt(2 ** r)}
+                  {/* The asked row's sum is the answer: "?" until the reveal lights it. */}
+                  {r === askRow && !askLit ? "?" : fmt(2 ** r)}
                 </text>
               )}
               {phase === "reveal" && r > 0 && rowShown(r) && (

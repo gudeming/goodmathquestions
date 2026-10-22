@@ -51,6 +51,8 @@ export default function CalendarGridScene({ config, phase, locale, reducedMotion
   const cells = windowCells(grid, shown[0], shown[1]) ?? [];
   const centre = cells[4] ?? 0;
   const sum = cells.reduce((a, b) => a + b, 0);
+  // The box the question asks about keeps its total hidden until the reveal.
+  const asked = phase === "explore" && config.centre !== undefined && centre === config.centre;
   const progress = useRevealProgress(phase === "reveal", REVEAL_MS, reducedMotion, () => events.emit("reveal_done"));
   const pairs = symmetricPairs();
 
@@ -142,7 +144,8 @@ export default function CalendarGridScene({ config, phase, locale, reducedMotion
       return revealFinal
         ? tr(locale, `Opposite dates balance around the middle, so the nine dates are always 9 × the middle.`, `对称的两个日期围着中间数平衡，所以九个数的和总是中间数的 9 倍。`)
         : tr(locale, `Pair up opposite dates: each pair makes 2 × ${centre} = ${2 * centre}.`, `把对称的日期两两配对：每对都是 2 × ${centre} = ${2 * centre}。`);
-    return note || tr(locale, "Drag the frame (or tap a date) to move it. Watch both sums.", "拖动方框（或点一个日期）移动它，看看两边的和。");
+    if (!note && asked) return tr(locale, `The question's box: can you find its total without adding? Move the frame to other dates first.`, `这是题目里的方框：能不加就知道总和吗？先把方框挪到别的日期试试。`);
+    return note || tr(locale, "Drag the frame (or tap a date) to move it. Compare the total with the middle date.", "拖动方框（或点一个日期）移动它，比一比总和和中间的日期。");
   })();
 
   return (
@@ -218,7 +221,7 @@ export default function CalendarGridScene({ config, phase, locale, reducedMotion
             {phase === "reveal" && revealPairs > 0 && <circle cx={cx(shown[1] + 1)} cy={cy(shown[0] + 1)} r={11} fill="none" className="stroke-fun-purple" strokeWidth={2} />}
           </svg>
         </div>
-        <SumPanel locale={locale} phase={phase} cells={cells} centre={centre} sum={sum} pairs={pairs.slice(0, revealPairs)} final={revealFinal} />
+        <SumPanel locale={locale} phase={phase} cells={cells} centre={centre} sum={sum} hideSum={asked} pairs={pairs.slice(0, revealPairs)} final={revealFinal} />
       </div>
       <SceneMessage>{msg}</SceneMessage>
     </SceneFrame>
@@ -231,15 +234,15 @@ interface PanelProps {
   cells: number[];
   centre: number;
   sum: number;
+  hideSum: boolean;
   pairs: Array<[number, number]>;
   final: boolean;
 }
 
 /** The two ways of getting the total, side by side (and, in the reveal, the pairs). */
-function SumPanel({ locale, phase, cells, centre, sum, pairs, final }: PanelProps) {
-  const hidden = phase === "hook";
+function SumPanel({ locale, phase, cells, centre, sum, hideSum, pairs, final }: PanelProps) {
+  const hidden = phase === "hook" || hideSum;
   const rule = centreRule(centre);
-  const ok = !hidden && rule === sum;
   if (phase === "reveal") {
     return (
       <div className="flex shrink-0 flex-col justify-center gap-0.5 text-center text-[11px] tabular-nums sm:w-40 sm:text-xs" aria-live="polite">
@@ -258,13 +261,14 @@ function SumPanel({ locale, phase, cells, centre, sum, pairs, final }: PanelProp
   }
   return (
     <div className="grid shrink-0 grid-cols-2 gap-1 text-center text-[11px] tabular-nums sm:w-40 sm:grid-cols-1 sm:content-center sm:text-xs" aria-live="polite">
-      <div className={`rounded-lg px-2 py-1 ${ok ? "bg-fun-green/20 text-green-800" : "bg-white text-gray-700"}`}>
+      <div className="rounded-lg bg-white px-2 py-1 text-gray-700">
         <div className="text-[10px] text-gray-500">{tr(locale, "add all nine", "九个数相加")}</div>
         <div className="break-words">{hidden ? `${cells.join(" + ")} = ?` : `${cells.join(" + ")} = ${sum}`}</div>
       </div>
-      <div className={`rounded-lg px-2 py-1 ${ok ? "bg-fun-green/20 text-green-800" : "bg-white text-gray-700"}`}>
-        <div className="text-[10px] text-gray-500">{tr(locale, "middle × 9", "中间数 × 9")}</div>
-        <div className="text-base font-bold">{hidden ? `${centre} × 9 = ?` : `${centre} × 9 = ${rule}`}</div>
+      {/* Just the middle date: the × 9 rule is the discovery, shown in the reveal. */}
+      <div className="rounded-lg bg-white px-2 py-1 text-gray-700">
+        <div className="text-[10px] text-gray-500">{tr(locale, "middle date", "中间的日期")}</div>
+        <div className="text-base font-bold">{centre}</div>
       </div>
     </div>
   );
