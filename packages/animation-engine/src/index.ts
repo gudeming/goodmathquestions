@@ -42,6 +42,19 @@ export {
   DigitSlideSchema,
   FibSpiralSchema,
   DivisorBlocksSchema,
+  TilingLabSchema,
+  DominoTilingSchema,
+  StaircasePathsSchema,
+  PascalTriangleSchema,
+  CalendarGridSchema,
+  CycleTimelineSchema,
+  FrogPuzzleSchema,
+  WaterJugsSchema,
+  QueensBoardSchema,
+  GuessGameSchema,
+  ExpressionBuilderSchema,
+  CoinPilesSchema,
+  TrainsFlySchema,
 } from "./schema";
 export type {
   SceneConfig,
@@ -80,6 +93,19 @@ export type {
   DigitSlideConfig,
   FibSpiralConfig,
   DivisorBlocksConfig,
+  TilingLabConfig,
+  DominoTilingConfig,
+  StaircasePathsConfig,
+  PascalTriangleConfig,
+  CalendarGridConfig,
+  CycleTimelineConfig,
+  FrogPuzzleConfig,
+  WaterJugsConfig,
+  QueensBoardConfig,
+  GuessGameConfig,
+  ExpressionBuilderConfig,
+  CoinPilesConfig,
+  TrainsFlyConfig,
 } from "./schema";
 export { SAMPLE_SCENE_CONFIGS, TRICK_SAMPLES, MODE_SAMPLES } from "./samples";
 
@@ -268,3 +294,73 @@ export {
   perfectNumbersUpTo,
 } from "./scenes/number-play";
 export type { ElevenStep, FibSquare, DivisorClass } from "./scenes/number-play";
+
+// Tier 2, batch 3b.
+export {
+  TILE_SHAPES,
+  SHAPE_SIDES,
+  interiorAngle,
+  tilesAlone,
+  vertexFit,
+  angleSum,
+  vertexStatus,
+  vertexCombos,
+  polygonAtVertex,
+  regularPolygon,
+  floorPatch,
+} from "./scenes/tiling";
+export type { TileShape, Pt, VertexStatus } from "./scenes/tiling";
+export { cellColour, rcKey, boardCells, colourBalance, dominoTilingPossibleByColour, areAdjacent, dominoTiling, MUTILATED_8 } from "./scenes/domino";
+export type { CellRC, DominoBoard, Domino, CellColour } from "./scenes/domino";
+export {
+  staircaseWays,
+  enumeratePaths,
+  pathKey,
+  pascalRow,
+  rowSum,
+  pascalTriangle,
+  shallowDiagonal,
+  diagonalSums,
+  gcd,
+  lcm,
+  collisions,
+  cycleYears,
+} from "./scenes/sequences";
+export { daysInMonth, firstWeekday, monthGrid, windowCells, windowSum, centreRule, validWindows, windowAround, symmetricPairs } from "./scenes/calendar";
+export type { MonthGrid } from "./scenes/calendar";
+export {
+  initialPads,
+  goalPads,
+  isFrogSolved,
+  frogMoveFrom,
+  isLegalFrogMove,
+  legalFrogMoves,
+  applyFrogMove,
+  isFrogDeadEnd,
+  frogMinMoves,
+  frogSolution,
+} from "./scenes/frogs";
+export type { Frog, Pads, FrogMove } from "./scenes/frogs";
+export { JUG_ACTIONS, applyJugAction, jugActionChanges, isJugsSolved, jugsReachable, jugsShortestSolution, jugsTimeline, jugsLedger } from "./scenes/jugs";
+export type { JugsConfigLike, JugState, JugAction } from "./scenes/jugs";
+export {
+  attacks,
+  attackedSquares,
+  clashingQueens,
+  isQueensSolution,
+  queensSolutions,
+  queensFromCols,
+  colsFromQueens,
+  solutionKey,
+  mirrorCols,
+  mirrorKey,
+} from "./scenes/queens";
+export type { Queen } from "./scenes/queens";
+export { binarySearchSteps, halvingStrip, replyTo, narrow, middleGuess, binarySearchPath } from "./scenes/guess";
+export type { GuessReply } from "./scenes/guess";
+export { EXPR_TILE_OPS, tilesToExpression, literalNumbers, literalOps, sameNumbers } from "./scenes/expression";
+export type { ExprTileOp, ExprTile } from "./scenes/expression";
+export { dealCoins, splitAndFlip, randomPick } from "./scenes/coin-piles";
+export type { SplitResult } from "./scenes/coin-piles";
+export { meetingTime, flyTotal, flyLegs, trainsAt } from "./scenes/trains";
+export type { TrainsLike, FlyLeg } from "./scenes/trains";

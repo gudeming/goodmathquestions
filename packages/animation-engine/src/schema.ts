@@ -48,6 +48,39 @@ export {
   FibSpiralSchema,
   DivisorBlocksSchema,
 } from "./schema-tier2a";
+import {
+  CalendarGridBase,
+  CoinPilesBase,
+  CycleTimelineBase,
+  DominoTilingBase,
+  ExpressionBuilderBase,
+  FrogPuzzleBase,
+  GuessGameBase,
+  PascalTriangleBase,
+  QueensBoardBase,
+  StaircasePathsBase,
+  TilingLabBase,
+  TrainsFlyBase,
+  WaterJugsBase,
+  TIER2B_REFINEMENTS,
+  TIER2B_SCENE_TYPES,
+} from "./schema-tier2b";
+
+export {
+  TilingLabSchema,
+  DominoTilingSchema,
+  StaircasePathsSchema,
+  PascalTriangleSchema,
+  CalendarGridSchema,
+  CycleTimelineSchema,
+  FrogPuzzleSchema,
+  WaterJugsSchema,
+  QueensBoardSchema,
+  GuessGameSchema,
+  ExpressionBuilderSchema,
+  CoinPilesSchema,
+  TrainsFlySchema,
+} from "./schema-tier2b";
 
 const Bi = z.object({ en: z.string().min(1), zh: z.string().min(1) });
 const num = z.number().finite();
@@ -449,6 +482,7 @@ const SCENE_REFINEMENTS: Partial<Record<string, Check<never>>> = {
   visual_pattern: checkPattern as Check<never>,
   balance_lab: checkBalance as Check<never>,
   ...TIER2A_REFINEMENTS,
+  ...TIER2B_REFINEMENTS,
 };
 
 // Refined per-scene schemas (use these when validating a single known type).
@@ -487,6 +521,7 @@ export const NEW_SCENE_TYPES = [
   "balance_lab",
   "illustration",
   ...TIER2A_SCENE_TYPES,
+  ...TIER2B_SCENE_TYPES,
 ] as const;
 
 export const SceneConfigSchema = z
@@ -528,6 +563,19 @@ export const SceneConfigSchema = z
     DigitSlideBase,
     FibSpiralBase,
     DivisorBlocksBase,
+    TilingLabBase,
+    DominoTilingBase,
+    StaircasePathsBase,
+    PascalTriangleBase,
+    CalendarGridBase,
+    CycleTimelineBase,
+    FrogPuzzleBase,
+    WaterJugsBase,
+    QueensBoardBase,
+    GuessGameBase,
+    ExpressionBuilderBase,
+    CoinPilesBase,
+    TrainsFlyBase,
   ])
   .superRefine((c, ctx) => {
     const check = SCENE_REFINEMENTS[c.type] as Check<typeof c> | undefined;
@@ -568,6 +616,19 @@ export type CollatzPathConfig = SceneConfigOf<"collatz_path">;
 export type DigitSlideConfig = SceneConfigOf<"digit_slide">;
 export type FibSpiralConfig = SceneConfigOf<"fib_spiral">;
 export type DivisorBlocksConfig = SceneConfigOf<"divisor_blocks">;
+export type TilingLabConfig = SceneConfigOf<"tiling_lab">;
+export type DominoTilingConfig = SceneConfigOf<"domino_tiling">;
+export type StaircasePathsConfig = SceneConfigOf<"staircase_paths">;
+export type PascalTriangleConfig = SceneConfigOf<"pascal_triangle">;
+export type CalendarGridConfig = SceneConfigOf<"calendar_grid">;
+export type CycleTimelineConfig = SceneConfigOf<"cycle_timeline">;
+export type FrogPuzzleConfig = SceneConfigOf<"frog_puzzle">;
+export type WaterJugsConfig = SceneConfigOf<"water_jugs">;
+export type QueensBoardConfig = SceneConfigOf<"queens_board">;
+export type GuessGameConfig = SceneConfigOf<"guess_game">;
+export type ExpressionBuilderConfig = SceneConfigOf<"expression_builder">;
+export type CoinPilesConfig = SceneConfigOf<"coin_piles">;
+export type TrainsFlyConfig = SceneConfigOf<"trains_fly">;
 export type LegacySceneConfig = SceneConfigOf<LegacySceneType>;
 
 export const SCENE_TYPES: readonly SceneConfigType[] = [...LEGACY_SCENE_TYPES, ...NEW_SCENE_TYPES];

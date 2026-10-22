@@ -39,6 +39,13 @@ const PRESETS: Preset[] = [
   { id: "mode:halving-thirds", label: "halving_bar · A10 extension 1/3 + 1/9 + …", config: MODE_SAMPLES.halvingThirds },
   { id: "mode:bridges-one-removed", label: "bridges_trace · B7 extension (one bridge removed)", config: MODE_SAMPLES.bridgesOneRemoved },
   { id: "mode:socks-two-pairs", label: "sock_drawer · C5 extension (two pairs)", config: MODE_SAMPLES.socksTwoPairs },
+  { id: "mode:tiling-octagon", label: "tiling_lab · B9 extension (with octagons)", config: MODE_SAMPLES.tilingWithOctagon },
+  { id: "mode:domino-one-of-each", label: "domino_tiling · B10 extension (one black, one white removed)", config: MODE_SAMPLES.dominoOneOfEach },
+  { id: "mode:stairs-up-to-three", label: "staircase_paths · E2 extension (hops of 1, 2 or 3)", config: MODE_SAMPLES.stairsUpToThree },
+  { id: "mode:calendar-generic", label: "calendar_grid · generic 31-day month", config: MODE_SAMPLES.calendarGeneric },
+  { id: "mode:cycle-seventeen", label: "cycle_timeline · E8 extension (17-year cicadas)", config: MODE_SAMPLES.cycleSeventeen },
+  { id: "mode:queens-eight", label: "queens_board · 8 × 8 (92 solutions)", config: MODE_SAMPLES.queensEight },
+  { id: "mode:guess-computer", label: "guess_game · F12 computer guesses (binary search)", config: MODE_SAMPLES.guessComputer },
   ...LEGACY_SCENE_TYPES.map((t: SceneConfigType) => ({ id: t, label: `${t} (legacy)`, config: SAMPLE_SCENE_CONFIGS[t] })),
 ];
 
