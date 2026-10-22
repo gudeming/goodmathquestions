@@ -128,12 +128,18 @@ describe.skipIf(!servicesUp)("question router v2 (Postgres)", () => {
     expect(res).toMatchObject({ isCorrect: true, feedback: null, estimate: null, aha: null });
   });
 
-  it("submitAnswer judges v2 questions, stores the text answer and awards the existing XP", async () => {
+  it("submitAnswer judges v2 questions, stores the text answer and awards Phase 4 XP", async () => {
     const caller = callerFor({ userId: f.userId });
     const wrong = await caller.question.submitAnswer({ questionId: f.multi.id, answer: "1 and 7", timeSpent: 5 });
-    expect(wrong).toMatchObject({ isCorrect: false, xpEarned: 0, attempt: 1, feedback: { zh: "7 太远了，再看看第二个。" } });
+    // First attempt earns +5 even when wrong (math-engine/xp.ts).
+    expect(wrong).toMatchObject({ isCorrect: false, xpEarned: 5, attempt: 1, feedback: { zh: "7 太远了，再看看第二个。" } });
 
-    const right = await caller.question.submitAnswer({ questionId: f.multi.id, answer: ["5", "1"], timeSpent: 9 });
+    const right = await caller.question.submitAnswer({
+      questionId: f.multi.id,
+      answer: ["5", "1"],
+      timeSpent: 9,
+      hintsUsed: 2,
+    });
     expect(right).toMatchObject({ isCorrect: true, xpEarned: 25, attempt: 2, aha: { en: "Both ends meet." } });
 
     const subs = await db.submission.findMany({ where: { userId: f.userId }, orderBy: { attempt: "asc" } });
@@ -142,7 +148,7 @@ describe.skipIf(!servicesUp)("question router v2 (Postgres)", () => {
       ["5, 1", true],
     ]);
     const user = await db.user.findUniqueOrThrow({ where: { id: f.userId }, select: { xp: true } });
-    expect(user.xp).toBe(25);
+    expect(user.xp).toBe(30);
   });
 });
 

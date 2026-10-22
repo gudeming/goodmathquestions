@@ -1,179 +1,148 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { useId, useState } from "react";
 import { useSession } from "next-auth/react";
-import { trpc } from "@/lib/trpc";
 import Link from "next/link";
+import { trpc } from "@/lib/trpc";
+import { getLocalizedPath } from "@/lib/seo";
+import { MathText } from "@/components/ui/MathText";
 
 interface DiscussionSectionProps {
   questionId: string;
+  /** A specific question to answer ("How did you pair them?"); hero questions pass their discussionPrompt. */
+  prompt?: string | null;
+  /** Called after a comment is posted (analytics). */
+  onPosted?: (content: string) => void;
 }
 
-export function DiscussionSection({ questionId }: DiscussionSectionProps) {
+const MAX_COMMENT = 500;
+
+/** Comment box + list. Used by the DRILL layout and, with a prompt, by the hero reveal. */
+export function DiscussionSection({ questionId, prompt, onPosted }: DiscussionSectionProps) {
   const t = useTranslations("questions");
-  const locale = useLocale();
-  const isZh = locale === "zh";
+  const locale = useLocale() === "zh" ? "zh" : "en";
+  const reduced = useReducedMotion();
   const { data: session } = useSession();
   const [newComment, setNewComment] = useState("");
+  const [status, setStatus] = useState<"idle" | "posted" | "failed">("idle");
+  const inputId = useId();
 
   const utils = trpc.useUtils();
-
-  const { data, isLoading } = trpc.comment.list.useQuery({
-    questionId,
-    limit: 20,
-  });
+  const { data, isLoading } = trpc.comment.list.useQuery({ questionId, limit: 20 });
 
   const addComment = trpc.comment.create.useMutation({
-    onSuccess: () => {
+    onSuccess: (_, vars) => {
       setNewComment("");
-      utils.comment.list.invalidate({ questionId });
+      setStatus("posted");
+      onPosted?.(vars.content);
+      void utils.comment.list.invalidate({ questionId });
     },
+    onError: () => setStatus("failed"),
   });
 
   const comments = data?.comments ?? [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim() || !session?.user) return;
-
-    addComment.mutate({
-      questionId,
-      content: newComment.trim(),
-    });
+    if (!newComment.trim() || !session?.user || addComment.isPending) return;
+    addComment.mutate({ questionId, content: newComment.trim() });
   };
 
   return (
-    <motion.div
-      className="bg-white rounded-card shadow-lg p-6 border-2 border-primary-100"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.8 }}
-    >
-      <h2 className="text-2xl font-heading font-bold text-gray-800 mb-6">
-        💬 {t("discussion")} ({comments.length})
+    <section aria-labelledby={`${inputId}-title`} className="rounded-card border-2 border-primary-100 bg-white p-6 shadow-lg" data-testid="discussion">
+      <h2 id={`${inputId}-title`} className="mb-2 font-heading text-2xl font-bold text-gray-800">
+        💬 {prompt ? t("howDidYouSolve") : t("discussion")} ({comments.length})
       </h2>
+      {prompt && <MathText as="p" className="mb-5 font-body text-lg text-gray-700" text={prompt} />}
 
-      {/* Comment Input */}
       {session?.user ? (
         <form onSubmit={handleSubmit} className="mb-8">
-          <div className="flex gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary-400 to-fun-purple flex items-center justify-center text-white font-bold shrink-0">
-              {session.user.name?.[0] || "?"}
-            </div>
-            <div className="flex-grow">
-              <textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="input-fun resize-none"
-                rows={2}
-                placeholder={t("addComment")}
-                maxLength={500}
-                disabled={addComment.isPending}
-              />
-              <AnimatePresence>
-                {newComment.length > 0 && (
-                  <motion.div
-                    className="flex justify-between items-center mt-2"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                  >
-                    <span className="text-xs text-gray-400">
-                      {newComment.length}/500
-                    </span>
-                    <motion.button
-                      type="submit"
-                      disabled={addComment.isPending}
-                      className="btn-primary text-sm py-2 px-4 disabled:opacity-50"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {addComment.isPending
-                        ? isZh ? "发送中..." : "Sending..."
-                        : isZh ? "发送" : "Post"} 💬
-                    </motion.button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+          <label htmlFor={inputId} className="sr-only">
+            {prompt ? t("howDidYouSolve") : t("addComment")}
+          </label>
+          <textarea
+            id={inputId}
+            value={newComment}
+            onChange={(e) => {
+              setNewComment(e.target.value);
+              if (status !== "idle") setStatus("idle");
+            }}
+            className="input-fun resize-none"
+            rows={3}
+            placeholder={prompt ? t("commentPlaceholder") : t("addComment")}
+            maxLength={MAX_COMMENT}
+            disabled={addComment.isPending}
+          />
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <span className="text-xs text-gray-500" aria-live="polite">
+              {status === "posted" ? t("posted") : status === "failed" ? t("postFailed") : `${newComment.length}/${MAX_COMMENT}`}
+            </span>
+            <button
+              type="submit"
+              disabled={addComment.isPending || newComment.trim() === ""}
+              className="btn-primary min-h-[44px] px-5 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {addComment.isPending ? t("posting") : t("post")} 💬
+            </button>
           </div>
         </form>
       ) : (
-        <div className="bg-primary-50 rounded-card p-4 mb-6 text-center">
-          <p className="text-gray-600 font-body text-sm">
-            {isZh ? "登录后参与讨论" : "Log in to join the discussion"}
-          </p>
-          <Link href="/login" className="text-primary-600 font-heading font-semibold text-sm hover:underline">
-            {isZh ? "登录" : "Log In"} →
+        <div className="mb-6 rounded-card bg-primary-50 p-4 text-center">
+          <p className="font-body text-sm text-gray-600">{t("loginToComment")}</p>
+          <Link href={getLocalizedPath(locale, "/login")} className="inline-flex min-h-[44px] items-center font-heading text-sm font-semibold text-primary-600 hover:underline">
+            {t("logIn")} →
           </Link>
         </div>
       )}
 
-      {/* Loading */}
-      {isLoading && (
-        <div className="text-center py-6">
-          <p className="text-gray-400 font-heading text-sm">
-            {isZh ? "加载评论..." : "Loading comments..."}
-          </p>
-        </div>
-      )}
+      {isLoading && <p className="py-6 text-center font-heading text-sm text-gray-500">{t("loadingComments")}</p>}
 
-      {/* Comments List */}
-      <div className="space-y-6">
-        {comments.length === 0 && !isLoading && (
-          <p className="text-center text-gray-400 py-6 font-body">
-            {isZh ? "还没有评论，来做第一个发言的人吧！" : "No comments yet. Be the first to share your thoughts!"}
-          </p>
-        )}
-
-        {comments.map((comment, i) => (
-          <motion.div
-            key={comment.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-          >
-            <CommentItem comment={comment} />
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
+      <ul className="space-y-6">
+        {comments.length === 0 && !isLoading && <li className="py-6 text-center font-body text-gray-500">{t("noComments")}</li>}
+        <AnimatePresence initial={false}>
+          {comments.map((comment, i) => (
+            <motion.li
+              key={comment.id}
+              initial={reduced ? { opacity: 0 } : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: reduced ? 0 : Math.min(i, 10) * 0.05 }}
+            >
+              <CommentItem comment={comment} />
+            </motion.li>
+          ))}
+        </AnimatePresence>
+      </ul>
+    </section>
   );
 }
 
-function CommentItem({
-  comment,
-  depth = 0,
-}: {
-  comment: any;
-  depth?: number;
-}) {
+interface CommentView {
+  id: string;
+  content: string;
+  createdAt: Date | string;
+  user: { displayName: string; level: number };
+  replies?: CommentView[];
+}
+
+function CommentItem({ comment, depth = 0 }: { comment: CommentView; depth?: number }) {
   return (
-    <div className={`${depth > 0 ? "ml-12 mt-3" : ""}`}>
+    <div className={depth > 0 ? "ml-12 mt-3" : ""}>
       <div className="flex gap-3">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-fun-cyan to-fun-green flex items-center justify-center text-white text-sm font-bold shrink-0">
-          {comment.user.displayName[0]}
+        <div aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-fun-cyan to-fun-green text-sm font-bold text-white">
+          {comment.user.displayName[0] ?? "?"}
         </div>
         <div className="flex-grow">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-heading font-semibold text-gray-800 text-sm">
-              {comment.user.displayName}
-            </span>
-            <span className="badge-level text-xs py-0.5 px-2">
-              Lv.{comment.user.level}
-            </span>
-            <span className="text-xs text-gray-400">
-              {new Date(comment.createdAt).toLocaleDateString()}
-            </span>
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <span className="font-heading text-sm font-semibold text-gray-800">{comment.user.displayName}</span>
+            <span className="badge-level px-2 py-0.5 text-xs">Lv.{comment.user.level}</span>
+            <span className="text-xs text-gray-500">{new Date(comment.createdAt).toLocaleDateString()}</span>
           </div>
-          <p className="text-gray-700 font-body text-sm">{comment.content}</p>
+          <p className="font-body text-sm text-gray-700">{comment.content}</p>
         </div>
       </div>
-
-      {/* Replies */}
-      {comment.replies?.map((reply: any) => (
+      {comment.replies?.map((reply) => (
         <CommentItem key={reply.id} comment={reply} depth={depth + 1} />
       ))}
     </div>

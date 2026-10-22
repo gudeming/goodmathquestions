@@ -285,11 +285,14 @@ describe("validateAnswerV2: ORDERING", () => {
   });
 });
 
-describe("validateAnswerV2: unsupported (Phase 4)", () => {
-  it("returns reason 'unsupported' for EXPRESSION and SCENE_COMPLETION instead of throwing", () => {
+describe("validateAnswerV2: EXPRESSION and SCENE_COMPLETION", () => {
+  it("judges EXPRESSION with the safe parser (6/(1-3/4) makes 24 from 1, 3, 4, 6)", () => {
     expect(
       validateAnswerV2("(6/(1-3/4))", { type: "EXPRESSION", target: 24, allowedNumbers: [1, 3, 4, 6], allowedOps: ["/", "-"] })
-    ).toEqual({ isCorrect: false, reason: "unsupported" });
+    ).toMatchObject({ isCorrect: true, detail: { type: "EXPRESSION", value: 24, numbersOk: true, disallowedOps: [] } });
+  });
+
+  it("still returns reason 'unsupported' for SCENE_COMPLETION instead of throwing", () => {
     expect(validateAnswerV2("done", { type: "SCENE_COMPLETION" })).toEqual({ isCorrect: false, reason: "unsupported" });
   });
 });

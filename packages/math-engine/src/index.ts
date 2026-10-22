@@ -56,6 +56,7 @@ export {
   EXPRESSION_OPS,
   SUPPORTED_ANSWER_SPEC_TYPES,
   DEFAULT_NUMERIC_TOLERANCE,
+  EXPRESSION_TOLERANCE,
   type Bi,
   type GuessOption,
   type GuessConfig,
@@ -71,3 +72,27 @@ export {
   type WrongAnswerRule,
   type SolutionTag,
 } from "./answer-spec";
+export {
+  evaluateExpression,
+  sameMultiset,
+  EXPR_MAX_LENGTH,
+  EXPR_MAX_DEPTH,
+  EXPR_MAX_FACTORIAL,
+  EXPR_MAX_MAGNITUDE,
+  type ExprOp,
+  type ExprError,
+  type ExprErrorCode,
+  type ExprResult,
+  type ExprValue,
+  type ExprOptions,
+} from "./expr";
+export {
+  XP_RULES,
+  difficultyXp,
+  computeAnswerXp,
+  solutionCommentXp,
+  levelForXp,
+  type XpDifficulty,
+  type AnswerXpInput,
+  type AnswerXpBreakdown,
+} from "./xp";

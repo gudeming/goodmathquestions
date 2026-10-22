@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { normalizeAnswer, parseNumberLike } from "./validator";
+import { evaluateExpression, sameMultiset, type ExprErrorCode, type ExprOp } from "./expr";
 
 /**
  * Question v2 answer model (docs/plans/good-questions-overhaul/01-question-rubric.md §4).
@@ -133,7 +134,7 @@ const OrderingSpecSchema = z.object({
   correctOrder: z.array(OptionIdSchema).min(2).max(20),
 });
 
-/** Declared for authoring; validateAnswerV2 returns "unsupported" until Phase 4. */
+/** Checked by validateAnswerV2 with the safe parser in expr.ts. */
 const ExpressionSpecSchema = z.object({
   type: z.literal("EXPRESSION"),
   target: finite(),
@@ -175,6 +176,7 @@ export const SUPPORTED_ANSWER_SPEC_TYPES = [
   "CHOICE",
   "MULTI_VALUE",
   "ORDERING",
+  "EXPRESSION",
 ] as const satisfies ReadonlyArray<AnswerSpecType>;
 
 // ---------------------------------------------------------------------------
@@ -288,7 +290,18 @@ export type AnswerV2Detail =
       distance: number;
       direction: "low" | "inside" | "high";
     }
-  | { type: "MULTI_VALUE"; expectedCount: number; givenCount: number };
+  | { type: "MULTI_VALUE"; expectedCount: number; givenCount: number }
+  | {
+      type: "EXPRESSION";
+      /** Parse / evaluation error, when the expression could not be read. */
+      error: ExprErrorCode | null;
+      value: number | null;
+      numbersUsed: number[];
+      /** Did it use exactly `allowedNumbers` (each once)? */
+      numbersOk: boolean;
+      /** Operators used that are not in `allowedOps`. */
+      disallowedOps: ExprOp[];
+    };
 
 export interface AnswerV2Result {
   isCorrect: boolean;
@@ -296,6 +309,9 @@ export interface AnswerV2Result {
   reason?: AnswerV2FailureReason;
   detail?: AnswerV2Detail;
 }
+
+/** EXPRESSION answers compare the evaluated value with the target within this. */
+export const EXPRESSION_TOLERANCE = 1e-9;
 
 /** v1 numeric tolerance, kept for NUMERIC specs without an explicit tolerance. */
 export const DEFAULT_NUMERIC_TOLERANCE = 0.0001;
@@ -379,8 +395,10 @@ function isNumberCorrect(n: number, spec: AnswerSpec): boolean {
 /**
  * Checks an answer against a v2 AnswerSpec.
  *
- * Never throws for user input: EXPRESSION / SCENE_COMPLETION (Phase 4) come back as
+ * Never throws for user input: SCENE_COMPLETION (judged by the scene) comes back as
  * `{ isCorrect: false, reason: "unsupported" }`; blank input as `reason: "empty"`.
+ * EXPRESSION is correct when the value equals `target` (±1e-9), the literals are
+ * exactly `allowedNumbers` (each once) and every operator is in `allowedOps`.
  */
 export function validateAnswerV2(input: AnswerInput, spec: AnswerSpec): AnswerV2Result {
   const isBlank = typeof input === "string" ? input.trim() === "" : input.every((s) => s.trim() === "");
@@ -434,7 +452,40 @@ export function validateAnswerV2(input: AnswerInput, spec: AnswerSpec): AnswerV2
       return { isCorrect };
     }
 
-    case "EXPRESSION":
+    case "EXPRESSION": {
+      const one = singleInput(input);
+      if (one === null) return { isCorrect: false, reason: "unparseable" };
+      const parsed = evaluateExpression(one, { allowedOps: spec.allowedOps });
+      if (!parsed.ok) {
+        return {
+          isCorrect: false,
+          reason: "unparseable",
+          detail: {
+            type: "EXPRESSION",
+            error: parsed.error.code,
+            value: null,
+            numbersUsed: [],
+            numbersOk: false,
+            disallowedOps: [],
+          },
+        };
+      }
+      const numbersOk = sameMultiset(parsed.numbersUsed, spec.allowedNumbers);
+      const disallowedOps = parsed.opsUsed.filter((op) => !spec.allowedOps.includes(op));
+      const valueOk = Math.abs(parsed.value - spec.target) <= EXPRESSION_TOLERANCE;
+      return {
+        isCorrect: valueOk && numbersOk && disallowedOps.length === 0,
+        detail: {
+          type: "EXPRESSION",
+          error: null,
+          value: parsed.value,
+          numbersUsed: parsed.numbersUsed,
+          numbersOk,
+          disallowedOps,
+        },
+      };
+    }
+
     case "SCENE_COMPLETION":
       return { isCorrect: false, reason: "unsupported" };
   }
@@ -447,6 +498,10 @@ export function validateAnswerV2(input: AnswerInput, spec: AnswerSpec): AnswerV2
 function inputNumber(input: AnswerInput, spec: AnswerSpec): number | null {
   const one = singleInput(input);
   if (one === null) return null;
+  if (spec.type === "EXPRESSION") {
+    const r = evaluateExpression(one, { allowedOps: spec.allowedOps });
+    return r.ok ? r.value : null;
+  }
   return spec.type === "ESTIMATE" ? parseEstimate(one) : parseNumberV2(one);
 }
 
@@ -490,6 +545,8 @@ function ruleMatches(rule: MatchRule, input: AnswerInput, spec: AnswerSpec): boo
         bound = spec.value;
       } else if (spec.type === "ESTIMATE") {
         bound = rule.kind === "gt" ? spec.max : spec.min;
+      } else if (spec.type === "EXPRESSION") {
+        bound = spec.target;
       } else {
         return false;
       }
