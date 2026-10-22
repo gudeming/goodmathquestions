@@ -5,6 +5,8 @@
  * TODO(phase-3 batch 3): F4 (bridge_torch), F5 (expression_builder), F6 (water_jugs),
  * F7 (queens_board), F9 (dot_connect), F10 (coin_piles), F11 (trains_fly), F12 (guess_game).
  * F12 guess-my-number is this world's second AGE_8_10 question.
+ * Editorial pass 1: hints name the scenes' buttons; the two illustration scenes now carry a
+ * revealCaption so Act 3 says something new; F8 got a story hook and a four-case table path.
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
@@ -21,8 +23,8 @@ export const riverCrossing: HeroQuestionBlueprint = {
   category: "LOGIC",
   title: { en: "Wolf, Goat and Cabbage", zh: "狼、羊、白菜过河" },
   hook: {
-    en: "A farmer has to row a wolf, a goat and a cabbage across a river. His little boat holds him and just one of them. If he leaves the wolf alone with the goat, the wolf eats the goat, and the goat will gobble up the cabbage the same way. How can he get everything across?",
-    zh: "农夫要划船把一只狼、一只羊和一棵白菜运过河。小船上除了农夫，只能再放一样。农夫不在的时候，狼会吃羊，羊会吃白菜。他该怎么把它们都运过去？",
+    en: "A farmer has to row a wolf, a goat and a cabbage across a river, in a little boat that holds him and just one of them. Left alone without him, the wolf will eat the goat, and the goat will gobble up the cabbage. How can he get everything across safely, and in how few trips?",
+    zh: "农夫要划一条小船，把一只狼、一只羊和一棵白菜运过河，船上除了他只能再放一样。农夫不在的时候，狼会吃羊，羊会吃白菜。他该怎么把它们都安全运过去？最少要划几趟？",
   },
   guess: {
     type: "slider",
@@ -50,7 +52,7 @@ export const riverCrossing: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 7 },
   hints: [
-    { en: "Which one can't be left alone with anything? Think about what has to go across first.", zh: "哪一样跟谁都不能单独待在一起？想想第一趟应该带谁。" },
+    { en: "Which one can't be left alone with anything? Tap it to put it in the boat, then press the cross button. Think about why it has to go first.", zh: "哪一样跟谁都不能单独待在一起？点它放上船，再按过河的按钮。想想为什么第一趟非带它不可。" },
     { en: "The goat goes first. Next the farmer takes the wolf over, but now the wolf and the goat are together on the far bank. What could he carry on the way back?", zh: "先带羊过去。接着农夫带狼过去，可现在狼和羊在对岸待在一起了。回来的时候他能带点什么？" },
     { en: "Bring the goat back! Leave it, take the cabbage across to the wolf, row back alone, and fetch the goat. Count every trip.", zh: "把羊带回来！把羊放下，带白菜过去和狼待在一起，自己空船回来，再去接羊。每一趟都数上。" },
   ],
@@ -109,8 +111,8 @@ export const riverCrossing: HeroQuestionBlueprint = {
   },
   solutionTags: ["simulate", "guess_check", "draw", "work_backwards"],
   funFact: {
-    en: "This puzzle is more than 1,200 years old. It appears in a collection of puzzles for young students put together by Alcuin of York around the year 800.",
-    zh: "这道谜题已经有 1200 多年了。大约公元 800 年，英国学者阿尔昆把它收进了一本给年轻学生的趣题书。",
+    en: "This puzzle is more than 1,200 years old. It appears in a book of puzzles for young students from around the year 800, usually credited to the scholar Alcuin of York.",
+    zh: "这道谜题已经有 1200 多年了。它出现在大约公元 800 年一本给年轻学生的趣题书里，一般认为编书的是英国学者阿尔昆。",
   },
   sortOrder: 1,
   rubricNotes:
@@ -145,7 +147,7 @@ export const nineBallsBalance: HeroQuestionBlueprint = {
   answer: { type: "NUMERIC", value: 2 },
   hints: [
     { en: "A weighing has three possible results, not two: left side down, right side down, or balanced. How could 'balanced' help you?", zh: "称一次有三种结果，不是两种：左边沉、右边沉、一样平。「一样平」能告诉你什么？" },
-    { en: "Start with just 3 balls. Put one on each pan and keep one off. Can one weighing always find the heavy ball?", zh: "先只用 3 个球。左右各放一个，留一个在外面。称一次能不能一定找出重球？" },
+    { en: "Imagine just 3 balls. Put one on each pan and keep one off, then press \"Weigh\". Can one weighing always find the heavy ball, even if the scale balances?", zh: "先想象只有 3 个球。左右各放一个，留一个在外面，再按「称一称」。称一次能不能一定找出重球，就算天平是平的也行？" },
     { en: "Now split the 9 balls into three groups of 3. Weigh one group against another. Whichever way it goes, which group must hold the heavy ball?", zh: "现在把 9 个球分成三组，每组 3 个。拿两组上去称。不管结果怎样，重球一定在哪一组？" },
   ],
   wrongAnswers: [
@@ -221,7 +223,7 @@ export const threeSwitches: HeroQuestionBlueprint = {
   category: "LOGIC",
   title: { en: "Three Switches, One Bulb", zh: "三个开关一盏灯" },
   hook: {
-    en: "Downstairs there are three light switches. Only one of them works the lamp upstairs, and you can't see the lamp from down there. You're allowed to walk upstairs just once. Can you work out which switch it is?",
+    en: "Downstairs there are three light switches, and only one of them works the lamp upstairs, which you can't see from down there. You're allowed to walk upstairs just once. Can you work out which switch it is?",
     zh: "楼下有三个开关，只有一个控制楼上的灯，在楼下看不见那盏灯。你只能上楼一次。你能确定是哪个开关吗？",
   },
   guess: {
@@ -236,6 +238,10 @@ export const threeSwitches: HeroQuestionBlueprint = {
     type: "illustration",
     asset: "three-switches",
     caption: { en: "Three switches downstairs, one bulb upstairs. You may go up only once.", zh: "楼下三个开关，楼上一盏灯。你只能上楼一次。" },
+    revealCaption: {
+      en: "Switch 1 on for ten minutes, then off; switch 2 on. Upstairs: lit = 2, dark but warm = 1, dark and cold = 3.",
+      zh: "1 号开十分钟再关，然后开 2 号。上楼：亮着是 2 号，不亮但温热是 1 号，不亮也凉是 3 号。",
+    },
   },
   prompt: {
     en: "You can flip the switches as often as you like, but you can go upstairs only once. Is there a way to be sure which switch controls the bulb?",
@@ -289,7 +295,11 @@ export const threeSwitches: HeroQuestionBlueprint = {
     "17/20 — hook 2, guess 2, hands-on 1, aha 2, floor 2, ceiling 1, paths 1, wrong 2, hints 2, retell 2: illustration only (待替换为 switch_room); one lateral-thinking path; great one to try on parents",
 };
 
-/** F8. Illustration until the T3 `dialogue_cards` scene lands (待替换为 dialogue_cards). The guess is the question. */
+/**
+ * F8. Illustration until the T3 `dialogue_cards` scene lands (待替换为 dialogue_cards). The guess is
+ * the question. A table of the four knight/knave cases is the second path (hint 1).
+ * Extension answer ("at least one of us is a knave"): A is a knight and B is a knave.
+ */
 export const knightsAndKnaves: HeroQuestionBlueprint = {
   slug: "knights-and-knaves",
   collection: "impossible-puzzles",
@@ -299,8 +309,8 @@ export const knightsAndKnaves: HeroQuestionBlueprint = {
   category: "LOGIC",
   title: { en: "Knights and Knaves", zh: "骑士与骗子" },
   hook: {
-    en: "On a strange island, knights always tell the truth and knaves always lie. You meet two islanders, A and B. A says: \"We are both knaves.\" What are A and B?",
-    zh: "在一座奇怪的岛上，骑士永远说真话，骗子永远说假话。你遇到两个岛民 A 和 B。A 说：「我们两个都是骗子。」A 和 B 各是什么人？",
+    en: "On a strange island, knights always tell the truth, knaves always lie, and you can't tell them apart by looking. Two islanders, A and B, stand on the path to the treasure, and A grins: \"We are both knaves.\" B says nothing at all, so can you still work out who is who?",
+    zh: "在一座奇怪的岛上，骑士永远说真话，骗子永远说假话，光看样子分不出来。两个岛民 A 和 B 挡在去宝藏的路上，A 笑着说：「我们两个都是骗子。」B 一句话也不说。你能分出谁是谁吗？",
   },
   guess: {
     type: "choice",
@@ -315,6 +325,10 @@ export const knightsAndKnaves: HeroQuestionBlueprint = {
     type: "illustration",
     asset: "knights-and-knaves",
     caption: { en: "A says: “We are both knaves.”", zh: "A 说：「我们两个都是骗子。」" },
+    revealCaption: {
+      en: "A knight would never say it, so A is a knave and the sentence is false: B must be a knight.",
+      zh: "骑士不会说这句话，所以 A 是骗子，这句话是假的：B 一定是骑士。",
+    },
   },
   prompt: {
     en: "Every islander is either a knight or a knave. A says: \"We are both knaves.\" What is A, and what is B?",
@@ -322,8 +336,8 @@ export const knightsAndKnaves: HeroQuestionBlueprint = {
   },
   answer: { type: "CHOICE", correctId: "a-knave-b-knight" },
   hints: [
-    { en: "Pretend A is a knight. Then everything A says is true. Does that fit with what A said?", zh: "假设 A 是骑士，那他说的都是真话。这和他说的话对得上吗？" },
-    { en: "A knight could never say \"I am a knave\", because that would be a lie. So what must A be?", zh: "骑士不可能说「我是骗子」，因为那是假话。那 A 一定是什么人？" },
+    { en: "There are only four possibilities: knight-knight, knight-knave, knave-knight, knave-knave. Make a little table and test each one: is A's sentence true or false, and is A allowed to say it?", zh: "一共只有四种可能：骑士-骑士、骑士-骗子、骗子-骑士、骗子-骗子。列个小表，一种一种地试：A 这句话是真是假？A 能说这句话吗？" },
+    { en: "Shortcut: a knight could never say \"I am a knave\", because that would be a lie. So what must A be?", zh: "捷径：骑士不可能说「我是骗子」，因为那是假话。那 A 一定是什么人？" },
     { en: "A is a knave, so \"we are both knaves\" is false. A really is a knave, yet the sentence is still false. What does that tell you about B?", zh: "A 是骗子，所以「我们两个都是骗子」是假的。A 确实是骗子，这句话却还是假的，那 B 是什么人？" },
   ],
   wrongAnswers: [
@@ -344,8 +358,8 @@ export const knightsAndKnaves: HeroQuestionBlueprint = {
     {
       match: "choice:cannot-tell",
       feedback: {
-        en: "B never says a word, so it seems we can't know. But A's lie gives B away: test each choice and see which one doesn't break the rules.",
-        zh: "B 一句话都没说，好像没法知道。可是 A 的假话把 B 出卖了：把每种情况都试一遍，看看哪种不违反规则。",
+        en: "B never says a word, so it seems we can't know. But A's lie gives B away: test each of the four cases and see which one doesn't break the rules.",
+        zh: "B 一句话都没说，好像没法知道。可是 A 的假话把 B 出卖了：把四种情况都试一遍，看看哪种不违反规则。",
       },
     },
   ],
@@ -354,16 +368,16 @@ export const knightsAndKnaves: HeroQuestionBlueprint = {
     zh: "如果 A 是骑士，他说的就是真话，那他就成了骗子，自相矛盾。所以 A 是骗子，「我们两个都是骗子」这句话是假的。A 确实是骗子，这句话要是假的，B 就不能是骗子。所以 B 是骑士。",
   },
   aha: {
-    en: "A knight can never say \"I am a knave\", so that one sentence unmasks A. And a lie still carries information: it tells you what is NOT true.",
-    zh: "骑士绝不会说「我是骗子」，所以这一句话就暴露了 A。假话也藏着信息：它告诉你什么不是真的。",
+    en: "A knight can never say \"I am a knave\", so that one sentence unmasks A. And a lie still carries information: B kept quiet, yet A's lie told you exactly what B is.",
+    zh: "骑士绝不会说「我是骗子」，所以这一句话就暴露了 A。假话也藏着信息：B 一声没吭，A 的假话却把 B 的身份说得清清楚楚。",
   },
   extension: {
     en: "What if A says instead: \"At least one of us is a knave\"? What are A and B now?",
     zh: "如果 A 改口说：「我们两个里至少有一个是骗子。」那 A 和 B 各是什么人？",
   },
   discussionPrompt: {
-    en: "Make up one sentence that lets a listener know for sure that the speaker is a knight. Is it harder than it sounds?",
-    zh: "编一句话，让听的人能确定说话的人是骑士。这比听起来难吗？",
+    en: "Make up one sentence that lets a listener know for sure that the speaker is a knight. Is it harder than it sounds? Test someone else's sentence.",
+    zh: "编一句话，让听的人能确定说话的人是骑士。这比听起来难吗？试试别人编的那一句。",
   },
   solutionTags: ["guess_check", "work_backwards", "table"],
   funFact: {
@@ -372,7 +386,7 @@ export const knightsAndKnaves: HeroQuestionBlueprint = {
   },
   sortOrder: 8,
   rubricNotes:
-    "16/20 — hook 2, guess 2, hands-on 1, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: illustration only (待替换为 dialogue_cards); 'what if A is a knight' case-testing is the one path, and self-reference trips up younger kids",
+    "17/20 — hook 2, guess 2, hands-on 1, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 1, retell 1: illustration only (待替换为 dialogue_cards); the four-case table and the 'a knight can't call himself a knave' shortcut are two real paths; hint 3 nearly gives the last step; self-reference still trips up some kids",
 };
 
 export const IMPOSSIBLE_PUZZLES: readonly HeroQuestionBlueprint[] = [riverCrossing, nineBallsBalance, threeSwitches, knightsAndKnaves];

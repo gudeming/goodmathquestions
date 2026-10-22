@@ -3,6 +3,9 @@
  * Batch 1: C2 monty-hall. Batch 2: C1 birthday-paradox, C3 two-dice-sum, C6 odd-even-game,
  * C8 rolls-until-six, C9 someone-shares-my-birthday (birthday_room / dice_lab).
  * Batch 3: C4 coin-streak (coin_flips), C5 socks-in-the-dark (sock_drawer), C7 pi-from-raindrops (pi_darts).
+ * Editorial pass 1: Monty Hall's prize matches the scene (🎁, not a bike); C6 uses 偶数/奇数 like the
+ * scene and the names 双双/单单 (双数/单数 mnemonic, as Evan/Otto is in English); C7's guess is a
+ * choice so the reveal histogram never marks 3.14 on a "drops inside" slider.
  * TODO(phase-3): C10 (sequence_lineup) once that Tier-3 scene lands.
  */
 import type { HeroQuestionBlueprint } from "./_template";
@@ -17,8 +20,8 @@ export const montyHall: HeroQuestionBlueprint = {
   category: "PROBABILITY",
   title: { en: "Switch or Stay?", zh: "换还是不换" },
   hook: {
-    en: "There are three closed doors: a new bike behind one, and a goat behind each of the others. You pick a door. The host knows where the bike is, so he opens a different door and shows you a goat. Should you switch to the last closed door?",
-    zh: "有三扇关着的门，一扇后面是一辆新自行车，另外两扇后面各是一只山羊。你选了一扇门。主持人知道车在哪儿，他打开另一扇门，里面是山羊。你要不要换到剩下的那扇门？",
+    en: "Three closed doors: a big prize behind one, and a goat behind each of the others. You pick a door, and the host, who knows where the prize is, always opens one of the other doors to show you a goat. Should you switch to the last closed door?",
+    zh: "三扇关着的门，一扇后面是大奖，另外两扇后面各是一只山羊。你选了一扇门。主持人知道大奖在哪儿，他每次都会打开另一扇门，给你看一只山羊。你要不要换到剩下的那扇门？",
   },
   guess: {
     type: "choice",
@@ -30,21 +33,21 @@ export const montyHall: HeroQuestionBlueprint = {
   },
   scene: { type: "monty_hall", doors: 3, rounds: 20, seed: 7 },
   prompt: {
-    en: "To give yourself the best chance of winning the bike, should you switch doors, stay with your first pick, or does it make no difference?",
-    zh: "想让赢到自行车的机会最大，你应该换门，坚持原来的门，还是换不换都一样？",
+    en: "To give yourself the best chance of winning the prize, should you switch doors, stay with your first pick, or does it make no difference?",
+    zh: "想让赢到大奖的机会最大，你应该换门，坚持原来的门，还是换不换都一样？",
   },
   answer: { type: "CHOICE", correctId: "switch" },
   hints: [
-    { en: "Forget the host for a moment. When you first pick a door, what is the chance it hides the bike?", zh: "先别管主持人。你刚选门的时候，选中自行车的机会有多大？" },
-    { en: "Play it out: say you always switch. When does switching lose? Only when your first pick was already the bike.", zh: "推一推：假设你每次都换。什么时候换了会输？只有你第一次就选中车的时候。" },
-    { en: "Your first pick is wrong 2 times out of 3. Each time it's wrong, the host has to leave the bike behind the last closed door.", zh: "第一次选错的机会是三分之二。每次你选错，主持人只能把车留在剩下那扇关着的门后面。" },
+    { en: "Forget the host for a moment. When you first pick a door, what is the chance it hides the prize?", zh: "先别管主持人。你刚选门的时候，选中大奖的机会有多大？" },
+    { en: "Press \"Auto 100 (always switch)\" and then \"Auto 100 (always stay)\". When does switching lose? Only when your first pick was already the prize.", zh: "按「自动玩 100 局（一直换）」，再按「自动玩 100 局（一直不换）」。什么时候换了会输？只有你第一次就选中大奖的时候。" },
+    { en: "Your first pick is wrong 2 times out of 3. Each time it's wrong, the host has to leave the prize behind the last closed door.", zh: "第一次选错的机会是三分之二。每次你选错，主持人只能把大奖留在剩下那扇关着的门后面。" },
   ],
   wrongAnswers: [
     {
       match: "choice:same",
       feedback: {
-        en: "Most people think this: two doors are left, so it must be 50-50. But the host isn't opening doors at random. He knows where the bike is and never opens that door.",
-        zh: "大多数人都这么想：剩两扇门，那就是一半对一半。可是主持人不是随便开门的，他知道车在哪儿，绝不会打开那扇门。",
+        en: "Most people think this: two doors are left, so it must be 50-50. But the host isn't opening doors at random. He knows where the prize is and never opens that door.",
+        zh: "大多数人都这么想：剩两扇门，那就是一半对一半。可是主持人不是随便开门的，他知道大奖在哪儿，绝不会打开那扇门。",
       },
     },
     {
@@ -56,16 +59,16 @@ export const montyHall: HeroQuestionBlueprint = {
     },
   ],
   explanation: {
-    en: "Your first pick is right 1 time in 3, so staying wins 1 time in 3. The other 2 times, the bike is behind one of the doors you didn't pick, and the host opens the goat one. So switching wins 2 times in 3.",
-    zh: "第一次选中车的机会是三分之一，所以不换只有三分之一的机会赢。另外三分之二的时候，车在你没选的两扇门里，主持人把有山羊的那扇打开了。所以换门赢的机会是三分之二。",
+    en: "Your first pick is right 1 time in 3, so staying wins 1 time in 3. The other 2 times, the prize is behind one of the doors you didn't pick, and the host opens the goat one. So switching wins 2 times in 3.",
+    zh: "第一次选中大奖的机会是三分之一，所以不换只有三分之一的机会赢。另外三分之二的时候，大奖在你没选的两扇门里，主持人把有山羊的那扇打开了。所以换门赢的机会是三分之二。",
   },
   aha: {
     en: "Your first pick is wrong 2 times out of 3. The host clears away one wrong door for you, so switching catches that whole 2 out of 3.",
     zh: "你第一次选错的机会是三分之二。主持人替你排除了一扇错的门，换过去就把这三分之二全接住了。",
   },
   extension: {
-    en: "Now there are 100 doors. You pick one, and the host opens 98 goat doors. Would you switch now? Why do more doors make the answer easier to feel?",
-    zh: "现在有 100 扇门。你选一扇，主持人打开 98 扇山羊门。你换不换？为什么门越多，答案反而越好懂？",
+    en: "Now there are 100 doors. You pick one, and the host opens 98 goat doors. Would you switch now, and how often would switching win? Why do more doors make the answer easier to feel?",
+    zh: "现在有 100 扇门。你选一扇，主持人打开 98 扇山羊门。你换不换？换了以后赢的机会是多少？为什么门越多，答案反而越好懂？",
   },
   discussionPrompt: {
     en: "How many rounds did you play in the scene before you believed it? If you still don't, what is your best argument?",
@@ -110,7 +113,7 @@ export const birthdayParadox: HeroQuestionBlueprint = {
   hints: [
     { en: "The question isn't about someone matching YOU. Any two people in the room count. How many different pairs of people are in a room?", zh: "题目问的不是有人和「你」同一天，房间里任何两个人都算。一个房间里能配出多少对人？" },
     { en: "Try it the other way round: work out the chance that nobody matches. The second person must miss 1 birthday, the third must miss 2, and so on.", zh: "反过来想：算一算「谁都不撞」的机会。第二个人要避开 1 个生日，第三个人要避开 2 个，依此类推。" },
-    { en: "Multiply 364/365 × 363/365 × 362/365 × … one person at a time, and stop when the result drops below one half. Or test room sizes in the scene.", zh: "一个人一个人地乘：364/365 × 363/365 × 362/365 × ……，乘到结果小于一半就停下。也可以在场景里试不同的人数。" },
+    { en: "Multiply 364/365 × 363/365 × 362/365 × … one person at a time, and stop when the result drops below one half. Or move the \"people in the room\" slider and press \"Simulate 200 rooms\" for each size.", zh: "一个人一个人地乘：364/365 × 363/365 × 362/365 × ……，乘到结果小于一半就停下。也可以拖动「房间里的人数」滑块，每换一个人数就按一次「模拟 200 个房间」。" },
   ],
   wrongAnswers: [
     {
@@ -137,8 +140,8 @@ export const birthdayParadox: HeroQuestionBlueprint = {
     {
       match: "lt:correct",
       feedback: {
-        en: "Too few. With that many people, the chance of a match is still under one half. Add people in the scene and watch the curve.",
-        zh: "少了。这么多人时，撞生日的机会还不到一半。在场景里加人，看看曲线怎么走。",
+        en: "Too few. With that many people, the chance of a match is still under one half. Add people with the slider, simulate again, and watch your dotted line climb.",
+        zh: "少了。这么多人时，撞生日的机会还不到一半。用滑块加人，再模拟一次，看你画出的虚线往上爬。",
       },
     },
   ],
@@ -199,7 +202,7 @@ export const twoDiceSum: HeroQuestionBlueprint = {
   },
   answer: { type: "CHOICE", correctId: "7" },
   hints: [
-    { en: "Roll a lot in the scene and watch which bar grows tallest. Then ask yourself why.", zh: "在场景里多掷几次，看哪根柱子长得最高。然后想想为什么。" },
+    { en: "Press \"Roll 300\" in the scene and watch which bar grows tallest. Then ask yourself why.", zh: "在场景里按「掷 300 次」，看哪根柱子长得最高。然后想想为什么。" },
     { en: "Count the ways to make each total. 2 needs a 1 and a 1: just one way. How many ways make 3? Remember 1 + 2 and 2 + 1 are different rolls.", zh: "数一数每个和有几种凑法。2 只能是 1 和 1，只有一种。3 有几种？记住 1 + 2 和 2 + 1 是两种不同的掷法。" },
     { en: "Make a 6 by 6 table: one die across the top, the other down the side, and the total in each box. Which total fills the most boxes?", zh: "画一张 6 × 6 的表：一个骰子写在上面，另一个写在左边，每格填上两数之和。哪个和占的格子最多？" },
   ],
@@ -269,7 +272,10 @@ export const twoDiceSum: HeroQuestionBlueprint = {
 /**
  * C6. Even product 27/36, odd 9/36. Created new: the legacy "Dice Game Fairness" row asks for
  * P(sum = 7), which is not this question, so it is not upgraded here.
- * English names follow the rule (Evan / even, Otto / odd); Chinese keeps 小明 / 小红.
+ * Names carry the rule in both languages: Evan / even and Otto / odd; 双双 / 双数 and 单单 / 单数.
+ * The terms are 偶数 / 奇数 as in the scene, with 双数 / 单数 glossed once in the hook.
+ * Option ids stay "xiaoming" / "xiaohong" so stored guesses keep their meaning.
+ * Extension answers: the sum game is fair (18 : 18); the product game is fair if odd scores 3 points.
  */
 export const oddEvenGame: HeroQuestionBlueprint = {
   slug: "odd-even-game",
@@ -280,55 +286,55 @@ export const oddEvenGame: HeroQuestionBlueprint = {
   category: "PROBABILITY",
   title: { en: "Is This Game Fair?", zh: "这个游戏公平吗" },
   hook: {
-    en: "Evan and Otto roll two dice and multiply the numbers. If the answer is even, Evan gets a point. If it's odd, Otto gets a point. If you could choose, whose side would you take?",
-    zh: "小明和小红一起掷两个骰子，把点数相乘。乘积是双数，小明得一分；是单数，小红得一分。如果让你选，你愿意当谁？",
+    en: "Evan and Otto roll two dice and multiply the numbers. If the answer is even, Evan gets a point; if it's odd, Otto gets a point. If you could choose, whose side would you take?",
+    zh: "双双和单单一起掷两个骰子，把点数相乘。乘积是偶数（双数），双双得一分；是奇数（单数），单单得一分。如果让你选，你愿意当谁？",
   },
   guess: {
     type: "choice",
     options: [
-      { id: "xiaoming", en: "Evan, who scores on even", zh: "小明（双数得分）" },
-      { id: "xiaohong", en: "Otto, who scores on odd", zh: "小红（单数得分）" },
+      { id: "xiaoming", en: "Evan, who scores on even", zh: "双双（偶数得分）" },
+      { id: "xiaohong", en: "Otto, who scores on odd", zh: "单单（奇数得分）" },
       { id: "same", en: "It's fair, so it doesn't matter", zh: "很公平，当谁都一样" },
     ],
   },
   scene: { type: "dice_lab", mode: "product", dice: 2, rolls: 300, seed: 6 },
   prompt: {
     en: "Two dice are rolled and multiplied. An even product scores for Evan, an odd one for Otto. Who is more likely to win a round, or is the game fair?",
-    zh: "掷两个骰子相乘，双数小明得分，单数小红得分。每一局谁更可能得分？还是这个游戏很公平？",
+    zh: "掷两个骰子相乘，偶数双双得分，奇数单单得分。每一局谁更可能得分？还是这个游戏很公平？",
   },
   answer: { type: "CHOICE", correctId: "xiaoming" },
   hints: [
-    { en: "Half the numbers on a die are even and half are odd, but that doesn't mean the products split half and half. Try some rolls in the scene first.", zh: "骰子上一半是双数一半是单数，可这不代表乘积也一半一半。先在场景里掷几次看看。" },
-    { en: "Work out some products: 2 × 3, 4 × 5, 3 × 5, 6 × 1. When does a product come out odd?", zh: "算几个乘积：2 × 3、4 × 5、3 × 5、6 × 1。什么时候乘积会是单数？" },
-    { en: "A product is odd only when BOTH dice are odd. Each die is odd 3 ways out of 6. How many of the 36 rolls have two odd dice?", zh: "只有两个骰子都是单数，乘积才是单数。每个骰子有 3 种单数。36 种结果里，有多少种两个都是单数？" },
+    { en: "Half the numbers on a die are even and half are odd, but that doesn't mean the products split half and half. Press \"Roll 300\" and compare the \"even\" and \"odd\" bars.", zh: "骰子上一半是偶数一半是奇数，可这不代表乘积也一半一半。按「掷 300 次」，比一比「偶数」和「奇数」两根柱子。" },
+    { en: "Work out some products: 2 × 3, 4 × 5, 3 × 5, 6 × 1. When does a product come out odd?", zh: "算几个乘积：2 × 3、4 × 5、3 × 5、6 × 1。什么时候乘积会是奇数？" },
+    { en: "A product is odd only when BOTH dice are odd. Each die is odd 3 ways out of 6. How many of the 36 rolls have two odd dice?", zh: "只有两个骰子都是奇数，乘积才是奇数。每个骰子有 3 种奇数。36 种结果里，有多少种两个都是奇数？" },
   ],
   wrongAnswers: [
     {
       match: "choice:same",
       feedback: {
         en: "Half the faces are odd and half are even, so it feels fair. But one even die is enough to make the whole product even. Odd needs both dice to be odd.",
-        zh: "骰子上单数双数各一半，所以感觉很公平。可是只要有一个骰子是双数，乘积就是双数。单数得两个骰子都是单数才行。",
+        zh: "骰子上奇数偶数各一半，所以感觉很公平。可是只要有一个骰子是偶数，乘积就是偶数。奇数得两个骰子都是奇数才行。",
       },
     },
     {
       match: "choice:xiaohong",
       feedback: {
         en: "There are plenty of odd numbers on a die, so this is a fair guess. But for an odd product, both dice have to be odd at the same time, and that only happens 9 times out of 36.",
-        zh: "骰子上单数不少，这样猜也有道理。可是乘积要是单数，两个骰子得同时是单数，36 种结果里只有 9 种。",
+        zh: "骰子上奇数不少，这样猜也有道理。可是乘积要是奇数，两个骰子得同时是奇数，36 种结果里只有 9 种。",
       },
     },
   ],
   explanation: {
-    en: "There are 36 equally likely rolls. The product is odd only when both dice are odd, which is 3 × 3 = 9 rolls. The other 27 rolls have at least one even die, so their product is even. On average Evan wins 27 rounds out of 36, three times as many as Otto.",
-    zh: "两个骰子一共有 36 种同样可能的结果。只有两个都是单数，乘积才是单数：3 × 3 = 9 种。剩下 27 种至少有一个双数，乘积就是双数。平均 36 局里小明赢 27 局，是小红的 3 倍。",
+    en: "There are 36 equally likely rolls. The product is odd only when both dice are odd, which is 3 × 3 = 9 rolls. The other 36 − 9 = 27 rolls have at least one even die, so their product is even. On average Evan wins 27 rounds out of 36, three times as many as Otto.",
+    zh: "两个骰子一共有 36 种同样可能的结果。只有两个都是奇数，乘积才是奇数：3 × 3 = 9 种。剩下 36 − 9 = 27 种至少有一个偶数，乘积就是偶数。平均 36 局里双双赢 27 局，是单单的 3 倍。",
   },
   aha: {
-    en: "Even numbers take over multiplication: one even die makes the whole product even. Odd only survives when both dice are odd, just 1 time in 4.",
-    zh: "乘法里双数特别「霸道」：只要有一个骰子是双数，乘积就是双数。单数要两个骰子都是单数才行，只有四分之一的机会。",
+    en: "In multiplication, even is like a drop of ink: one even die colours the whole product even. Odd only survives when both dice are odd, just 1 time in 4.",
+    zh: "在乘法里，偶数就像一滴墨水：只要有一个骰子是偶数，整个乘积就被「染」成偶数。奇数要两个骰子都是奇数才能活下来，只有四分之一的机会。",
   },
   extension: {
-    en: "What if the game used the sum instead of the product? Is that fair? Can you change the rules of the product game so that it becomes fair?",
-    zh: "如果改成把点数相加呢？公平吗？你能改一改相乘游戏的规则，让它变公平吗？",
+    en: "What if the game used the sum instead of the product: is that fair? And can you change the points in the product game so that it becomes fair?",
+    zh: "如果改成把点数相加呢？公平吗？你能改一改相乘游戏的得分规则，让它变公平吗？",
   },
   discussionPrompt: {
     en: "Invent a dice game that looks unfair but is actually fair. Post the rules and let others check it.",
@@ -337,14 +343,19 @@ export const oddEvenGame: HeroQuestionBlueprint = {
   solutionTags: ["simulate", "table", "pattern"],
   funFact: {
     en: "The more dice you multiply, the more even wins: with three dice, the product is even 7 times out of 8.",
-    zh: "骰子越多，双数赢得越多：三个骰子相乘，8 次里有 7 次是双数。",
+    zh: "骰子越多，偶数赢得越多：三个骰子相乘，8 次里有 7 次是偶数。",
   },
   sortOrder: 6,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 1, paths 2, wrong 2, hints 2, retell 1: the 'make it fair' extension is good but stays small; simulate, 6 × 6 table and the parity argument are all real paths",
 };
 
-/** C8. Geometric distribution, mean 1/p = 6. The scene's seed lands the 300-round average near 6. */
+/**
+ * C8. Geometric distribution, mean 1/p = 6. The scene's seed lands the 300-round average near 6.
+ * In this scene "Roll 300" plays 300 ROUNDS, the counter is "average", and the chart stops at "16+";
+ * P(16 or more throws) = (5/6)^15 ≈ 6.5%, about 1 round in 15. Extension answer: two sixes in a row
+ * take 42 throws on average.
+ */
 export const rollsUntilSix: HeroQuestionBlueprint = {
   slug: "rolls-until-six",
   collection: "chance-and-luck",
@@ -364,7 +375,7 @@ export const rollsUntilSix: HeroQuestionBlueprint = {
     step: 1,
     unit: { en: "rolls", zh: "次" },
   },
-  // seed 16: the average after the first 300 rounds is 5.97 (and the longest wait is a whopping 53).
+  // seed 16: the average after the first 300 rounds is 5.97.
   scene: { type: "dice_lab", mode: "until_target", dice: 1, target: 6, rolls: 300, seed: 16 },
   prompt: {
     en: "Roll one fair die again and again until you get a six, and count the rolls, including the six. If you play many rounds like this, what is the average number of rolls per round?",
@@ -372,7 +383,7 @@ export const rollsUntilSix: HeroQuestionBlueprint = {
   },
   answer: { type: "ESTIMATE", min: 5.5, max: 6.5, truth: 6, unit: { en: "rolls", zh: "次" } },
   hints: [
-    { en: "Play a few rounds in the scene and write down how many rolls each one took. Then press the big button and watch the average.", zh: "在场景里玩几轮，记下每轮用了几次。然后按大按钮，看平均数怎么变。" },
+    { en: "Press \"Roll 1\" a few times: each press plays one whole round, and the scene tells you how many throws it took. Then press \"Roll 300\" and watch the \"average\" counter.", zh: "先按几次「掷 1 次」：每按一次就玩完一整轮，场景会告诉你这一轮掷了几次。然后按「掷 300 次」，看「平均」那个数。" },
     { en: "Each roll has a 1 in 6 chance of being a six. If you rolled 600 times in a row, about how many sixes would you get?", zh: "每掷一次，掷出 6 的机会是六分之一。如果连着掷 600 次，大约会掷出几个 6？" },
     { en: "About 100 sixes in 600 rolls means the rolls split into about 100 rounds. How many rolls is that per round, on average?", zh: "600 次里大约有 100 个 6，也就是大约分成了 100 轮。平均每轮是几次？" },
   ],
@@ -387,8 +398,8 @@ export const rollsUntilSix: HeroQuestionBlueprint = {
     {
       match: "3",
       feedback: {
-        en: "Maybe you thought 'half of 6'. It's true that about half the time you get a six within 4 rolls. But some rounds take 15 or 20 rolls, and those long waits pull the average up.",
-        zh: "你可能想的是「6 的一半」。确实，大约一半的时候 4 次以内就能掷到 6。可是有些轮要等 15 次、20 次，这些长长的等待把平均数拉高了。",
+        en: "Maybe you thought 'half of 6'. It's true that about half the time you get a six within 4 rolls. But some rounds take 16 rolls or more, and those long waits pull the average up.",
+        zh: "你可能想的是「6 的一半」。确实，大约一半的时候 4 次以内就能掷到 6。可是有些轮要等 16 次甚至更久，这些长长的等待把平均数拉高了。",
       },
     },
     {
@@ -401,33 +412,33 @@ export const rollsUntilSix: HeroQuestionBlueprint = {
     {
       match: "lt:correct",
       feedback: {
-        en: "A bit low. Long waits happen more often than you'd think, and they count in the average too. Try 300 rounds in the scene.",
-        zh: "有点少。很长的等待比你想的更常见，它们也要算进平均数。在场景里试试 300 轮。",
+        en: "A bit low. Long waits happen more often than you'd think, and they count in the average too. Press \"Roll 300\" and look at the \"16+\" bar.",
+        zh: "有点少。很长的等待比你想的更常见，它们也要算进平均数。按「掷 300 次」，看看「16+」那根柱子。",
       },
     },
     {
       match: "gt:correct",
       feedback: {
-        en: "A bit high. Long waits do happen, but most rounds end sooner. Try 300 rounds in the scene and watch where the average settles.",
-        zh: "有点多。确实会有很长的等待，但大多数轮结束得更早。在场景里试 300 轮，看平均数停在哪里。",
+        en: "A bit high. Long waits do happen, but most rounds end sooner. Press \"Roll 300\" a few times and watch where the \"average\" settles.",
+        zh: "有点多。确实会有很长的等待，但大多数轮结束得更早。多按几次「掷 300 次」，看「平均」停在哪里。",
       },
     },
   ],
   explanation: {
-    en: "Each roll is a six with chance 1/6, so in a long run of rolls about one in every six is a six. Those sixes split the rolls into rounds, and the rounds average 6 rolls each. The scene's running average settles close to 6 after a few hundred rounds.",
-    zh: "每一次掷出 6 的机会是六分之一，所以掷很多很多次的时候，大约每 6 次里有 1 个 6。这些 6 把所有的掷骰分成一轮一轮，平均每轮 6 次。场景里玩几百轮以后，平均数会停在 6 附近。",
+    en: "Each roll is a six with chance 1/6, so in a long run of rolls about one in every six is a six. Those sixes split the rolls into rounds: 600 rolls hold about 100 sixes, and 600 ÷ 100 = 6 rolls a round. The scene's average settles close to 6 after a few hundred rounds.",
+    zh: "每一次掷出 6 的机会是六分之一，所以掷很多很多次的时候，大约每 6 次里有 1 个 6。这些 6 把所有的掷骰分成一轮一轮：600 次里大约有 100 个 6，600 ÷ 100 = 6，平均每轮 6 次。场景里玩几百轮以后，平均数会停在 6 附近。",
   },
   aha: {
-    en: "The average wait is 6, yet half the time you're done within 4 rolls. A few very long waits, sometimes more than 20 rolls, pull the average up.",
-    zh: "平均要等 6 次，可是一半的时候 4 次以内就掷到了。少数特别长的等待，有时超过 20 次，把平均数拉高了。",
+    en: "The average wait is 6, yet about half the time you're done within 4 rolls. The rare long waits, 16 rolls or more about 1 round in 15, drag the average up.",
+    zh: "平均要等 6 次，可是大约一半的时候 4 次以内就掷到了。少数特别长的等待（大约每 15 轮就有 1 轮要 16 次以上）把平均数拉高了。",
   },
   extension: {
     en: "What if you keep rolling until you get two sixes in a row? Guess first: is the average wait 12 rolls, or much longer?",
     zh: "如果要一直掷到连续两次 6 呢？先猜：平均要等 12 次，还是久得多？",
   },
   discussionPrompt: {
-    en: "What was the longest round in your simulation? Did it surprise you, and does it change how you feel about 'waiting for a six'?",
-    zh: "你模拟的时候，最长的一轮等了几次？吓到你了吗？它会不会改变你对「等一个 6」的感觉？",
+    en: "After 300 rounds, how tall is the \"16+\" bar in your chart, compared with the \"1\" bar? Did long waits happen more or less often than you expected?",
+    zh: "玩了 300 轮以后，图里「16+」那根柱子和「1」那根比，有多高？很长的等待，比你想的多还是少？",
   },
   solutionTags: ["simulate", "table"],
   funFact: {
@@ -450,7 +461,7 @@ export const someoneSharesMyBirthday: HeroQuestionBlueprint = {
   ageGroup: "AGE_12_14",
   difficulty: "HARD",
   category: "PROBABILITY",
-  title: { en: "Someone Born on My Birthday", zh: "和「我」同一天生日" },
+  title: { en: "Born on Your Birthday", zh: "和你同一天生日的人" },
   hook: {
     en: "A fairly small class is often enough for two people to share a birthday. But what about someone sharing YOUR birthday? How many other people would you need before that's more likely than not?",
     zh: "一个不大的班级里，常常就有两个人同一天生日。可如果要有人和「你」同一天生日呢？身边要有多少人，这件事才会比不发生更可能？",
@@ -471,7 +482,7 @@ export const someoneSharesMyBirthday: HeroQuestionBlueprint = {
   hints: [
     { en: "This time only pairs that include YOU count. Each other person is one chance, and each chance is small. How small?", zh: "这次只有包括「你」的那些对才算。每多一个人就多一次机会，可每次机会都很小。有多小？" },
     { en: "Work out the chance that nobody matches you. Each person misses your birthday with chance 364/365, and you multiply one 364/365 for every person.", zh: "先算「没有人和你撞」的机会。每个人避开你生日的机会是 364/365，有几个人就乘几个 364/365。" },
-    { en: "Keep multiplying by 364/365 until the result falls below one half. Use a calculator, or try room sizes in the scene.", zh: "一直乘 364/365，直到结果小于一半。可以用计算器，也可以在场景里试不同的人数。" },
+    { en: "Keep multiplying by 364/365 until the result falls below one half. Use a calculator, or move the \"other people besides you\" slider and simulate each room size.", zh: "一直乘 364/365，直到结果小于一半。可以用计算器，也可以拖动「除你以外的人数」滑块，每个人数都模拟一次。" },
   ],
   wrongAnswers: [
     {
@@ -505,8 +516,8 @@ export const someoneSharesMyBirthday: HeroQuestionBlueprint = {
     {
       match: "gt:correct",
       feedback: {
-        en: "Too many. By then a match with you is already more likely than not. Try a smaller room in the scene.",
-        zh: "多了。到那时，有人和你同一天已经比没有更可能了。在场景里试试少一点的人。",
+        en: "Too many. By then a match with you is already more likely than not. Slide to fewer people in the scene and simulate again.",
+        zh: "多了。到那时，有人和你同一天已经比没有更可能了。在场景里把人数拖少一点，再模拟一次。",
       },
     },
   ],
@@ -546,8 +557,8 @@ export const coinStreak: HeroQuestionBlueprint = {
   category: "PROBABILITY",
   title: { en: "Ten Heads in a Row", zh: "连续十次正面之后" },
   hook: {
-    en: "You flip a fair coin and it lands heads. And again. And again, until you've had ten heads in a row! One friend says tails is 'due' now. Another says the coin is 'on a hot streak'. Who is right about the next flip?",
-    zh: "你掷一枚公平的硬币，正面。再掷，正面。又是正面……一直到连续十次正面！一个朋友说：「下次该轮到反面了。」另一个朋友说：「它手气正旺，还会是正面。」下一次到底谁说得对？",
+    en: "You flip a fair coin and it lands heads, again and again, until you've had ten heads in a row! One friend says tails is 'due' now; another says the coin is 'on a hot streak'. Who is right about the next flip?",
+    zh: "你掷一枚公平的硬币：正面，正面，又是正面……一直连续十次正面！一个朋友说下次该轮到反面了，另一个说它手气正旺，还会是正面。下一次到底谁说得对？",
   },
   guess: {
     type: "choice",
@@ -565,8 +576,8 @@ export const coinStreak: HeroQuestionBlueprint = {
   answer: { type: "CHOICE", correctId: "same" },
   hints: [
     { en: "Think about the coin itself. Does it have a memory? Can it 'know' what it did the last ten times?", zh: "想想硬币本身。它有记忆吗？它能「知道」自己前十次是什么吗？" },
-    { en: "In the scene, fast-forward to a streak of 10 heads again and again. Each time, look only at the flip that comes right after the streak.", zh: "在场景里一次次快进，直到出现连续 10 次正面。每次都只看紧接着的那一次。" },
-    { en: "After many streaks, count how many of those next flips were heads and how many were tails. What are the two numbers getting close to?", zh: "等出现过很多次连正以后，数一数紧接着的那一次里，有几次正面、几次反面。这两个数越来越接近什么？" },
+    { en: "In the scene, press \"⏩ Until 10 heads\", then \"Flip\" once to see what comes right after the streak.", zh: "在场景里按「⏩ 掷到连续 10 个正面」，再按一次「掷一次」，看看紧接着的那一次是什么。" },
+    { en: "Now press \"10 more streaks\" a few times and watch the \"flip after 10×H\" bar. After many streaks, what are the heads and tails counts getting close to?", zh: "再多按几次「再找 10 次」，看「10 连正之后」那根条。出现过很多次连正以后，紧接着的正面和反面各有几次？越来越接近什么？" },
   ],
   wrongAnswers: [
     {
@@ -593,8 +604,8 @@ export const coinStreak: HeroQuestionBlueprint = {
     zh: "硬币没有记忆。十连正面很少见，可一旦已经发生，下一次还是一半对一半。",
   },
   extension: {
-    en: "Before you start flipping, what is the chance of getting ten heads in a row? About how many flips does it usually take before a streak like that shows up?",
-    zh: "还没开始掷的时候，连续十次正面的机会是多少？一般要掷多少次，才会出现这样的连正？",
+    en: "In four flips, which is more likely: heads, heads, heads, heads, or heads, tails, heads, heads? And a harder one: on average, do you wait longer for two heads in a row, or for a heads followed by a tails?",
+    zh: "掷四次，哪个更可能：「正正正正」，还是「正反正正」？再难一点：平均来说，等到「连续两个正面」和等到「一个正面后面跟一个反面」，哪个要等得更久？",
   },
   discussionPrompt: {
     en: "Have you ever heard someone in a game say 'I'm due for a win'? Use what you saw in the scene to explain to them why chance doesn't work like that.",
@@ -607,7 +618,7 @@ export const coinStreak: HeroQuestionBlueprint = {
   },
   sortOrder: 4,
   rubricNotes:
-    "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 1, paths 1, wrong 2, hints 2, retell 1: simulation is the only path at this age; the extension stays with streak odds",
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: simulation is the only path at this age; the new extension (HHHH vs HTHH are equally likely; HH takes 6 flips on average, HT only 4) opens real probability",
 };
 
 /** C5. Pigeonhole: colours + 1 = 4. The scene proposes "4" from worst-luck mode. */
@@ -620,8 +631,8 @@ export const socksInTheDark: HeroQuestionBlueprint = {
   category: "LOGIC",
   title: { en: "Socks in the Dark", zh: "黑暗中摸袜子" },
   hook: {
-    en: "Your sock drawer is full of red, blue and green socks, all mixed up. Suddenly the lights go out! You can't see a thing, but you need two socks of the same colour. How many should you grab to be sure?",
-    zh: "你的袜子抽屉里塞满了红、蓝、绿三种颜色的袜子，全混在一起。突然停电了！你什么都看不见，可是需要两只同色的袜子。拿几只才能保证一定配成一双？",
+    en: "Your sock drawer is full of red, blue and green socks, all mixed up, and suddenly the lights go out! You need two socks of the same colour, but you can't see a thing. How many should you grab to be sure?",
+    zh: "你的袜子抽屉里塞满了红、蓝、绿三种颜色的袜子，全混在一起，突然停电了！你需要两只同色的袜子，可是什么都看不见。拿几只才能保证一定配成一双？",
   },
   guess: {
     type: "slider",
@@ -638,7 +649,7 @@ export const socksInTheDark: HeroQuestionBlueprint = {
   answer: { type: "NUMERIC", value: 4 },
   hints: [
     { en: "Don't think about good luck. Think about the WORST luck. How could your socks keep refusing to match?", zh: "别想运气好的时候，想想运气最差的时候。你拿的袜子怎样才能一直配不成对？" },
-    { en: "Try worst-luck mode in the scene. After 3 socks, what is the unluckiest thing you could be holding?", zh: "在场景里试试「最倒霉模式」。拿了 3 只以后，手里最倒霉会是什么样？" },
+    { en: "Turn on \"😈 Worst luck\" in the scene and press \"Pull a sock\". After 3 socks, what is the unluckiest thing you could be holding?", zh: "在场景里打开「😈 最倒霉模式」，再按「摸一只」。拿了 3 只以后，手里最倒霉会是什么样？" },
     { en: "The unluckiest 3 socks are one red, one blue and one green. Now take one more. What colour can it be, and does it match?", zh: "最倒霉的 3 只是一红、一蓝、一绿。再拿一只，它会是什么颜色？能配上吗？" },
   ],
   wrongAnswers: [
@@ -666,7 +677,7 @@ export const socksInTheDark: HeroQuestionBlueprint = {
     {
       match: "gt:correct",
       feedback: {
-        en: "That's enough socks, but not the fewest. Try worst-luck mode in the scene and stop the moment a pair is guaranteed.",
+        en: "That's enough socks, but not the fewest. Turn on \"😈 Worst luck\" in the scene and stop the moment a pair is guaranteed.",
         zh: "这么多肯定够，但不是最少的。在场景里试试「最倒霉模式」，一保证有一双就停下。",
       },
     },
@@ -706,8 +717,11 @@ export const socksInTheDark: HeroQuestionBlueprint = {
 
 /**
  * C7. pi_darts has no seed on purpose: every child gets a different rain, and the scene proposes
- * its own estimate (toFixed(2)) after 1,000 dots. At 1,000 dots one standard deviation is about
- * 0.05, so 3.0-3.3 holds roughly 99.5% of runs.
+ * its own estimate (toFixed(2)) the first time it has 1,000 dots. At 1,000 dots one standard
+ * deviation is about 0.05, so 3.0-3.3 holds roughly 99.5% of runs. The guess is a CHOICE (not a
+ * 0-1000 slider) because the reveal histogram marks a slider guess with the answer's truth (3.14).
+ * Precision: the error shrinks like 1/√N, so 10× smaller wobble needs 100× the drops
+ * (1,000 drops ≈ ±0.05; 100,000 ≈ ±0.005); about a million drops make 3.14 a safe bet.
  */
 export const piFromRaindrops: HeroQuestionBlueprint = {
   slug: "pi-from-raindrops",
@@ -718,26 +732,28 @@ export const piFromRaindrops: HeroQuestionBlueprint = {
   category: "PROBABILITY",
   title: { en: "Finding π With Raindrops", zh: "用雨点算出 π" },
   hook: {
-    en: "Draw a square and fit the biggest circle you can inside it. Now let 1,000 raindrops fall on the square, landing completely at random. About how many of them land inside the circle?",
-    zh: "画一个正方形，在里面画一个尽可能大的圆。让 1,000 个雨点完全随机地落在正方形上。大约有多少个会落在圆里？",
+    en: "Draw a square and fit the biggest circle you can inside it. Now let a thousand raindrops fall on the square, landing completely at random. About how many of them land inside the circle, and could they tell you something secret about circles?",
+    zh: "画一个正方形，在里面画一个尽可能大的圆。让一千个雨点完全随机地落在正方形上。大约有多少个会落在圆里？它们能不能告诉你一个关于圆的秘密？",
   },
   guess: {
-    type: "slider",
-    min: 0,
-    max: 1000,
-    step: 10,
-    unit: { en: "drops inside", zh: "个在圆里" },
+    type: "choice",
+    options: [
+      { id: "500", en: "About 500: half of them", zh: "大约 500 个：一半" },
+      { id: "650", en: "About 650", zh: "大约 650 个" },
+      { id: "800", en: "About 800", zh: "大约 800 个" },
+      { id: "950", en: "About 950: nearly all of them", zh: "大约 950 个：几乎全部" },
+    ],
   },
   scene: { type: "pi_darts", maxDrops: 5000 },
   prompt: {
-    en: "Drop at least 1,000 dots in the scene. Then work out 4 × (dots inside the circle) ÷ (all the dots). What do you get? Round it to two decimal places.",
-    zh: "在场景里撒至少 1,000 个点。然后算一算：4 × 圆里的点数 ÷ 全部点数。你得到多少？保留两位小数。",
+    en: "Drop at least 1,000 dots in the scene. It works out 4 × (dots inside the circle) ÷ (all the dots) for you. What does your estimate come to, rounded to two decimal places?",
+    zh: "在场景里撒至少 1,000 个点。场景会帮你算出：4 × 圆里的点数 ÷ 全部点数。你的估计值是多少？保留两位小数。",
   },
   answer: { type: "ESTIMATE", min: 3.0, max: 3.3, truth: 3.14 },
   hints: [
-    { en: "What matters isn't the number of dots but the SHARE that lands inside the circle. Which takes up more of the square: the circle, or the four corners?", zh: "关键不是点有多少，而是落在圆里的点占了多少。圆和四个角，哪个占正方形更多？" },
+    { en: "Press \"+1,000\". What matters isn't the number of dots but the SHARE that lands inside the circle. Which takes up more of the square: the circle, or the four corners?", zh: "按「+1,000」。关键不是点有多少，而是落在圆里的点占了多少。圆和四个角，哪个占正方形更多？" },
     { en: "If the circle's radius is r, the square's side is 2r. So the square's area is 4r², and the circle's area is πr².", zh: "如果圆的半径是 r，正方形的边长就是 2r。所以正方形的面积是 4r²，圆的面积是 πr²。" },
-    { en: "Random dots land in each part in proportion to its area, so the share inside is about πr² ÷ 4r² = π/4. Multiply the share by 4.", zh: "随机的点落在哪一块的多少和面积成比例，所以圆里的比例大约是 πr² ÷ 4r² = π/4。把这个比例乘 4。" },
+    { en: "Random dots land in each part in proportion to its area, so the share inside is about πr² ÷ 4r² = π/4. That's why the scene multiplies the share by 4.", zh: "随机的点落在哪一块的多少和面积成比例，所以圆里的比例大约是 πr² ÷ 4r² = π/4。这就是场景要把比例乘 4 的原因。" },
   ],
   wrongAnswers: [
     {
@@ -777,16 +793,16 @@ export const piFromRaindrops: HeroQuestionBlueprint = {
     },
   ],
   explanation: {
-    en: "The circle's area is πr² and the square's is 4r², so the circle covers π/4 of the square, about 0.785. Random dots spread out evenly, so about 0.785 of them land inside the circle. Four times that share is about 3.14, which is π. With 1,000 dots your answer usually lands between 3.0 and 3.3, and more dots bring it closer.",
-    zh: "圆的面积是 πr²，正方形是 4r²，所以圆占正方形的 π/4，大约 0.785。随机的点落得很均匀，所以大约 0.785 的点会落在圆里。这个比例乘 4，大约是 3.14，也就是 π。撒 1,000 个点时，结果通常在 3.0 到 3.3 之间，点越多越接近。",
+    en: "The circle's area is πr² and the square's is 4r², so the circle covers π/4 of the square, about 0.785: roughly 785 of 1,000 drops land inside. Four times that share is about 3.14, which is π. With 1,000 dots your answer usually lands between 3.0 and 3.3, and more dots bring it closer.",
+    zh: "圆的面积是 πr²，正方形是 4r²，所以圆占正方形的 π/4，大约 0.785：1,000 个雨点里大约有 785 个落在圆里。这个比例乘 4，大约是 3.14，也就是 π。撒 1,000 个点时，结果通常在 3.0 到 3.3 之间，点越多越接近。",
   },
   aha: {
-    en: "Pure randomness can find an exact number: the circle covers π/4 of the square, so the dots spell out π. It's slow, though: you need about a hundred thousand dots to be fairly sure of even 3.14.",
-    zh: "纯粹的随机也能算出一个精确的数：圆占正方形的 π/4，所以这些点拼出了 π。只是很慢：要撒大约十万个点，才能比较有把握地得到 3.14。",
+    en: "Pure randomness can find an exact number: the circle covers π/4 of the square, so the raindrops spell out π. It's slow, though: for one more correct digit you need about a hundred times as many drops.",
+    zh: "纯粹的随机也能算出一个精确的数：圆占正方形的 π/4，所以雨点拼出了 π。只是很慢：想多算对一位小数，雨点大约要多一百倍。",
   },
   extension: {
-    en: "How many dots does it take before your estimate stays between 3.13 and 3.15? Guess first, then try 5,000 dots in the scene.",
-    zh: "要撒多少个点，估计值才能一直停在 3.13 到 3.15 之间？先猜，再在场景里撒 5,000 个点试试。",
+    en: "With 1,000 drops, the estimate wobbles by about 0.05. Guess: how many drops would make the wobble ten times smaller? Then compare 1,000 and 5,000 drops in the scene.",
+    zh: "撒 1,000 个点时，估计值大约会上下晃 0.05。猜一猜：要撒多少个点，晃动才会小十倍？再在场景里比一比 1,000 个和 5,000 个点。",
   },
   discussionPrompt: {
     en: "What estimate of π did you get, and with how many dots? Why do different people get different answers from the same rule?",
@@ -799,7 +815,7 @@ export const piFromRaindrops: HeroQuestionBlueprint = {
   },
   sortOrder: 7,
   rubricNotes:
-    "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: needs the area of a circle; simulation plus the area ratio is one path; the estimate varies run to run (window 3.0-3.3 is about 3 standard deviations at 1,000 dots)",
+    "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: needs the area of a circle; simulation plus the area ratio is one path; the scene does the 4 × share sum, so the work is understanding why; the estimate varies run to run (window 3.0-3.3 is about 3 standard deviations at 1,000 dots)",
 };
 
 export const CHANCE_AND_LUCK: readonly HeroQuestionBlueprint[] = [

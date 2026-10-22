@@ -702,3 +702,51 @@ describe("scene/answer cross-checks for the Tier-2 scenes", () => {
     );
   });
 });
+
+describe("editorial pass 1 (docs/plans/good-questions-overhaul/editorial-pass-1.md)", () => {
+  const COMPUTE_WORDS = /^(compute|calculate|solve|simplify|find|what is|evaluate|write|round|fill in)\b/i;
+
+  it("no hook or prompt opens with a COMPUTE_PREFIX word (scramble-and-nine's 'Write down' is a reviewed waiver)", () => {
+    for (const bp of ALL_HERO_BLUEPRINTS) {
+      expect(COMPUTE_WORDS.test(bp.prompt.en.trim()), `${bp.slug} prompt`).toBe(false);
+      if (bp.slug !== "scramble-and-nine") expect(COMPUTE_WORDS.test(bp.hook.en.trim()), `${bp.slug} hook`).toBe(false);
+    }
+  });
+
+  it("states the corrected facts", () => {
+    // 10^20 universes / ~7.5 × 10^18 grains of sand ≈ 13 per grain, not 100.
+    expect(bySlug("googol-vs-atoms").aha.en).toMatch(/more than ten universes for every grain of sand/);
+    expect(bySlug("googol-vs-atoms").aha.zh).toMatch(/十几个宇宙/);
+    // 52 known perfect numbers (as of October 2024), not "about fifty".
+    expect(bySlug("perfect-28").aha.en).toMatch(/Only 52 are known/);
+    // The board's rice: "more than 500 years" holds for any realistic grain weight.
+    expect(bySlug("chessboard-rice").aha.en).toMatch(/500 years/);
+    expect(2 ** 64 - 1).toBeGreaterThan(1.8e19);
+    // 253 = 23 × 11.
+    expect(bySlug("someone-shares-my-birthday").explanation.en).toMatch(/11 times/);
+  });
+
+  it("gives times-eleven an Act-1 guess and keeps pi's guess off the truth-marked slider", () => {
+    expect(bySlug("times-eleven").guess?.type).toBe("choice");
+    expect(bySlug("pi-from-raindrops").guess?.type).toBe("choice");
+  });
+
+  it("illustration scenes say something new in Act 3", () => {
+    for (const slug of ["three-switches", "knights-and-knaves"]) {
+      expect(bySlug(slug).scene, slug).toHaveProperty("revealCaption");
+    }
+  });
+
+  it("D3's reveal no longer shows the 3-digit 1089 table for a 4-digit scramble", () => {
+    expect(bySlug("scramble-and-nine").scene).toMatchObject({ type: "number_trick_stepper", revealExtra: "none" });
+  });
+
+  it("the rope slider reaches the extension (a 1.8 m grown-up needs 2π × 1.8 ≈ 11.3 m)", () => {
+    const scene = bySlug("rope-around-earth").scene as { extraMetersMax: number };
+    expect(scene.extraMetersMax).toBeGreaterThanOrEqual(2 * Math.PI * 1.8);
+  });
+
+  it("every hero question scores at least 17/20 after the pass", () => {
+    for (const bp of ALL_HERO_BLUEPRINTS) expect(Number(bp.rubricNotes.slice(0, 2)), bp.slug).toBeGreaterThanOrEqual(17);
+  });
+});

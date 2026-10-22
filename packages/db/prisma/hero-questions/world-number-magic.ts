@@ -5,6 +5,8 @@
  * each trick on 20 seeded inputs plus edge cases (expectFixedPoint / expectDivisibleBy).
  * Batch 3: D5 collatz-hailstone (collatz_path), D6 times-eleven (digit_slide), D8 fibonacci-next
  * (fib_spiral; upgrades the legacy "Sunflower Fibonacci Spiral" row), D9 perfect-28 (divisor_blocks).
+ * Editorial pass 1: D1 opens as a magic act (sealed card), D3's reveal no longer shows the
+ * 3-digit 1089 table, D4 counts "rounds" like its scene, D6 gained an Act-1 guess, D9 says 52 known.
  * TODO(phase-3): D7 (prime_spiral), D10 (money_flow) once those Tier-3 scenes land.
  */
 import type { GuessConfig, HeroQuestionBlueprint } from "./_template";
@@ -28,8 +30,8 @@ export const trick1089: HeroQuestionBlueprint = {
   category: "NUMBER_THEORY",
   title: { en: "I Know Your Number", zh: "你心里的数我早就知道" },
   hook: {
-    en: "Think of a three-digit number whose first and last digits are at least 2 apart. Reverse it, and subtract the smaller number from the bigger one. Reverse that answer and add the two together. I already know what you got. How can I possibly know?",
-    zh: "想一个三位数，第一位和最后一位至少差 2。把它倒过来写，用大数减小数。再把得数倒过来写，和得数相加。我早就知道你得到了多少。我是怎么知道的？",
+    en: "Before you even pick your number, I seal my prediction in an envelope. Choose a three-digit number whose first and last digits are at least 2 apart, reverse it, subtract the smaller from the bigger, then add that answer to its own reverse. Open the envelope: how could I have known?",
+    zh: "你还没选数，我就把预言封进了信封。你想一个三位数，首位和末位至少差 2；把它倒过来写，大数减小数；再把得数倒过来写，两个数相加。打开信封：我怎么可能提前知道？",
   },
   guess: SAME_OR_DIFFERENT_GUESS,
   scene: {
@@ -48,7 +50,7 @@ export const trick1089: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 1089 },
   hints: [
-    { en: "Try the trick with two different numbers, like 742 and 513. Compare how they end.", zh: "用两个不同的数试试，比如 742 和 513。比一比最后的结果。" },
+    { en: "Type 742 in the scene and press \"Start\", then try 513 (or tap 🎲 for a surprise). Compare how they end.", zh: "在场景里输入 742，点「开始」，再试试 513（或者点 🎲 随机来一个）。比一比最后的结果。" },
     { en: "Look at the subtraction step. Write down what you got each time: 495, 198, … What do these numbers have in common?", zh: "看相减那一步。把每次的得数写下来：495、198……这些数有什么共同点？" },
     { en: "Every subtraction answer is in the 99 times table, and its middle digit is always 9. Try adding each one to its reverse.", zh: "相减的得数都在 99 的乘法表里，而且中间一位总是 9。把每一个和它倒过来的数相加试试。" },
   ],
@@ -84,8 +86,8 @@ export const trick1089: HeroQuestionBlueprint = {
     zh: "相减这一步把所有的数都挤进了 99 的乘法表。之后，结局只剩一个：1089。",
   },
   extension: {
-    en: "Try the trick with four-digit numbers. Do you still always get the same answer? Find two starts that end differently and explain why.",
-    zh: "换成四位数试试。还是每次都一样吗？找两个结果不同的起点，说说为什么。",
+    en: "Try the trick with four-digit numbers. Do you still always get the same answer? Find two starts that end differently (two common endings are 10890 and 9999) and explain why.",
+    zh: "换成四位数试试。还是每次都一样吗？找两个结果不同的起点（最常见的两个结局是 10890 和 9999），说说为什么。",
   },
   discussionPrompt: {
     en: "Try this trick on someone at home. What did they say when you told them their number before they did?",
@@ -98,7 +100,7 @@ export const trick1089: HeroQuestionBlueprint = {
   },
   sortOrder: 1,
   rubricNotes:
-    "18/20 — hook 1, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 2: the trick needs its digit rules up front, so the hook is number-heavy; paths are try-and-see or algebra",
+    "19/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 2: the sealed-envelope opening puts the magic before the digit rules; paths are try-and-see or algebra",
 };
 
 /** D2. Upgrades the legacy DRILL row "Math Mind-Reading Trick" in place. */
@@ -111,8 +113,8 @@ export const mindReadingFive: HeroQuestionBlueprint = {
   category: "ALGEBRA",
   title: { en: "The Mind Reader", zh: "读心术" },
   hook: {
-    en: "Think of a secret number and don't tell anyone. Double it, add 10, cut it in half, then take away the number you first thought of. I can tell you what you have left. How could I possibly know?",
-    zh: "心里想一个数，别告诉任何人。把它乘 2，加 10，再除以 2，最后减去你一开始想的数。我知道你剩下多少。我怎么可能知道？",
+    en: "Think of a secret number and don't tell anyone. Double it, add 10, cut it in half, then take away the number you first thought of. I can tell you what's left without asking: how could I possibly know?",
+    zh: "心里想一个数，别告诉任何人。把它乘 2，加 10，再除以 2，最后减去你一开始想的数。我不用问就知道你剩下多少：我怎么可能知道？",
   },
   guess: SAME_OR_DIFFERENT_GUESS,
   scene: {
@@ -133,7 +135,7 @@ export const mindReadingFive: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 5 },
   hints: [
-    { en: "Don't just wonder about it. Try it with a small number, like 3, and write down every step.", zh: "别光想，用一个小数试试，比如 3，每一步都写下来。" },
+    { en: "Don't just wonder about it. Type a small number like 3 into the scene and press \"Next step\" one step at a time.", zh: "别光想，在场景里输入一个小数，比如 3，再一步一步地点「下一步」。" },
     { en: "Now try a different number, like 10. Did you end up in the same place? Which step makes your number disappear?", zh: "再换一个数试试，比如 10。结果一样吗？是哪一步让你的数消失了？" },
     { en: "Doubling and then halving brings you back to your number. But the 10 you added got halved too. What is left after you take your number away?", zh: "先乘 2 再除以 2，又回到了你的数。可是你加的 10 也被除以 2 了。减掉你的数以后，还剩多少？" },
   ],
@@ -168,16 +170,16 @@ export const mindReadingFive: HeroQuestionBlueprint = {
     },
   ],
   explanation: {
-    en: "Call your number n. Doubling gives 2n, adding 10 gives 2n + 10, and halving gives n + 5. Taking away n leaves 5, whatever n was.",
-    zh: "把你的数叫作 n。乘 2 得 2n，加 10 得 2n + 10，除以 2 得 n + 5。减去 n，剩下 5，不管 n 是几。",
+    en: "Call your number x, like the scene does. Doubling gives 2x, adding 10 gives 2x + 10, and halving gives x + 5. Taking away x leaves 5, whatever x was.",
+    zh: "像场景里那样，把你的数叫作 x。乘 2 得 2x，加 10 得 2x + 10，除以 2 得 x + 5。减去 x，剩下 5，不管 x 是几。",
   },
   aha: {
     en: "Your number gets doubled, halved and then taken away, so none of it is left. Only half of the 10 survives, and that's the 5 I read in your mind.",
     zh: "你的数先翻倍、再减半、最后被减掉，一点都不剩。只剩下 10 的一半，就是我「读」到的 5。",
   },
   extension: {
-    en: "What if the trick says add 20 instead of 10? Can you invent a trick where the answer is always 7?",
-    zh: "如果把「加 10」改成「加 20」，答案是多少？你能设计一个答案总是 7 的魔术吗？",
+    en: "What if the trick says add 20 instead of 10? Can you invent a trick where the answer is always 7? Harder: invent one that hands back the number your friend started with.",
+    zh: "如果把「加 10」改成「加 20」，答案是多少？你能设计一个答案总是 7 的魔术吗？再难一点：设计一个最后正好变回朋友原来那个数的魔术。",
   },
   discussionPrompt: {
     en: "Post a trick you invented, but keep the answer secret. Can the next person work out the number everyone will end up with?",
@@ -207,8 +209,8 @@ export const scrambleAndNine: HeroQuestionBlueprint = {
   category: "NUMBER_THEORY",
   title: { en: "Scramble and Subtract", zh: "打乱数字之后" },
   hook: {
-    en: "Write down a number with a few digits. Scramble its digits to make a new number, then subtract the smaller one from the bigger one. Whatever you started with, the answer always divides exactly by one special number. Which one?",
-    zh: "写一个几位数。把它的数字打乱顺序，变成另一个数，再用大数减小数。不管你一开始写的是什么，结果总能被一个特别的数整除。是哪一个？",
+    en: "Write down a number with a few digits, scramble its digits to make a new number, and subtract the smaller one from the bigger one. Whatever you started with, the answer always divides exactly by one special number. Which one is it?",
+    zh: "写一个几位数，把它的数字打乱顺序变成另一个数，再用大数减小数。不管你一开始写的是什么，结果总能被一个特别的数整除。是哪一个？",
   },
   guess: {
     type: "choice",
@@ -226,7 +228,7 @@ export const scrambleAndNine: HeroQuestionBlueprint = {
       { op: "scramble_minus", label: { en: "Scramble the digits. Subtract the smaller from the bigger.", zh: "打乱数字顺序，大数减小数。" } },
     ],
     expectDivisibleBy: 9,
-    revealExtra: "nines_table",
+    revealExtra: "none",
   },
   prompt: {
     en: "Scramble the digits of a number and subtract the smaller from the bigger. Which is the biggest of these numbers that always divides the answer exactly: 2, 3, 9 or 11?",
@@ -234,8 +236,8 @@ export const scrambleAndNine: HeroQuestionBlueprint = {
   },
   answer: { type: "CHOICE", correctId: "9" },
   hints: [
-    { en: "Test it. Scramble 52 into 25 and subtract. Then try 731 and 173. What do the answers have in common?", zh: "试一试。把 52 打乱成 25，相减。再试试 731 和 173。这些得数有什么共同点？" },
-    { en: "Add up the digits of each answer: 27 gives 2 + 7 = 9, and 558 gives 5 + 5 + 8 = 18. What do you notice?", zh: "把每个得数的各位数字加起来：27 是 2 + 7 = 9，558 是 5 + 5 + 8 = 18。你发现了什么？" },
+    { en: "Test it. Type a four-digit number into the scene and press \"Start\": it scrambles the digits and subtracts for you. Do it three times. On paper, try 52 − 25 and 731 − 173 too. What do the answers have in common?", zh: "试一试。在场景里输入一个四位数，点「开始」：它会帮你打乱数字再相减。做三次。再在纸上算算 52 − 25 和 731 − 173。这些得数有什么共同点？" },
+    { en: "Add up the digits of each answer: 27 gives 2 + 7 = 9, and 558 gives 5 + 5 + 8 = 18. Try the scene's answers too. What do you notice?", zh: "把每个得数的各位数字加起来：27 是 2 + 7 = 9，558 是 5 + 5 + 8 = 18。场景里的得数也加一加。你发现了什么？" },
     { en: "A number and the sum of its digits leave the same remainder when you divide by 9. Scrambling doesn't change the digit sum. So what happens to the remainder when you subtract?", zh: "一个数除以 9 的余数，和它各位数字之和除以 9 的余数一样。打乱顺序不会改变数字之和。那相减以后，余数会怎样？" },
   ],
   wrongAnswers: [
@@ -293,12 +295,12 @@ export const kaprekar6174: HeroQuestionBlueprint = {
   collection: "number-magic",
   kind: "MAGIC_TRICK",
   ageGroup: "AGE_12_14",
-  difficulty: "HARD",
+  difficulty: "MEDIUM",
   category: "NUMBER_THEORY",
   title: { en: "The Black Hole Number", zh: "黑洞数" },
   hook: {
-    en: "Pick a four-digit number, as long as its digits aren't all the same. Arrange its digits from biggest to smallest, then from smallest to biggest, and subtract. Now do the same thing to your answer, again and again. What do you think will happen?",
-    zh: "想一个四位数，只要四个数字不全一样就行。把数字从大到小排成一个数，再从小到大排成一个数，大减小。再对得数做同样的事，一遍又一遍。你猜会发生什么？",
+    en: "Pick a four-digit number whose digits aren't all the same, then subtract its digits in smallest-first order from the same digits in biggest-first order. Do the same thing to your answer, again and again, round after round. What do you think will happen?",
+    zh: "想一个四位数，只要四个数字不全一样就行；把数字从大到小排成一个数，减去从小到大排成的数。再对得数做同样的事，一轮又一轮。你猜会发生什么？",
   },
   guess: {
     type: "choice",
@@ -319,14 +321,14 @@ export const kaprekar6174: HeroQuestionBlueprint = {
     expectFixedPoint: 6174,
   },
   prompt: {
-    en: "Keep repeating the step: digits in biggest-first order minus digits in smallest-first order. Keep zeros, so 999 counts as 0999. When the number stops changing, what number is it?",
-    zh: "一直重复这一步：数字从大到小排，减去从小到大排。0 也要算上，999 要写成 0999。数字不再变的时候，它是多少？",
+    en: "Keep repeating the round: digits in biggest-first order minus digits in smallest-first order. Keep zeros as digits, so if you get 999, treat it as 0999. When the number stops changing, what number is it?",
+    zh: "一轮一轮地重复：数字从大到小排，减去从小到大排。0 也要当成数字留着，如果得到 999，就写成 0999。数字不再变的时候，它是多少？",
   },
   answer: { type: "NUMERIC", value: 6174 },
   hints: [
-    { en: "Just start. Try 3524: biggest-first is 5432 and smallest-first is 2345. Subtract, then do it again with the answer.", zh: "先动手。试试 3524：从大到小是 5432，从小到大是 2345。相减，再对得数做一遍。" },
-    { en: "Keep going and write each result in a list. From 3524 you get 3087, then 8352, then… Watch for a number that comes back.", zh: "继续做，把每个结果写成一列。从 3524 开始会得到 3087，然后 8352，然后……注意有没有重复出现的数。" },
-    { en: "When the step gives back the very same number, you're stuck there forever. Check it: does sorting that number's digits and subtracting give the number itself?", zh: "如果做完这一步得到的还是同一个数，就会永远停在那里。验证一下：把这个数的数字重新排、相减，是不是又得到它自己？" },
+    { en: "Just start. Try 3524: biggest-first is 5432 and smallest-first is 2345. Subtract, then do it again with the answer, or type 3524 into the scene and press \"Start\".", zh: "先动手。试试 3524：从大到小是 5432，从小到大是 2345。相减，再对得数做一遍；也可以在场景里输入 3524，点「开始」。" },
+    { en: "Watch the \"Round\" lines. From 3524 you get 3087, then 8352, then… Look out for a number that comes back.", zh: "看「第 N 轮」那几行。从 3524 开始会得到 3087，然后 8352，然后……注意有没有重复出现的数。" },
+    { en: "When a round gives back the very same number, you're stuck there forever. Check it: does sorting that number's digits and subtracting give the number itself?", zh: "如果做完一轮得到的还是同一个数，就会永远停在那里。验证一下：把这个数的数字重新排、相减，是不是又得到它自己？" },
   ],
   wrongAnswers: [
     {
@@ -346,33 +348,33 @@ export const kaprekar6174: HeroQuestionBlueprint = {
     {
       match: "lt:correct",
       feedback: {
-        en: "That number still changes if you do the step again. Try it: sort its digits, subtract, and keep going until nothing changes.",
-        zh: "这个数再做一遍还会变。试试：把它的数字排一排，相减，一直做到不再变为止。",
+        en: "That number still changes if you do another round. Try it: sort its digits, subtract, and keep going until nothing changes.",
+        zh: "这个数再做一轮还会变。试试：把它的数字排一排，相减，一直做到不再变为止。",
       },
     },
     {
       match: "gt:correct",
       feedback: {
-        en: "Not stuck yet: that number changes when you do the step again. Keep going until the answer comes out the same as the number you started the step with.",
-        zh: "还没停下来：这个数再做一遍还会变。一直做下去，直到得数和做这一步之前的数一模一样。",
+        en: "Not stuck yet: that number changes when you do another round. Keep going until the answer comes out the same as the number you started the round with.",
+        zh: "还没停下来：这个数再做一轮还会变。一直做下去，直到得数和这一轮开始时的数一模一样。",
       },
     },
   ],
   explanation: {
-    en: "6174 is the only four-digit number the step leaves unchanged: 7641 − 1467 = 6174. Every allowed start falls into it, and never needs more than 7 steps. You can check this in the scene, or by trying a few starts by hand.",
-    zh: "6174 是唯一一个做完这一步不变的四位数：7641 − 1467 = 6174。每个符合要求的起点都会掉进去，而且最多只要 7 步。你可以在场景里验证，也可以自己多试几个。",
+    en: "6174 is the only four-digit number a round leaves unchanged: 7641 − 1467 = 6174. Every allowed start falls into it (3524 goes 5432 − 2345 = 3087, then 8352, then 6174), and never needs more than 7 rounds. You can check this in the scene, or by trying a few starts by hand.",
+    zh: "6174 是唯一一个做完一轮不变的四位数：7641 − 1467 = 6174。每个符合要求的起点都会掉进去（3524 先变成 5432 − 2345 = 3087，再变成 8352，然后就是 6174），而且最多只要 7 轮。你可以在场景里验证，也可以自己多试几个。",
   },
   aha: {
-    en: "Every allowed four-digit number falls into 6174 within 7 steps, like a black hole. Computers have checked every start, but nobody has found a simple reason why it has to be 6174.",
-    zh: "所有符合要求的四位数，最多 7 步都会掉进 6174，就像掉进黑洞。电脑检查过每一个起点，可是还没有人找到一个简单的理由，说明为什么偏偏是它。",
+    en: "Every allowed four-digit number falls into 6174 within 7 rounds, like a black hole. There are fewer than 10,000 starts, so a computer can check every one in a blink, and they all end there.",
+    zh: "所有符合要求的四位数，最多 7 轮都会掉进 6174，就像掉进黑洞。四位数不到一万个，电脑一眨眼就能全部检查一遍，每一个都掉了进去。",
   },
   extension: {
-    en: "Play the same game with three-digit numbers. Where do they get stuck? And what happens with two-digit numbers?",
-    zh: "用三位数玩同样的游戏，它们会停在哪里？两位数又会怎样？",
+    en: "Play the same game with three-digit numbers. Where do they get stuck? And what happens with two-digit numbers: do they get stuck at all, or go round in a loop?",
+    zh: "用三位数玩同样的游戏，它们会停在哪里？两位数又会怎样：会停下来，还是绕着圈转？",
   },
   discussionPrompt: {
-    en: "How many steps did your starting number take? Can anyone find a start that needs all 7 steps?",
-    zh: "你的起点用了几步？谁能找到一个正好要 7 步的数？",
+    en: "How many rounds did your starting number take? Can anyone find a start that needs all 7 rounds, and is there anything special about it?",
+    zh: "你的起点用了几轮？谁能找到一个正好要 7 轮的数？它有什么特别的地方吗？",
   },
   solutionTags: ["guess_check", "table", "pattern", "simulate"],
   funFact: {
@@ -381,7 +383,7 @@ export const kaprekar6174: HeroQuestionBlueprint = {
   },
   sortOrder: 4,
   rubricNotes:
-    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 1, hints 2, retell 2: wrong-answer rules beyond 0 and 495 are generic 'keep going' nudges; the only real path is iterate-and-list",
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 1, hints 2, retell 2: wrong-answer rules beyond 0 and 495 are generic 'keep going' nudges; the only real path is iterate-and-list; MEDIUM, not HARD, now that the scene does the subtraction",
 };
 
 /**
@@ -395,9 +397,9 @@ export const collatzHailstone: HeroQuestionBlueprint = {
   ageGroup: "AGE_10_12",
   difficulty: "MEDIUM",
   category: "NUMBER_THEORY",
-  title: { en: "The Game Nobody Can Solve", zh: "没人能证明的游戏" },
+  title: { en: "The Puzzle Nobody Has Solved", zh: "至今没人解开的游戏" },
   hook: {
-    en: "Here's a game: if your number is even, halve it; if it's odd, triple it and add 1. Keep going. Starting at 6 you get 6, 3, 10, 5, 16, 8, 4, 2, 1. Does every starting number end up at 1?",
+    en: "Here's a game: if your number is even, halve it; if it's odd, triple it and add 1; then keep going. Starting at 6 you get 6, 3, 10, 5, 16, 8, 4, 2, 1. Does every starting number end up at 1?",
     zh: "一个游戏：偶数就除以 2，奇数就乘 3 再加 1，一直做下去。从 6 开始：6、3、10、5、16、8、4、2、1。每个数最后都会到 1 吗？",
   },
   guess: {
@@ -415,7 +417,7 @@ export const collatzHailstone: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 9 },
   hints: [
-    { en: "Bigger numbers don't always take longer. Try a few starts in the scene and write each one's number of steps in a table.", zh: "大的数不一定走得久。在场景里试几个起点，把每个的步数记在表里。" },
+    { en: "Bigger numbers don't always take longer. Type a few starts into the scene and press \"Go\": the table on the side keeps each one's steps.", zh: "大的数不一定走得久。在场景里输入几个起点，点「出发」：旁边的表会记下每个起点的步数。" },
     { en: "8 is quick: 8, 4, 2, 1 is just 3 steps. Odd numbers are the ones that jump UP. Which odd starts from 1 to 9 might climb high?", zh: "8 很快：8、4、2、1，只要 3 步。奇数才会往上跳。1 到 9 里，哪些奇数起点可能爬得很高？" },
     { en: "7 takes 16 steps. Now try 9: it goes 9, 28, 14, 7, … and from there it follows 7's path. How many steps is that altogether?", zh: "7 要走 16 步。再试试 9：9、28、14、7……接下来就沿着 7 的路走。一共几步？" },
   ],
@@ -481,8 +483,8 @@ export const collatzHailstone: HeroQuestionBlueprint = {
   },
   solutionTags: ["table", "pattern", "guess_check"],
   funFact: {
-    en: "The game is called the Collatz problem, after Lothar Collatz, who asked about it in 1937. The great mathematician Paul Erdős said that mathematics is not yet ready for problems like this.",
-    zh: "这个游戏叫「考拉兹猜想」（也叫「角谷猜想」），德国数学家考拉兹在 1937 年提出了它。大数学家埃尔德什说过：数学还没有准备好对付这样的问题。",
+    en: "It's called the Collatz problem, or the hailstone problem because the numbers bounce up and down like hail, after Lothar Collatz, who asked about it in 1937. The great mathematician Paul Erdős said mathematics is not yet ready for problems like this.",
+    zh: "这个游戏叫「考拉兹猜想」，也叫「冰雹猜想」，因为数字像冰雹一样忽上忽下。德国数学家考拉兹在 1937 年提出了它；大数学家埃尔德什说过：数学还没有准备好对付这样的问题。",
   },
   sortOrder: 5,
   rubricNotes:
@@ -490,8 +492,9 @@ export const collatzHailstone: HeroQuestionBlueprint = {
 };
 
 /**
- * D6. No guess: straight into exploring. The hook's examples have different middle digits
- * (495, 286, 583) so the "sum in the middle" rule is visible; 72 and 85 are left for the child.
+ * D6. The hook's examples match the scene (its hook card shows 45 and 63; 26 breaks the "always 9"
+ * idea), and the Act-1 guess is about where the middle digit comes from. The scene's quick-pick
+ * buttons include 85 for the carry case in the extension (935); 123 × 11 = 1353 is paper-only.
  */
 export const timesEleven: HeroQuestionBlueprint = {
   slug: "times-eleven",
@@ -502,18 +505,27 @@ export const timesEleven: HeroQuestionBlueprint = {
   category: "ARITHMETIC",
   title: { en: "Times 11 in One Second", zh: "一秒算出乘 11" },
   hook: {
-    en: "Look: 45 × 11 = 495. 26 × 11 = 286. 53 × 11 = 583. There's a secret hiding in these answers. Can you spot it, and use it to do the next one in your head in one second?",
-    zh: "看：45 × 11 = 495，26 × 11 = 286，53 × 11 = 583。这些答案里藏着一个秘密。你能找到它，然后一秒钟心算出下一题吗？",
+    en: "Your friend says she can multiply any two-digit number by 11 faster than you can type it into a calculator. Her secret hides in these answers: 45 × 11 = 495, 63 × 11 = 693, 26 × 11 = 286. Can you spot it?",
+    zh: "你的朋友说，任何两位数乘 11，她都能比你按计算器还快。她的秘密就藏在这些答案里：45 × 11 = 495，63 × 11 = 693，26 × 11 = 286。你能找到吗？",
   },
-  scene: { type: "digit_slide", multiplier: 11, examples: [45, 26, 53, 63] },
+  guess: {
+    type: "choice",
+    options: [
+      { id: "always-9", en: "The middle digit is always 8 or 9", zh: "中间那位总是 8 或 9" },
+      { id: "add", en: "The middle digit is the two digits added", zh: "中间那位是两个数字相加" },
+      { id: "multiply", en: "The middle digit is the two digits multiplied", zh: "中间那位是两个数字相乘" },
+      { id: "luck", en: "There's no secret, it's luck", zh: "没有秘密，碰巧而已" },
+    ],
+  },
+  scene: { type: "digit_slide", multiplier: 11, examples: [45, 63, 26, 85] },
   prompt: {
-    en: "What is 72 × 11? Try to use the secret instead of long multiplication.",
-    zh: "72 × 11 等于多少？试着用这个秘密来算，别列竖式。",
+    en: "Use the secret to work out 72 × 11 in your head, without long multiplication. Then type 72 into the scene to check. What is 72 × 11?",
+    zh: "用这个秘密心算 72 × 11，别列竖式。算完在场景里输入 72 验证一下。72 × 11 等于多少？",
   },
   answer: { type: "NUMERIC", value: 792 },
   hints: [
-    { en: "Look at the first and last digits of each answer. In 45 × 11 = 495, where did the 4 and the 5 go?", zh: "看看每个答案的第一位和最后一位。45 × 11 = 495 里，4 和 5 跑到哪里去了？" },
-    { en: "Now look at the middle digit: it's 9 in 495, 8 in 286 and 8 in 583. How can you make 9 out of the digits 4 and 5?", zh: "再看中间那一位：495 里是 9，286 里是 8，583 里也是 8。用 4 和 5 怎么得到 9？" },
+    { en: "Look at the first and last digits of each answer. In 45 × 11 = 495, where did the 4 and the 5 go? Tap 45 in the scene and watch.", zh: "看看每个答案的第一位和最后一位。45 × 11 = 495 里，4 和 5 跑到哪里去了？在场景里点 45 看一看。" },
+    { en: "Now look at the middle digit: it's 9 in 495, 9 in 693 and 8 in 286. How can you make 8 out of the digits 2 and 6?", zh: "再看中间那一位：495 里是 9，693 里是 9，286 里是 8。用 2 和 6 怎么得到 8？" },
     { en: "Slide the two digits apart and drop their SUM in the middle. For 72: 7 on the left, 2 on the right, and 7 + 2 in between.", zh: "把两个数字分开，中间放它们的和。72 就是：左边 7，右边 2，中间放 7 + 2。" },
   ],
   wrongAnswers: [
@@ -529,6 +541,13 @@ export const timesEleven: HeroQuestionBlueprint = {
       feedback: {
         en: "Nearly! The 7 and the 2 on the outside are right. Check the middle digit again: 7 + 2 is 9, not 8.",
         zh: "差一点！外面的 7 和 2 都对了。再算一次中间：7 + 2 是 9，不是 8。",
+      },
+    },
+    {
+      match: "7142",
+      feedback: {
+        en: "You put 7 × 2 = 14 in the middle. The middle is the two digits ADDED, not multiplied: look at 45 × 11 = 495, where 4 + 5 = 9.",
+        zh: "你在中间放的是 7 × 2 = 14。中间是两个数字相加，不是相乘：看 45 × 11 = 495，4 + 5 = 9。",
       },
     },
     {
@@ -562,8 +581,8 @@ export const timesEleven: HeroQuestionBlueprint = {
     zh: "乘 11 就是乘 10 再加乘 1，所以两个数字分开，中间落下它们的和。和满 10 的时候，要向前进 1。",
   },
   extension: {
-    en: "Now try 85 × 11. The middle sum is 8 + 5 = 13, which doesn't fit in one digit. What do you do? Can the trick work for a three-digit number like 123 × 11?",
-    zh: "再试试 85 × 11。中间的和是 8 + 5 = 13，一格放不下。怎么办？这个方法能用在三位数上吗？比如 123 × 11。",
+    en: "Now try 85 × 11 (it's one of the scene's buttons). The middle sum is 8 + 5 = 13, which doesn't fit in one digit. What do you do? Can the trick work for a three-digit number like 123 × 11?",
+    zh: "再试试 85 × 11（场景里有这个按钮）。中间的和是 8 + 5 = 13，一格放不下。怎么办？这个方法能用在三位数上吗？比如 123 × 11。",
   },
   discussionPrompt: {
     en: "Teach the trick to someone at home, using a number whose two digits add up to more than 9. Did they get the carry right the first time?",
@@ -576,7 +595,7 @@ export const timesEleven: HeroQuestionBlueprint = {
   },
   sortOrder: 6,
   rubricNotes:
-    "16/20 — hook 2, guess 0, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: no Act-1 guess (straight to exploring); spotting the pattern is the one path, and the × 10 + × 1 reason plus the carry case is the ceiling",
+    "18/20 — hook 2, guess 1, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 2: the new guess (where does the middle digit come from?) lets a kid commit to 'always 8 or 9' before exploring, though the right option is easy to spot; spotting the pattern is the one path; a trick kids really do show at home",
 };
 
 /**
@@ -609,7 +628,7 @@ export const fibonacciNext: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 55 },
   hints: [
-    { en: "Don't look for a times table. Look at how each number is made from the numbers just before it.", zh: "别去找乘法表。看看每个数是怎么由它前面的数变出来的。" },
+    { en: "Don't look for a times table. Press \"Next square\" in the scene: each new square sits along the long side. How is its size made from the squares just before it?", zh: "别去找乘法表。在场景里点「下一个」：新正方形贴着长边放。它的边长是怎么由前面的正方形变出来的？" },
     { en: "Try it on a few: 2 + 3 = 5. 3 + 5 = 8. 5 + 8 = 13. Do the later numbers work the same way?", zh: "试几个：2 + 3 = 5，3 + 5 = 8，5 + 8 = 13。后面的数也是这样吗？" },
     { en: "Every number is the two before it added together. So the next one is 21 + 34.", zh: "每个数都是它前面两个数的和。所以下一个是 21 + 34。" },
   ],
@@ -680,8 +699,8 @@ export const perfect28: HeroQuestionBlueprint = {
   category: "NUMBER_THEORY",
   title: { en: "The Perfect Number", zh: "完美的数" },
   hook: {
-    en: "Some numbers are 'perfect': add up all the smaller numbers that divide into them evenly, and you get the number back exactly. Six is one, because 1 + 2 + 3 = 6. The next perfect number is hiding between 20 and 30. Which one is it?",
-    zh: "有些数是「完美」的：把能整除它的、比它小的数全加起来，正好等于它本身。6 就是一个，因为 1 + 2 + 3 = 6。下一个完全数藏在 20 到 30 之间。是哪一个？",
+    en: "Some numbers are 'perfect': add up all the smaller numbers that divide into them evenly, and you get the number back exactly. Six is one, because 1 + 2 + 3 = 6. The next perfect number is hiding somewhere between 20 and 30: can you find it?",
+    zh: "有些数是「完美」的：把能整除它的、比它小的数全加起来，正好等于它本身，这样的数叫「完全数」。6 就是一个，因为 1 + 2 + 3 = 6。下一个完全数就藏在 20 到 30 之间，你能找到它吗？",
   },
   guess: {
     type: "choice",
@@ -697,7 +716,7 @@ export const perfect28: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 28 },
   hints: [
-    { en: "Don't guess blindly. Pick one number and list every number that divides into it evenly. Try 20 first.", zh: "别瞎猜。先挑一个数，把能整除它的数全列出来。先试试 20。" },
+    { en: "Don't guess blindly. Drag the slider to 20: its divisors stack up into a bar. Does the stack come out short, exactly equal, or too tall?", zh: "别瞎猜。把滑块拖到 20：它的因数会叠成一根柱子。这根柱子是「不够」「正好相等」还是「超过了」？" },
     { en: "20: 1 + 2 + 4 + 5 + 10 = 22, a bit too big. Odd numbers have few divisors, so their sums come out too small. Try the even ones.", zh: "20：1 + 2 + 4 + 5 + 10 = 22，大了一点。奇数的因数很少，加起来总是太小。试试偶数。" },
     { en: "Find divisors in pairs: 24 = 1 × 24 = 2 × 12 = 3 × 8 = 4 × 6. Do the same for 22, 26 and 28, and add up each list (leave out the number itself).", zh: "因数可以成对地找：24 = 1 × 24 = 2 × 12 = 3 × 8 = 4 × 6。用同样的办法找 22、26、28 的因数，再分别加起来（别算它自己）。" },
   ],
@@ -705,8 +724,8 @@ export const perfect28: HeroQuestionBlueprint = {
     {
       match: "24",
       feedback: {
-        en: "Good try: 24 has lots of divisors. Too many, in fact: 1 + 2 + 3 + 4 + 6 + 8 + 12 = 36, which is more than 24. Numbers like that are called 'abundant'.",
-        zh: "想得不错：24 的因数很多。其实是太多了：1 + 2 + 3 + 4 + 6 + 8 + 12 = 36，比 24 还大。这样的数叫「盈数」。",
+        en: "Good try: 24 has lots of divisors. Too many, in fact: 1 + 2 + 3 + 4 + 6 + 8 + 12 = 36, so its stack is too tall. Numbers like that are called 'abundant'.",
+        zh: "想得不错：24 的因数很多。其实是太多了：1 + 2 + 3 + 4 + 6 + 8 + 12 = 36，柱子超过了 24。这样的数叫「盈数」。",
       },
     },
     {
@@ -731,6 +750,13 @@ export const perfect28: HeroQuestionBlueprint = {
       },
     },
     {
+      match: "regex:^\\s*(21|22|25|26)\\s*$",
+      feedback: {
+        en: "Its stack comes up short: 21 gives 1 + 3 + 7 = 11, 22 gives 1 + 2 + 11 = 14, 25 gives 1 + 5 = 6 and 26 gives 1 + 2 + 13 = 16. Look for a number with more divisors.",
+        zh: "它的柱子不够高：21 是 1 + 3 + 7 = 11，22 是 1 + 2 + 11 = 14，25 是 1 + 5 = 6，26 是 1 + 2 + 13 = 16。找一个因数更多的数。",
+      },
+    },
+    {
       match: "regex:^\\s*(23|29)\\s*$",
       feedback: {
         en: "That's a prime number: apart from itself, only 1 divides into it. So its sum is just 1.",
@@ -743,8 +769,8 @@ export const perfect28: HeroQuestionBlueprint = {
     zh: "对每个数，把能整除它的数加起来，不算它自己。大多数不是太小（27 只有 13），就是太大（24 有 36）。只有 28 正好：1 + 2 + 4 + 7 + 14 = 28。",
   },
   aha: {
-    en: "Perfect numbers are incredibly rare: 6, 28, 496, 8128, and the next one already has eight digits. Only about fifty have ever been found, all even, and nobody knows if an odd one exists.",
-    zh: "完全数少得惊人：6、28、496、8128，下一个就有 8 位数了。人类一共只找到大约五十个，全是偶数，到底有没有奇数的完全数，没人知道。",
+    en: "Perfect numbers are incredibly rare: 6, 28, 496, 8128, and the next one already has eight digits. Only 52 are known, all of them even, and nobody knows if an odd one exists.",
+    zh: "完全数少得惊人：6、28、496、8128，下一个就有 8 位数了。人类目前只知道 52 个，全是偶数，到底有没有奇数的完全数，没人知道。",
   },
   extension: {
     en: "The divisors of 12 add up to 1 + 2 + 3 + 4 + 6 = 16, more than 12, so 12 is 'abundant'. Which numbers from 1 to 30 are abundant? What do they have in common?",

@@ -3,6 +3,8 @@
  * Batch 1: B1 squares-on-chessboard. Batch 2: B2 pizza-cuts, B4 fence-shaper. Batch 3: B3
  * rope-around-earth (circle_rope), B6 pythagoras-squares, B7 seven-bridges (bridges_trace),
  * B8 clock-hands-meet (clock_overlap).
+ * Editorial pass 1: titles read as story names, hints name the scenes' real controls (size buttons,
+ * "Count the bridges", the "🔒 Right angle" toggle, the "extra rope" slider), facts re-checked.
  * TODO(phase-3): B5, B9-B11 once dissection_slide, tiling_lab, domino_tiling and mobius_cut land.
  */
 import type { HeroQuestionBlueprint } from "./_template";
@@ -15,7 +17,7 @@ export const squaresOnChessboard: HeroQuestionBlueprint = {
   ageGroup: "AGE_10_12",
   difficulty: "MEDIUM",
   category: "GEOMETRY",
-  title: { en: "How Many Squares?", zh: "棋盘上到底有几个正方形" },
+  title: { en: "The Hidden Squares", zh: "藏起来的正方形" },
   hook: {
     en: "Ask anyone how many squares are on a chessboard and they'll say 64. But squares come big and small, and they can overlap. How many squares are really hiding on a chessboard?",
     zh: "问别人棋盘上有几个正方形，大家都会说 64 个。可是正方形有大有小，还能互相重叠。棋盘上到底藏着多少个正方形？",
@@ -29,13 +31,13 @@ export const squaresOnChessboard: HeroQuestionBlueprint = {
   },
   scene: { type: "grid_squares", size: 8 },
   prompt: {
-    en: "A chessboard is an 8 × 8 grid. Count every square of every size, from 1 × 1 up to the whole board. How many are there?",
+    en: "A chessboard is an 8 × 8 grid. Count every square of every size, from 1 × 1 up to the whole board. How many squares are there?",
     zh: "棋盘是 8 × 8 的方格。从 1 × 1 到整个棋盘，所有大小的正方形都算。一共有多少个？",
   },
   answer: { type: "NUMERIC", value: 204 },
   hints: [
-    { en: "A square can be bigger than one cell. A 2 × 2 block of cells is a square too. Which sizes are possible?", zh: "正方形不一定只有一格大。2 × 2 的一块格子也是正方形。可能有哪些大小？" },
-    { en: "Try a 3 × 3 board first. Count the 1 × 1 squares, then the 2 × 2, then the 3 × 3.", zh: "先试试 3 × 3 的小棋盘。数一数 1 × 1 的，再数 2 × 2 的，最后数 3 × 3 的。" },
+    { en: "A square can be bigger than one cell. Press the \"2×2\" button in the scene and slide the frame around: every spot it fits is another square.", zh: "正方形不一定只有一格大。在场景里点「2×2」，把方框挪来挪去：它能放下的每个位置都是一个正方形。" },
+    { en: "On paper, try a tiny 3 × 3 board first. Count the 1 × 1 squares, then the 2 × 2, then the 3 × 3. Do you get 9 + 4 + 1?", zh: "先在纸上试一个 3 × 3 的小棋盘。数一数 1 × 1 的，再数 2 × 2 的，最后数 3 × 3 的。是不是 9 + 4 + 1？" },
     { en: "A 2 × 2 square can start in 7 places across and 7 places down, so there are 7 × 7 of them. Do the same for every size, then add.", zh: "2 × 2 的正方形横着有 7 个起点，竖着也有 7 个，所以一共 7 × 7 个。每种大小都这样算，再加起来。" },
   ],
   wrongAnswers: [
@@ -102,10 +104,10 @@ export const pizzaCuts: HeroQuestionBlueprint = {
   ageGroup: "AGE_8_10",
   difficulty: "MEDIUM",
   category: "GEOMETRY",
-  title: { en: "Four Cuts, How Many Slices?", zh: "四刀最多切几块" },
+  title: { en: "The Lazy Chef's Pizza", zh: "懒厨师的披萨" },
   hook: {
-    en: "You get to cut a big pizza with a long, straight knife, and the pieces don't have to be the same size. With only four cuts, how many pieces can you make?",
-    zh: "你拿一把长长的直刀切一张大披萨，每块不用一样大。只能切四刀，最多能切出几块？",
+    en: "A lazy chef wants as many slices as possible with as little work as possible. He has a long, straight knife, and the slices don't have to be the same size. With only four cuts, how many pieces can he make?",
+    zh: "一个懒厨师想少切几刀，又想切出尽量多的块。他有一把长长的直刀，每块不用一样大。只切四刀，最多能切出几块？",
   },
   guess: {
     type: "slider",
@@ -116,12 +118,12 @@ export const pizzaCuts: HeroQuestionBlueprint = {
   },
   scene: { type: "pizza_cuts", maxCuts: 4 },
   prompt: {
-    en: "Make 4 straight cuts across a round pizza. What is the greatest number of pieces you can get?",
+    en: "Make 4 straight cuts across a round pizza. At most, how many pieces can you get?",
     zh: "在一张圆披萨上直直地切 4 刀。最多能切出多少块？",
   },
   answer: { type: "NUMERIC", value: 11 },
   hints: [
-    { en: "Cutting through the middle every time isn't the best plan. Try cuts that don't all meet at one point.", zh: "每一刀都切过中心，不是最好的办法。试试让几刀不要交在同一个点上。" },
+    { en: "Cutting through the middle every time isn't the best plan: the \"All through the centre\" button shows why. Drag cuts that don't all meet at one point.", zh: "每一刀都切过中心，不是最好的办法：点「全部过圆心」就知道为什么。试着拖出几刀，不要都交在同一个点上。" },
     { en: "Count as you go: 1 cut makes 2 pieces, 2 cuts make 4. Where can the third cut go so it crosses both of the first two?", zh: "边切边数：1 刀 2 块，2 刀 4 块。第 3 刀放在哪里，才能同时穿过前两刀？" },
     { en: "A new cut adds one piece, plus one more for every old cut it crosses. Make each cut cross all the earlier cuts, at new points.", zh: "新的一刀本身多出 1 块，每穿过一条旧刀痕再多 1 块。让每一刀都穿过前面所有的刀，而且别穿过旧的交点。" },
   ],
@@ -203,13 +205,13 @@ export const fenceShaper: HeroQuestionBlueprint = {
   },
   scene: { type: "fence_shaper", perimeter: 24, integerOnly: true, wallSide: false },
   prompt: {
-    en: "The fence is 24 metres long and every side must be a whole number of metres. What is the biggest area the garden can have, in square metres?",
+    en: "The fence is 24 metres long and every side must be a whole number of metres. How big can the garden be, in square metres?",
     zh: "围栏长 24 米，每条边都要是整数米。菜地最大能有多少平方米？",
   },
   answer: { type: "NUMERIC", value: 36, unit: { en: "m²", zh: "平方米" } },
   hints: [
     { en: "The fence goes all the way around, so one long side plus one short side uses half of it. What do those two sides add up to?", zh: "围栏要绕一整圈，所以一条长边加一条短边只用了一半的围栏。这两条边加起来是几米？" },
-    { en: "Make a table. If one side is 1 m the other is 11 m, and the area is 11. Try 2 m and 10 m, then 3 m and 9 m…", zh: "列个表。一边 1 米，另一边就是 11 米，面积是 11。再试 2 米和 10 米，3 米和 9 米……" },
+    { en: "Drag the \"width\" slider one metre at a time, or make a table: 1 m and 11 m gives 11, then try 2 m and 10 m, 3 m and 9 m…", zh: "把「宽」的滑块一米一米地拖，或者列个表：1 米和 11 米，面积是 11；再试 2 米和 10 米，3 米和 9 米……" },
     { en: "Watch the areas in your table: they grow, then shrink. The biggest one comes when the two sides are as close to each other as they can get.", zh: "看表里的面积：先变大，再变小。两条边越接近，面积越大，最大的那个出现在两条边尽量接近的时候。" },
   ],
   wrongAnswers: [
@@ -299,7 +301,7 @@ export const ropeAroundEarth: HeroQuestionBlueprint = {
   },
   scene: {
     type: "circle_rope",
-    extraMetersMax: 10,
+    extraMetersMax: 12,
     planets: [
       { id: "basketball", label: { en: "a basketball", zh: "篮球" }, radiusM: 0.12, emoji: "🏀" },
       { id: "earth", label: { en: "the Earth", zh: "地球" }, radiusM: 6_371_000, emoji: "🌍" },
@@ -312,7 +314,7 @@ export const ropeAroundEarth: HeroQuestionBlueprint = {
   },
   answer: { type: "ESTIMATE", min: 15, max: 17, truth: 15.9, unit: { en: "cm", zh: "厘米" } },
   hints: [
-    { en: "The Earth is so big that it gets in the way of thinking. Try the same thing with a basketball first, and compare them in the scene.", zh: "地球太大了，反而让人想不清楚。先换成一个篮球试试，在场景里比一比。" },
+    { en: "The Earth is so big that it gets in the way of thinking. Set the \"extra rope\" slider to exactly 1 m, then tap 🏀 and 🌍 to compare a basketball with the Earth.", zh: "地球太大了，反而让人想不清楚。把「加长」滑块拖到正好 1 米，再点 🏀 和 🌍，比一比篮球和地球。" },
     { en: "A rope around a circle is 2π × the radius long. If the rope is lifted by a gap g, the radius grows by g. How much longer does the rope get?", zh: "绕圆一圈的绳长 = 2π × 半径。绳子被撑高 g，半径就变大 g。绳子要长多少？" },
     { en: "Extra rope = 2π × g, and the extra rope is 1 metre. So g = 1 ÷ 2π metres. Work it out and turn it into centimetres.", zh: "加长的绳子 = 2π × g，而加长的是 1 米。所以 g = 1 ÷ 2π 米。算出来，再换成厘米。" },
   ],
@@ -369,12 +371,12 @@ export const ropeAroundEarth: HeroQuestionBlueprint = {
     zh: "地球有多大，在算式里完全抵消了。篮球、地球还是太阳，多 1 米绳子，缝都是大约 16 厘米。",
   },
   extension: {
-    en: "How much longer would the rope need to be for a grown-up, 1.8 m tall, to walk underneath? Guess before you work it out.",
-    zh: "绳子要加长多少，一个 1.8 米高的大人才能从下面走过去？先猜再算。",
+    en: "How much longer would the rope need to be for a grown-up, 1.8 m tall, to walk underneath? Guess first, then check with the slider.",
+    zh: "绳子要加长多少，一个 1.8 米高的大人才能从下面走过去？先猜，再用滑块验证。",
   },
   discussionPrompt: {
-    en: "Using only 'distance around = π × distance across', can you explain to a friend why the gap doesn't depend on how big the ball is?",
-    zh: "你能只用「周长 = π × 直径」，向朋友解释为什么缝的大小和球多大没关系吗？",
+    en: "The hints used 'rope = 2π × radius'. Can you explain the same thing with 'distance around = π × distance across' instead? Which way would convince your friend faster?",
+    zh: "提示里用的是「绳长 = 2π × 半径」。你能换成「周长 = π × 直径」来讲同一件事吗？哪种讲法更快说服你的朋友？",
   },
   solutionTags: ["algebra", "draw", "guess_check"],
   funFact: {
@@ -396,7 +398,7 @@ export const pythagorasSquares: HeroQuestionBlueprint = {
   category: "GEOMETRY",
   title: { en: "The Secret of Three Squares", zh: "三个正方形的秘密" },
   hook: {
-    en: "Draw a triangle with one square corner. On each of its three sides, build a square. Put the two smaller squares together and compare them with the biggest one. Which has more area?",
+    en: "Draw a triangle with one square corner, and build a square on each of its three sides. Put the two smaller squares together and compare them with the biggest one: which has more area?",
     zh: "画一个有直角的三角形，在它的三条边上各搭一个正方形。把两个小正方形合在一起，和最大的那个比一比，谁的面积大？",
   },
   guess: {
@@ -414,9 +416,9 @@ export const pythagorasSquares: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 10 },
   hints: [
-    { en: "Think about the squares, not the sides. What is the area of the square on the side of 6? And on the side of 8?", zh: "先别想边，想正方形。边长 6 的正方形面积是多少？边长 8 的呢？" },
-    { en: "36 + 64 = 100. If the two small squares exactly fill the big one, what is the big square's area?", zh: "36 + 64 = 100。如果两个小正方形正好铺满大正方形，大正方形的面积是多少？" },
-    { en: "The big square's area is 100. Its side is the number that, multiplied by itself, gives 100.", zh: "大正方形的面积是 100。它的边长，就是自己乘自己等于 100 的那个数。" },
+    { en: "Think about the squares, not the sides. The numbers inside the squares in the scene are their areas: count a few tiles to check that 6 × 6 really is 36.", zh: "先别想边，想正方形。场景里正方形上的数是它们的面积：数几块小方格，验证一下 6 × 6 真的是 36。" },
+    { en: "Drag a pink corner to try other right triangles, like 3 and 4. Do the two small areas always add up to exactly the big one?", zh: "拖动粉色的顶点，试试别的直角三角形，比如 3 和 4。两个小面积加起来，是不是总是正好等于大的那个？" },
+    { en: "So the big square here has area 36 + 64 = 100. Its side is the number that, multiplied by itself, gives 100.", zh: "所以这里大正方形的面积是 36 + 64 = 100。它的边长，就是自己乘自己等于 100 的那个数。" },
   ],
   wrongAnswers: [
     {
@@ -468,17 +470,17 @@ export const pythagorasSquares: HeroQuestionBlueprint = {
     zh: "如果两条直角边是 5 和 12 呢？你还能找到三条边都是整数的直角三角形吗？",
   },
   discussionPrompt: {
-    en: "Unlock the corner in the scene and drag it around. When do the two small squares beat the big one, and when do they lose?",
-    zh: "在场景里解锁顶点，拖来拖去。什么时候两个小正方形加起来更大？什么时候更小？",
+    en: "Tap \"🔒 Right angle\" so it says \"🔓 Free corner\", then drag the top corner. When do the two small squares beat the big one, and when do they lose? Can you say why?",
+    zh: "点「🔒 锁定直角」，让它变成「🔓 自由顶点」，再拖动上面的顶点。什么时候两个小正方形加起来更大？什么时候更小？你能说出为什么吗？",
   },
   solutionTags: ["draw", "algebra", "pattern"],
   funFact: {
-    en: "A Babylonian clay tablet about 3,800 years old lists triangles like this one, more than 1,000 years before Pythagoras was born.",
-    zh: "一块大约 3,800 年前的古巴比伦泥板上就记着这样的三角形，比毕达哥拉斯出生早了 1,000 多年。中国古书里也有「勾三股四弦五」的说法。",
+    en: "Your 6-8-10 triangle is the famous 3-4-5 triangle doubled. The 2,000-year-old Chinese book Zhoubi Suanjing already describes 3-4-5, calling the two short sides gou and gu, which is why Chinese still calls it the gou-gu theorem.",
+    zh: "你这个 6、8、10 的三角形，就是有名的 3、4、5 放大了一倍。两千多年前的《周髀算经》里就写着「勾广三，股修四，径隅五」，后人简称「勾三股四弦五」，勾股定理的名字就是这么来的。",
   },
   sortOrder: 6,
   rubricNotes:
-    "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: needs squares and square roots; the area picture (scene tiles) is the main path, and the free-corner mode shows why the right angle matters",
+    "17/20 — hook 2, guess 1, hands-on 2, aha 2, floor 1, ceiling 2, paths 2, wrong 2, hints 2, retell 1: the scene's hook already shows 36, 64, 100 and a² + b² = c², which takes the edge off the guess; area tiles, trying other right triangles (hint 2) and the square root are real paths; needs squares and roots, so 12+",
 };
 
 /**
@@ -494,8 +496,8 @@ export const sevenBridges: HeroQuestionBlueprint = {
   category: "LOGIC",
   title: { en: "The Seven Bridges Walk", zh: "走遍七座桥" },
   hook: {
-    en: "An old city sits on a river with two islands, and seven bridges join all the land together. People liked to try a Sunday walk that crosses every bridge exactly once. Can it be done? Try it yourself.",
-    zh: "一座老城建在河边，河里有两个小岛，七座桥把陆地都连在一起。城里的人星期天喜欢试着散步，每座桥正好走一次。能做到吗？你自己试试。",
+    en: "An old city sits on a river with two islands, and seven bridges join all the land together. On Sundays people tried to find a walk that crosses every bridge exactly once. Can it be done?",
+    zh: "一座老城建在河边，河里有两个小岛，七座桥把陆地都连在一起。星期天，城里的人总想找一条散步路线，每座桥正好走一次。能做到吗？",
   },
   guess: {
     type: "choice",
@@ -531,7 +533,7 @@ export const sevenBridges: HeroQuestionBlueprint = {
   },
   answer: { type: "CHOICE", correctId: "impossible" },
   hints: [
-    { en: "Stop walking for a moment and start counting. For each piece of land, how many bridges touch it?", zh: "先别走了，数一数。每块陆地连着几座桥？" },
+    { en: "Stop walking for a moment and start counting. For each piece of land, how many bridges touch it? (The \"Count the bridges\" button writes it on the map.)", zh: "先别走了，数一数。每块陆地连着几座桥？（点「数每块地的桥」，数字会写在地图上。）" },
     { en: "Every time you walk THROUGH a piece of land, you use two bridges: one in, one out. So should a walk-through land have an odd or an even number of bridges?", zh: "每次「穿过」一块陆地，你都要用两座桥：一座进，一座出。那么被穿过的陆地，连着的桥数应该是奇数还是偶数？" },
     { en: "Only the start and the finish of a walk can have an odd number of bridges. Count how many lands here have an odd number.", zh: "一条路线只有起点和终点可以连着奇数座桥。数一数，这里有几块陆地连着奇数座桥？" },
   ],
@@ -588,10 +590,10 @@ export const clockHandsMeet: HeroQuestionBlueprint = {
   ageGroup: "AGE_10_12",
   difficulty: "HARD",
   category: "LOGIC",
-  title: { en: "When Clock Hands Meet", zh: "时针分针一天重合几次" },
+  title: { en: "The Clock-Hand Chase", zh: "钟面上的追赶" },
   hook: {
-    en: "At midnight, the hour hand and the minute hand of a clock lie exactly on top of each other. Then the minute hand races ahead while the hour hand creeps along. How many times in one whole day do they end up together?",
-    zh: "半夜 12 点，钟的时针和分针正好叠在一起。接着分针飞快地往前跑，时针慢慢地挪。一整天里，它们会叠在一起几次？",
+    en: "At midnight, the hour hand and the minute hand of a clock lie exactly on top of each other. Then the minute hand races ahead while the hour hand creeps along behind. In one whole day, counting that midnight meeting, how many times are they together?",
+    zh: "半夜 12 点，钟的时针和分针正好叠在一起。接着分针飞快地往前跑，时针慢慢地在后面挪。算上半夜那一次，一整天里它们会叠在一起几次？",
   },
   guess: {
     type: "choice",
@@ -609,7 +611,7 @@ export const clockHandsMeet: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 22 },
   hints: [
-    { en: "Don't do a whole day yet: look at just 12 hours. At 1 o'clock, where are the two hands? When does the minute hand catch up again?", zh: "先别算一整天，只看 12 个小时。1 点整的时候，两根针在哪里？分针什么时候再追上时针？" },
+    { en: "Don't do a whole day yet: look at just 12 hours. Drag the minute hand round to 1 o'clock. Where is the hour hand? When does the minute hand catch up again?", zh: "先别算一整天，只看 12 个小时。拖着分针转到 1 点整。时针在哪里？分针什么时候再追上它？" },
     { en: "The minute hand catches the hour hand a little after 1:05, a little after 2:10, a little after 3:16 … What happens around 11 o'clock?", zh: "分针在 1:05 多一点、2:10 多一点、3:16 多一点……追上时针。到了 11 点左右会怎样？" },
     { en: "Between 11 and 12 the minute hand doesn't catch up until exactly 12:00. So 12 hours hold only 11 meetings, counting the one at the start. Now do a whole day.", zh: "11 点到 12 点之间，分针要到 12 点整才追上。所以 12 小时里，算上开头那次，只重合 11 次。再算一整天。" },
   ],
@@ -658,8 +660,8 @@ export const clockHandsMeet: HeroQuestionBlueprint = {
     },
   ],
   explanation: {
-    en: "In 12 hours the minute hand goes round 12 times and the hour hand once, so the minute hand gains only 11 laps and catches the hour hand 11 times. They meet at 12:00, about 1:05, about 2:11 and so on, but the '11 o'clock' meeting slides all the way to 12:00. That makes 11 meetings every 12 hours, and 2 × 11 = 22 in a whole day.",
-    zh: "12 小时里，分针转 12 圈，时针转 1 圈，所以分针只比时针多转 11 圈，也就只追上 11 次。它们在 12:00、大约 1:05、大约 2:11……相遇，而「11 点那一次」一直滑到了 12:00。所以每 12 小时重合 11 次，一整天是 2 × 11 = 22 次。",
+    en: "In 12 hours the minute hand goes round 12 times and the hour hand once, so the minute hand gains only 12 − 1 = 11 laps and catches the hour hand 11 times. They meet at 12:00, about 1:05, about 2:11 and so on, but the '11 o'clock' meeting slides all the way to 12:00. That makes 11 meetings every 12 hours, and 2 × 11 = 22 in a whole day.",
+    zh: "12 小时里，分针转 12 圈，时针转 1 圈，所以分针只比时针多转 12 − 1 = 11 圈，也就只追上 11 次。它们在 12:00、大约 1:05、大约 2:11……相遇，而「11 点那一次」一直滑到了 12:00。所以每 12 小时重合 11 次，一整天是 2 × 11 = 22 次。",
   },
   aha: {
     en: "The hour hand is a moving target, so each catch-up takes 1 hour 5 minutes and 27 seconds, not one hour. Those extra minutes add up until a whole meeting disappears.",
@@ -670,7 +672,7 @@ export const clockHandsMeet: HeroQuestionBlueprint = {
     zh: "一天里，时针和分针有几次正好指向相反的方向，连成一条穿过中心的直线？",
   },
   discussionPrompt: {
-    en: "Which overlap surprised you most when you dragged the hands in the scene? Write down its time and explain why it lands there.",
+    en: "Which overlap surprised you most when you dragged the minute hand round? Write down its time and explain why it lands there.",
     zh: "你在场景里拖动分针时，哪一次重合最让你意外？写下它的时间，说说为什么会在那里。",
   },
   solutionTags: ["simulate", "table", "pattern"],
@@ -680,7 +682,7 @@ export const clockHandsMeet: HeroQuestionBlueprint = {
   },
   sortOrder: 8,
   rubricNotes:
-    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 1, retell 1: dragging the hands, a table of meeting times and the 'laps' argument all work; hint 3 gives away the 11-per-12-hours step",
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 1, retell 1: dragging the minute hand, a table of meeting times and the 'laps' argument all work; hint 3 gives away the 11-per-12-hours step",
 };
 
 export const SHAPES_THAT_LIE: readonly HeroQuestionBlueprint[] = [

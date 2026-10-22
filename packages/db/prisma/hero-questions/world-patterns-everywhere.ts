@@ -1,6 +1,8 @@
 /**
  * World E · Patterns everywhere (`patterns-everywhere`). Catalog: 02-hero-question-catalog.md §E.
  * Batch 2: E1 tower-of-hanoi, E3 growing-plus, E10 four-weights.
+ * Editorial pass 1: hooks trimmed to three sentences and kept off leading numbers; E10 gained a
+ * story with tension and uses the scene's words (object, other pan, object's pan).
  * TODO(phase-3 batch 3): E2 (staircase_paths), E4 (pascal_triangle), E5 (polyomino_builder),
  * E6 (star_drawer), E7 (calendar_grid), E8 (cycle_timeline), E9 (frog_puzzle).
  */
@@ -16,8 +18,8 @@ export const towerOfHanoi: HeroQuestionBlueprint = {
   category: "LOGIC",
   title: { en: "The Monks' Tower", zh: "僧侣的塔" },
   hook: {
-    en: "A tower of discs sits on one of three pegs, biggest at the bottom. You may move one disc at a time, and you may never put a bigger disc on a smaller one. Warm up by moving a three-disc tower to another peg. Then guess: how few moves would a four-disc tower need?",
-    zh: "三根柱子，其中一根上套着一座圆盘塔，大的在下，小的在上。一次只能搬一个圆盘，大的永远不能压在小的上面。先把三个盘的塔搬到另一根柱子上热热身。再猜一猜：四个盘的塔最少要搬几步？",
+    en: "A tower of discs sits on one of three pegs, biggest at the bottom. You may move one disc at a time, and a bigger disc may never sit on a smaller one. How few moves would it take to move a four-disc tower to another peg?",
+    zh: "三根柱子，其中一根上套着一座圆盘塔，大的在下，小的在上。一次只能搬一个圆盘，大的永远不能压在小的上面。把四个盘的塔搬到另一根柱子上，最少要几步？",
   },
   guess: {
     type: "slider",
@@ -28,12 +30,12 @@ export const towerOfHanoi: HeroQuestionBlueprint = {
   },
   scene: { type: "tower_of_hanoi", discs: 3, askDiscs: 4 },
   prompt: {
-    en: "What is the fewest number of moves needed to move a tower of 4 discs to another peg?",
-    zh: "把 4 个圆盘的塔搬到另一根柱子上，最少要搬几步？",
+    en: "Warm up with 3 discs in the scene, then press \"Add a disc (4)\". How few moves does it take to move a tower of 4 discs to another peg?",
+    zh: "先在场景里搬 3 个盘热热身，再点「再加一个盘（4）」。把 4 个圆盘的塔搬到另一根柱子上，最少要搬几步？",
   },
   answer: { type: "NUMERIC", value: 15 },
   hints: [
-    { en: "Start tiny. How many moves for 1 disc? For 2 discs? Then solve 3 discs in the scene and count.", zh: "从最小的开始。1 个盘要几步？2 个盘呢？再在场景里搬 3 个盘，数一数步数。" },
+    { en: "Start tiny, in your head: how many moves for 1 disc? For 2 discs? Then solve 3 discs in the scene and look at the \"moves\" counter.", zh: "先在脑子里从最小的开始：1 个盘要几步？2 个盘呢？再在场景里搬 3 个盘，看看「步数」是多少。" },
     { en: "To move the biggest disc, every smaller disc has to be out of the way, stacked on the spare peg. That's a smaller tower you already know how to move.", zh: "想搬最大的那个盘，上面所有小盘都得先挪开，叠在空柱子上。那就是一座你已经会搬的小塔。" },
     { en: "For 4 discs: move the top 3 out of the way (7 moves), move the big disc (1 move), then move the 3 back on top of it (7 moves). Add them up.", zh: "搬 4 个盘：先把上面 3 个挪开（7 步），再搬最大的盘（1 步），最后把那 3 个搬回它上面（7 步）。加起来。" },
   ],
@@ -110,8 +112,8 @@ export const growingPlus: HeroQuestionBlueprint = {
   category: "ALGEBRA",
   title: { en: "The Growing Plus Sign", zh: "越来越大的加号" },
   hook: {
-    en: "A plus sign made of dots grows a little at every step. Step 1 has 5 dots, step 2 has 9 and step 3 has 13. Can you see how it grows, and say how many dots step 10 has without drawing it?",
-    zh: "一个用点排成的加号，每一步都长大一点。第 1 步有 5 个点，第 2 步 9 个，第 3 步 13 个。你能看出它是怎么长的吗？不画出来，你能说出第 10 步有几个点吗？",
+    en: "A plus sign made of dots grows at every step, as if someone keeps stretching its arms. Look at the first three steps in the picture and work out how it grows. Without drawing them all, can you say how many dots step 10 will have?",
+    zh: "一个用点排成的加号，每一步都长大一点，好像有人在拉长它的胳膊。看看图里的前三步，它是怎么长的？不把每一步都画出来，你能说出第 10 步有几个点吗？",
   },
   guess: {
     type: "slider",
@@ -143,7 +145,7 @@ export const growingPlus: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 41 },
   hints: [
-    { en: "Look at the picture, not just the numbers. Which dots are new in step 2 compared with step 1? Where did they appear?", zh: "别只看数字，看图。第 2 步比第 1 步多出了哪些点？它们长在哪里？" },
+    { en: "Look at the picture, not just the numbers. Press \"By arms\" to colour each arm. Which dots are new in step 2 compared with step 1? Where did they appear?", zh: "别只看数字，看图。点「按胳膊着色」，给每条胳膊涂上颜色。第 2 步比第 1 步多出了哪些点？它们长在哪里？" },
     { en: "Each step adds one dot to the end of each of the four arms. So in step 3, each arm has 3 dots, and there's one dot in the middle.", zh: "每一步，四条胳膊各长出 1 个点。所以第 3 步每条胳膊有 3 个点，中间还有 1 个点。" },
     { en: "In step 10, each of the 4 arms has 10 dots. Don't forget the centre dot, which doesn't belong to any arm.", zh: "第 10 步，4 条胳膊每条有 10 个点。别忘了中间那个点，它不属于任何一条胳膊。" },
   ],
@@ -182,8 +184,8 @@ export const growingPlus: HeroQuestionBlueprint = {
     zh: "每一步，4 条胳膊各长出 1 个点，所以第 n 步有 4 条胳膊、每条 n 个点，再加中间 1 个。第 10 步是 4 × 10 + 1 = 41 个点。也可以从 5 开始加 9 次 4：5 + 36 = 41。",
   },
   aha: {
-    en: "There's more than one way to see it: four arms plus a centre, or 5 dots and then 4 more at every step. Both ways land on 41, and both are right.",
-    zh: "看法不止一种：四条胳膊加一个中心，或者先有 5 个点、以后每步加 4 个。两种看法都得到 41，而且都对。",
+    en: "Four arms of n dots plus one centre: step n always has 4n + 1 dots, however you choose to see it. Now step 100 is easy, 401 dots, and you never had to draw one.",
+    zh: "四条胳膊各 n 个点，再加一个中心：不管你怎么看，第 n 步总是 4n + 1 个点。现在第 100 步也难不倒你了：401 个点，一个都不用画。",
   },
   extension: {
     en: "How many dots are in step 100? Which step has exactly 201 dots? Is there any step with exactly 100 dots?",
@@ -200,13 +202,16 @@ export const growingPlus: HeroQuestionBlueprint = {
   },
   sortOrder: 3,
   rubricNotes:
-    "17/20 — hook 1, guess 2, hands-on 2, aha 1, floor 2, ceiling 2, paths 2, wrong 2, hints 2, retell 1: the hook has to show the first counts; the 'two ways to see it' aha is gentle rather than surprising",
+    "18/20 — hook 2, guess 2, hands-on 2, aha 1, floor 2, ceiling 2, paths 2, wrong 2, hints 2, retell 1: the hook now lets the picture give the counts; a linear rule is still gentle rather than surprising, though 'step 100 without drawing' helps",
 };
 
 /**
  * E10. Balanced ternary: with weights on both pans, 1, 3, 9, 27 reach every whole number 1..40.
  * The prompt asks for the longest unbroken run from 1 (with one pan only the run stops at 1),
  * because "the heaviest weight you can measure" would be 40 even without the second pan.
+ * The scene calls the sweets the "object" and the pans "other pan" / "object's pan"
+ * (对面盘 / 物品这边); the copy uses those words in the hints.
+ * Extension answers: one pan only needs 1, 2, 4, 8 for 1-15 (binary); a fifth weight of 81 reaches 121.
  */
 export const fourWeights: HeroQuestionBlueprint = {
   slug: "four-weights",
@@ -215,10 +220,10 @@ export const fourWeights: HeroQuestionBlueprint = {
   ageGroup: "AGE_12_14",
   difficulty: "HARD",
   category: "NUMBER_THEORY",
-  title: { en: "Four Magic Weights", zh: "四个砝码能称多少" },
+  title: { en: "The Shopkeeper's Four Weights", zh: "糖果店的四个砝码" },
   hook: {
-    en: "You have a two-pan balance and just four weights: 1, 3, 9 and 27 grams. A bag of sweets could weigh 1 gram, 2 grams, 3 grams and so on. How far up can you go without skipping a single number?",
-    zh: "你有一架两边都能放东西的天平，和四个砝码：1 克、3 克、9 克、27 克。一袋糖可能是 1 克、2 克、3 克……一直往上。你能一克不漏地称到几克？",
+    en: "A sweet-shop owner has lost all her weights but four: 1, 3, 9 and 27 grams. A customer wants exactly 2 grams of sweets, yet she smiles and says she can weigh every whole number of grams up to a surprising amount. How far can she go without skipping one?",
+    zh: "糖果店老板娘的砝码丢得只剩四个：1 克、3 克、9 克、27 克。客人要正好 2 克糖，她却笑着说：从 1 克往上，她能一克不漏地称到一个让你吃惊的数。她最多能称到几克？",
   },
   guess: {
     type: "slider",
@@ -234,9 +239,9 @@ export const fourWeights: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 40, unit: { en: "grams", zh: "克" } },
   hints: [
-    { en: "Try 2 grams. You don't have a 2-gram weight, and 1 + 3 is too much. What if the 1-gram weight sits next to the sweets?", zh: "先试 2 克。你没有 2 克的砝码，1 + 3 又太多。如果把 1 克砝码和糖放在同一边呢？" },
-    { en: "A weight next to the sweets works like a subtraction: 3 on one side and sweets + 1 on the other means the sweets weigh 3 − 1 = 2 grams. Now try 5, 6 and 7.", zh: "和糖放在同一边的砝码相当于做减法：一边放 3，另一边放糖和 1，糖就是 3 − 1 = 2 克。再试试 5、6、7。" },
-    { en: "Each weight can be on the far pan (+), beside the sweets (−) or not used (0). What is the most you can make with every weight on the far pan, and is there any gap below that?", zh: "每个砝码可以放在对面（加）、放在糖旁边（减），或者不用（0）。全部放在对面最多是多少？比它小的数里有没有称不出来的？" },
+    { en: "Try 2 grams. You don't have a 2-gram weight, and 1 + 3 is too much. In the scene, tap the 1-gram weight until it moves to the \"object's pan\", next to the sweets. What happens?", zh: "先试 2 克。你没有 2 克的砝码，1 + 3 又太多。在场景里点 1 克砝码，直到它跑到「物品这边」，和糖放在一起。会怎样？" },
+    { en: "A weight next to the sweets works like a subtraction: 3 on the other pan and sweets + 1 on this one means the sweets weigh 3 − 1 = 2 grams. Now try 5, 6 and 7.", zh: "和糖放在同一边的砝码相当于做减法：对面盘放 3，这边放糖和 1，糖就是 3 − 1 = 2 克。再试试 5、6、7。" },
+    { en: "Each weight can be on the other pan (+), beside the sweets (−) or not used (0). What is the most you can make with every weight on the other pan, and is there any gap below that?", zh: "每个砝码可以放在对面盘（加）、放在糖旁边（减），或者不用（0）。全部放在对面盘最多是多少？比它小的数里有没有称不出来的？" },
   ],
   wrongAnswers: [
     {
@@ -249,15 +254,15 @@ export const fourWeights: HeroQuestionBlueprint = {
     {
       match: "81",
       feedback: {
-        en: "81 is the next weight in the pattern, 3 × 27, but you don't have it. Even with all four weights on one pan, the most you can balance is 1 + 3 + 9 + 27.",
-        zh: "81 是规律里的下一个砝码（3 × 27），可是你手里没有它。就算四个砝码全放一边，最多也只能平衡 1 + 3 + 9 + 27。",
+        en: "81 is the next weight in the pattern, 3 × 27, but she doesn't have it. Even with all four weights on one pan, the most you can balance is 1 + 3 + 9 + 27.",
+        zh: "81 是规律里的下一个砝码（3 × 27），可是老板娘手里没有它。就算四个砝码全放一边，最多也只能平衡 1 + 3 + 9 + 27。",
       },
     },
     {
       match: "1",
       feedback: {
-        en: "If weights could only go on the far pan, 2 grams would be impossible and you'd stop at 1. But the balance has two pans: try putting a weight beside the sweets.",
-        zh: "如果砝码只能放在对面，2 克就称不出来，只能停在 1 克。可是天平有两边：试试把砝码放在糖旁边。",
+        en: "If weights could only go on the other pan, 2 grams would be impossible and you'd stop at 1. But the balance has two pans: try putting a weight beside the sweets.",
+        zh: "如果砝码只能放在对面盘，2 克就称不出来，只能停在 1 克。可是天平有两边：试试把砝码放在糖旁边。",
       },
     },
     {
@@ -277,26 +282,26 @@ export const fourWeights: HeroQuestionBlueprint = {
     {
       match: "lt:correct",
       feedback: {
-        en: "You can go further. At the number where you got stuck, try putting weights beside the sweets as well as on the far pan.",
-        zh: "还能更往上。在你卡住的那个数，试试一边放砝码，糖旁边也放砝码。",
+        en: "You can go further. At the number where you got stuck, try putting weights beside the sweets as well as on the other pan.",
+        zh: "还能更往上。在你卡住的那个数，试试对面盘放砝码，糖旁边也放砝码。",
       },
     },
   ],
   explanation: {
-    en: "A weight on the far pan adds, a weight beside the sweets subtracts, and an unused weight counts 0. With 1 and 3 you can make 1 to 4 (2 = 3 − 1), adding 9 reaches 13 (5 = 9 − 3 − 1), and adding 27 reaches 40 (14 = 27 − 9 − 3 − 1). All four weights add up to 40, so nothing heavier can balance, and the answer is 40.",
-    zh: "放在对面的砝码是加，放在糖旁边的是减，不用的算 0。用 1 和 3 能称 1 到 4（2 = 3 − 1），加上 9 能到 13（5 = 9 − 3 − 1），再加上 27 能到 40（14 = 27 − 9 − 3 − 1）。四个砝码加起来正好 40 克，更重的就平衡不了，所以答案是 40。",
+    en: "A weight on the other pan adds, a weight beside the sweets subtracts, and an unused weight counts 0. With 1 and 3 you can make 1 to 4 (2 = 3 − 1), adding 9 reaches 13 (5 = 9 − 3 − 1), and adding 27 reaches 40 (14 = 27 − 9 − 3 − 1). All four weights add up to 40, so nothing heavier can balance, and the answer is 40.",
+    zh: "放在对面盘的砝码是加，放在糖旁边的是减，不用的算 0。用 1 和 3 能称 1 到 4（2 = 3 − 1），加上 9 能到 13（5 = 9 − 3 − 1），再加上 27 能到 40（14 = 27 − 9 − 3 − 1）。四个砝码加起来正好 40 克，更重的就平衡不了，所以答案是 40。",
   },
   aha: {
-    en: "Each weight has three jobs: add, subtract or sit out. That's why the weights grow by threes, the same idea as counting in base 3.",
-    zh: "每个砝码有三种用法：加、减、不用。所以砝码是一个比一个大 3 倍，和三进制计数是同一个道理。",
+    en: "Each weight has three jobs: add, subtract or sit out. That's why the weights grow by threes, the same idea as counting in base 3, and four weights cover all 40 numbers with no gaps.",
+    zh: "每个砝码有三种用法：加、减、不用。所以砝码一个比一个大 3 倍，和三进制计数是同一个道理，四个砝码就把 1 到 40 一个不漏地全包了。",
   },
   extension: {
-    en: "If weights could only go on the far pan, which four weights would let you weigh every amount from 1 to 15? Why does each one double the last? And what fifth weight would take 1, 3, 9, 27 past 40?",
-    zh: "如果砝码只能放在对面，哪四个砝码能称出 1 到 15 的每一个数？为什么它们每个都是前一个的 2 倍？如果给 1、3、9、27 再加第五个砝码，让它称到 40 以上，应该加几克？",
+    en: "If weights could only go on the other pan, which four weights would let you weigh every amount from 1 to 15? Why does each one double the last? And what fifth weight would take 1, 3, 9, 27 past 40, and how far?",
+    zh: "如果砝码只能放在对面盘，哪四个砝码能称出 1 到 15 的每一个数？为什么它们每个都是前一个的 2 倍？如果给 1、3、9、27 再加第五个砝码，让它称到 40 以上，应该加几克？能称到多少？",
   },
   discussionPrompt: {
-    en: "How do you weigh exactly 5 grams? Say which weights go on which pan, and check that it balances.",
-    zh: "怎么正好称出 5 克？说清楚哪个砝码放在哪一边，再检查一下是不是平衡。",
+    en: "How do you weigh exactly 5 grams? Say which weights go on which pan, and check that it balances. Did anyone find a different way?",
+    zh: "怎么正好称出 5 克？说清楚哪个砝码放在哪一边，再检查一下是不是平衡。有没有人找到不一样的放法？",
   },
   solutionTags: ["guess_check", "table", "pattern", "algebra"],
   funFact: {
@@ -305,7 +310,7 @@ export const fourWeights: HeroQuestionBlueprint = {
   },
   sortOrder: 10,
   rubricNotes:
-    "16/20 — hook 1, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the weights are the hook so it opens with numbers; the subtraction idea is a real hurdle, and the main path is build-up-and-check",
+    "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the shopkeeper story gives the hook a problem to solve before the numbers; the subtraction idea is still a real hurdle, and the main path is build-up-and-check; the scene's '/40' progress bar gives the target away (scene issue)",
 };
 
 export const PATTERNS_EVERYWHERE: readonly HeroQuestionBlueprint[] = [towerOfHanoi, growingPlus, fourWeights];

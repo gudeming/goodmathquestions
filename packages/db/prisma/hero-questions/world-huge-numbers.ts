@@ -4,11 +4,13 @@
  * (upgrades the legacy "Paper Folding Challenge" row). Batch 3: A4 million-seconds (this world's
  * second AGE_8_10 question), A5 billion-heartbeats, A9 googol-vs-atoms (scale_ladder),
  * A10 halfway-to-the-wall (halving_bar).
+ * Editorial pass 1 (docs/plans/good-questions-overhaul/editorial-pass-1.md): copy aligned with
+ * each scene's real controls, facts re-checked, hooks/prompts kept off the COMPUTE_PREFIX words.
  * TODO(phase-3): A6 (zoom_number_line), A7 (hotel_shift) once those Tier-3 scenes land.
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
-/** A1. The rubric's §4.1 example, verbatim. */
+/** A1. Built on the rubric's §4.1 example; the pass only added scene references and "the story goes". */
 export const gaussSum: HeroQuestionBlueprint = {
   slug: "gauss-sum",
   collection: "huge-numbers",
@@ -18,7 +20,7 @@ export const gaussSum: HeroQuestionBlueprint = {
   category: "ARITHMETIC",
   title: { en: "The Boy Who Beat the Teacher", zh: "几秒钟就算完的男孩" },
   hook: {
-    en: "A teacher wanted a quiet hour, so she told the class: \"Add up every number from 1 to 100. No talking until you finish.\" One boy put his slate down after a few seconds. His answer was right. How could he possibly be that fast?",
+    en: "A teacher wanted a quiet hour, so she told the class: \"Add up every number from 1 to 100. No talking until you finish.\" One boy put his slate down after a few seconds, and his answer was right. How could he possibly be that fast?",
     zh: "老师想让教室安静一小时，就说：「把 1 到 100 所有的数加起来，算完才能说话。」一个男孩几秒钟就放下了石板，答案还是对的。他怎么可能这么快？",
   },
   guess: {
@@ -31,11 +33,11 @@ export const gaussSum: HeroQuestionBlueprint = {
     ],
   },
   scene: { type: "gauss_pairing", n: 100, visibleHead: 6, visibleTail: 6, pairSum: 101, pairCount: 50 },
-  prompt: { en: "What is 1 + 2 + 3 + … + 100?", zh: "1 + 2 + 3 + … + 100 等于多少？" },
+  prompt: { en: "Add up 1 + 2 + 3 + … + 100. What do you get?", zh: "1 + 2 + 3 + … + 100 等于多少？" },
   answer: { type: "NUMERIC", value: 5050 },
   hints: [
-    { en: "Don't start at 1 and plod upward. What if you add the FIRST number and the LAST number together?", zh: "别从 1 开始一个个往上加。试试把第一个数和最后一个数加在一起？" },
-    { en: "1 + 100 = 101. Now try 2 + 99, and 3 + 98. Notice anything?", zh: "1 + 100 = 101。再试试 2 + 99，还有 3 + 98。发现什么了？" },
+    { en: "Don't start at 1 and plod upward. In the scene, tap the FIRST number and the LAST number to pair them. What do they make?", zh: "别从 1 开始一个个往上加。在场景里点一下第一个数和最后一个数，把它们配成一对。加起来是多少？" },
+    { en: "1 + 100 = 101. Now pair 2 with 99, and 3 with 98. Notice anything?", zh: "1 + 100 = 101。再把 2 和 99 配一对，3 和 98 配一对。发现什么了？" },
     { en: "Every pair makes 101. How many pairs can you make from 100 numbers? Multiply.", zh: "每一对都是 101。100 个数能配成多少对？乘一下。" },
   ],
   wrongAnswers: [
@@ -48,8 +50,8 @@ export const gaussSum: HeroQuestionBlueprint = {
     zh: "从两头往中间配对：1 + 100、2 + 99、3 + 98……每一对都是 101。一共 50 对，所以总和是 50 × 101 = 5050。",
   },
   aha: {
-    en: "Adding 100 numbers turned into one multiplication, because the pairs are all the same. That boy was Gauss, and he was about your age.",
-    zh: "100 个数相加变成了一次乘法，因为每一对都一样。那个男孩叫高斯，当时和你差不多大。",
+    en: "Adding 100 numbers turned into one multiplication, because the pairs are all the same. The story goes that the boy was Gauss, and he was about your age.",
+    zh: "100 个数相加变成了一次乘法，因为每一对都一样。传说那个男孩就是高斯，当时和你差不多大。",
   },
   extension: {
     en: "What is 1 + 2 + … + 1000? Can you find a rule that works for adding 1 up to any number n?",
@@ -68,7 +70,7 @@ export const gaussSum: HeroQuestionBlueprint = {
   rubricNotes: "19/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 2, retell 1",
 };
 
-/** A8. */
+/** A8. The scene shows ten numbered people (no names), so the feedback talks about person 1 and person 2. */
 export const handshakeParty: HeroQuestionBlueprint = {
   slug: "handshake-party",
   collection: "huge-numbers",
@@ -76,10 +78,10 @@ export const handshakeParty: HeroQuestionBlueprint = {
   ageGroup: "AGE_8_10",
   difficulty: "EASY",
   category: "LOGIC",
-  title: { en: "Party Handshakes", zh: "派对上的握手" },
+  title: { en: "The Handshake Party", zh: "握手派对" },
   hook: {
-    en: "Friends keep arriving at your party, and every two of them shake hands exactly once. Nobody skips anyone, and nobody shakes the same hand twice. By the time ten friends are there, how many handshakes have happened?",
-    zh: "朋友们陆续来参加你的派对，每两个人都要握一次手。不能漏掉谁，也不能和同一个人握两次。等十个朋友都到齐了，一共握了多少次手？",
+    en: "Friends keep ringing your doorbell, and every new arrival shakes hands with everyone already at the party. Nobody gets skipped, and nobody shakes the same hand twice. Once ten friends are there, how many handshakes have happened?",
+    zh: "门铃一直在响，每来一个朋友，都要和已经到的每个人握一次手。谁都不能漏，也不能和同一个人握两次。等十个朋友都到齐了，一共握了多少次手？",
   },
   guess: {
     type: "slider",
@@ -95,16 +97,16 @@ export const handshakeParty: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 45 },
   hints: [
-    { en: "Start smaller. How many handshakes are there with just 3 friends? With 4?", zh: "先从小的试。只有 3 个朋友时握几次手？4 个呢？" },
-    { en: "Look at just one friend. She shakes hands with everyone except herself. How many handshakes is that for her?", zh: "只看一个人。她要和除了自己以外的每个人握手。她要握几次？" },
+    { en: "Start smaller, on paper. How many handshakes are there with just 3 friends? With 4? Draw dots and join them.", zh: "先在纸上从小的试。只有 3 个朋友时握几次手？4 个呢？画几个点连一连。" },
+    { en: "In the scene, tap \"1 shakes everyone's hand\". How many lines come out of person 1? Will every person have that many?", zh: "在场景里点「让 1 和所有人握手」。从 1 号连出了几条线？每个人都会有这么多条吗？" },
     { en: "Each of the 10 friends shakes 9 hands, but every handshake has two people in it. So 10 × 9 counts each handshake twice.", zh: "10 个人每人握 9 次，可是每次握手都有两个人。所以 10 × 9 把每次握手都数了两遍。" },
   ],
   wrongAnswers: [
     {
       match: "90",
       feedback: {
-        en: "You did 10 × 9. Great start! But when Ana shakes Ben's hand, Ben is shaking Ana's hand too. You counted that handshake twice.",
-        zh: "你算的是 10 × 9，开头很好！可是小安和小斌握手的时候，小斌也在和小安握手。这一次握手你数了两遍。",
+        en: "You did 10 × 9. Great start! But when person 1 shakes person 2's hand, person 2 is shaking person 1's hand too. You counted that handshake twice.",
+        zh: "你算的是 10 × 9，开头很好！可是 1 号和 2 号握手的时候，2 号也在和 1 号握手。这一次握手你数了两遍。",
       },
     },
     {
@@ -130,20 +132,20 @@ export const handshakeParty: HeroQuestionBlueprint = {
     },
   ],
   explanation: {
-    en: "Each of the 10 friends shakes hands with the other 9, which gives 10 × 9 = 90. But every handshake has two people in it, so 90 counts each one twice. 90 ÷ 2 = 45 handshakes.",
-    zh: "10 个人每人和另外 9 个人握手，得到 10 × 9 = 90。可是每次握手有两个人，90 把每次都数了两遍。90 ÷ 2 = 45 次。",
+    en: "Each of the 10 friends shakes hands with the other 9, which gives 10 × 9 = 90. But every handshake has two people in it, so 90 counts each one twice. 90 ÷ 2 = 45 handshakes. (Or follow the doorbell: 0 + 1 + 2 + … + 9 = 45.)",
+    zh: "10 个人每人和另外 9 个人握手，得到 10 × 9 = 90。可是每次握手有两个人，90 把每次都数了两遍。90 ÷ 2 = 45 次。（也可以跟着门铃数：0 + 1 + 2 + … + 9 = 45。）",
   },
   aha: {
-    en: "Draw 10 dots and join every pair with a line: each line is one handshake. Counting from each person sees every line twice, so you halve it.",
-    zh: "画 10 个点，每两个点连一条线，一条线就是一次握手。从每个人那头数，每条线都被数了两遍，所以要除以 2。",
+    en: "Each line between two dots is one handshake, but counting person by person sees every line twice, so you halve it. Ten friends make 45 handshakes; a class of 30 makes 435.",
+    zh: "两点之间的一条线就是一次握手，可是一个人一个人地数，每条线都被数了两遍，所以要除以 2。十个人握 45 次，全班 30 个人就要握 435 次。",
   },
   extension: {
     en: "What if your whole class of 30 shakes hands? Can you find a rule for any number of people?",
     zh: "如果全班 30 个人都互相握手呢？你能找到任何人数都适用的规律吗？",
   },
   discussionPrompt: {
-    en: "Did you draw dots, make a list, or multiply? Which way would you pick for 100 people, and why?",
-    zh: "你是画点连线、列表，还是用乘法？如果有 100 个人，你会用哪种方法？为什么？",
+    en: "Did you draw dots, add up 1 + 2 + 3 + … as friends arrived, or multiply? Which way would you pick for 100 people, and why?",
+    zh: "你是画点连线、跟着来的人数加 1 + 2 + 3 + ……，还是用乘法？如果有 100 个人，你会用哪种方法？为什么？",
   },
   solutionTags: ["draw", "table", "pattern"],
   funFact: {
@@ -152,10 +154,14 @@ export const handshakeParty: HeroQuestionBlueprint = {
   },
   sortOrder: 8,
   rubricNotes:
-    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 1, retell 1: hint 3 nearly gives the method away; retelling is a nice fact rather than a jaw-dropper",
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 1, retell 1: hint 3 nearly gives the method away; the 435-for-a-class line helps the retell but it's still a nice fact rather than a jaw-dropper",
 };
 
-/** A2. The guess is about the whole board; the question pins down one square the child can reach in the scene. */
+/**
+ * A2. The guess is about the whole board; the question pins down one square the child can reach
+ * in the scene. Board total 2^64 − 1 ≈ 1.8 × 10^19; "more than 500 years of the world's rice" holds
+ * for any grain weight from 20 to 40 mg (the scene's own 25,000 grains/kg gives about 1,476 years).
+ */
 export const chessboardRice: HeroQuestionBlueprint = {
   slug: "chessboard-rice",
   collection: "huge-numbers",
@@ -165,7 +171,7 @@ export const chessboardRice: HeroQuestionBlueprint = {
   category: "ARITHMETIC",
   title: { en: "The King's Cheap Reward", zh: "国王的便宜奖赏" },
   hook: {
-    en: "A king offers the inventor of chess any reward he likes. The inventor asks for rice: one grain on the first square of the board, two on the next, and double again on every square after that. The king laughs at such a cheap prize. Who do you think ends up sorry?",
+    en: "A king offers the inventor of chess any reward he likes. The inventor asks only for rice: one grain on the first square of the board, two on the next, and double again on every square after that. The king laughs at such a cheap prize, so who do you think ends up sorry?",
     zh: "国王要奖赏发明国际象棋的人，想要什么都行。那人只要米：棋盘第一格放一粒，第二格放两粒，之后每一格都比前一格多一倍。国王笑了：「这么便宜？」最后谁会后悔？",
   },
   guess: {
@@ -190,8 +196,8 @@ export const chessboardRice: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 1048576 },
   hints: [
-    { en: "Don't jump straight to square 21. Write down the first few squares: 1, 2, 4, 8, … What comes next?", zh: "先别急着跳到第 21 格。把前几格写出来：1、2、4、8……下一个是几？" },
-    { en: "Square 11 has 1,024 grains: that's 10 doublings after square 1. How many doublings does it take to get from square 1 to square 21?", zh: "第 11 格有 1,024 粒，从第 1 格到这里翻了 10 次倍。从第 1 格到第 21 格要翻几次倍？" },
+    { en: "Don't jump straight to square 21. Press \"Next square ×2\" a few times and write the numbers down: 1, 2, 4, 8, … What comes next?", zh: "先别急着跳到第 21 格。按几下「下一格 ×2」，把数写下来：1、2、4、8……下一个是几？" },
+    { en: "When you reach square 11, the grain counter says 1,024: that's 10 doublings after square 1. How many doublings does it take to get from square 1 to square 21?", zh: "走到第 11 格时，米粒计数是 1,024：从第 1 格到这里翻了 10 次倍。从第 1 格到第 21 格要翻几次倍？" },
     { en: "Square 21 is 20 doublings after square 1. Ten doublings make 1,024, so twenty doublings make 1,024 × 1,024.", zh: "第 21 格比第 1 格多翻了 20 次倍。翻 10 次是 1,024，所以翻 20 次就是 1,024 × 1,024。" },
   ],
   wrongAnswers: [
@@ -225,12 +231,12 @@ export const chessboardRice: HeroQuestionBlueprint = {
     },
   ],
   explanation: {
-    en: "Every square doubles the one before, so square 21 is 20 doublings after square 1. Ten doublings make 1,024, and ten more multiply that by 1,024 again. So square 21 holds 1,024 × 1,024 = 1,048,576 grains.",
-    zh: "每一格都是前一格的两倍，所以第 21 格比第 1 格多翻了 20 次倍。翻 10 次是 1,024，再翻 10 次就是再乘一个 1,024。所以第 21 格有 1,024 × 1,024 = 1,048,576 粒米。",
+    en: "Every square doubles the one before, so square 21 is 20 doublings after square 1: 2 × 2 × … × 2, twenty times. Ten doublings make 1,024, and ten more multiply that by 1,024 again. So square 21 holds 1,024 × 1,024 = 1,048,576 grains, already more than a million.",
+    zh: "每一格都是前一格的两倍，所以第 21 格比第 1 格多翻了 20 次倍：20 个 2 相乘。翻 10 次是 1,024，再翻 10 次就是再乘一个 1,024。所以第 21 格有 1,024 × 1,024 = 1,048,576 粒米，已经超过一百万了。",
   },
   aha: {
-    en: "Just twenty doublings pass a million, and the board has 64 squares. Altogether it holds about 18 billion billion grains, more than a thousand years of the world's rice.",
-    zh: "只翻 20 次倍就超过了一百万，而棋盘有 64 格。全部加起来大约是 1800 亿亿粒，比全世界一千多年种的米还多。",
+    en: "Twenty doublings already pass a million, and the board has 64 squares. Altogether it holds about 18 billion billion grains (18 followed by 18 zeros): more rice than the whole world grows in 500 years.",
+    zh: "只翻 20 次倍就超过了一百万，而棋盘有 64 格。全部加起来大约是 1800 亿亿粒（18 后面跟 18 个 0），比全世界 500 年种的米还多。",
   },
   extension: {
     en: "How many grains go on square 64? How many on the whole board? (Look at the totals for the first few squares: 1, 3, 7, 15… Compare each with the next square.)",
@@ -252,7 +258,9 @@ export const chessboardRice: HeroQuestionBlueprint = {
 
 /**
  * A3. Upgrades the legacy DRILL row "Paper Folding Challenge" in place. The guess is the
- * question: picking the closest reference object (102.4 mm ≈ a thick book).
+ * question: picking the closest reference object (102.4 mm ≈ a thick book). Option labels match
+ * the scene's references (the scene says "skyscraper"). Extension answers: taller than a 1.7 m
+ * person at 15 folds (3.3 m; 14 folds is 1.64 m), past Everest at 27 folds (13.4 km).
  */
 export const foldToTheMoon: HeroQuestionBlueprint = {
   slug: "fold-to-the-moon",
@@ -263,7 +271,7 @@ export const foldToTheMoon: HeroQuestionBlueprint = {
   category: "ARITHMETIC",
   title: { en: "Fold Your Way to the Moon", zh: "折纸去月球" },
   hook: {
-    en: "Every time you fold a sheet of paper in half, it gets twice as thick. Paper is very thin, so that doesn't sound like much. If you could fold it just ten times, how thick would it be?",
+    en: "Every time you fold a sheet of paper in half, it gets twice as thick. Paper is so thin that this doesn't sound like much. If you could fold it just ten times, how thick would it be?",
     zh: "一张纸每对折一次，就会厚一倍。纸那么薄，听起来没什么大不了。如果能对折十次，它会有多厚？",
   },
   guess: {
@@ -272,7 +280,7 @@ export const foldToTheMoon: HeroQuestionBlueprint = {
       { id: "coin", en: "As thick as a coin", zh: "像一枚硬币那么厚" },
       { id: "book", en: "As thick as a thick book", zh: "像一本厚书那么厚" },
       { id: "person", en: "As tall as a person", zh: "像一个人那么高" },
-      { id: "building", en: "As tall as a building", zh: "像一座大楼那么高" },
+      { id: "building", en: "As tall as a skyscraper", zh: "像一座摩天楼那么高" },
     ],
   },
   scene: {
@@ -295,7 +303,7 @@ export const foldToTheMoon: HeroQuestionBlueprint = {
   answer: { type: "CHOICE", correctId: "book" },
   hints: [
     { en: "Don't add 0.1 mm for each fold. Each fold doubles the number of layers. How many layers after 1 fold? After 2?", zh: "别每折一次就加 0.1 毫米。每折一次，纸的层数翻一倍。折 1 次有几层？折 2 次呢？" },
-    { en: "Keep doubling the layers: 2, 4, 8, 16, … Count until you have doubled 10 times.", zh: "层数一直翻倍：2、4、8、16……一直数到翻了 10 次为止。" },
+    { en: "Tap \"Fold once\" in the scene and keep going (after fold 7 it says \"Pretend to fold\"). The layers go 2, 4, 8, 16, … Stop at 10 folds.", zh: "在场景里点「折一次」，一直折下去（折到第 7 次以后按钮会变成「假装再折」）。层数是 2、4、8、16……折到 10 次停下。" },
     { en: "After 10 folds there are 1,024 layers, each 0.1 mm thick. Multiply, then change millimetres into centimetres.", zh: "折 10 次以后有 1,024 层，每层 0.1 毫米。乘一下，再把毫米换成厘米。" },
   ],
   wrongAnswers: [
@@ -330,8 +338,8 @@ export const foldToTheMoon: HeroQuestionBlueprint = {
     zh: "再折 32 次，一共 42 次，纸就能超过月球。翻倍不是比加法快一点，而是完全不一样的增长。",
   },
   extension: {
-    en: "How many folds would it take to be taller than you? Taller than Mount Everest?",
-    zh: "要折几次才能比你还高？比珠穆朗玛峰还高呢？",
+    en: "How many folds would it take to be taller than you? Taller than Mount Everest? Check your guesses on the scene's ruler.",
+    zh: "要折几次才能比你还高？比珠穆朗玛峰还高呢？先猜，再到场景的刻度尺上核对。",
   },
   discussionPrompt: {
     en: "Try folding a real sheet of paper in half again and again. How many times could you do it, and what stopped you?",
@@ -339,8 +347,8 @@ export const foldToTheMoon: HeroQuestionBlueprint = {
   },
   solutionTags: ["table", "pattern", "simulate"],
   funFact: {
-    en: "In 2002 a high-school student, Britney Gallivan, folded a very long strip of paper in half 12 times, beating the old saying that paper can't be folded more than 7 times.",
-    zh: "2002 年，美国高中生布兰妮·加利万用一条很长很长的纸带对折了 12 次，打破了「纸最多只能折 7 次」的说法。",
+    en: "Ordinary paper gives up after about 7 folds. In 2002 a high-school student, Britney Gallivan, used a very long strip of paper and folded it in half 12 times.",
+    zh: "普通的纸折到 7 次左右就折不动了。2002 年，美国高中生布兰妮·加利万用一条很长很长的纸带，对折了 12 次。",
   },
   sortOrder: 3,
   rubricNotes:
@@ -369,7 +377,7 @@ export const millionSeconds: HeroQuestionBlueprint = {
     options: [
       { id: "tonight", en: "Still today, around dinner time", zh: "还是今天，晚饭的时候" },
       { id: "tomorrow", en: "Sometime tomorrow", zh: "明天的某个时候" },
-      { id: "weeks", en: "About two weeks from now", zh: "大约两周以后" },
+      { id: "weeks", en: "In about a week and a half", zh: "大约一个半星期以后" },
       { id: "year", en: "Sometime next year", zh: "明年的某个时候" },
     ],
   },
@@ -384,14 +392,14 @@ export const millionSeconds: HeroQuestionBlueprint = {
     ],
   },
   prompt: {
-    en: "About how many days is 1,000,000 seconds?",
-    zh: "1,000,000 秒大约是多少天？",
+    en: "About how many days is 1,000,000 seconds? (One decimal place is fine.)",
+    zh: "1,000,000 秒大约是多少天？（保留一位小数就行。）",
   },
   answer: { type: "ESTIMATE", min: 11, max: 12, truth: 11.57, unit: { en: "days", zh: "天" } },
   hints: [
-    { en: "Don't try to count them. Climb in steps: first turn the seconds into minutes. How many seconds make one minute?", zh: "别真的去数。一步一步往上爬：先把秒换成分钟。1 分钟是多少秒？" },
-    { en: "1,000,000 ÷ 60 is about 16,667 minutes. Now turn the minutes into hours the same way.", zh: "1,000,000 ÷ 60 大约是 16,667 分钟。再用同样的办法，把分钟换成小时。" },
-    { en: "16,667 ÷ 60 is about 278 hours. A day has 24 hours, so how many days is 278 hours?", zh: "16,667 ÷ 60 大约是 278 小时。一天有 24 小时，278 小时是几天？" },
+    { en: "Don't try to count them. Climb in steps: first turn the seconds into minutes. Which button in the scene does that, and why?", zh: "别真的去数。一步一步往上爬：先把秒换成分钟。场景里该按哪个按钮？为什么？" },
+    { en: "\"÷ 60\" turns 1,000,000 seconds into about 16,667 minutes. Now turn the minutes into hours the same way.", zh: "按「÷ 60」，1,000,000 秒变成大约 16,667 分钟。再用同样的办法，把分钟换成小时。" },
+    { en: "16,667 ÷ 60 is about 278 hours. A day has 24 hours, so press \"÷ 24\": how many days is 278 hours?", zh: "16,667 ÷ 60 大约是 278 小时。一天有 24 小时，按「÷ 24」：278 小时是几天？" },
   ],
   wrongAnswers: [
     {
@@ -435,8 +443,8 @@ export const millionSeconds: HeroQuestionBlueprint = {
     zh: "一级一级往上爬：1,000,000 ÷ 60 ≈ 16,667 分钟，16,667 ÷ 60 ≈ 278 小时。再算 278 ÷ 24 ≈ 11.6 天。所以一百万秒大约是 11 天半。",
   },
   aha: {
-    en: "A million seconds is only about eleven and a half days, but a billion seconds is about 32 years. Million and billion sound like neighbours, yet one is a holiday and the other is half a lifetime.",
-    zh: "一百万秒只有大约 11 天半，十亿秒却差不多是 32 年。「百万」和「十亿」听起来像邻居，一个是一次假期，另一个是半辈子。",
+    en: "A million seconds is a holiday, about eleven and a half days, but a billion seconds is about 32 years. Three more zeros make the wait a thousand times longer.",
+    zh: "一百万秒只是一次假期，大约 11 天半；十亿秒却要大约 32 年。只多了 3 个 0，时间就长了 1000 倍。",
   },
   extension: {
     en: "About how many seconds old are you? At what age will you be one billion seconds old?",
@@ -459,6 +467,7 @@ export const millionSeconds: HeroQuestionBlueprint = {
 /**
  * A5. 70 beats a minute → 36,792,000 a year; 10^9 / that = 27.18 years. The scene proposes "27".
  * Wrong-answer windows: < 5 years is the 一亿 / 十亿 (10^8 vs 10^9) slip; 200-1000 is 10^10.
+ * Extension answers: mouse (500 a minute) about 3.8 years; elephant (30 a minute) about 63 years.
  */
 export const billionHeartbeats: HeroQuestionBlueprint = {
   slug: "billion-heartbeats",
@@ -469,8 +478,8 @@ export const billionHeartbeats: HeroQuestionBlueprint = {
   category: "ARITHMETIC",
   title: { en: "Your Billionth Heartbeat", zh: "第十亿次心跳" },
   hook: {
-    en: "Put two fingers on your neck and feel your heart. It beats about 70 times a minute, every minute, even while you sleep. One day it will beat for the billionth time. How old will you be?",
-    zh: "把两根手指放在脖子上，感觉一下心跳。它每分钟大约跳 70 下，睡觉的时候也不停。总有一天，它会跳到第十亿下。那时你几岁？",
+    en: "Put two fingers on your neck and feel your heart: it beats about 70 times a minute, even while you sleep. One day it will beat for the billionth time. How old will you be?",
+    zh: "把两根手指放在脖子上，感觉一下心跳：它每分钟大约跳 70 下，睡觉的时候也不停。总有一天，它会跳到第十亿下。那时你几岁？",
   },
   guess: {
     type: "slider",
@@ -491,13 +500,13 @@ export const billionHeartbeats: HeroQuestionBlueprint = {
     ],
   },
   prompt: {
-    en: "Your heart beats 70 times a minute. About how old will you be when it beats for the 1,000,000,000th time?",
-    zh: "你的心每分钟跳 70 下。它跳到第 1,000,000,000 下的时候，你大约几岁？",
+    en: "Your heart beats 70 times a minute. About how old will you be when it beats for the 1,000,000,000th time? (Answer in years.)",
+    zh: "你的心每分钟跳 70 下。它跳到第 1,000,000,000 下的时候，你大约几岁？（用「岁」回答。）",
   },
   answer: { type: "ESTIMATE", min: 25, max: 30, truth: 27.2, unit: { en: "years old", zh: "岁" } },
   hints: [
-    { en: "A billion is too big to think about all at once. Start small: how many times does your heart beat in one hour?", zh: "十亿太大了，一下子想不清楚。先从小的算：你的心一小时跳多少下？" },
-    { en: "70 × 60 = 4,200 beats an hour. Keep going: how many in a day (24 hours), and then in a year (365 days)?", zh: "70 × 60 = 4,200，这是一小时的心跳。继续算：一天（24 小时）跳多少下？一年（365 天）呢？" },
+    { en: "A billion is too big to think about all at once. Start small: how many times does your heart beat in one hour? (That's the scene's \"× 60\" button.)", zh: "十亿太大了，一下子想不清楚。先从小的算：你的心一小时跳多少下？（就是场景里的「× 60」按钮。）" },
+    { en: "70 × 60 = 4,200 beats an hour. Keep going: \"× 24\" gives a day, and \"× 365\" gives a year.", zh: "70 × 60 = 4,200，这是一小时的心跳。继续算：「× 24」是一天，「× 365」是一年。" },
     { en: "A year has about 36.8 million beats (4,200 × 24 × 365). How many of those years fit into 1,000,000,000 beats? Divide.", zh: "一年大约跳 3,680 万下（4,200 × 24 × 365）。1,000,000,000 下里能装下几年？除一下。" },
   ],
   wrongAnswers: [
@@ -549,8 +558,8 @@ export const billionHeartbeats: HeroQuestionBlueprint = {
     zh: "沿着梯子往上爬：每分钟 70 下，× 60 是每小时 4,200 下，× 24 是每天 100,800 下，× 365 大约是每年 3,680 万下。然后 1,000,000,000 ÷ 36,800,000 ≈ 27。所以第十亿下心跳，大约在你 27 岁的时候。",
   },
   aha: {
-    en: "A billion heartbeats takes about 27 years: long enough to grow up, finish school and start a job. That's how big a billion is.",
-    zh: "十亿下心跳要大约 27 年，够你长大、读完书、开始工作。十亿就是这么大。",
+    en: "Your heart beats about 37 million times a year, and it still takes 27 years to reach a billion. That's long enough to grow up, finish school and start a job.",
+    zh: "你的心一年要跳大约 3,700 万下，可还是要 27 年才能跳到十亿。这么长的时间，够你长大、读完书、开始工作。",
   },
   extension: {
     en: "A mouse's heart beats about 500 times a minute, and an elephant's about 30. How long would each take to reach a billion beats? Compare that with how long they live.",
@@ -572,8 +581,10 @@ export const billionHeartbeats: HeroQuestionBlueprint = {
 
 /**
  * A9. 10^100 / 10^80 = 10^20. The catalog's first aha ("turn every atom into a universe and you
- * still fall short") was wrong: that gives 10^160 > 10^100. The copy uses 10^20 universes instead
- * (about 100 for every grain of sand on Earth, ~10^18, matching the scene's reference).
+ * still fall short") was wrong: that gives 10^160 > 10^100. Batch 3 then said "about 100 universes
+ * for every grain of sand", which used 10^18 grains; the usual estimate is about 7.5 × 10^18, so
+ * 10^20 / 7.5 × 10^18 ≈ 13 universes per grain ("more than ten" / 十几个).
+ * The hook no longer opens with "Write…" (COMPUTE_PREFIX).
  */
 export const googolVsAtoms: HeroQuestionBlueprint = {
   slug: "googol-vs-atoms",
@@ -584,8 +595,8 @@ export const googolVsAtoms: HeroQuestionBlueprint = {
   category: "ARITHMETIC",
   title: { en: "A Googol vs. the Universe", zh: "古戈尔和宇宙比大小" },
   hook: {
-    en: "Write a 1 followed by a hundred zeros: that number is called a googol. Now imagine counting every atom in the whole universe, in every star and every planet. Which is bigger, and by how much?",
-    zh: "写一个 1，后面跟一百个 0，这个数叫古戈尔。再想象一下，把整个宇宙里的原子都数一遍，每颗星星、每颗行星都算上。哪个更大？大多少？",
+    en: "Imagine counting every atom in the whole universe: in every star, every planet and every grain of sand. Now picture a googol, a 1 followed by a hundred zeros. Which is bigger, and by how much?",
+    zh: "想象一下，把整个宇宙里的原子都数一遍：每颗星星、每颗行星、每一粒沙子都算上。再想想古戈尔：1 后面跟着一百个 0。哪个更大？大多少？",
   },
   guess: {
     type: "choice",
@@ -614,14 +625,14 @@ export const googolVsAtoms: HeroQuestionBlueprint = {
   hints: [
     { en: "Don't compare 80 and 100 as if they were the numbers. They count ZEROS. What does one extra zero do to a number?", zh: "别把 80 和 100 当成那两个数来比，它们数的是 0 的个数。多一个 0，数会变成原来的几倍？" },
     { en: "One extra zero means × 10, and two extra zeros mean × 100. So how many times bigger is a number with 20 extra zeros?", zh: "多一个 0 就是 × 10，多两个 0 就是 × 100。那多 20 个 0，是大多少倍？" },
-    { en: "20 extra zeros means × 100,000,000,000,000,000,000. Slide the scene's zeros across and ask yourself: is that 'a bit'?", zh: "多 20 个 0 就是 × 100,000,000,000,000,000,000。在场景里把 0 一个个加上去，再问问自己：这算「一点点」吗？" },
+    { en: "Drag the scene's \"add zeros\" slider until the atoms row is as long as the googol row. You've multiplied by 10 twenty times. Is that 'a bit'?", zh: "拖动场景里的「加 0」滑块，直到原子那一行和古戈尔一样长。你一共乘了 20 次 10。这算「一点点」吗？" },
   ],
   wrongAnswers: [
     {
       match: "choice:bit",
       feedback: {
         en: "100 zeros and 80 zeros look close, like 100 and 80. But every extra zero multiplies by 10, and 20 extra zeros multiply by 10 twenty times. That's a hundred billion billion times bigger.",
-        zh: "100 个 0 和 80 个 0 看起来差不多，就像 100 和 80。可是每多一个 0 就要乘 10，多 20 个 0 就是乘了 20 次 10，大了一万亿亿倍。",
+        zh: "100 个 0 和 80 个 0 看起来差不多，就像 100 和 80。可是每多一个 0 就要乘 10，多 20 个 0 就是乘了 20 次 10，大了「1 后面 20 个 0」那么多倍。",
       },
     },
     {
@@ -633,12 +644,12 @@ export const googolVsAtoms: HeroQuestionBlueprint = {
     },
   ],
   explanation: {
-    en: "Each extra zero multiplies a number by 10. A googol has 20 more zeros than the number of atoms, so it is \\(10^{20}\\) times bigger. That's 100,000,000,000,000,000,000 times: ridiculously bigger.",
-    zh: "每多一个 0，数就变成原来的 10 倍。古戈尔比原子的数量多 20 个 0，所以大 \\(10^{20}\\) 倍。也就是 100,000,000,000,000,000,000 倍，大得离谱。",
+    en: "Each extra zero means × 10. A googol has 20 more zeros than the number of atoms, so it is 10 × 10 × … × 10, twenty times, which is \\(10^{20}\\) times bigger. That's 100,000,000,000,000,000,000 times: ridiculously bigger.",
+    zh: "每多一个 0，就是 × 10。古戈尔比原子的数量多 20 个 0，所以要乘 20 个 10，也就是大 \\(10^{20}\\) 倍。也就是 100,000,000,000,000,000,000 倍，大得离谱。",
   },
   aha: {
-    en: "To get a googol atoms you'd need \\(10^{20}\\) whole universes, about a hundred universes for every grain of sand on Earth. 'Only 20 more zeros' is a monster.",
-    zh: "要凑够一个古戈尔的原子，需要 \\(10^{20}\\) 个宇宙，相当于地球上每一粒沙子都配一百个宇宙。「只多 20 个 0」其实是个怪物。",
+    en: "To collect a googol atoms you'd need \\(10^{20}\\) whole universes: more than ten universes for every grain of sand on Earth. 'Only 20 more zeros' is a monster.",
+    zh: "要凑够一个古戈尔的原子，需要 \\(10^{20}\\) 个宇宙：地球上每一粒沙子都要配十几个宇宙。「只多 20 个 0」其实是个怪物。",
   },
   extension: {
     en: "A googolplex is a 1 followed by a googol zeros. If you wrote one zero on every atom in the universe, could you write it down?",
@@ -650,18 +661,19 @@ export const googolVsAtoms: HeroQuestionBlueprint = {
   },
   solutionTags: ["pattern", "algebra"],
   funFact: {
-    en: "The name 'googol' was made up around 1920 by a nine-year-old boy, Milton Sirotta, when a mathematician in his family asked him to name a really big number.",
-    zh: "「古戈尔」这个名字是 1920 年前后一个 9 岁男孩米尔顿起的：他家里一位当数学家的长辈，请他给一个超级大的数取个名字。",
+    en: "The name 'googol' was made up around 1920 by a nine-year-old boy, Milton Sirotta, when his uncle, the mathematician Edward Kasner, asked him to name a really big number.",
+    zh: "「古戈尔」这个名字是 1920 年前后一个 9 岁男孩米尔顿起的：他的亲戚、数学家卡斯纳请他给一个超级大的数取个名字。",
   },
   sortOrder: 9,
   rubricNotes:
-    "16/20 — hook 2, guess 2, hands-on 1, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the powers scene shows the zeros but the answer comes from the 'each zero is × 10' idea, not from the scene; exponents are a 12+ idea",
+    "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the 'add zeros' slider now carries hint 3 and shows the × 10^20 itself; exponents are still a 12+ idea and 'each zero is × 10' is the one path",
 };
 
 /**
  * A10. halving_bar: the scene's TINY_THINGS say the gap passes a hair at step 14, a bacterium at
- * 20 and an atom only at step 34 (2^-34 m ≈ 5.8e-11 m < 1e-10 m), so maxSteps is 40 and the copy
- * says 34.
+ * 19 and an atom only at step 34 (2^-34 m ≈ 5.8e-11 m < 1e-10 m), so maxSteps is 40 and the copy
+ * says 34. The scene's "Left:" readout is in cm/mm/µm, so hints use 50 cm, 25 cm rather than 1/2 m.
+ * Extension answer: 1/3 + 1/9 + 1/27 + … = 1/2.
  */
 export const halfwayToTheWall: HeroQuestionBlueprint = {
   slug: "halfway-to-the-wall",
@@ -672,7 +684,7 @@ export const halfwayToTheWall: HeroQuestionBlueprint = {
   category: "FRACTIONS",
   title: { en: "The Wall You Never Reach", zh: "永远走不到的墙" },
   hook: {
-    en: "You stand facing a wall. You walk half of the way there, then half of what's left, then half of what's left again, and you never stop. Do you ever reach the wall? And how far do you walk altogether?",
+    en: "You stand facing a wall. You walk half of the way there, then half of what's left, then half of what's left again, and you never stop. Do you ever reach the wall, and how far do you walk altogether?",
     zh: "你面对一面墙站着。先走一半的路，再走剩下的一半，再走剩下的一半……永远不停。你能走到墙吗？你一共走了多远？",
   },
   guess: {
@@ -686,13 +698,13 @@ export const halfwayToTheWall: HeroQuestionBlueprint = {
   },
   scene: { type: "halving_bar", ratio: 0.5, maxSteps: 40 },
   prompt: {
-    en: "The wall is 1 metre away. If you keep going forever, what does 1/2 + 1/4 + 1/8 + 1/16 + … add up to?",
-    zh: "墙在 1 米外。如果永远走下去，1/2 + 1/4 + 1/8 + 1/16 + …… 加起来等于多少？",
+    en: "The wall is 1 metre away. If you keep going forever, what does 1/2 + 1/4 + 1/8 + 1/16 + … add up to, in metres?",
+    zh: "墙在 1 米外。如果永远走下去，1/2 + 1/4 + 1/8 + 1/16 + …… 加起来是多少米？",
   },
   answer: { type: "NUMERIC", value: 1, unit: { en: "m", zh: "米" } },
   hints: [
-    { en: "Don't add the fractions one by one. Look at what is LEFT after each step instead. After the first step, how much is left?", zh: "别一个个去加分数。换个角度，看每一步之后还剩多少。走完第一步，还剩多少？" },
-    { en: "After 1 step, 1/2 m is left. After 2 steps, 1/4 m. After 3 steps, 1/8 m. What happens to the part left as you keep going?", zh: "走 1 步后剩 1/2 米，走 2 步后剩 1/4 米，走 3 步后剩 1/8 米。一直走下去，剩下的会怎样？" },
+    { en: "Don't add the fractions one by one. Look at what is LEFT after each step instead. Press \"Walk half\" once: how much is left?", zh: "别一个个去加分数。换个角度，看每一步之后还剩多少。点一次「走一半」：还剩多少？" },
+    { en: "After 1 step, 50 cm (half a metre) is left. After 2 steps, 25 cm. After 3, 12.5 cm. Press \"5 more\" a few times: what happens to the part left?", zh: "走 1 步后剩 50 厘米（半米），走 2 步后剩 25 厘米，走 3 步后剩 12.5 厘米。多点几次「再 5 步」：剩下的会怎样？" },
     { en: "Walked + left = 1 metre, every single time. The part left gets smaller than any number you can name. So what must the walked part add up to?", zh: "走过的 + 剩下的 = 1 米，每一步都是这样。剩下的会比你说得出的任何数都小。那走过的加起来是多少？" },
   ],
   wrongAnswers: [
