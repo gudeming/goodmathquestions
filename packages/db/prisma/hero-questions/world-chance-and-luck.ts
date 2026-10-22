@@ -7,6 +7,8 @@
  * scene and the names 双双/单单 (双数/单数 mnemonic, as Evan/Otto is in English); C7's guess is a
  * choice so the reveal histogram never marks 3.14 on a "drops inside" slider.
  * Batch 4: C10 spot-the-real-random, `illustration` until the Tier-3 sequence_lineup scene lands.
+ * Editorial pass 2 (editorial-pass-2.md): C10 retitled, and its feedback says "streaky" / 「连成串」
+ * in plain words instead of "lumpier" / 「扎堆」 and "polite" / 「讲礼貌」.
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
@@ -834,10 +836,10 @@ export const spotTheRealRandom: HeroQuestionBlueprint = {
   ageGroup: "AGE_10_12",
   difficulty: "MEDIUM",
   category: "PROBABILITY",
-  title: { en: "Which Coin Was Real?", zh: "哪一串是真随机" },
+  title: { en: "Which Row Is Really Random?", zh: "哪一串是真随机" },
   hook: {
     en: "Three friends were asked to make up twenty coin flips that look random, and a fourth friend really flipped a coin twenty times. Their four rows of heads and tails are in the picture. Can you spot the one that came from a real coin?",
-    zh: "三个朋友被要求编出看起来很随机的 20 次掷硬币记录，第四个朋友真的掷了 20 次硬币。四串正面和反面就在图里。你能找出哪一串是真掷出来的吗？",
+    zh: "三个朋友被要求编出看起来很随机的二十次掷硬币记录，第四个朋友真的掷了二十次硬币。四串正面和反面就在图里。你能找出哪一串是真掷出来的吗？",
   },
   guess: {
     type: "choice",
@@ -872,15 +874,15 @@ export const spotTheRealRandom: HeroQuestionBlueprint = {
     {
       match: "choice:A",
       feedback: {
-        en: "Row A looks nicely mixed, and that's the giveaway: it changes face 15 times out of 19 and never shows the same face three times running. A real coin is lumpier than that.",
-        zh: "A 串看起来混得很匀，这恰恰露了馅：19 次机会里换了 15 次面，同一面从来没有连续出现 3 次。真硬币要「扎堆」得多。",
+        en: "Row A looks nicely mixed, and that's the giveaway: it changes face 15 times out of 19 and never shows the same face three times running. A real coin lands the same way several times in a row far more often than that.",
+        zh: "A 串看起来混得很匀，这恰恰露了馅：19 次机会里换了 15 次面，同一面从来没有连续出现 3 次。真硬币常常一连好几次都是同一面。",
       },
     },
     {
       match: "choice:B",
       feedback: {
-        en: "Row B feels random because heads and tails come out exactly 10 and 10 and keep taking turns. Real coins are rarely that polite: B changes face 15 times, where a real coin changes about 9 or 10 times.",
-        zh: "B 串让人觉得随机，因为正反面正好各 10 个，还总是轮流出现。真硬币很少这么「讲礼貌」：B 换了 15 次面，真硬币一般只换 9 到 10 次。",
+        en: "Row B feels random because heads and tails come out exactly 10 and 10 and keep taking turns. A real coin doesn't take turns that neatly: B changes face 15 times, where a real coin changes about 9 or 10 times.",
+        zh: "B 串让人觉得随机，因为正反面正好各 10 个，还总是轮流出现。真硬币可不会这么规规矩矩地轮流来：B 换了 15 次面，真硬币一般只换 9 到 10 次。",
       },
     },
     {
@@ -896,8 +898,8 @@ export const spotTheRealRandom: HeroQuestionBlueprint = {
     zh: "编随机数的人会躲着连串走，因为连续 5 个正面看起来太整齐，不像是碰巧。可真硬币常常出现连串：掷 20 次，出现连续 4 个的机会约 77%，连续 5 个约 46%，而最长连串不超过 2 的情况只有约 2%。A、B、D 三串同一面从不连续超过 2 次，还换了 14 或 15 次面；C 串只换了 10 次面，还有连续 5 个正面。所以 C 是真的。",
   },
   aha: {
-    en: "Real randomness is lumpier than people expect: streaks are normal, and perfect mixing is the fake. That's how you can catch someone who made up their coin flips.",
-    zh: "真正的随机比人们想象的更「扎堆」：连串很正常，混得太匀才是假的。靠这一点，你就能揭穿编造掷硬币记录的人。",
+    en: "Real randomness is streakier than people expect: long runs are normal, and perfect mixing gives a faker away. That's how you can catch someone who made up their coin flips.",
+    zh: "真正的随机比人们想象的更爱连成串：长长的连串很正常，混得太匀反而会露馅。靠这一点，你就能揭穿编造掷硬币记录的人。",
   },
   extension: {
     en: "Flip a real coin 20 times and write it down, and ask a friend to make up 20 flips without a coin. Can you tell which is which? How likely is a run of at least four in 20 real flips?",

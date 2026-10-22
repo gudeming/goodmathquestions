@@ -10,6 +10,8 @@
  * Batch 4: D7 prime-spiral and D10 missing-dollar, `illustration` until the Tier-3 prime_spiral /
  * money_flow scenes land. D3's hook no longer opens with "Write" and D4's fun fact drops the
  * initials, so neither needs a content-lint waiver any more.
+ * Editorial pass 2 (editorial-pass-2.md): D7's Chinese title no longer names the answer; D10's hook
+ * is three sentences in Chinese too and its aha says plainly that only the sum is wrong.
  */
 import type { GuessConfig, HeroQuestionBlueprint } from "./_template";
 
@@ -806,7 +808,7 @@ export const primeSpiral: HeroQuestionBlueprint = {
   ageGroup: "AGE_12_14",
   difficulty: "MEDIUM",
   category: "NUMBER_THEORY",
-  title: { en: "The Prime Number Spiral", zh: "质数排成的线" },
+  title: { en: "The Prime Number Spiral", zh: "绕成螺旋的质数" },
   hook: {
     en: "Start with a one in the middle of some squared paper and write the counting numbers round and round it in a spiral. Then shade every prime number, the ones that divide only by one and themselves. When the spiral gets really big, what picture do you think the shaded squares make?",
     zh: "在方格纸中间写一个 1，然后把 2、3、4、5……一圈一圈绕着它写成螺旋。再把所有质数（只能被 1 和它自己整除的数）涂黑。螺旋写得很大以后，涂黑的格子会组成什么样的图案？",
@@ -878,7 +880,7 @@ export const primeSpiral: HeroQuestionBlueprint = {
   },
   sortOrder: 7,
   rubricNotes:
-    "17/20 — hook 2, guess 2, hands-on 1, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 2: illustration only (待替换为 prime_spiral); drawing it on squared paper is the one real path, and the chessboard-parity idea is a partial reason, not a proof; primes and squared rules make it 12+; the open question is real",
+    "17/20 — hook 2, guess 2, hands-on 1, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 2: illustration only (待替换为 prime_spiral); drawing it on squared paper is the one real path, and the chessboard-parity idea is a partial reason, not a proof; primes and squared rules make it 12+; the open question is real; editorial pass 2 renamed the Chinese title (「质数排成的线」 gave the answer away)",
 };
 
 /**
@@ -897,7 +899,7 @@ export const missingDollar: HeroQuestionBlueprint = {
   title: { en: "The Missing Dollar", zh: "消失的一块钱" },
   hook: {
     en: "Three friends share a hotel room and pay 30 dollars between them. The clerk realises the room costs only 25 and sends the bellboy back with 5, but the bellboy quietly keeps 2 and gives each friend 1 back. So each friend paid 9, and 3 × 9 = 27, plus the bellboy's 2 makes 29: where did the missing dollar go?",
-    zh: "三个朋友合住一间旅馆，一共付了 30 元。前台发现房费只要 25 元，就让服务员退回 5 元；服务员偷偷留下 2 元，给每人退了 1 元。这样每人付了 9 元，3 × 9 = 27，再加上服务员的 2 元是 29 元。还有 1 元去哪儿了？",
+    zh: "三个朋友合住一间旅馆，一共付了 30 元。前台发现房费只要 25 元，就让服务员退回 5 元；服务员偷偷留下 2 元，给每人退了 1 元。这样每人付了 9 元，3 × 9 = 27，再加上服务员的 2 元是 29 元，还有 1 元去哪儿了？",
   },
   guess: {
     type: "choice",
@@ -921,8 +923,8 @@ export const missingDollar: HeroQuestionBlueprint = {
     },
   },
   prompt: {
-    en: "In the end the friends paid 27 and the bellboy has 2. Why doesn't 27 + 2 make 30, and where is the missing dollar?",
-    zh: "三个朋友最后一共付了 27 元，服务员手里有 2 元。为什么 27 + 2 不等于 30？少的那 1 元去哪儿了？",
+    en: "In the end the friends paid 27 and the bellboy has 2, which makes 29, not 30. So where did the missing dollar go?",
+    zh: "三个朋友最后一共付了 27 元，服务员手里有 2 元，加起来是 29 元，不是 30 元。少的那 1 元去哪儿了？",
   },
   answer: { type: "CHOICE", correctId: "nothing-missing" },
   hints: [
@@ -951,8 +953,8 @@ export const missingDollar: HeroQuestionBlueprint = {
     zh: "跟着钱走：30 元里，25 元留在前台，2 元进了服务员的口袋，3 元退给了三个朋友，25 + 2 + 3 = 30。三个朋友最后付的 27 元，正好是前台的 25 元加上服务员的 2 元。把服务员的 2 元再加到 27 上，就把同一笔 2 元算了两遍，所以 29 这个数毫无意义。正确的算式是 27 = 25 + 2，以及 27 + 3 = 30。",
   },
   aha: {
-    en: "Nothing is missing: the story adds the bellboy's 2 to a total that already contains it. The money is fine; it's the sum that's crooked.",
-    zh: "什么都没少：故事把服务员的 2 元加到了一个已经包含它的总数上。钱没问题，有问题的是那道算式。",
+    en: "Nothing is missing: the story adds the bellboy's 2 to a total that already contains it. Every dollar is accounted for; the only thing that's wrong is the sum.",
+    zh: "什么都没少：故事把服务员的 2 元加到了一个已经包含它的总数上。每一块钱都有着落，错的只是那道算式。",
   },
   extension: {
     en: "Make up your own \"vanishing money\" story to try on a friend. What rule does the fake sum have to break so that it sounds right but isn't?",
@@ -964,8 +966,8 @@ export const missingDollar: HeroQuestionBlueprint = {
   },
   solutionTags: ["draw", "table", "work_backwards"],
   funFact: {
-    en: "This riddle has been fooling people for nearly a hundred years, told in many languages and with many different coins.",
-    zh: "这个谜题已经骗了人快一百年，换了好多种语言、好多种钱，照样管用。",
+    en: "This riddle has been fooling people since at least the 1930s, told in many languages and with many different kinds of money.",
+    zh: "这个谜题至少从 20 世纪 30 年代起就在骗人了，换了好多种语言、好多种钱，照样管用。",
   },
   sortOrder: 10,
   rubricNotes:

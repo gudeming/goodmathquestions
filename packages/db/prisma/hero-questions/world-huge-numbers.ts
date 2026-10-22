@@ -8,6 +8,8 @@
  * each scene's real controls, facts re-checked, hooks/prompts kept off the COMPUTE_PREFIX words.
  * Batch 4: A6 point-nine-repeating and A7 hilbert-hotel, both `illustration` (with a reveal picture)
  * until the Tier-3 zoom_number_line / hotel_shift scenes land.
+ * Editorial pass 2 (editorial-pass-2.md): batch-4 copy re-read; A6's gap argument now says "smaller than
+ * every positive number", A7's fun fact dates Hilbert's lecture (1924).
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
@@ -161,7 +163,7 @@ export const handshakeParty: HeroQuestionBlueprint = {
 /**
  * A2. The guess is about the whole board; the question pins down one square the child can reach
  * in the scene. Board total 2^64 − 1 ≈ 1.8 × 10^19; "more than 500 years of the world's rice" holds
- * for any grain weight from 20 to 40 mg (the scene's own 25,000 grains/kg gives about 1,476 years).
+ * for any grain weight from 20 to 40 mg (the scene's own 40,000 grains/kg and 500 Mt a year give about 920 years).
  */
 export const chessboardRice: HeroQuestionBlueprint = {
   slug: "chessboard-rice",
@@ -288,6 +290,7 @@ export const foldToTheMoon: HeroQuestionBlueprint = {
     type: "fold_paper",
     thicknessMm: 0.1,
     maxFolds: 42,
+    labels: { hook: { en: "Fold a sheet of paper in half ten times. How thick does it get?", zh: "一张纸对折 10 次，会有多厚？" } },
     references: [
       { heightMm: 2, emoji: "🪙", label: { en: "a coin", zh: "一枚硬币" } },
       { heightMm: 100, emoji: "📕", label: { en: "a thick book", zh: "一本厚书" } },
@@ -786,7 +789,7 @@ export const pointNineRepeating: HeroQuestionBlueprint = {
   title: { en: "Is 0.999… Really 1?", zh: "0.999… 到底等不等于 1" },
   hook: {
     en: "Put a nine after the decimal point and you get a number just below one. Add another nine, and another, and it's still just below one. But what if the nines never, ever stop: is 0.999… still smaller than 1?",
-    zh: "0.9 比 1 小，0.99 也比 1 小，0.999 还是比 1 小。那后面的 9 永远写不完的 0.999… 呢？它还比 1 小吗？",
+    zh: "0.9 比 1 小，0.99 也比 1 小，0.999 还是比 1 小。那 9 一直写下去、永远写不完的 0.999… 呢？它还比 1 小吗？",
   },
   guess: {
     type: "choice",
@@ -820,8 +823,8 @@ export const pointNineRepeating: HeroQuestionBlueprint = {
     {
       match: "choice:a-tiny-bit-less",
       feedback: {
-        en: "That's what almost everyone feels at first: every extra nine still seems to leave a gap. But how much less is \"a tiny bit\"? Writing the gap as 0.000…1 needs a last digit, and the nines never let a last digit arrive. A gap you can't name is a gap of 0.",
-        zh: "几乎每个人一开始都这么觉得：每多一个 9，好像还差一点。可是「小一点点」到底小多少？把差距写成 0.000…1，就得有最后一位，而 9 永远不会让最后一位出现。说不出来的差距，就是 0。",
+        en: "That's what almost everyone feels at first: every extra nine still seems to leave a gap. But how much less is \"a tiny bit\"? Writing the gap as 0.000…1 needs a last digit, and the nines never let a last digit arrive. A gap smaller than every positive number you can name can only be 0.",
+        zh: "几乎每个人一开始都这么觉得：每多一个 9，好像还差一点。可是「小一点点」到底小多少？把差距写成 0.000…1，就得有最后一位，而 9 永远不会让最后一位出现。比任何一个正数都小的差距，只能是 0。",
       },
     },
     {
@@ -837,16 +840,16 @@ export const pointNineRepeating: HeroQuestionBlueprint = {
     zh: "三分之一是 0.333…，所以三个三分之一是 3 × 0.333… = 0.999…，而三个三分之一又正好是 1。另一种算法：设 x = 0.999…，那么 10x − x = 9.999… − 0.999… = 9，所以 9x = 9，x = 1。再说，如果 0.999… 比 1 小，它们中间就该能塞进一个数，可是一个也找不到。",
   },
   aha: {
-    en: "0.999… and 1 are two ways of writing the same number, just as 1/2 and 0.5 are. The gap you imagine is smaller than every number you can name, so it is zero.",
-    zh: "0.999… 和 1 是同一个数的两种写法，就像 1/2 和 0.5 一样。你想象中的那条缝，比任何一个说得出的数都小，所以它就是 0。",
+    en: "0.999… and 1 are two ways of writing the same number, just as 1/2 and 0.5 are. The gap you imagine would have to be smaller than every positive number, so it is zero.",
+    zh: "0.999… 和 1 是同一个数的两种写法，就像 1/2 和 0.5 一样。你想象中的那条缝，得比任何一个正数都小，所以它只能是 0。",
   },
   extension: {
     en: "What is 0.4999… (with nines forever) equal to? Can you find other numbers that have two different decimal names?",
     zh: "0.4999…（后面的 9 永远不停）等于多少？你还能找到别的有两种小数写法的数吗？",
   },
   discussionPrompt: {
-    en: "This is the best question on the site for saying \"I disagree\". Write the strongest argument you can that 0.999… is NOT 1, then read someone else's and find its weak spot.",
-    zh: "这是全站最适合说「我不同意」的一道题。写下你能想到的最有力的理由，证明 0.999… 不等于 1；再读读别人的理由，找出它的漏洞。",
+    en: "Write the strongest argument you can that 0.999… is NOT 1. Then read someone else's argument and find the exact step where it goes wrong.",
+    zh: "写下你能想到的最有力的理由，证明 0.999… 不等于 1。再读读别人的理由，找出它错在哪一步。",
   },
   solutionTags: ["algebra", "pattern", "other"],
   funFact: {
@@ -936,8 +939,8 @@ export const hilbertHotel: HeroQuestionBlueprint = {
   },
   solutionTags: ["draw", "pattern", "other"],
   funFact: {
-    en: "The mathematician David Hilbert told this story about 100 years ago to show how strange infinity is. In his hotel, the even-numbered rooms alone hold as many guests as the whole hotel.",
-    zh: "大约 100 年前，数学家希尔伯特讲了这个故事，用来说明无限有多奇怪。在他的旅馆里，光是双号房住的客人，就和整个旅馆一样多。",
+    en: "The mathematician David Hilbert told this story in a lecture in 1924 to show how strange infinity is. In his hotel, the even-numbered rooms alone hold as many guests as the whole hotel.",
+    zh: "1924 年，数学家希尔伯特在一次讲座里讲了这个故事，用来说明无限有多奇怪。在他的旅馆里，光是偶数号房间住的客人，就和整个旅馆一样多。",
   },
   sortOrder: 7,
   rubricNotes:

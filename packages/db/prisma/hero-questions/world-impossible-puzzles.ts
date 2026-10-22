@@ -7,6 +7,8 @@
  * F10 blindfold-coins, F11 fly-between-trains, F12 guess-my-number (this world's second AGE_8_10).
  * Editorial pass 1: hints name the scenes' buttons; the two illustration scenes now carry a
  * revealCaption so Act 3 says something new; F8 got a story hook and a four-case table path.
+ * Editorial pass 2 (editorial-pass-2.md): batch-4 copy re-read; F4's aha is the 'hide the 5 inside
+ * the 10' picture, F11 names von Neumann as a legend, F12's Chinese matches the scene's 「比 g 大 / 小」.
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
@@ -401,7 +403,7 @@ export const bridgeAndTorch: HeroQuestionBlueprint = {
   ageGroup: "AGE_12_14",
   difficulty: "HARD",
   category: "LOGIC",
-  title: { en: "The Midnight Bridge", zh: "过桥的四个人" },
+  title: { en: "The Midnight Bridge", zh: "半夜过吊桥" },
   hook: {
     en: "Four friends reach a rickety rope bridge in the middle of the night, with just one torch between them. The bridge holds two people at a time, nobody may cross without the torch, and a pair walks at the slower one's speed. Alone they take 1, 2, 5 and 10 minutes to cross, so how fast can all four get over?",
     zh: "半夜，四个朋友走到一座摇摇晃晃的吊桥前，他们只有一支手电。桥上一次最多走两个人，过桥必须带着手电，两个人一起走时要按慢的那个人的速度。他们单独过桥分别要 1、2、5、10 分钟，四个人全部过去，最快要几分钟？",
@@ -487,8 +489,8 @@ export const bridgeAndTorch: HeroQuestionBlueprint = {
     zh: "先让 1 和 2 过桥（2 分钟），1 拿着手电回来（1 分钟）。再让 5 和 10 一起过桥（10 分钟），2 拿着手电回来（2 分钟）。最后 1 和 2 一起过去（2 分钟）：2 + 1 + 10 + 2 + 2 = 17 分钟。让最快的人一个个护送要 19 分钟，因为 5 和 10 各自走了一趟慢的。",
   },
   aha: {
-    en: "The slow walkers' minutes are the expensive ones, so put them on the same trip. Sending the fastest friend back every time feels smart, but it costs two extra minutes.",
-    zh: "慢的人走的那几分钟最贵，所以让他们俩合成一趟。每次都让最快的人回来看起来很聪明，其实多花了 2 分钟。",
+    en: "Send the two slowest across together, and the 5-minute walk hides inside the 10-minute one. Sending the fastest friend back every time feels smart, but it costs two extra minutes.",
+    zh: "让最慢的两个人一起走，5 分钟那一趟就「藏」进了 10 分钟里。每次都让最快的人回来看起来很聪明，其实多花了 2 分钟。",
   },
   extension: {
     en: "A fifth friend who needs 15 minutes joins them, so the times are 1, 2, 5, 10 and 15. What's the fastest now? Is \"the two slowest together\" still the best move?",
@@ -522,8 +524,8 @@ export const fourFours: HeroQuestionBlueprint = {
   category: "ARITHMETIC",
   title: { en: "The Four Fours Challenge", zh: "四个 4 的挑战" },
   hook: {
-    en: "A broken calculator has only one working number key, the four, and it dies after you press it four times. You still have + − × ÷, brackets, √ and !, and you may glue two 4s into 44. Can you make it show 7?",
-    zh: "一台坏掉的计算器只剩一个数字键能用：4，而且按满四次就彻底坏了。加减乘除、括号、√ 和 ! 都还能用，两个 4 还可以拼成 44。你能让它显示 7 吗？",
+    en: "A broken calculator has only one working number key, the four, and it dies after you press it four times. You still have + − × ÷, brackets, √ and !, and you may glue two 4s into 44. Can you make it show 7, and in how many different ways?",
+    zh: "一台坏掉的计算器只剩一个数字键能用：4，而且按满四次就彻底坏了。加减乘除、括号、√ 和 ! 都还能用，两个 4 还可以拼成 44。你能让它显示 7 吗，有几种不同的按法？",
   },
   guess: {
     type: "choice",
@@ -542,8 +544,8 @@ export const fourFours: HeroQuestionBlueprint = {
     solutions: ["44/4-4", "4+4-4/4", "4!/4+4/4", "4+4!/(4+4)"],
   },
   prompt: {
-    en: "Use exactly four 4s and any of + − × ÷, brackets, √, ! and 44. Build an expression that equals 7.",
-    zh: "正好用四个 4，可以用加减乘除、括号、√、! 和 44。写出一个等于 7 的算式。",
+    en: "Using exactly four 4s and any of + − × ÷, brackets, √, ! and 44, how can you make 7?",
+    zh: "正好用四个 4，可以用加减乘除、括号、√、! 和 44，怎样凑出 7？",
   },
   answer: {
     type: "EXPRESSION",
@@ -611,7 +613,7 @@ export const fourFours: HeroQuestionBlueprint = {
     zh: "7 有很多种样子：44 ÷ 4 − 4 和 4 + 4 − 4 ÷ 4 看起来毫不相干，却都等于 7。找到一种是解题，再找到一种不一样的才是真正的游戏。",
   },
   extension: {
-    en: "Make every number from 0 to 10 with four 4s. Which one fought back the hardest? Can you keep going all the way to 20?",
+    en: "Make every number from 0 to 10 with four 4s. Which one was the hardest to make? Can you keep going all the way to 20?",
     zh: "用四个 4 凑出 0 到 10 的每一个数。哪个最难？你能一直做到 20 吗？",
   },
   discussionPrompt: {
@@ -640,10 +642,10 @@ export const waterJugs: HeroQuestionBlueprint = {
   ageGroup: "AGE_10_12",
   difficulty: "MEDIUM",
   category: "NUMBER_THEORY",
-  title: { en: "The Giant's Four Litres", zh: "巨人要的 4 升水" },
+  title: { en: "The Giant's Four Litres", zh: "给巨人量 4 升水" },
   hook: {
     en: "A giant will only let you past if you bring him exactly four litres of water. You have a tap, a three-litre jug and a five-litre jug, and neither jug has any markings on it. How can you measure exactly four litres, and in how few steps?",
-    zh: "巨人说，只有给他正好 4 升水，才放你过去。你有一个水龙头、一个 3 升的壶和一个 5 升的壶，壶上都没有刻度。怎么量出正好 4 升？最少要几步？",
+    zh: "巨人说，只有给他正好 4 升水，才放你过去。你有一个水龙头、一个 3 升的壶和一个 5 升的壶，壶上都没有刻度。怎么量出正好 4 升，最少要几步？",
   },
   guess: {
     type: "slider",
@@ -725,7 +727,7 @@ export const waterJugs: HeroQuestionBlueprint = {
   },
   sortOrder: 6,
   rubricNotes:
-    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the scene is the puzzle and shows the fewest steps; trial is the main path (the 5 + 5 − 3 − 3 view comes after); feedback covers the 8-step route and counting only pours",
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the scene is the puzzle and asks 'can you do it in fewer?' until the reveal shows the shortest route; trial is the main path (the 5 + 5 − 3 − 3 view comes after); feedback covers the 8-step route and counting only pours",
 };
 
 /**
@@ -742,8 +744,8 @@ export const fourQueens: HeroQuestionBlueprint = {
   category: "LOGIC",
   title: { en: "Four Queens, No Fights", zh: "互不攻击的四个皇后" },
   hook: {
-    en: "A chess queen is a fierce fighter: she attacks every square along her row, her column and both diagonals, all the way to the edge. Can you squeeze four queens onto a tiny board, four squares by four, so that none of them is under attack? And how many different ways are there?",
-    zh: "国际象棋里的皇后很厉害：她能攻击同一行、同一列和两条斜线上的每一格，一直到棋盘边。在一个只有 4 × 4 格的小棋盘上，能不能放下四个皇后，谁也攻击不到谁？一共有几种摆法？",
+    en: "A chess queen is the most powerful piece on the board: she attacks every square along her row, her column and both diagonals, all the way to the edge. Can you squeeze four queens onto a tiny board, four squares by four, so that none of them is under attack? And how many different ways are there?",
+    zh: "皇后是国际象棋里最厉害的棋子：她能攻击同一行、同一列和两条斜线上的每一格，一直到棋盘边。在一个只有 4 × 4 格的小棋盘上，能不能放下四个皇后，谁也攻击不到谁？一共有几种摆法？",
   },
   guess: {
     type: "slider",
@@ -868,7 +870,7 @@ export const nineDotsFourLines: HeroQuestionBlueprint = {
   },
   prompt: {
     en: "Four straight lines, one stroke, all nine dots. Can it be done, and if so, where do the lines have to go?",
-    zh: "四条直线、一笔画、九个点全连上。做得到吗？如果做得到，线要画在哪儿？",
+    zh: "四条直线、一笔画、九个点全连上：做得到吗，线又该画在哪儿？",
   },
   answer: { type: "CHOICE", correctId: "outside-the-box" },
   hints: [
@@ -992,8 +994,8 @@ export const blindfoldCoins: HeroQuestionBlueprint = {
     zh: "随便拿 10 枚当小堆。如果小堆里有 k 个正面，大堆里就剩 10 − k 个正面。小堆里另外 10 − k 枚是反面，把小堆全部翻面后，它们变成了正面，小堆也有 10 − k 个正面了。不管 k 是几，两堆都一样多。",
   },
   aha: {
-    en: "You never find out where the heads are, and you don't need to: flipping turns the small pile's k heads into exactly the 10 − k heads the big pile has. Algebra works even with your eyes shut.",
-    zh: "你始终不知道正面在哪儿，也不需要知道：一翻面，小堆的 k 个正面正好变成和大堆一样的 10 − k 个。闭着眼睛，代数照样管用。",
+    en: "You never find out where the heads are, and you don't need to: flipping turns the small pile's k heads into exactly the 10 − k heads the big pile has. Algebra works even blindfolded.",
+    zh: "你始终不知道正面在哪儿，也不需要知道：一翻面，小堆的 k 个正面正好变成和大堆一样的 10 − k 个。蒙着眼睛，代数照样管用。",
   },
   extension: {
     en: "What if exactly 20 of the 100 coins show heads? And what if nobody tells you how many heads there are?",
@@ -1102,7 +1104,7 @@ export const flyBetweenTrains: HeroQuestionBlueprint = {
   ],
   explanation: {
     en: "The gap closes at 50 + 50 = 100 km/h, so the trains meet after 100 ÷ 100 = 1 hour. The fly flies for that whole hour at 75 km/h, so it covers 75 km. You can also add up the trips one by one, 60 + 12 + 2.4 + …, and you get the same 75, but it takes forever.",
-    zh: "两车之间的距离每小时缩短 50 + 50 = 100 千米，所以 100 ÷ 100 = 1 小时后相遇。苍蝇这一整个小时都以 75 千米/时在飞，所以飞了 75 千米。也可以把每一段加起来：60 + 12 + 2.4 + …，结果也是 75，只是要加个没完。",
+    zh: "两车之间的距离每小时缩短 50 + 50 = 100 千米，所以 100 ÷ 100 = 1 小时后相遇。苍蝇这一整个小时都以 75 千米/时在飞，所以飞了 75 千米。也可以把每一段加起来：60 + 12 + 2.4 + …，结果也是 75，只是得一直加下去，没完没了。",
   },
   aha: {
     en: "Change the question from \"how far\" to \"how long\", and endlessly many zigzags collapse into one easy hour. Infinitely many trips can still add up to an ordinary 75 km.",
@@ -1118,8 +1120,8 @@ export const flyBetweenTrains: HeroQuestionBlueprint = {
   },
   solutionTags: ["algebra", "simulate", "pattern"],
   funFact: {
-    en: "The story goes that a famous mathematician answered this in a flash, and when someone said he must know the shortcut, he replied that he had simply added up all the trips in his head.",
-    zh: "传说有位大数学家一下子就说出了答案。别人说他肯定知道捷径，他却回答：我只是在脑子里把每一趟都加起来了。",
+    en: "The story goes that the mathematician John von Neumann answered this in a flash. When someone said he must know the shortcut, he replied that he had simply added up all the trips in his head.",
+    zh: "传说数学家冯·诺依曼一下子就说出了答案。别人说他肯定知道捷径，他却回答：我只是在脑子里把每一趟都加起来了。",
   },
   sortOrder: 11,
   rubricNotes:
@@ -1140,7 +1142,7 @@ export const guessMyNumber: HeroQuestionBlueprint = {
   title: { en: "Higher or Lower?", zh: "比它大还是比它小" },
   hook: {
     en: "I'm thinking of a whole number between one and a hundred. Each time you guess, I'll only tell you \"higher\" or \"lower\". How many guesses do you need to be sure of catching my number, even on your unluckiest day?",
-    zh: "我心里想了一个 1 到 100 之间的整数。你每猜一次，我只告诉你：我的数比你猜的大，还是比你猜的小。最少要猜几次，才能保证一定猜中，就算运气最差也不怕？",
+    zh: "我心里想了一个 1 到 100 之间的整数。你每猜一个数，我只告诉你「比它大」还是「比它小」。最少要猜几次，才能保证一定猜中，就算运气最差也不怕？",
   },
   guess: {
     type: "slider",

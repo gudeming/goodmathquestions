@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { existsSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   binarySearchSteps,
@@ -994,6 +994,55 @@ describe("hero blueprints (batch 4: the rest of the catalog)", () => {
     expect(fb("fly-between-trains", "100")).toMatch(/gap between the trains/);
     expect(fb("fly-between-trains", "150")).toMatch(/2 hours/);
     expect(fb("guess-my-number", "6")).toMatch(/63 numbers/);
+  });
+});
+
+describe("editorial pass 2 (docs/plans/good-questions-overhaul/editorial-pass-2.md)", () => {
+  const SCENES_DIR = resolve(__dirname, "../../../../apps/web/public/scenes");
+  const optionIds = (slug: string) => {
+    const guess = bySlug(slug).guess;
+    return guess?.type === "choice" ? guess.options.map((o) => o.id) : [];
+  };
+
+  it("titles no longer give the answer away", () => {
+    expect(bySlug("mobius-cut").title.en).not.toMatch(/split/i); // the answer is "it doesn't split"
+    expect(bySlug("prime-spiral").title.zh).not.toMatch(/线/); // the answer is "diagonal lines"
+    expect(bySlug("cicada-primes").title.zh).not.toMatch(/十七/); // the question is about the 13-year cicada
+  });
+
+  it("hooks ask the question their guess answers", () => {
+    expect(bySlug("cicada-primes").hook.en).toMatch(/every 12 years/);
+    expect(optionIds("cicada-primes")).toEqual(["every-12", "every-24", "every-72", "never"]);
+    expect(bySlug("calendar-square").hook.en).toMatch(/shortcut/);
+    expect(optionIds("calendar-square")).toContain("times-9");
+    expect(bySlug("pascal-row-sum").hook.en).toMatch(/ten rows below/);
+    // The options bracket the truth (1024): the largest is "more than 5,000".
+    expect(optionIds("pascal-row-sum")).toEqual(["55", "100", "512", "1024", "5000"]);
+  });
+
+  it("states the checked facts", () => {
+    expect(bySlug("mutilated-chessboard").funFact?.en).toMatch(/1964 .*John McCarthy/);
+    expect(bySlug("hilbert-hotel").funFact?.en).toMatch(/1924/);
+    expect(bySlug("fly-between-trains").funFact?.en).toMatch(/^The story goes that the mathematician John von Neumann/);
+    expect(bySlug("cicada-primes").funFact?.en).toMatch(/2024 .*1803/);
+    expect(bySlug("nine-dots-four-lines").funFact?.en).toMatch(/Nobody knows for sure/);
+  });
+
+  it("B5's extension is the next Fibonacci size, where the hole is still one square", () => {
+    expect(bySlug("missing-square").extension.en).toMatch(/21 squares wide and 8 high/);
+    expect(Math.abs(13 * 8 - 5 * 21) / 2).toBe(0.5); // the sliver at 21 × 8 ...
+    expect(Math.abs(8 * 5 - 3 * 13) / 2).toBe(0.5); // ... is the same half square as at 13 × 5
+  });
+
+  it("E5's picture leaves the number of missing shapes open (three '?' boxes pointed at 5)", () => {
+    const svg = readFileSync(resolve(SCENES_DIR, "tetris-shapes.svg"), "utf8");
+    expect(svg.match(/>\?</g)).toHaveLength(1);
+  });
+
+  it("E9's Chinese names the two kinds of move 小跳 and 大跳", () => {
+    const frog = bySlug("frog-swap");
+    expect(frog.prompt.zh).toMatch(/「小跳」.*「大跳」/);
+    expect(frog.explanation.zh).toMatch(/9 次大跳/);
   });
 });
 

@@ -7,6 +7,8 @@
  * and E6 star-strokes (illustration until polyomino_builder / star_drawer exist), E7 calendar-square
  * (calendar_grid; this world's third AGE_8_10 question), E8 cicada-primes (cycle_timeline; upgrades the
  * legacy "Cicada Underground Mystery" row), E9 frog-swap (frog_puzzle).
+ * Editorial pass 2 (editorial-pass-2.md): E4 and E8 hooks now ask the guess's question; E7's guess is
+ * 'which shortcut?'; E9's Chinese names the two moves 小跳 (hop) and 大跳 (jump over a frog).
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
@@ -348,7 +350,7 @@ export const staircaseWays: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 89, unit: { en: "ways", zh: "种" } },
   hints: [
-    { en: "Ten stairs is too many to list, so start small. Use − and + to pick 1, 2, 3, 4 stairs, climb them with \"+1 step\" and \"+2 steps\", and read how many ways each one has in the row of counts.", zh: "10 级太多，列不完，先从小的开始。用 − 和 + 选 1、2、3、4 级楼梯，用「上 1 级」「上 2 级」爬上去，看那一排计数里每种楼梯有几种走法。" },
+    { en: "Ten stairs is too many to list, so start small. Use − and + to pick 1, 2, 3, 4 stairs, climb them with \"+1 step\" and \"+2 steps\", and find every way: a ✓ appears in the row of counts once you have them all.", zh: "10 级太多，列不完，先从小的开始。用 − 和 + 选 1、2、3、4 级楼梯，用「上 1 级」「上 2 级」爬上去，把每种走法都找出来：找全了，那一排计数旁边会出现 ✓。" },
     { en: "Write the counts in a row: 1, 2, 3, 5, 8, … Look at any number and the two just before it. How do you get it from them?", zh: "把这些数排成一行：1、2、3、5、8……随便挑一个数，看看它前面紧挨着的两个数。它是怎么从这两个数变来的？" },
     { en: "Your last stride lands on the top stair from either one stair below or two stairs below. So the ways for 10 stairs = the ways for 9 + the ways for 8. Keep adding pairs until you reach 10.", zh: "最后一步要么从下面 1 级跨上来，要么从下面 2 级跨上来。所以 10 级的走法 = 9 级的走法 + 8 级的走法。两个两个地往上加，一直加到 10 级。" },
   ],
@@ -391,8 +393,8 @@ export const staircaseWays: HeroQuestionBlueprint = {
     {
       match: "lt:correct",
       feedback: {
-        en: "That's too few. Just 6 stairs already have 13 ways (look at the row of counts), and every extra stair adds the two counts before it.",
-        zh: "太少了。光是 6 级楼梯就有 13 种走法（看那一排计数），每多一级，都要把前面两个数加起来。",
+        en: "That's too few. Just 6 stairs already have 13 ways (5 + 8), and every extra stair adds the two counts before it.",
+        zh: "太少了。光是 6 级楼梯就有 13 种走法（5 + 8），每多一级，都要把前面两个数加起来。",
       },
     },
     {
@@ -426,7 +428,7 @@ export const staircaseWays: HeroQuestionBlueprint = {
   },
   sortOrder: 2,
   rubricNotes:
-    "18/20 — hook 2, guess 2, hands-on 2, aha 1, floor 2, ceiling 2, paths 2, wrong 2, hints 2, retell 1: listing small staircases, the last-stride recurrence and counting by the number of 2-strides are all real paths; kids who did fibonacci-next will see Fibonacci coming, and the scene's count row (1-6 stairs) shows the first six terms once they are found",
+    "18/20 — hook 2, guess 2, hands-on 2, aha 1, floor 2, ceiling 2, paths 2, wrong 2, hints 2, retell 1: listing small staircases, the last-stride recurrence and counting by the number of 2-strides are all real paths; kids who did fibonacci-next will see Fibonacci coming; the scene's count row (1-6 stairs) shows only the ways a child has found, with a ✓ when a staircase is complete",
 };
 
 /**
@@ -443,8 +445,8 @@ export const pascalRowSum: HeroQuestionBlueprint = {
   category: "ARITHMETIC",
   title: { en: "The Triangle's Secret", zh: "三角形里的秘密" },
   hook: {
-    en: "Build a triangle of numbers with ones all down both edges, where every other number is the sum of the two just above it. Now add up each row. What happens to the row totals as the triangle grows?",
-    zh: "搭一个数字三角形：两条斜边上全是 1，中间每个数都等于它正上方两个数的和。现在把每一行加起来。三角形越长越大，每一行的和会怎么变？",
+    en: "Build a triangle of numbers with ones all down both edges, where every other number is the sum of the two just above it. Now add up each row. How big do you think the total gets ten rows below the 1 at the top?",
+    zh: "搭一个数字三角形：两条斜边上全是 1，中间每个数都等于它正上方两个数的和。现在把每一行加起来。从顶上的 1 往下数第 10 行，你觉得它的和会有多大？",
   },
   guess: {
     type: "choice",
@@ -453,6 +455,7 @@ export const pascalRowSum: HeroQuestionBlueprint = {
       { id: "100", en: "Row 10 adds up to about 100", zh: "第 10 行的和大约是 100" },
       { id: "512", en: "Row 10 adds up to about 500", zh: "第 10 行的和大约是 500" },
       { id: "1024", en: "Row 10 adds up to about 1,000", zh: "第 10 行的和大约是 1000" },
+      { id: "5000", en: "Row 10 adds up to more than 5,000", zh: "第 10 行的和超过 5000" },
     ],
   },
   scene: { type: "pascal_triangle", rows: 10, prefilled: 3, askRow: 10, rowSum: 1024 },
@@ -522,8 +525,8 @@ export const pascalRowSum: HeroQuestionBlueprint = {
     zh: "搭下一行的时候，每个数都会加进它下面的两个数里，一个在左下，一个在右下。所以一行里的每个数，到了下一行都被算了两次，每一行的和正好是上一行的 2 倍：1、2、4、8、16……第 10 行离第 0 行翻了 10 次，10 个 2 相乘是 1024。",
   },
   aha: {
-    en: "Every number is passed down to two children, so every row exactly doubles. Press \"Colour: evens\" and a triangle full of triangle-shaped holes appears.",
-    zh: "每个数都传给下面两个「孩子」，所以每一行正好翻倍。再点「涂色：偶数」，会冒出一个满是三角形窟窿的三角形。",
+    en: "Every number feeds into the two numbers below it, so every row exactly doubles. Press \"Colour: evens\" and a big triangle full of triangle-shaped holes appears.",
+    zh: "每个数都会加进它下面的两个数里，所以每一行正好翻倍。再点「涂色：偶数」，会冒出一个布满三角形小洞的大三角形。",
   },
   extension: {
     en: "Add up the numbers along the shallow diagonals (start at a 1 on the left edge and go up and to the right, one step over each time). Which famous sequence appears? Can you see why?",
@@ -540,7 +543,7 @@ export const pascalRowSum: HeroQuestionBlueprint = {
   },
   sortOrder: 4,
   rubricNotes:
-    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: filling rows and reading the sum column is the main path, the 'each number is used twice' argument explains it rather than finding it; the sum column gives row 10's total once a child fills every row, so the guess has to come first",
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: filling rows and reading the sum column is the main path, the 'each number is used twice' argument explains it rather than finding it; the sum column shows rows 0-9 but keeps row 10's total as '?' until the reveal, so the doubling has to be spotted, not read off; editorial pass 2 made the hook ask the guess's question and added a 'more than 5,000' option so the choices bracket 1024",
 };
 
 /**
@@ -558,7 +561,7 @@ export const tetrisShapes: HeroQuestionBlueprint = {
   title: { en: "Four Squares, How Many Shapes?", zh: "四个方块能拼几种" },
   hook: {
     en: "Snap four identical squares together, edge to edge, like the pieces in a falling-block game. You may turn a shape around, but you may not flip it over like a pancake. How many different shapes can you make?",
-    zh: "把四个一样的小正方形边贴边拼在一起，就像俄罗斯方块里的那些块。拼好的形状可以转，但不能像翻烙饼那样翻过来。一共能拼出几种不同的形状？",
+    zh: "把四个一样的小正方形边贴边拼在一起，就像俄罗斯方块里的那些块。拼好的形状可以转，但不能像翻烙饼那样翻个面。一共能拼出几种不同的形状？",
   },
   guess: {
     type: "slider",
@@ -637,7 +640,7 @@ export const tetrisShapes: HeroQuestionBlueprint = {
   },
   extension: {
     en: "Five squares make pentominoes. How many different ones are there if you may turn them but not flip them? How many if flipping is allowed?",
-    zh: "五个方块拼成的叫五连块。只许转、不许翻，有几种？允许翻面的话，又有几种？",
+    zh: "五个方块拼成的形状叫「五格骨牌」。只许转、不许翻，有几种？允许翻面的话，又有几种？",
   },
   discussionPrompt: {
     en: "Which shape did you miss at first? Why do you think that one is easy to miss, and what system would make sure you never miss one?",
@@ -646,11 +649,11 @@ export const tetrisShapes: HeroQuestionBlueprint = {
   solutionTags: ["draw", "guess_check", "table"],
   funFact: {
     en: "Tetris was created in 1984 by Alexey Pajitnov, a computer scientist in Moscow. Shapes made of four squares are called tetrominoes, from the Greek word for four.",
-    zh: "俄罗斯方块是 1984 年由莫斯科的电脑科学家阿列克谢·帕基特诺夫发明的。四个方块拼成的形状叫「四连块」，英文名来自希腊语里的「四」。",
+    zh: "俄罗斯方块是 1984 年由莫斯科的电脑科学家阿列克谢·帕基特诺夫发明的。四个方块拼成的形状叫「四格骨牌」，英文名 tetromino 来自希腊语里的「四」。",
   },
   sortOrder: 5,
   rubricNotes:
-    "17/20 — hook 2, guess 2, hands-on 1, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: illustration only (待替换为 polyomino_builder), so the hands-on part is squared paper; one real path (sort by longest row); the mirror-twin rule is the surprise, and 5 vs 7 vs 19 feedback names the three classic counting slips",
+    "17/20 — hook 2, guess 2, hands-on 1, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: illustration only (待替换为 polyomino_builder), so the hands-on part is squared paper; one real path (sort by longest row); the mirror-twin rule is the surprise, and 5 vs 7 vs 19 feedback names the three classic counting slips; editorial pass 2 replaced the picture's three '?' boxes (2 found + 3 empty pointed at the flip-allowed 5) with one open box",
 };
 
 /**
@@ -742,7 +745,7 @@ export const starStrokes: HeroQuestionBlueprint = {
   },
   extension: {
     en: "Try eight dots, joining every third dot: one stroke or several shapes? And twelve dots, every third dot? Can you predict the answer before you draw?",
-    zh: "试试 8 个点、每隔两个点连（每次往前数 3 个）：一笔画完，还是分成几个形状？12 个点、每次往前数 3 个呢？你能先预测再画吗？",
+    zh: "试试 8 个点，每次往前跳 3 个点再连线：一笔画完，还是分成几个形状？12 个点、每次也跳 3 个呢？你能先预测再画吗？",
   },
   discussionPrompt: {
     en: "Find a number of dots and a jump that draws everything in one stroke, and one that doesn't. What do the ones that fail have in common?",
@@ -750,8 +753,8 @@ export const starStrokes: HeroQuestionBlueprint = {
   },
   solutionTags: ["draw", "pattern", "guess_check"],
   funFact: {
-    en: "The six-pointed shape made of two triangles is called a hexagram. Mathematicians write the five-pointed star as {5/2}: five dots, joined two at a time.",
-    zh: "两个三角形叠成的六角形叫六芒星。数学家把五角星写成 {5/2}：5 个点，每次往前跳 2 个。",
+    en: "Mathematicians write the five-pointed star as {5/2}: five dots, jumping two each time. Your two triangles are {6/2}, a six-pointed star also called a hexagram.",
+    zh: "数学家把五角星写成 {5/2}：5 个点，每次往前跳 2 个。你画的两个三角形就是 {6/2}，合起来是一颗六角星。",
   },
   sortOrder: 6,
   rubricNotes:
@@ -761,7 +764,7 @@ export const starStrokes: HeroQuestionBlueprint = {
 /**
  * E7. A 3 × 3 box of dates adds up to 9 × the middle date: opposite dates balance around it.
  * The scene shows November 2026 with the box on 17 (9, 10, 11 / 16, 17, 18 / 23, 24, 25 = 153);
- * its explore panel shows "add all nine" next to "middle × 9", so the rule is visible while playing.
+ * its explore panel shows "add all nine" next to "middle date" and hides the asked box's total until the reveal.
  * Catalog correction: a 5 × 5 box never fits on a month (the middle would have to be ≥ 17 and ≤ 15),
  * so the extension uses the four corners (4 × middle) and a 2 × 2 box (4 × top-left + 16) instead.
  */
@@ -774,15 +777,16 @@ export const calendarSquare: HeroQuestionBlueprint = {
   category: "ARITHMETIC",
   title: { en: "The Calendar Magic Box", zh: "日历上的魔法方块" },
   hook: {
-    en: "Pick any month on a calendar and draw a box around nine dates, three across and three down. Tell me only the date in the middle, and I'll say the total of all nine before you can add them up. How does the trick work?",
-    zh: "随便翻到日历上的一个月，框住九个日期：横着三个，竖着三个。你只要告诉我中间那个日期，我就能在你加完之前说出九个数的和。这个魔术是怎么变的？",
+    en: "Pick any month on a calendar and draw a box around nine dates, three across and three down. Tell me only the date in the middle, and I'll say the total of all nine before you can add them up. What's my secret shortcut?",
+    zh: "随便翻到日历上的一个月，框住九个日期：横着三个，竖着三个。你只要告诉我中间那个日期，我就能在你加完之前说出九个数的和。我的秘密捷径是什么？",
   },
   guess: {
     type: "choice",
     options: [
-      { id: "always", en: "The trick works every time", zh: "每次都能成功" },
-      { id: "sometimes", en: "Only for some boxes", zh: "只有某些方框可以" },
-      { id: "never", en: "It's impossible, there must be a catch", zh: "不可能，一定有诈" },
+      { id: "times-3", en: "The middle date × 3", zh: "中间的日期 × 3" },
+      { id: "times-9", en: "The middle date × 9", zh: "中间的日期 × 9" },
+      { id: "times-10", en: "The middle date × 10", zh: "中间的日期 × 10" },
+      { id: "no-shortcut", en: "There's no shortcut: I'm secretly fast at adding", zh: "没有捷径，我只是偷偷算得快" },
     ],
   },
   scene: { type: "calendar_grid", year: 2026, month: 11, centre: 17, sum: 153 },
@@ -792,7 +796,7 @@ export const calendarSquare: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 153 },
   hints: [
-    { en: "Drag the frame to a few different places (or tap a date) and compare the two totals beside the calendar, \"add all nine\" and \"middle × 9\". What do you notice every time?", zh: "把方框拖到几个不同的地方（或点一个日期），比一比日历旁边的两个数：「九个数相加」和「中间数 × 9」。你每次都发现了什么？" },
+    { en: "Drag the frame to a few different places (or tap a date) and compare the two numbers beside the calendar, \"add all nine\" and \"middle date\". What do you notice every time?", zh: "把方框拖到几个不同的地方（或点一个日期），比一比日历旁边的两个数：「九个数相加」和「中间的日期」。你每次都发现了什么？" },
     { en: "Why does it work? The date left of 17 is one less, and the date right of it is one more, so together they make 17 + 17. What about the dates just above and below 17?", zh: "为什么会这样？17 左边的日期少 1，右边的多 1，所以这两个加起来是 17 + 17。17 正上方和正下方的日期呢？" },
     { en: "All four pairs of opposite dates (left and right, up and down, and both diagonals) make 17 + 17. Four pairs plus the 17 in the middle is nine 17s. Quick way: 10 × 17, then take away one 17.", zh: "四对相对的日期（左右、上下，还有两条对角线）每对都是 17 + 17。四对再加上中间的 17，就是九个 17。快算法：先算 10 × 17，再减去一个 17。" },
   ],
@@ -829,7 +833,7 @@ export const calendarSquare: HeroQuestionBlueprint = {
       match: "gt:correct",
       feedback: {
         en: "A little too big. Count the dates in the box again: there are exactly nine, and they balance out to nine 17s.",
-        zh: "大了一点。再数一数框里的日期：正好九个，它们一抵一消，正好是九个 17。",
+        zh: "大了一点。再数一数框里的日期：正好九个，多的和少的互相抵消，合起来正好是九个 17。",
       },
     },
   ],
@@ -838,8 +842,8 @@ export const calendarSquare: HeroQuestionBlueprint = {
     zh: "在围着 17 的方框里，左边的日期少 1，右边的多 1，这一对加起来是 17 + 17；上面的少 7，下面的多 7，也正好抵消。两条对角线也是这样，所以四对相对的日期每对都是 34。四对加上中间的 17：4 × 34 + 17 = 153，也就是 9 × 17。",
   },
   aha: {
-    en: "Opposite dates balance each other around the middle, like children on a seesaw. So nine dates always add up to nine times the middle one, in any month you like.",
-    zh: "相对的两个日期围着中间数平衡，就像跷跷板两头的小朋友。所以不管哪个月，九个日期的和总是中间那个数的 9 倍。",
+    en: "Opposite dates balance around the middle: one is bigger by exactly as much as the other is smaller. So nine dates always add up to nine times the middle one, in any month you like.",
+    zh: "相对的两个日期，一个比中间数大多少，另一个就比它小多少，正好扯平。所以不管哪个月，九个日期的和总是中间那个数的 9 倍。",
   },
   extension: {
     en: "What if you add only the four corners of the 3 × 3 box? And for a smaller 2 × 2 box of four dates, can you still find the total from just the top-left date?",
@@ -856,14 +860,14 @@ export const calendarSquare: HeroQuestionBlueprint = {
   },
   sortOrder: 7,
   rubricNotes:
-    "18/20 — hook 2, guess 1, hands-on 2, aha 2, floor 2, ceiling 1, paths 2, wrong 2, hints 2, retell 2: a real trick kids can do on a family calendar; the 'always' guess is easy because the hook promises a trick, and the explore panel shows 'middle × 9' next to the sum, so the rule is handed over while playing; adding all nine, pairing opposites and ×9 are all real paths; extensions stay close",
+    "19/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 1, paths 2, wrong 2, hints 2, retell 2: a real trick kids can do on a family calendar; editorial pass 2 turned the guess into 'which shortcut?' (× 3 / × 9 / × 10 / none), a real hunch with × 3 as the tempting slip, where 'does it always work?' was a giveaway; the explore panel now shows the sum next to the middle date (not 'middle × 9') and hides the asked box's total, so the rule is found by moving the frame; adding all nine, pairing opposites and ×9 are all real paths; extensions stay close",
 };
 
 /**
  * E8. Cycles of 13 and 6 years first meet at lcm(13, 6) = 78; a 12-year cycle meets a 6-year predator
  * at every emergence. Upgrades the legacy "Cicada Underground Mystery" row (4- and 6-year cycles, lcm 12).
- * The explore readout says "First together: year 78" for the default cycles, so the value is in the
- * comparison (presets 🦗 12 / 13 / 17). Extension answers: 17 and 6 meet every 102 years; between 10 and 20,
+ * The explore readout counts the meetings and asks for the first ★ (it no longer prints "year 78"); the
+ * presets 🦗 12 / 13 / 17 carry the comparison. Extension answers: 17 and 6 meet every 102 years; between 10 and 20,
  * the worst cycles against a 6-year predator are 12 and 18 (they meet at every emergence).
  */
 export const cicadaPrimes: HeroQuestionBlueprint = {
@@ -873,24 +877,24 @@ export const cicadaPrimes: HeroQuestionBlueprint = {
   ageGroup: "AGE_10_12",
   difficulty: "MEDIUM",
   category: "NUMBER_THEORY",
-  title: { en: "The Cicadas' Secret Numbers", zh: "十七年才出来一次的虫" },
+  title: { en: "The Cicadas' Secret Numbers", zh: "蝉的秘密数字" },
   hook: {
-    en: "Some cicadas live underground for years and then crawl out all together, but only every 13 or every 17 years. Imagine a hungry predator that has a big year every 6 years. Why would a cicada pick such a strange number?",
-    zh: "有一种蝉在地下一住就是好多年，然后一起钻出地面，而且只在每 13 年或每 17 年出来一次。假设有一种天敌每 6 年大爆发一次。蝉为什么偏偏选这么奇怪的数？",
+    en: "Some cicadas live underground for years and then crawl out all together, but only every 13 or every 17 years. Imagine a hungry predator whose numbers boom every 6 years. If a cicada came out every 12 years instead, how often would it run into the predator?",
+    zh: "有一种蝉在地下一住就是好多年，然后一起钻出地面，而且只在每 13 年或每 17 年出来一次。假设有一种天敌，每 6 年数量就爆发一次。如果蝉改成每 12 年出来一次，它会多久撞上一次天敌？",
   },
   guess: {
     type: "choice",
     options: [
-      { id: "every-12", en: "A 12-year cicada meets the predator every time it comes out", zh: "12 年的蝉每次出来都会撞上天敌" },
-      { id: "every-6", en: "They meet every 6 years", zh: "每 6 年撞上一次" },
-      { id: "every-72", en: "They meet every 72 years (12 × 6)", zh: "每 72 年（12 × 6）才撞上一次" },
-      { id: "never", en: "They never meet", zh: "永远撞不上" },
+      { id: "every-12", en: "Every single time it comes out", zh: "每次出来都撞上" },
+      { id: "every-24", en: "Every other time it comes out", zh: "隔一次撞一次" },
+      { id: "every-72", en: "Only once every 72 years (12 × 6)", zh: "72 年（12 × 6）才撞一次" },
+      { id: "never", en: "Never", zh: "永远撞不上" },
     ],
   },
   scene: { type: "cycle_timeline", a: 13, b: 6, years: 120, altA: 12, collision: 78 },
   prompt: {
     en: "A cicada that comes out every 13 years and a predator that booms every 6 years were both out this year. How many years until they are out in the same year again?",
-    zh: "每 13 年出来一次的蝉，和每 6 年大爆发一次的天敌，今年同时出现了。再过多少年，它们才会又在同一年出现？",
+    zh: "每 13 年出来一次的蝉，和每 6 年爆发一次的天敌，今年同时出现了。再过多少年，它们才会又在同一年出现？",
   },
   answer: { type: "NUMERIC", value: 78, unit: { en: "years", zh: "年" } },
   hints: [
@@ -965,7 +969,7 @@ export const cicadaPrimes: HeroQuestionBlueprint = {
   },
   sortOrder: 8,
   rubricNotes:
-    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 1, retell 1: listing both sets of years and the 'multiple of both' idea are two real paths, and the 12-vs-13 presets carry the surprise; the explore readout says 'First together: year 78' for the default cycles, so the hints explain more than they lead",
+    "19/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 2, retell 1: listing both sets of years and the 'multiple of both' idea are two real paths, and the 12-vs-13 presets carry the surprise; the explore readout now counts the meetings and asks for the first ★ instead of printing 'First together: year 78', so the hints lead again (that item was 1 before pass 2); editorial pass 2 made the hook ask the guess's question (a 12-year cicada) instead of a 'why?' the options didn't answer",
   upgradesLegacyTitleEn: "Cicada Underground Mystery",
 };
 
@@ -985,7 +989,7 @@ export const frogSwap: HeroQuestionBlueprint = {
   title: { en: "The Great Frog Swap", zh: "青蛙换位" },
   hook: {
     en: "Three green frogs sit on the lily pads on the left, three brown frogs on the right, and one pad in the middle is empty. Frogs only ever move forward: a hop onto the empty pad next to them, or a jump over one frog into it. Can you swap the two teams, and how few moves does it take?",
-    zh: "一排荷叶上，左边蹲着 3 只绿蛙，右边蹲着 3 只棕蛙，中间空着一片。青蛙只能往前走：要么跳到旁边的空荷叶上，要么跳过一只青蛙落到空荷叶上。你能让两队青蛙完全换位吗？最少要几步？",
+    zh: "一排荷叶上，左边蹲着 3 只绿蛙，右边蹲着 3 只棕蛙，中间空着一片。青蛙只能往前走：要么跳到旁边的空荷叶上，要么跳过一只青蛙落到空荷叶上。让两队青蛙完全换位，最少要几步？",
   },
   guess: {
     type: "slider",
@@ -997,27 +1001,27 @@ export const frogSwap: HeroQuestionBlueprint = {
   scene: { type: "frog_puzzle", perSide: 3, minMoves: 15 },
   prompt: {
     en: "Green frogs move only to the right and brown frogs only to the left. Every hop or jump counts as one move. How few moves does it take to swap the two teams completely?",
-    zh: "绿蛙只能往右，棕蛙只能往左。每跳一次（不管是跳到旁边，还是跳过一只青蛙）都算一步。让两队青蛙完全换位，最少要几步？",
+    zh: "绿蛙只能往右，棕蛙只能往左。跳到旁边空荷叶上叫「小跳」，跳过一只青蛙叫「大跳」，每跳一次都算一步。让两队青蛙完全换位，最少要几步？",
   },
   answer: { type: "NUMERIC", value: 15, unit: { en: "moves", zh: "步" } },
   hints: [
     { en: "Play first: tap a frog to make it hop or jump, and press \"Undo\" when you get stuck. Look at the position just before you got stuck. What went wrong?", zh: "先玩一玩：点一只青蛙让它跳，卡住了就点「撤销」。看看卡住之前的那个局面，问题出在哪里？" },
     { en: "Getting stuck usually starts when two frogs of the same colour end up side by side too early, so nobody can jump. Try to keep the colours mixed in the middle: green, brown, green, brown.", zh: "卡住往往是因为两只同色的青蛙太早挨在了一起，谁也跳不过去。试着让中间的颜色一直交错：绿、棕、绿、棕。" },
-    { en: "Count the moves in two kinds. Every green frog has to jump over every brown frog once: that's 3 × 3 jumps. All six frogs travel 4 pads each, 24 pads in total, and a jump covers 2 pads. How many one-pad hops are left?", zh: "把步数分成两种来数。每只绿蛙都要跳过每只棕蛙一次：一共 3 × 3 次跳跃。6 只青蛙每只都要走 4 片荷叶，一共 24 片，跳一次走 2 片。剩下还要几次一格一格的小跳？" },
+    { en: "Count the moves in two kinds. Every green frog has to jump over every brown frog once: that's 3 × 3 jumps. All six frogs travel 4 pads each, 24 pads in total, and a jump covers 2 pads. How many one-pad hops are left?", zh: "把步数分成两种来数。每只绿蛙都要跳过每只棕蛙一次：一共 3 × 3 次大跳。6 只青蛙每只都要走 4 片荷叶，一共 24 片，一次大跳走 2 片。剩下还要几次只走 1 片的小跳？" },
   ],
   wrongAnswers: [
     {
       match: "9",
       feedback: {
         en: "9 is the number of jumps: each green frog leaps over each brown frog once. But the frogs also need some small hops onto the pad right next to them. Count those too.",
-        zh: "9 是跳跃的次数：每只绿蛙都跳过每只棕蛙一次。可青蛙还需要往旁边空荷叶挪几次小步，那些也要算上。",
+        zh: "9 是大跳的次数：每只绿蛙都跳过每只棕蛙一次。可青蛙还需要几次跳到旁边空荷叶的小跳，那些也要算上。",
       },
     },
     {
       match: "6",
       feedback: {
         en: "6 is the number of small hops onto a neighbouring pad. The frogs also have to jump over each other, nine times in all.",
-        zh: "6 是挪到旁边空荷叶的小跳次数。青蛙还得互相跳过去，一共 9 次。",
+        zh: "6 是小跳的次数。青蛙还得互相跳过去，一共 9 次大跳。",
       },
     },
     {
@@ -1031,7 +1035,7 @@ export const frogSwap: HeroQuestionBlueprint = {
       match: "lt:correct",
       feedback: {
         en: "That's too few to be possible. Every green frog must get past every brown frog, and the only way past is a jump: that's 9 jumps before you count a single hop.",
-        zh: "这么少是做不到的。每只绿蛙都得越过每只棕蛙，而越过去只能靠跳：光跳就要 9 次，还没算小步呢。",
+        zh: "这么少是做不到的。每只绿蛙都得越过每只棕蛙，而越过去只能靠大跳：光大跳就要 9 次，还没算小跳呢。",
       },
     },
     {
@@ -1044,11 +1048,11 @@ export const frogSwap: HeroQuestionBlueprint = {
   ],
   explanation: {
     en: "Every green frog has to get past every brown frog, and the only way past is a jump, so there are 3 × 3 = 9 jumps. Each of the 6 frogs travels 4 pads, 24 pads in total; the 9 jumps cover 18 of them, so 6 one-pad hops cover the rest. That's 9 + 6 = 15 moves, and no swap can do it in fewer.",
-    zh: "每只绿蛙都要越过每只棕蛙，而越过去只能靠跳，所以要跳 3 × 3 = 9 次。6 只青蛙每只走 4 片荷叶，一共 24 片；9 次跳跃走了其中 18 片，剩下的 6 片靠 6 次小跳。一共 9 + 6 = 15 步，没有更少的换法。",
+    zh: "每只绿蛙都要越过每只棕蛙，而越过去只能靠大跳，所以要大跳 3 × 3 = 9 次。6 只青蛙每只走 4 片荷叶，一共 24 片；9 次大跳走了其中 18 片，剩下的 6 片靠 6 次小跳。一共 9 + 6 = 15 步，没有更少的换法。",
   },
   aha: {
     en: "Every finished swap takes exactly 15 moves, so the hard part isn't being fast, it's not getting stuck. With n frogs a side it's n × n jumps plus 2n hops, which is n(n + 2).",
-    zh: "每一种换完的走法都正好是 15 步，所以难的不是快，而是别卡住。每边 n 只青蛙时，是 n × n 次跳跃加 2n 次小跳，也就是 n(n + 2) 步。",
+    zh: "每一种换完的走法都正好是 15 步，所以难的不是快，而是别卡住。每边 n 只青蛙时，是 n × n 次大跳加 2n 次小跳，也就是 n(n + 2) 步。",
   },
   extension: {
     en: "Four frogs a side on nine lily pads: how many moves now? Can you predict ten frogs a side without playing?",

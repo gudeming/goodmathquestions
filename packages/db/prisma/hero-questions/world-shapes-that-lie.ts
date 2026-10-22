@@ -8,6 +8,8 @@
  * Batch 4: B9 why-hexagons (tiling_lab; answered by numbers of sides), B10 mutilated-chessboard
  * (domino_tiling); B5 missing-square and B11 mobius-cut are `illustration` until the Tier-3
  * dissection_slide / mobius_cut scenes land.
+ * Editorial pass 2 (editorial-pass-2.md): B5 gained a real extension, B10's fun fact names McCarthy (1964),
+ * B11's title no longer rules out a guess.
  */
 import type { HeroQuestionBlueprint } from "./_template";
 
@@ -418,7 +420,7 @@ export const pythagorasSquares: HeroQuestionBlueprint = {
   },
   answer: { type: "NUMERIC", value: 10 },
   hints: [
-    { en: "Think about the squares, not the sides. The numbers inside the squares in the scene are their areas: count a few tiles to check that 6 × 6 really is 36.", zh: "先别想边，想正方形。场景里正方形上的数是它们的面积：数几块小方格，验证一下 6 × 6 真的是 36。" },
+    { en: "Think about the squares, not the sides. Press \"Show areas\" (or drag a pink corner): the number inside each square is its area. Count a few tiles to check that 6 × 6 really is 36.", zh: "先别想边，想正方形。点「显示面积」（或者拖一下粉色的顶点）：每个正方形里的数就是它的面积。数几块小方格，验证一下 6 × 6 真的是 36。" },
     { en: "Drag a pink corner to try other right triangles, like 3 and 4. Do the two small areas always add up to exactly the big one?", zh: "拖动粉色的顶点，试试别的直角三角形，比如 3 和 4。两个小面积加起来，是不是总是正好等于大的那个？" },
     { en: "So the big square here has area 36 + 64 = 100. Its side is the number that, multiplied by itself, gives 100.", zh: "所以这里大正方形的面积是 36 + 64 = 100。它的边长，就是自己乘自己等于 100 的那个数。" },
   ],
@@ -692,6 +694,9 @@ export const clockHandsMeet: HeroQuestionBlueprint = {
  * (待替换为 dissection_slide). Pieces: red 8 × 3 triangle (12), blue 5 × 2 (5), green 8 cells, yellow 7:
  * 32 in all, against 32.5 for a true triangle. Slopes 3/8 = 0.375 and 2/5 = 0.4, so neither "hypotenuse"
  * is straight: the top figure dents in (32), the bottom one bulges out (33 = 32 + the hole).
+ * Extension answer: one Fibonacci step up (13 × 5 and 8 × 3 triangles in a 21 × 8 outline) the slopes are
+ * 5/13 ≈ 0.385 and 3/8 = 0.375, even closer, yet the sliver is again 1/2 square each way and the hole again
+ * exactly 1 square (5 × 8 − 3 × 13 = 1: neighbouring Fibonacci fractions always differ by that one square).
  */
 export const missingSquare: HeroQuestionBlueprint = {
   slug: "missing-square",
@@ -761,8 +766,8 @@ export const missingSquare: HeroQuestionBlueprint = {
     zh: "眼睛会把「差不多直」看成直的。两条弯边之间那条细缝薄得看不见，面积却正好是一整格。",
   },
   extension: {
-    en: "Work out 13 × 5 ÷ 2 and compare it with the total area of the four pieces. What does the difference tell you about each of the two shapes?",
-    zh: "算一算 13 × 5 ÷ 2，再和四块拼板的面积之和比较。差了多少？这说明两个图形各是怎么回事？",
+    en: "Build the trick one Fibonacci step bigger: a 13 × 5 triangle and an 8 × 3 triangle inside an outline 21 squares wide and 8 high. Work out the two slopes. Is the bend easier or harder to see now, and how big is the hole?",
+    zh: "把魔术按斐波那契数放大一级：用 13 × 5 和 8 × 3 的两个三角形，拼进底 21 格、高 8 格的轮廓。算算两个斜度。现在拐弯更好看出来，还是更难？洞有多大？",
   },
   discussionPrompt: {
     en: "How would you convince a friend that the long side isn't straight: by measuring, by working out slopes, or by zooming in? Which way is most convincing, and why?",
@@ -770,12 +775,12 @@ export const missingSquare: HeroQuestionBlueprint = {
   },
   solutionTags: ["draw", "guess_check", "algebra"],
   funFact: {
-    en: "The sides 2, 3, 5, 8 and 13 are all Fibonacci numbers. Fractions made from them, like 2/5 and 3/8, are always very close, which is why the bend is so hard to spot.",
-    zh: "边长 2、3、5、8、13 都是斐波那契数。用它们组成的分数（比如 2/5 和 3/8）总是非常接近，所以那个拐弯才这么难看出来。",
+    en: "The sides 2, 3, 5, 8 and 13 are all Fibonacci numbers. Fractions made from neighbouring ones, like 2/5 and 3/8, are so close that the bend is almost impossible to see.",
+    zh: "边长 2、3、5、8、13 都是斐波那契数。用相邻的几个组成的分数（比如 2/5 和 3/8）非常接近，所以那个拐弯几乎看不出来。",
   },
   sortOrder: 5,
   rubricNotes:
-    "18/20 — hook 2, guess 2, hands-on 1, aha 2, floor 1, ceiling 2, paths 2, wrong 2, hints 2, retell 2: illustration only (待替换为 dissection_slide); counting areas and comparing slopes are two real paths; slopes as fractions make it 12+; a picture kids love to show",
+    "18/20 — hook 2, guess 2, hands-on 1, aha 2, floor 1, ceiling 2, paths 2, wrong 2, hints 2, retell 2: illustration only (待替换为 dissection_slide); counting areas and comparing slopes are two real paths; slopes as fractions make it 12+; editorial pass 2 replaced an extension that repeated hint 1 with the next Fibonacci size (the hole stays one square), which earns the ceiling; a picture kids love to show",
 };
 
 /**
@@ -792,8 +797,8 @@ export const whyHexagons: HeroQuestionBlueprint = {
   category: "GEOMETRY",
   title: { en: "Why Bees Pick Hexagons", zh: "蜜蜂为什么选六边形" },
   hook: {
-    en: "Bees build their honeycomb from six-sided cells that fit together with no gaps. Could they have used triangles, squares or five-sided pentagons instead? Which of these shapes can cover a floor all by itself, with no gaps and no overlaps?",
-    zh: "蜜蜂用六边形的小格子造蜂巢，一格挨一格，没有一点缝。换成三角形、正方形或者五边形行不行？这几种形状里，哪些能单独铺满地面，不留缝也不重叠？",
+    en: "Bees build their honeycomb from six-sided cells that fit together with no gaps. Could they have used triangles, squares or five-sided pentagons instead? How many of these four shapes can cover a floor all by themselves, with no gaps and no overlaps?",
+    zh: "蜜蜂用六边形的小格子造蜂巢，一格挨一格，没有一点缝。换成三角形、正方形或者五边形行不行？这四种形状里，有几种能单独铺满地面，不留缝也不重叠？",
   },
   guess: {
     type: "choice",
@@ -962,8 +967,8 @@ export const mutilatedChessboard: HeroQuestionBlueprint = {
   },
   solutionTags: ["guess_check", "draw", "pattern"],
   funFact: {
-    en: "In the 1960s this puzzle became a famous challenge for computer programs that try to prove things, because checking arrangements one by one is hopeless while the colour trick takes a single line.",
-    zh: "20 世纪 60 年代，它成了「会证明题的电脑程序」的著名考题：一种摆法一种摆法地试根本试不完，而涂颜色的办法一句话就说完了。",
+    en: "In 1964 the computer scientist John McCarthy called this puzzle a \"tough nut\" for programs that search for proofs: trying arrangements one by one is hopeless, while the colour trick takes one line.",
+    zh: "1964 年，计算机科学家麦卡锡说，这道题是让电脑自己找证明时的「一块硬骨头」：一种一种摆法去试，多得根本试不完；涂颜色的办法却一句话就说完了。",
   },
   sortOrder: 10,
   rubricNotes:
@@ -982,7 +987,7 @@ export const mobiusCut: HeroQuestionBlueprint = {
   ageGroup: "AGE_10_12",
   difficulty: "MEDIUM",
   category: "GEOMETRY",
-  title: { en: "The Loop That Won't Split", zh: "剪不断的纸环" },
+  title: { en: "The Half-Twist Loop", zh: "扭了半圈的纸环" },
   hook: {
     en: "Take a strip of paper, give one end a half twist, and tape the ends together into a loop. Now cut all the way along the middle line, round and round until you're back where you started. What will be in your hands when you finish?",
     zh: "拿一条纸带，把一头扭转半圈，再把两头粘成一个环。然后沿着中线一直剪，绕一圈剪回起点。剪完以后，你手里会是什么？",
@@ -1049,12 +1054,12 @@ export const mobiusCut: HeroQuestionBlueprint = {
   },
   solutionTags: ["simulate", "draw", "guess_check"],
   funFact: {
-    en: "This shape is called a Möbius strip, after the German mathematician who described it in 1858. Some factory belts have been made with a half twist so that both faces wear out evenly.",
+    en: "This shape is called a Möbius strip, after August Möbius, a German mathematician who studied it in 1858. Some factory belts have been made with a half twist so that both faces wear out evenly.",
     zh: "这种纸带叫莫比乌斯带，名字来自 1858 年研究它的德国数学家莫比乌斯。有些工厂的传送带故意扭了半圈，这样两面会磨损得一样多。",
   },
   sortOrder: 11,
   rubricNotes:
-    "18/20 — hook 2, guess 2, hands-on 1, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 2: illustration only (待替换为 mobius_cut), though the paper experiment in hint 3 is the best hands-on there is; one path (do it, or reason about the single side); the third-of-the-way cut is a great ceiling; every family tries it",
+    "18/20 — hook 2, guess 2, hands-on 1, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 2: illustration only (待替换为 mobius_cut), though the paper experiment in hint 3 is the best hands-on there is; one path (do it, or reason about the single side); the third-of-the-way cut is a great ceiling; every family tries it; editorial pass 2 retitled it (\"The Loop That Won't Split\" ruled out the two-loops guess)",
 };
 
 export const SHAPES_THAT_LIE: readonly HeroQuestionBlueprint[] = [
