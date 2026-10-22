@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { validateAnswer } from "./validator";
+import { validateAnswerV2, type AnswerSpec } from "./answer-spec";
 
 // These tests pin the CURRENT behaviour of validateAnswer(). Cases marked
-// "KNOWN GAP" are wrong today and are recorded for Phase 4 (validateAnswerV2 /
-// answerType MULTI_VALUE). Do not "fix" them here: Phase 0 changes no behaviour.
+// "KNOWN GAP" are wrong in v1 and stay pinned: legacy DRILL questions keep v1.
+// The multi-value gaps are fixed by validateAnswerV2 (answer-spec.ts, Phase 1).
 
 describe("validateAnswer: integers and decimals", () => {
   it("accepts an exact integer", () => {
@@ -108,7 +109,7 @@ describe("validateAnswer: trailing units and word numbers", () => {
   });
 });
 
-describe("validateAnswer: multi-value answers (Phase 4 gap: validateAnswerV2 / MULTI_VALUE)", () => {
+describe("validateAnswer: multi-value answers (v1 gap; fixed by validateAnswerV2 / MULTI_VALUE)", () => {
   it("accepts the exact same multi-value string", () => {
     expect(validateAnswer("1 and 5", "1 and 5")).toBe(true);
   });
@@ -131,8 +132,20 @@ describe("validateAnswer: multi-value answers (Phase 4 gap: validateAnswerV2 / M
     expect(validateAnswer("1和7", "1 and 5")).toBe(true);
   });
 
-  it.todo("Phase 4: '5 and 1' should equal '1 and 5' when orderMatters is false");
-  it.todo("Phase 4: '1 and 7' and '1' should be rejected for '1 and 5'");
+  // Fixed in v2 (Phase 1): MULTI_VALUE questions use validateAnswerV2. v1 above stays pinned.
+  const oneAndFive: AnswerSpec = { type: "MULTI_VALUE", values: ["1", "5"] };
+
+  it("v2: '5 and 1' equals '1 and 5' when orderMatters is false", () => {
+    expect(validateAnswerV2("5 and 1", oneAndFive).isCorrect).toBe(true);
+    expect(validateAnswerV2("1, 5", oneAndFive).isCorrect).toBe(true);
+    expect(validateAnswerV2("1和5", oneAndFive).isCorrect).toBe(true);
+  });
+
+  it("v2: '1 and 7', '1', '1和7' are rejected for '1 and 5'", () => {
+    expect(validateAnswerV2("1 and 7", oneAndFive).isCorrect).toBe(false);
+    expect(validateAnswerV2("1", oneAndFive).isCorrect).toBe(false);
+    expect(validateAnswerV2("1和7", oneAndFive).isCorrect).toBe(false);
+  });
 });
 
 describe("validateAnswer: negative cases", () => {

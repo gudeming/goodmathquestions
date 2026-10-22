@@ -32,6 +32,8 @@ npm install --include=dev --no-audit --no-fund
 
 echo "[3/5] Prisma generate + schema push..."
 npx prisma generate --schema "$SCHEMA"
+# Idempotent additive prep (header of pre-push.sql explains why) so db push needs no --accept-data-loss.
+npx prisma db execute --file packages/db/prisma/pre-push.sql --schema "$SCHEMA"
 npx prisma db push --schema "$SCHEMA" $DB_PUSH_FLAG
 
 echo "[4/5] Building..."

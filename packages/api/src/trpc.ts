@@ -3,17 +3,23 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 import type { Session } from "next-auth";
 import { db } from "@gmq/db";
+import { parseAnonId } from "./anon-id";
 
 export interface CreateContextOptions {
   session: Session | null;
+  /** Raw `x-gmq-anon` header value; kept only if it is a strict UUID v4. */
+  anonId?: string | null;
 }
 
 export const createTRPCContext = (opts: CreateContextOptions) => {
   return {
     session: opts.session,
     db,
+    anonId: parseAnonId(opts.anonId),
   };
 };
+
+export type TRPCContext = ReturnType<typeof createTRPCContext>;
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,

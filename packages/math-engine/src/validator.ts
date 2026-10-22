@@ -33,7 +33,9 @@ export function validateAnswer(
   return false;
 }
 
-function normalizeAnswer(answer: string): string {
+// The helpers below are exported for validateAnswerV2 (answer-spec.ts). Their
+// behaviour is pinned by validator.test.ts; change them only together with v1.
+export function normalizeAnswer(answer: string): string {
   return answer
     .trim()
     .toLowerCase()
@@ -42,7 +44,7 @@ function normalizeAnswer(answer: string): string {
     .replace(/\s+/g, " "); // Keep single spaces for mixed fractions like "1 3/4"
 }
 
-function parseNumericAnswer(answer: string): number | null {
+export function parseNumericAnswer(answer: string): number | null {
   const normalized = normalizeAnswer(answer);
 
   // Pure numeric input
@@ -95,7 +97,7 @@ function parseNumericAnswer(answer: string): number | null {
   return null;
 }
 
-function parseFraction(answer: string): number | null {
+export function parseFraction(answer: string): number | null {
   const normalized = normalizeAnswer(answer);
 
   // Try mixed number: "1 3/4" format
@@ -117,4 +119,12 @@ function parseFraction(answer: string): number | null {
   }
 
   return null;
+}
+
+/**
+ * Parses a number the way validateAnswer() does: plain/word numbers, numbers with a
+ * trailing unit, fractions and mixed numbers. Returns null when nothing parses.
+ */
+export function parseNumberLike(answer: string): number | null {
+  return parseNumericAnswer(answer) ?? parseFraction(answer);
 }

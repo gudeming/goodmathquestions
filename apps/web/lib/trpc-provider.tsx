@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { useState } from "react";
 import { trpc } from "./trpc";
+import { anonIdHeaders } from "./anon-id";
 import superjson from "superjson";
 
 function getBaseUrl() {
@@ -31,6 +32,8 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
           transformer: superjson,
+          // Guests are counted once per question via this id (see lib/anon-id.ts).
+          headers: anonIdHeaders,
         }),
       ],
     })

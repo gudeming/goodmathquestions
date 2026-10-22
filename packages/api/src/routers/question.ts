@@ -5,7 +5,16 @@ import {
   publicProcedure,
   protectedProcedure,
 } from "../trpc";
-import { validateAnswer } from "@gmq/math-engine";
+import { QuestionKind } from "@gmq/db";
+import { publicQuestionSelect, toPublicQuestion } from "../lib/question-public";
+import { AnswerInputSchema, answerToText, judgeAnswer } from "../lib/answer-check";
+
+const SlugSchema = z.string().min(1).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+
+/** aha (Act 3) is part of the reveal, so it is only sent after a correct answer. */
+function ahaOf(q: { ahaEn: string | null; ahaZh: string | null }) {
+  return q.ahaEn || q.ahaZh ? { en: q.ahaEn ?? null, zh: q.ahaZh ?? null } : null;
+}
 
 async function resolveSessionUserId(ctx: {
   session: { user: { id: string; email?: string | null } };
@@ -41,6 +50,19 @@ async function resolveSessionUserId(ctx: {
   });
 }
 
+/** Server-only fields needed to judge an answer. */
+const judgedQuestionSelect = {
+  id: true,
+  kind: true,
+  answer: true,
+  answerRule: true,
+  wrongAnswerFeedback: true,
+  answerExplainEn: true,
+  answerExplainZh: true,
+  ahaEn: true,
+  ahaZh: true,
+} as const;
+
 export const questionRouter = createTRPCRouter({
   // Get all published questions with filters
   list: publicProcedure
@@ -49,12 +71,13 @@ export const questionRouter = createTRPCRouter({
         category: z.string().optional(),
         difficulty: z.string().optional(),
         ageGroup: z.string().optional(),
+        kind: z.nativeEnum(QuestionKind).optional(),
         cursor: z.string().optional(),
         limit: z.number().min(1).max(50).default(20),
       })
     )
     .query(async ({ ctx, input }) => {
-      const { limit, cursor, category, difficulty, ageGroup } = input;
+      const { limit, cursor, category, difficulty, ageGroup, kind } = input;
 
       const questions = await ctx.db.question.findMany({
         take: limit + 1,
@@ -64,34 +87,10 @@ export const questionRouter = createTRPCRouter({
           ...(category && { category: category as any }),
           ...(difficulty && { difficulty: difficulty as any }),
           ...(ageGroup && { ageGroup: ageGroup as any }),
+          ...(kind && { kind }),
         },
         orderBy: { sortOrder: "asc" },
-        select: {
-          id: true,
-          titleEn: true,
-          titleZh: true,
-          contentEn: true,
-          contentZh: true,
-          difficulty: true,
-          category: true,
-          ageGroup: true,
-          hints: true,
-          animationConfig: true,
-          funFactEn: true,
-          funFactZh: true,
-          isPublished: true,
-          sortOrder: true,
-          createdAt: true,
-          updatedAt: true,
-          tags: { include: { tag: true } },
-          _count: {
-            select: {
-              submissions: true,
-              comments: true,
-              likes: true,
-            },
-          },
-        },
+        select: publicQuestionSelect,
       });
 
       let nextCursor: string | undefined;
@@ -100,7 +99,7 @@ export const questionRouter = createTRPCRouter({
         nextCursor = nextItem?.id;
       }
 
-      return { questions, nextCursor };
+      return { questions: questions.map(toPublicQuestion), nextCursor };
     }),
 
   // Get single question by ID
@@ -109,39 +108,57 @@ export const questionRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const question = await ctx.db.question.findUnique({
         where: { id: input.id, isPublished: true },
-        select: {
-          id: true,
-          titleEn: true,
-          titleZh: true,
-          contentEn: true,
-          contentZh: true,
-          difficulty: true,
-          category: true,
-          ageGroup: true,
-          hints: true,
-          animationConfig: true,
-          funFactEn: true,
-          funFactZh: true,
-          isPublished: true,
-          sortOrder: true,
-          createdAt: true,
-          updatedAt: true,
-          tags: { include: { tag: true } },
-          _count: {
-            select: {
-              submissions: true,
-              comments: true,
-              likes: true,
-            },
-          },
-        },
+        select: publicQuestionSelect,
       });
 
       if (!question) {
         throw new Error("Question not found");
       }
 
-      return question;
+      return toPublicQuestion(question);
+    }),
+
+  // Get a single published question by its stable slug (v2 hero questions)
+  bySlug: publicProcedure
+    .input(z.object({ slug: SlugSchema }))
+    .query(async ({ ctx, input }) => {
+      const question = await ctx.db.question.findFirst({
+        where: { slug: input.slug, isPublished: true },
+        select: publicQuestionSelect,
+      });
+      if (!question) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Question not found" });
+      }
+      return toPublicQuestion(question);
+    }),
+
+  // Published questions of one collection ("world"), in authored order
+  listByCollection: publicProcedure
+    .input(z.object({ slug: SlugSchema }))
+    .query(async ({ ctx, input }) => {
+      const collection = await ctx.db.collection.findUnique({
+        where: { slug: input.slug },
+        select: {
+          id: true,
+          slug: true,
+          titleEn: true,
+          titleZh: true,
+          descEn: true,
+          descZh: true,
+          emoji: true,
+          colorToken: true,
+          sortOrder: true,
+        },
+      });
+      if (!collection) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Collection not found" });
+      }
+      const questions = await ctx.db.question.findMany({
+        where: { collectionId: collection.id, isPublished: true },
+        orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+        select: publicQuestionSelect,
+      });
+      return { collection, questions: questions.map(toPublicQuestion) };
     }),
 
   // Check answer for guests (no XP, no submission record)
@@ -149,24 +166,20 @@ export const questionRouter = createTRPCRouter({
     .input(
       z.object({
         questionId: z.string(),
-        answer: z.string(),
+        answer: AnswerInputSchema,
       })
     )
     .mutation(async ({ ctx, input }) => {
       const question = await ctx.db.question.findUnique({
         where: { id: input.questionId, isPublished: true },
-        select: {
-          answer: true,
-          answerExplainEn: true,
-          answerExplainZh: true,
-        },
+        select: judgedQuestionSelect,
       });
 
       if (!question) {
         throw new Error("Question not found");
       }
 
-      const isCorrect = validateAnswer(input.answer, question.answer);
+      const { isCorrect, feedback, estimate } = judgeAnswer(question, input.answer);
 
       return {
         isCorrect,
@@ -176,6 +189,11 @@ export const questionRouter = createTRPCRouter({
               zh: question.answerExplainZh ?? null,
             }
           : null,
+        // v2 only (null for DRILL): targeted feedback for a wrong answer,
+        // estimate direction, and the aha after a correct answer.
+        feedback,
+        estimate,
+        aha: isCorrect ? ahaOf(question) : null,
       };
     }),
 
@@ -184,7 +202,7 @@ export const questionRouter = createTRPCRouter({
     .input(
       z.object({
         questionId: z.string(),
-        answer: z.string(),
+        answer: AnswerInputSchema,
         timeSpent: z.number().int().min(0),
       })
     )
@@ -193,19 +211,15 @@ export const questionRouter = createTRPCRouter({
 
       const question = await ctx.db.question.findUnique({
         where: { id: input.questionId },
-        select: {
-          answer: true,
-          difficulty: true,
-          answerExplainEn: true,
-          answerExplainZh: true,
-        },
+        select: { ...judgedQuestionSelect, difficulty: true },
       });
 
       if (!question) {
         throw new Error("Question not found");
       }
 
-      const isCorrect = validateAnswer(input.answer, question.answer);
+      const { isCorrect, feedback, estimate } = judgeAnswer(question, input.answer);
+      const answerText = answerToText(input.answer);
 
       // Calculate XP based on difficulty and correctness
       const xpMap = { EASY: 10, MEDIUM: 25, HARD: 50, CHALLENGE: 100 };
@@ -224,7 +238,7 @@ export const questionRouter = createTRPCRouter({
         data: {
           userId,
           questionId: input.questionId,
-          answer: input.answer,
+          answer: answerText,
           isCorrect,
           timeSpent: input.timeSpent,
           xpEarned,
@@ -262,6 +276,9 @@ export const questionRouter = createTRPCRouter({
               zh: question.answerExplainZh ?? null,
             }
           : null,
+        feedback,
+        estimate,
+        aha: isCorrect ? ahaOf(question) : null,
       };
     }),
 

@@ -66,6 +66,31 @@ enum BattleActionType {
   NONE // Timed out — auto-treated as ATTACK
 }
 
+// Question v2 (three-act). Legacy questions keep the defaults (DRILL / NUMERIC).
+enum QuestionKind {
+  DRILL
+  PUZZLE
+  THREE_ACT
+  ESTIMATION
+  WODB
+  WOULD_YOU_RATHER
+  PATTERN
+  MAGIC_TRICK
+  OPEN_MIDDLE
+  PARADOX
+}
+
+enum AnswerType {
+  NUMERIC
+  CHOICE
+  ESTIMATE
+  MULTI_VALUE
+  ORDERING
+  EXPRESSION
+  OPEN
+}
+
+
 // ============================================================
 // USER SYSTEM
 // ============================================================
@@ -100,6 +125,7 @@ model User {
   classroomId      String?
   knowledgeMastery   UserKnowledgePointMastery[]
   battleParticipants BattleParticipant[]
+  guesses            Guess[]
   battlesWon         Int                 @default(0)
   battlesPlayed      Int                 @default(0)
 
@@ -179,15 +205,100 @@ model Question {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
+  // ---- v2 (three-act) fields: all nullable or defaulted so `db push` stays additive ----
+  kind                QuestionKind @default(DRILL)
+  answerType          AnswerType   @default(NUMERIC)
+  hookEn              String? // Act 1 situation, ideally without numbers
+  hookZh              String?
+  guessConfig         Json? // GuessConfig (math-engine/answer-spec.ts)
+  choices             Json? // CHOICE options [{ id, en, zh, isCorrect }]; isCorrect is never sent to clients
+  answerRule          Json? // AnswerSpec; contains the truth, never sent to clients
+  wrongAnswerFeedback Json         @default("[]") // WrongAnswerRule[]
+  ahaEn               String? // <= 2 sentence aha
+  ahaZh               String?
+  extensionEn         String?
+  extensionZh         String?
+  discussionPromptEn  String?
+  discussionPromptZh  String?
+  solutionTags        Json         @default("[]") // SolutionTag[]
+  collection          Collection?  @relation(fields: [collectionId], references: [id])
+  collectionId        String?
+  slug                String?      @unique // stable URL, e.g. "gauss-sum"
+
   // Relations
-  submissions Submission[]
-  comments    Comment[]
-  tags        TagsOnQuestions[]
-  likes       QuestionLike[]
+  submissions  Submission[]
+  comments     Comment[]
+  tags         TagsOnQuestions[]
+  likes        QuestionLike[]
+  guesses      Guess[]
+  dailyPuzzles DailyPuzzle[]
 
   @@index([category, difficulty])
   @@index([ageGroup])
   @@index([isPublished])
+  @@index([kind, isPublished])
+  @@index([collectionId, sortOrder])
+}
+
+// A "world" of hero questions.
+model Collection {
+  id         String     @id @default(cuid())
+  slug       String     @unique
+  titleEn    String
+  titleZh    String
+  descEn     String
+  descZh     String
+  emoji      String
+  colorToken String // tailwind colour name, e.g. "fun-purple"
+  sortOrder  Int        @default(0)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  questions  Question[]
+}
+
+// Act 1 guess. Guests are identified by anonId; signed-in users by userId.
+// Postgres treats NULLs as distinct, so each unique only bites when its id is set.
+model Guess {
+  id         String   @id @default(cuid())
+  questionId String
+  userId     String?
+  anonId     String?
+  value      String // slider value or option id
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, userId])
+  @@unique([questionId, anonId])
+  @@index([questionId])
+}
+
+model DailyPuzzle {
+  id         String   @id @default(cuid())
+  date       DateTime @unique @db.Date // UTC calendar day
+  questionId String
+  createdAt  DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+// Lightweight analytics. No foreign keys on purpose: writes stay cheap and
+// events survive question/user deletion.
+model Event {
+  id         String   @id @default(cuid())
+  name       String // whitelisted in packages/api/src/routers/event.ts
+  questionId String?
+  userId     String?
+  anonId     String?
+  props      Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([questionId, name])
 }
 
 model Tag {
@@ -278,6 +389,8 @@ model Comment {
   parentId    String? // threaded replies
   isApproved  Boolean  @default(false) // moderation: must be approved
   isFlagged   Boolean  @default(false) // flagged for review
+  solutionTag String? // v2: which approach the author used ("draw", "pair", ...)
+  guessValue  String? // v2: the author's own Act 1 guess at posting time
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
