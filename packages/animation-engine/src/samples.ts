@@ -1,5 +1,6 @@
 import type { SceneConfigInput, SceneConfigType } from "./schema";
 import { WOLF_GOAT_CABBAGE } from "./scenes/river";
+import { KONIGSBERG } from "./scenes/bridges";
 
 /** E3 growing plus: a centre dot and four arms of length n. */
 function plusStep(n: number): { cells: Array<[number, number]> } {
@@ -60,6 +61,28 @@ export const SAMPLE_SCENE_CONFIGS: Record<SceneConfigType, SceneConfigInput> = {
     asset: "three-switches",
     caption: { en: "Three switches downstairs, one bulb upstairs. You may go up only once.", zh: "楼下三个开关，楼上一盏灯。你只能上楼一次。" },
   },
+  scale_ladder: {
+    type: "scale_ladder",
+    mode: "time",
+    start: 1_000_000,
+    references: [
+      { value: 23_400, emoji: "🏫", label: { en: "a school day", zh: "一天的课" } },
+      { value: 604_800, emoji: "📅", label: { en: "a week", zh: "一周" } },
+      { value: 4_838_400, emoji: "🏖️", label: { en: "a summer holiday", zh: "一个暑假" } },
+    ],
+  },
+  halving_bar: { type: "halving_bar", ratio: 0.5, maxSteps: 20 },
+  circle_rope: { type: "circle_rope", extraMetersMax: 12 },
+  pythagoras_squares: { type: "pythagoras_squares", a: 6, b: 8, lockRightAngle: true },
+  bridges_trace: { type: "bridges_trace", ...KONIGSBERG, layout: "konigsberg", solvable: false },
+  clock_overlap: { type: "clock_overlap", hours: 24, overlaps: 22 },
+  coin_flips: { type: "coin_flips", streak: 10, seed: 1024 },
+  sock_drawer: { type: "sock_drawer", colors: 3, seed: 4 },
+  pi_darts: { type: "pi_darts", maxDrops: 5000, seed: 314 },
+  collatz_path: { type: "collatz_path", maxStart: 200, highlightRange: [1, 9] },
+  digit_slide: { type: "digit_slide", multiplier: 11, examples: [45, 63, 72, 85] },
+  fib_spiral: { type: "fib_spiral", terms: 10 },
+  divisor_blocks: { type: "divisor_blocks", max: 40, highlight: [6, 28] },
   pizza_slice: { type: "pizza_slice", totalSlices: 8, eatenSlices: 3 },
   balance_scale: { type: "balance_scale", leftSide: { expression: "x + 9" }, rightSide: { value: 27 } },
   number_journey: { type: "number_journey", range: [0, 25], highlights: [21] },
@@ -99,8 +122,33 @@ export const TRICK_SAMPLES = {
   },
 } satisfies Record<string, SceneConfigInput>;
 
-/** Extra samples for the other modes of multi-mode scenes (C6, C8, C9, E10, F8). */
+/** Extra samples for the other modes of multi-mode scenes (C6, C8, C9, E10, F8, A5, A9) and extensions. */
 export const MODE_SAMPLES = {
+  scaleHeartbeats: {
+    type: "scale_ladder",
+    mode: "heartbeats",
+    start: 70,
+    target: 1_000_000_000,
+    references: [
+      { value: 6, emoji: "🎒", label: { en: "starting school", zh: "上小学" } },
+      { value: 18, emoji: "🎓", label: { en: "finishing school", zh: "高中毕业" } },
+      { value: 40, emoji: "🧑", label: { en: "a parent", zh: "爸爸妈妈" } },
+    ],
+  },
+  scalePowers: {
+    type: "scale_ladder",
+    mode: "powers",
+    start: 80,
+    target: 100,
+    labels: { start: { en: "atoms in the universe", zh: "宇宙里的原子" }, target: { en: "a googol", zh: "古戈尔" } },
+    references: [
+      { value: 18, emoji: "🏖️", label: { en: "grains of sand on Earth", zh: "地球上的沙粒" } },
+      { value: 22, emoji: "✨", label: { en: "stars in the universe", zh: "宇宙里的恒星" } },
+    ],
+  },
+  halvingThirds: { type: "halving_bar", ratio: 1 / 3, maxSteps: 20 },
+  bridgesOneRemoved: { type: "bridges_trace", ...KONIGSBERG, edges: KONIGSBERG.edges.slice(1), layout: "konigsberg", solvable: true },
+  socksTwoPairs: { type: "sock_drawer", colors: 3, guaranteeTwoPairs: true, seed: 6 },
   diceProduct: { type: "dice_lab", mode: "product", dice: 2, rolls: 300, seed: 6 },
   diceUntilSix: { type: "dice_lab", mode: "until_target", dice: 1, target: 6, rolls: 300, seed: 8 },
   birthdayMatchMe: { type: "birthday_room", mode: "match_me", maxPeople: 500, trials: 200, seed: 253 },

@@ -29,6 +29,19 @@ export {
   PizzaCutsSchema,
   BalanceLabSchema,
   IllustrationSchema,
+  ScaleLadderSchema,
+  HalvingBarSchema,
+  CircleRopeSchema,
+  PythagorasSquaresSchema,
+  BridgesTraceSchema,
+  ClockOverlapSchema,
+  CoinFlipsSchema,
+  SockDrawerSchema,
+  PiDartsSchema,
+  CollatzPathSchema,
+  DigitSlideSchema,
+  FibSpiralSchema,
+  DivisorBlocksSchema,
 } from "./schema";
 export type {
   SceneConfig,
@@ -54,6 +67,19 @@ export type {
   PizzaCutsConfig,
   BalanceLabConfig,
   IllustrationConfig,
+  ScaleLadderConfig,
+  HalvingBarConfig,
+  CircleRopeConfig,
+  PythagorasSquaresConfig,
+  BridgesTraceConfig,
+  ClockOverlapConfig,
+  CoinFlipsConfig,
+  SockDrawerConfig,
+  PiDartsConfig,
+  CollatzPathConfig,
+  DigitSlideConfig,
+  FibSpiralConfig,
+  DivisorBlocksConfig,
 } from "./schema";
 export { SAMPLE_SCENE_CONFIGS, TRICK_SAMPLES, MODE_SAMPLES } from "./samples";
 
@@ -172,3 +198,73 @@ export {
   splitThree,
 } from "./scenes/balance";
 export type { Tilt } from "./scenes/balance";
+
+// Tier 2, batch 3a.
+export {
+  ladderFor,
+  applyLadderStep,
+  ladderValues,
+  answerRung,
+  scaleAnswer,
+  secondsIn,
+  roundForLadder,
+  SCALE_DEFAULTS,
+  SECONDS_PER_DAY,
+  DAYS_PER_YEAR,
+  MINUTES_PER_YEAR,
+} from "./scenes/scale";
+export type { ScaleMode, Ladder, LadderStep } from "./scenes/scale";
+export {
+  ratioDenominator,
+  seriesTerm,
+  partialSum,
+  partialSumFraction,
+  seriesLimit,
+  remainingAfter,
+  smallerThan,
+  stepsToShrinkBelow,
+  TINY_THINGS,
+  HALVING_DENOMINATORS,
+} from "./scenes/halving";
+export type { HalvingDenominator, TinyThing } from "./scenes/halving";
+export { ropeGap, ropeGapFor, extraForGap, circumference, biggestThatFits, DEFAULT_PLANETS, GAP_THINGS } from "./scenes/circle-rope";
+export type { RopePlanet, GapThing } from "./scenes/circle-rope";
+export { distance, integerHypotenuse, angleAt, squareOnSide, tileCorners, rightTriangle, triangleSquares, squaresBounds, tileMoves } from "./scenes/pythagoras";
+export type { Vec, RightTriangle, TriangleSquares } from "./scenes/pythagoras";
+export { degrees, oddDegreeNodes, isEdgeConnected, hasEulerPath, openEdgesAt, otherEnd, eulerPath, isValidEulerWalk, KONIGSBERG } from "./scenes/bridges";
+export type { GraphLike } from "./scenes/bridges";
+export { overlapTimes, handAngles, handGap, crossedOverlaps, minutesForDrag, formatClock, MINUTES_PER_DAY, LAP_MINUTES } from "./scenes/clock";
+export {
+  streakProbability,
+  expectedFlipsForStreak,
+  flip,
+  addFlip,
+  flipUntilStreak,
+  collectAfterStreak,
+  EMPTY_COIN_STATE,
+  RECENT_FLIPS,
+} from "./scenes/coins";
+export type { Flip, CoinState } from "./scenes/coins";
+export { socksToGuarantee, sockCounts, pairsIn, worstSock, randomSock, worstCaseSequence, SOCK_COLORS } from "./scenes/socks";
+export type { SockColor } from "./scenes/socks";
+export { isInsideCircle, throwDarts, piEstimate, convergence, simulatePi } from "./scenes/pi-darts";
+export type { Dart } from "./scenes/pi-darts";
+export {
+  collatzPath,
+  collatzSteps,
+  collatzPeak,
+  longestCollatz,
+  COLLATZ_CAP,
+  timesElevenSteps,
+  fibonacci,
+  fibRatios,
+  fibSquares,
+  fibBounds,
+  sunflowerSeeds,
+  GOLDEN_RATIO,
+  properDivisors,
+  aliquotSum,
+  classify,
+  perfectNumbersUpTo,
+} from "./scenes/number-play";
+export type { ElevenStep, FibSquare, DivisorClass } from "./scenes/number-play";

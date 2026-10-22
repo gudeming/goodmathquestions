@@ -3,7 +3,7 @@ import { renderToString } from "react-dom/server";
 import type { ComponentType } from "react";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { MODE_SAMPLES, SAMPLE_SCENE_CONFIGS, TRICK_SAMPLES, WOLF_GOAT_CABBAGE, parseSceneConfig, type SceneConfig, type ScenePhase, type SceneProps } from "@gmq/animation-engine";
+import { KONIGSBERG, MODE_SAMPLES, SAMPLE_SCENE_CONFIGS, TRICK_SAMPLES, WOLF_GOAT_CABBAGE, parseSceneConfig, type SceneConfig, type ScenePhase, type SceneProps } from "@gmq/animation-engine";
 import GaussPairingScene from "./GaussPairingScene";
 import ChessboardDoublingScene from "./ChessboardDoublingScene";
 import FoldPaperScene from "./FoldPaperScene";
@@ -20,6 +20,19 @@ import HandshakeGraphScene from "./HandshakeGraphScene";
 import GridSquaresScene from "./GridSquaresScene";
 import NumberTrickStepperScene from "./NumberTrickStepperScene";
 import MontyHallScene from "./MontyHallScene";
+import ScaleLadderScene from "./ScaleLadderScene";
+import HalvingBarScene from "./HalvingBarScene";
+import CircleRopeScene from "./CircleRopeScene";
+import PythagorasSquaresScene from "./PythagorasSquaresScene";
+import BridgesTraceScene from "./BridgesTraceScene";
+import ClockOverlapScene from "./ClockOverlapScene";
+import CoinFlipsScene from "./CoinFlipsScene";
+import SockDrawerScene from "./SockDrawerScene";
+import PiDartsScene from "./PiDartsScene";
+import CollatzPathScene from "./CollatzPathScene";
+import DigitSlideScene from "./DigitSlideScene";
+import FibSpiralScene from "./FibSpiralScene";
+import DivisorBlocksScene from "./DivisorBlocksScene";
 import { SCENE_REGISTRY } from "./registry";
 import { SceneHost } from "./SceneHost";
 
@@ -104,6 +117,45 @@ const CASES: Array<[string, AnyScene, unknown]> = [
   ["balance weights six", BalanceLabScene as AnyScene, { type: "balance_lab", mode: "weights", weights: [1, 3, 9, 27, 81, 243], target: 364 }],
   ["illustration switches", IllustrationScene as AnyScene, SAMPLE_SCENE_CONFIGS.illustration],
   ["illustration knights + reveal", IllustrationScene as AnyScene, { ...MODE_SAMPLES.knightsAndKnaves, revealAsset: "three-switches", revealCaption: bi("Reveal", "揭晓") }],
+  // Tier 2, batch 3a.
+  ["scale time (A4)", ScaleLadderScene as AnyScene, SAMPLE_SCENE_CONFIGS.scale_ladder],
+  ["scale time billion, no refs", ScaleLadderScene as AnyScene, { type: "scale_ladder", mode: "time", start: 1_000_000_000 }],
+  ["scale heartbeats (A5)", ScaleLadderScene as AnyScene, MODE_SAMPLES.scaleHeartbeats],
+  ["scale heartbeats mouse", ScaleLadderScene as AnyScene, { type: "scale_ladder", mode: "heartbeats", start: 500 }],
+  ["scale powers (A9)", ScaleLadderScene as AnyScene, MODE_SAMPLES.scalePowers],
+  ["scale powers reversed, no labels", ScaleLadderScene as AnyScene, { type: "scale_ladder", mode: "powers", start: 200, target: 3 }],
+  ["halving halves", HalvingBarScene as AnyScene, SAMPLE_SCENE_CONFIGS.halving_bar],
+  ["halving thirds", HalvingBarScene as AnyScene, MODE_SAMPLES.halvingThirds],
+  ["halving 60 steps", HalvingBarScene as AnyScene, { type: "halving_bar", maxSteps: 60 }],
+  ["rope default", CircleRopeScene as AnyScene, SAMPLE_SCENE_CONFIGS.circle_rope],
+  ["rope one planet", CircleRopeScene as AnyScene, { type: "circle_rope", extraMetersMax: 1, planets: [{ id: "moon", label: bi("the Moon", "月球"), radiusM: 1_737_400, emoji: "🌕" }] }],
+  ["pythagoras 6-8", PythagorasSquaresScene as AnyScene, SAMPLE_SCENE_CONFIGS.pythagoras_squares],
+  ["pythagoras 5-12 unlocked", PythagorasSquaresScene as AnyScene, { type: "pythagoras_squares", a: 5, b: 12, lockRightAngle: false }],
+  ["pythagoras 3-4", PythagorasSquaresScene as AnyScene, { type: "pythagoras_squares", a: 3, b: 4 }],
+  ["bridges königsberg", BridgesTraceScene as AnyScene, SAMPLE_SCENE_CONFIGS.bridges_trace],
+  ["bridges one removed", BridgesTraceScene as AnyScene, MODE_SAMPLES.bridgesOneRemoved],
+  ["bridges envelope", BridgesTraceScene as AnyScene, { type: "bridges_trace", nodes: [{ id: "a", x: 10, y: 90 }, { id: "b", x: 90, y: 90 }, { id: "c", x: 90, y: 40 }, { id: "d", x: 10, y: 40 }, { id: "e", x: 50, y: 5 }], edges: [["a", "b"], ["b", "c"], ["c", "d"], ["d", "a"], ["a", "c"], ["b", "d"], ["c", "e"], ["d", "e"]] }],
+  ["bridges no layout", BridgesTraceScene as AnyScene, { type: "bridges_trace", nodes: KONIGSBERG.nodes, edges: KONIGSBERG.edges }],
+  ["clock 24h", ClockOverlapScene as AnyScene, SAMPLE_SCENE_CONFIGS.clock_overlap],
+  ["clock 12h", ClockOverlapScene as AnyScene, { type: "clock_overlap", hours: 12 }],
+  ["coins 10", CoinFlipsScene as AnyScene, SAMPLE_SCENE_CONFIGS.coin_flips],
+  ["coins 3 unseeded", CoinFlipsScene as AnyScene, { type: "coin_flips", streak: 3 }],
+  ["coins 12", CoinFlipsScene as AnyScene, { type: "coin_flips", streak: 12, seed: 5 }],
+  ["socks 3", SockDrawerScene as AnyScene, SAMPLE_SCENE_CONFIGS.sock_drawer],
+  ["socks two pairs", SockDrawerScene as AnyScene, MODE_SAMPLES.socksTwoPairs],
+  ["socks 5", SockDrawerScene as AnyScene, { type: "sock_drawer", colors: 5, guaranteeTwoPairs: true }],
+  ["pi 5000", PiDartsScene as AnyScene, SAMPLE_SCENE_CONFIGS.pi_darts],
+  ["pi 100 unseeded", PiDartsScene as AnyScene, { type: "pi_darts", maxDrops: 100 }],
+  ["collatz 1-9", CollatzPathScene as AnyScene, SAMPLE_SCENE_CONFIGS.collatz_path],
+  ["collatz 20-30", CollatzPathScene as AnyScene, { type: "collatz_path", maxStart: 1000, highlightRange: [20, 30] }],
+  ["digit slide examples", DigitSlideScene as AnyScene, SAMPLE_SCENE_CONFIGS.digit_slide],
+  ["digit slide 99", DigitSlideScene as AnyScene, { type: "digit_slide", examples: [99] }],
+  ["fib 10", FibSpiralScene as AnyScene, SAMPLE_SCENE_CONFIGS.fib_spiral],
+  ["fib 5", FibSpiralScene as AnyScene, { type: "fib_spiral", terms: 5 }],
+  ["fib 14", FibSpiralScene as AnyScene, { type: "fib_spiral", terms: 14 }],
+  ["divisors 40", DivisorBlocksScene as AnyScene, SAMPLE_SCENE_CONFIGS.divisor_blocks],
+  ["divisors 10", DivisorBlocksScene as AnyScene, { type: "divisor_blocks", max: 10, highlight: [6] }],
+  ["divisors 100", DivisorBlocksScene as AnyScene, { type: "divisor_blocks", max: 100 }],
 ];
 
 describe("scene SSR smoke", () => {
@@ -127,6 +179,47 @@ describe("scene SSR smoke", () => {
     const html = renderToString(<GaussPairingScene config={parsed(SAMPLE_SCENE_CONFIGS.gauss_pairing) as never} phase="reveal" locale="en" reducedMotion onEvent={() => {}} />);
     expect(html.replace(/<!-- -->/g, "")).toContain("50 × 101 = 5,050");
   });
+});
+
+describe("tier-2 batch 3a content", () => {
+  const html = (Scene: AnyScene, input: unknown, phase: ScenePhase = "explore", locale: "en" | "zh" = "en") => {
+    const Any = Scene as unknown as ComponentType<SceneProps<SceneConfig>>;
+    return renderToString(<Any config={parsed(input)} phase={phase} locale={locale} reducedMotion onEvent={() => {}} />).replace(/<!-- -->/g, "");
+  };
+  it("time ladder starts at a million seconds and offers ÷ 60", () => {
+    const h = html(ScaleLadderScene as AnyScene, SAMPLE_SCENE_CONFIGS.scale_ladder);
+    expect(h).toContain("1,000,000 seconds");
+    expect(h).toContain("÷ 60");
+    expect(h).toContain("a summer holiday");
+  });
+  it("heartbeats ladder offers × 60 and the billion step", () => {
+    const h = html(ScaleLadderScene as AnyScene, MODE_SAMPLES.scaleHeartbeats);
+    expect(h).toContain("× 60");
+    expect(h).toContain("1B ÷ ?");
+  });
+  it("powers names both numbers", () => expect(html(ScaleLadderScene as AnyScene, MODE_SAMPLES.scalePowers, "explore", "zh")).toContain("古戈尔"));
+  it("halving shows the series", () => expect(html(HalvingBarScene as AnyScene, SAMPLE_SCENE_CONFIGS.halving_bar, "hook")).toContain("1/2 + 1/4 + 1/8 = 7/8"));
+  it("königsberg has seven bridge targets", () => expect(html(BridgesTraceScene as AnyScene, SAMPLE_SCENE_CONFIGS.bridges_trace).match(/aria-label="Bridge \d/g)?.length).toBe(7));
+  it("königsberg reveal counts bridges at every land", () => {
+    const h = html(BridgesTraceScene as AnyScene, SAMPLE_SCENE_CONFIGS.bridges_trace, "reveal");
+    expect(h).toContain("Island: 5 bridges");
+    expect(h).toContain("North bank: 3 bridges");
+  });
+  it("pythagoras shows the three areas", () => {
+    const h = html(PythagorasSquaresScene as AnyScene, SAMPLE_SCENE_CONFIGS.pythagoras_squares);
+    expect(h).toContain(">36<");
+    expect(h).toContain(">64<");
+    expect(h).toContain(">100<");
+  });
+  it("clock starts with midnight found", () => expect(html(ClockOverlapScene as AnyScene, SAMPLE_SCENE_CONFIGS.clock_overlap)).toContain("12:00 am"));
+  it("socks reveal sets up three boxes", () => expect(html(SockDrawerScene as AnyScene, SAMPLE_SCENE_CONFIGS.sock_drawer, "reveal")).toContain("3 boxes, 4 socks"));
+  it("collatz hook shows 6's path", () => expect(html(CollatzPathScene as AnyScene, SAMPLE_SCENE_CONFIGS.collatz_path, "hook")).toContain("6 → 3 → 10 → 5 → 16 → 8 → 4 → 2 → 1"));
+  it("digit slide reveal adds n × 10 and n", () => expect(html(DigitSlideScene as AnyScene, SAMPLE_SCENE_CONFIGS.digit_slide, "reveal")).toContain("45 × 10 + 45 = 495"));
+  it("fib reveal lists every square", () => expect(html(FibSpiralScene as AnyScene, SAMPLE_SCENE_CONFIGS.fib_spiral, "reveal")).toContain("2 squares: 1, 1"));
+  it("divisors hook is 6 = 1 + 2 + 3", () => expect(html(DivisorBlocksScene as AnyScene, SAMPLE_SCENE_CONFIGS.divisor_blocks, "hook")).toContain("6 = 1 + 2 + 3"));
+  it("rope shows the planet buttons", () => expect(html(CircleRopeScene as AnyScene, SAMPLE_SCENE_CONFIGS.circle_rope)).toContain('aria-label="the Sun"'));
+  it("pi darts starts empty", () => expect(html(PiDartsScene as AnyScene, SAMPLE_SCENE_CONFIGS.pi_darts)).toContain("0/5,000"));
+  it("coins show the 1/1024 grid in the reveal", () => expect(html(CoinFlipsScene as AnyScene, SAMPLE_SCENE_CONFIGS.coin_flips, "reveal")).toContain("1 out of 1024"));
 });
 
 describe("illustration", () => {

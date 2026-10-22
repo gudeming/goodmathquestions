@@ -15,6 +15,39 @@ import { birthdayThreshold } from "./scenes/birthday";
 import { RIVER_MAX_ITEMS, shortestSolution } from "./scenes/river";
 import { countAtStep, cellKey } from "./scenes/pattern";
 import { weighableSet } from "./scenes/balance";
+import {
+  BridgesTraceBase,
+  CircleRopeBase,
+  ClockOverlapBase,
+  CoinFlipsBase,
+  CollatzPathBase,
+  DigitSlideBase,
+  DivisorBlocksBase,
+  FibSpiralBase,
+  HalvingBarBase,
+  PiDartsBase,
+  PythagorasSquaresBase,
+  ScaleLadderBase,
+  SockDrawerBase,
+  TIER2A_REFINEMENTS,
+  TIER2A_SCENE_TYPES,
+} from "./schema-tier2a";
+
+export {
+  ScaleLadderSchema,
+  HalvingBarSchema,
+  CircleRopeSchema,
+  PythagorasSquaresSchema,
+  BridgesTraceSchema,
+  ClockOverlapSchema,
+  CoinFlipsSchema,
+  SockDrawerSchema,
+  PiDartsSchema,
+  CollatzPathSchema,
+  DigitSlideSchema,
+  FibSpiralSchema,
+  DivisorBlocksSchema,
+} from "./schema-tier2a";
 
 const Bi = z.object({ en: z.string().min(1), zh: z.string().min(1) });
 const num = z.number().finite();
@@ -415,6 +448,7 @@ const SCENE_REFINEMENTS: Partial<Record<string, Check<never>>> = {
   fence_shaper: checkFence as Check<never>,
   visual_pattern: checkPattern as Check<never>,
   balance_lab: checkBalance as Check<never>,
+  ...TIER2A_REFINEMENTS,
 };
 
 // Refined per-scene schemas (use these when validating a single known type).
@@ -452,6 +486,7 @@ export const NEW_SCENE_TYPES = [
   "pizza_cuts",
   "balance_lab",
   "illustration",
+  ...TIER2A_SCENE_TYPES,
 ] as const;
 
 export const SceneConfigSchema = z
@@ -480,6 +515,19 @@ export const SceneConfigSchema = z
     PizzaCutsBase,
     BalanceLabBase,
     IllustrationBase,
+    ScaleLadderBase,
+    HalvingBarBase,
+    CircleRopeBase,
+    PythagorasSquaresBase,
+    BridgesTraceBase,
+    ClockOverlapBase,
+    CoinFlipsBase,
+    SockDrawerBase,
+    PiDartsBase,
+    CollatzPathBase,
+    DigitSlideBase,
+    FibSpiralBase,
+    DivisorBlocksBase,
   ])
   .superRefine((c, ctx) => {
     const check = SCENE_REFINEMENTS[c.type] as Check<typeof c> | undefined;
@@ -507,6 +555,19 @@ export type VisualPatternConfig = SceneConfigOf<"visual_pattern">;
 export type PizzaCutsConfig = SceneConfigOf<"pizza_cuts">;
 export type BalanceLabConfig = SceneConfigOf<"balance_lab">;
 export type IllustrationConfig = SceneConfigOf<"illustration">;
+export type ScaleLadderConfig = SceneConfigOf<"scale_ladder">;
+export type HalvingBarConfig = SceneConfigOf<"halving_bar">;
+export type CircleRopeConfig = SceneConfigOf<"circle_rope">;
+export type PythagorasSquaresConfig = SceneConfigOf<"pythagoras_squares">;
+export type BridgesTraceConfig = SceneConfigOf<"bridges_trace">;
+export type ClockOverlapConfig = SceneConfigOf<"clock_overlap">;
+export type CoinFlipsConfig = SceneConfigOf<"coin_flips">;
+export type SockDrawerConfig = SceneConfigOf<"sock_drawer">;
+export type PiDartsConfig = SceneConfigOf<"pi_darts">;
+export type CollatzPathConfig = SceneConfigOf<"collatz_path">;
+export type DigitSlideConfig = SceneConfigOf<"digit_slide">;
+export type FibSpiralConfig = SceneConfigOf<"fib_spiral">;
+export type DivisorBlocksConfig = SceneConfigOf<"divisor_blocks">;
 export type LegacySceneConfig = SceneConfigOf<LegacySceneType>;
 
 export const SCENE_TYPES: readonly SceneConfigType[] = [...LEGACY_SCENE_TYPES, ...NEW_SCENE_TYPES];

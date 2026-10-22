@@ -34,6 +34,11 @@ const PRESETS: Preset[] = [
   { id: "mode:birthday-match-me", label: "birthday_room · C9 matches me", config: MODE_SAMPLES.birthdayMatchMe },
   { id: "mode:balance-weights", label: "balance_lab · E10 weights 1-3-9-27", config: MODE_SAMPLES.balanceWeights },
   { id: "mode:knights-and-knaves", label: "illustration · F8 knights and knaves", config: MODE_SAMPLES.knightsAndKnaves },
+  { id: "mode:scale-heartbeats", label: "scale_ladder · A5 billion heartbeats", config: MODE_SAMPLES.scaleHeartbeats },
+  { id: "mode:scale-powers", label: "scale_ladder · A9 googol vs atoms", config: MODE_SAMPLES.scalePowers },
+  { id: "mode:halving-thirds", label: "halving_bar · A10 extension 1/3 + 1/9 + …", config: MODE_SAMPLES.halvingThirds },
+  { id: "mode:bridges-one-removed", label: "bridges_trace · B7 extension (one bridge removed)", config: MODE_SAMPLES.bridgesOneRemoved },
+  { id: "mode:socks-two-pairs", label: "sock_drawer · C5 extension (two pairs)", config: MODE_SAMPLES.socksTwoPairs },
   ...LEGACY_SCENE_TYPES.map((t: SceneConfigType) => ({ id: t, label: `${t} (legacy)`, config: SAMPLE_SCENE_CONFIGS[t] })),
 ];
 
