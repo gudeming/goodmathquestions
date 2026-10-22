@@ -134,6 +134,36 @@ export default function AdminDashboard() {
           </motion.div>
         </Link>
 
+        <Link href="/admin/funnel">
+          <motion.div
+            className="card-fun text-center cursor-pointer"
+            whileHover={{ scale: 1.03 }}
+          >
+            <div className="text-4xl mb-3">📈</div>
+            <h3 className="font-heading font-bold text-gray-800">
+              {isZh ? "题目漏斗" : "Question Funnel"}
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              {isZh ? "每道亮眼题的猜测、探索、揭示转化" : "Guess, explore and reveal rates per hero question"}
+            </p>
+          </motion.div>
+        </Link>
+
+        <Link href="/admin/comments">
+          <motion.div
+            className="card-fun text-center cursor-pointer"
+            whileHover={{ scale: 1.03 }}
+          >
+            <div className="text-4xl mb-3">🛡️</div>
+            <h3 className="font-heading font-bold text-gray-800">
+              {isZh ? "评论审核" : "Comment Queue"}
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              {isZh ? "处理被拦下或被举报的评论" : "Review held and reported comments"}
+            </p>
+          </motion.div>
+        </Link>
+
         <motion.div
           className="card-fun text-center opacity-60"
           title="Coming in Phase 4"
