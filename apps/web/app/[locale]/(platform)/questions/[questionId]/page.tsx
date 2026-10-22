@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { locales, type Locale } from "@gmq/i18n";
 import { QuestionView } from "@/components/question-v2/QuestionView";
-import { resolveQuestion } from "@/lib/question-server";
+import { listHeroSlugs, resolveQuestion } from "@/lib/question-server";
 import { getLocalizedPath, getLocalizedUrl } from "@/lib/seo";
 
 interface PageProps {
@@ -10,6 +10,33 @@ interface PageProps {
 }
 
 const DESCRIPTION_MAX = 200;
+
+/**
+ * ISR (README Phase 7 item 5). Nothing here reads the session, cookies or headers:
+ * the server part only resolves the public question (metadata, redirect, 404) and
+ * the three acts are client components that fetch per-viewer state over tRPC. So
+ * the HTML is the same for everyone and can be cached for 60 s.
+ *
+ * It only takes effect once `app/[locale]/layout.tsx` calls `setRequestLocale(locale)`
+ * (next-intl): without it, `NextIntlClientProvider` reads `headers()` for the time
+ * zone and every page under `[locale]` renders dynamically (no error, just no cache).
+ */
+export const revalidate = 60;
+
+/**
+ * Hero slugs are prerendered at build; other ids/slugs render on first request and
+ * are then cached the same way (dynamicParams stays true). A database that is
+ * unreachable at build time only skips prerendering, it never fails the build.
+ */
+export async function generateStaticParams(): Promise<Array<PageProps["params"]>> {
+  try {
+    const heroes = await listHeroSlugs();
+    return heroes.flatMap(({ slug }) => locales.map((locale) => ({ locale, questionId: slug })));
+  } catch (err) {
+    console.warn("[questions] generateStaticParams: no prerendering:", err instanceof Error ? err.message : err);
+    return [];
+  }
+}
 
 function asLocale(locale: string): Locale {
   return (locales as readonly string[]).includes(locale) ? (locale as Locale) : "en";

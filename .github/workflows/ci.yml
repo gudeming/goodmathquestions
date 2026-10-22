@@ -1,0 +1,166 @@
+name: CI
+
+# Quality gate for every PR and every non-main push (README Phase 7 item 1).
+# Make "ci" a required status check on main (branch protection) so a red run
+# blocks the merge, and therefore the production deploy in deploy.yml.
+# Lint is not run yet: the repo has no ESLint config (`next lint` would prompt).
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: gmq_user
+          POSTGRES_PASSWORD: gmq_ci_password
+          POSTGRES_DB: goodmathquestions
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gmq_user -d goodmathquestions"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgresql://gmq_user:gmq_ci_password@127.0.0.1:5432/goodmathquestions
+      DIRECT_URL: postgresql://gmq_user:gmq_ci_password@127.0.0.1:5432/goodmathquestions
+      REDIS_URL: redis://127.0.0.1:6379
+      NEXTAUTH_SECRET: ci-only-not-a-secret
+      NEXTAUTH_URL: http://127.0.0.1:3000
+      PRISMA_SCHEMA: packages/db/prisma/schema.prisma
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Same as ec2-deploy.sh: the build needs devDependencies (prisma CLI, typescript, tsx).
+      - name: Install
+        run: npm ci --include=dev --no-audit --no-fund
+
+      - name: Prisma generate
+        run: npx prisma generate --schema "$PRISMA_SCHEMA"
+
+      # Mirrors ec2-deploy.sh: idempotent additive prep, then push the schema.
+      - name: Database schema
+        run: |
+          npx prisma db execute --file packages/db/prisma/pre-push.sql --schema "$PRISMA_SCHEMA"
+          npx prisma db push --schema "$PRISMA_SCHEMA" --skip-generate
+
+      # DB-free: hero blueprints vs rubric §3.4 and the machine rubric flags.
+      - name: Content lint
+        run: npm run content-lint
+
+      # Legacy questions + the hero questions, so the tests, the prerendered hero
+      # pages and the e2e flow all see the same data as a local dev database.
+      - name: Seed questions
+        run: SEED_MODE=questions_only npm run db:seed -w @gmq/db
+
+      - name: Unit + integration tests
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee vitest.log
+          # The API suites skip themselves when Postgres/Redis are unreachable; in CI that is a failure.
+          if grep -q "SKIPPING integration tests" vitest.log; then
+            echo "::error::API integration tests were skipped (services unreachable)"; exit 1
+          fi
+          if grep -E "\|api\|.*skipped" vitest.log; then
+            echo "::error::API integration tests reported skipped tests"; exit 1
+          fi
+          ran=$(grep -cE "\|api\| src/test/.*\.test\.ts" vitest.log || true)
+          echo "api test files run: $ran"
+          if [ "$ran" -lt 5 ]; then
+            echo "::error::expected the api vitest project to run its integration suites"; exit 1
+          fi
+
+      - name: Typecheck
+        run: |
+          npx tsc --noEmit -p apps/web
+          npx tsc --noEmit -p packages/api
+
+      - name: Build web
+        run: npm run build -w @gmq/web
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      # Ids for the optional specs (id → slug redirect, legacy DRILL page).
+      - name: Resolve e2e fixtures
+        working-directory: packages/db
+        run: |
+          node -e '
+            const { PrismaClient } = require("@prisma/client");
+            const db = new PrismaClient();
+            (async () => {
+              const hero = await db.question.findUnique({ where: { slug: "gauss-sum" }, select: { id: true } });
+              const drill = await db.question.findFirst({
+                where: { kind: "DRILL", isPublished: true }, orderBy: { sortOrder: "asc" }, select: { id: true },
+              });
+              if (!hero) throw new Error("gauss-sum was not seeded");
+              console.log(`E2E_HERO_ID=${hero.id}`);
+              if (drill) console.log(`E2E_DRILL_ID=${drill.id}`);
+              await db.$disconnect();
+            })().catch((e) => { console.error(e); process.exit(1); });
+          ' >> "$GITHUB_ENV"
+
+      - name: Start web
+        run: |
+          nohup npm run start -w @gmq/web -- -p 3000 > next-start.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS -o /dev/null -m 5 http://127.0.0.1:3000/; then echo "web is up after ${i}s"; exit 0; fi
+            sleep 1
+          done
+          echo "::error::web did not answer on :3000"; cat next-start.log; exit 1
+
+      - name: E2E (Playwright)
+        run: npm run test:e2e -w @gmq/web -- --reporter=github,html
+        env:
+          E2E_BASE_URL: http://127.0.0.1:3000
+          E2E_HERO_SLUG: gauss-sum
+          E2E_HERO_ANSWER: "5050"
+          E2E_HERO_WRONG: "1"
+          PLAYWRIGHT_HTML_OPEN: never
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+            next-start.log
+            vitest.log
+          retention-days: 14
+          if-no-files-found: ignore

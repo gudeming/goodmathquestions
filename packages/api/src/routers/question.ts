@@ -9,6 +9,7 @@ import { QuestionKind } from "@gmq/db";
 import { AnswerSpecSchema, computeAnswerXp, levelForXp, type AnswerSpec } from "@gmq/math-engine";
 import { identityFromContext } from "../lib/identity";
 import { publicQuestionSelect, toPublicQuestion } from "../lib/question-public";
+import { loadPublicQuestion } from "../lib/question-cache";
 import { AnswerInputSchema, answerToText, judgeAnswer } from "../lib/answer-check";
 
 const SlugSchema = z.string().min(1).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
@@ -143,16 +144,14 @@ export const questionRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      const question = await ctx.db.question.findUnique({
-        where: { id: input.id, isPublished: true },
-        select: publicQuestionSelect,
-      });
+      // Redis-cached payload (lib/question-cache.ts): keyed by id + updatedAt, _count 60 s.
+      const question = await loadPublicQuestion(ctx.db, { id: input.id });
 
       if (!question) {
         throw new Error("Question not found");
       }
 
-      return toPublicQuestion(question);
+      return question;
     }),
 
   /**
@@ -164,18 +163,15 @@ export const questionRouter = createTRPCRouter({
     .input(z.object({ idOrSlug: z.string().min(1).max(120) }))
     .query(async ({ ctx, input }) => {
       const key = input.idOrSlug;
-      const byId = () =>
-        ctx.db.question.findUnique({ where: { id: key, isPublished: true }, select: publicQuestionSelect });
+      const byId = () => loadPublicQuestion(ctx.db, { id: key });
       const bySlug = () =>
-        SlugSchema.safeParse(key).success
-          ? ctx.db.question.findFirst({ where: { slug: key, isPublished: true }, select: publicQuestionSelect })
-          : Promise.resolve(null);
+        SlugSchema.safeParse(key).success ? loadPublicQuestion(ctx.db, { slug: key }) : Promise.resolve(null);
       const [first, second] = CUID_PATTERN.test(key) ? [byId, bySlug] : [bySlug, byId];
       const question = (await first()) ?? (await second());
       if (!question) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Question not found" });
       }
-      return toPublicQuestion(question);
+      return question;
     }),
 
   /**
@@ -252,14 +248,11 @@ export const questionRouter = createTRPCRouter({
   bySlug: publicProcedure
     .input(z.object({ slug: SlugSchema }))
     .query(async ({ ctx, input }) => {
-      const question = await ctx.db.question.findFirst({
-        where: { slug: input.slug, isPublished: true },
-        select: publicQuestionSelect,
-      });
+      const question = await loadPublicQuestion(ctx.db, { slug: input.slug });
       if (!question) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Question not found" });
       }
-      return toPublicQuestion(question);
+      return question;
     }),
 
   // Published questions of one collection ("world"), in authored order
