@@ -233,6 +233,7 @@ model Question {
   submissions  Submission[]
   variantSubmissions VariantSubmission[]
   variantXpAwards    VariantXpAward[]
+  guestReveals       GuestReveal[]
   comments     Comment[]
   tags         TagsOnQuestions[]
   likes        QuestionLike[]
@@ -386,6 +387,20 @@ model VariantXpAward {
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([userId, questionId, variantId])
+}
+
+// A guest pressed "Show me" (anonId = the browser's x-gmq-anon id). If that browser later signs in,
+// a correct answer to the same question (variantId "" = the original) earns no correct-answer XP.
+model GuestReveal {
+  id         String   @id @default(cuid())
+  anonId     String
+  questionId String
+  variantId  String   @default("")
+  createdAt  DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([anonId, questionId, variantId])
 }
 
 model Badge {

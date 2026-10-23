@@ -8,6 +8,7 @@ import {
   type Bi,
   type GuessOption,
 } from "@gmq/math-engine";
+import { publicSceneConfig } from "@gmq/animation-engine";
 import { judgeAnswer, type AnswerJudgement } from "./answer-check";
 
 /**
@@ -57,7 +58,7 @@ export function findVariant(raw: unknown, questionId: string, variantId: string)
 }
 
 export function toPublicVariant(v: StoredVariant): PublicVariant {
-  return { id: v.id, params: v.params, prompt: v.prompt, scene: v.scene, hints: v.hints, choices: v.choices };
+  return { id: v.id, params: v.params, prompt: v.prompt, scene: publicSceneConfig(v.scene), hints: v.hints, choices: v.choices };
 }
 
 /** Judges an answer to a variant exactly like the standard version (validateAnswerV2 + its wrong-answer rules). */

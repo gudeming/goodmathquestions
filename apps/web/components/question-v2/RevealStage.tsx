@@ -39,6 +39,8 @@ export function RevealStage({ question, locale, gaveUp, guess, solved, isLoggedI
   const extensionId = useId();
   const showScene = useHasScene(question.animationConfig);
   const reveal = trpc.question.reveal.useQuery({ questionId: question.id }, { retry: 1, staleTime: Infinity });
+  // Public payloads carry the scene without its answer fields; the reveal brings the full one.
+  const revealScene = reveal.data?.scene ?? (reveal.isError ? question.animationConfig : null);
   const histogram = trpc.guess.histogram.useQuery(
     { questionId: question.id },
     { enabled: guess !== null && question.guessConfig !== null, retry: 1 }
@@ -79,7 +81,11 @@ export function RevealStage({ question, locale, gaveUp, guess, solved, isLoggedI
 
       {showScene && (
         <div className="overflow-hidden rounded-card border-2 border-primary-100 bg-white p-3 shadow-lg sm:p-4" data-testid="scene-card">
-          <SceneHost config={question.animationConfig} phase="reveal" locale={locale} />
+          {revealScene !== null ? (
+            <SceneHost config={revealScene} phase="reveal" locale={locale} />
+          ) : (
+            <div aria-hidden className="h-64 w-full animate-pulse rounded-card bg-primary-50" />
+          )}
         </div>
       )}
 

@@ -1,4 +1,5 @@
 import type { Prisma } from "@gmq/db";
+import { publicSceneConfig } from "@gmq/animation-engine";
 import {
   ChoicesSchema,
   GuessConfigSchema,
@@ -8,7 +9,7 @@ import {
 } from "@gmq/math-engine";
 
 /**
- * Fields a client may see. Never add `answer`, `answerRule`, `wrongAnswerFeedback`,
+ * Fields a client may see (`animationConfig` minus its answer fields, see toPublicQuestion). Never add `answer`, `answerRule`, `wrongAnswerFeedback`,
  * `answerExplain*` or `aha*` here: they give away the answer (aha and the
  * explanation are returned by checkAnswer / submitAnswer after a correct answer).
  */
@@ -89,6 +90,8 @@ export function toPublicQuestion(row: PublicQuestionRow): PublicQuestion {
   const solutionTags = parseOrNull(SolutionTagsSchema, row.solutionTags, "solutionTags", row.id);
   return {
     ...row,
+    // The scene's answer fields (e.g. clock_overlap.overlaps) only come with the reveal.
+    animationConfig: publicSceneConfig(row.animationConfig),
     guessConfig: parseOrNull(GuessConfigSchema, row.guessConfig, "guessConfig", row.id),
     choices: choices ? choices.map(({ id, en, zh }) => ({ id, en, zh })) : null,
     solutionTags: solutionTags ?? [],

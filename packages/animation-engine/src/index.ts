@@ -2,6 +2,9 @@
 export { SceneBuilder } from "./core/scene-builder";
 export type { AnimationConfig, AnimationScene, SceneType } from "./core/types";
 
+// Answer fields stripped from scene configs before the reveal.
+export { ANSWER_FIELDS, publicSceneConfig } from "./core/public";
+
 // v2 scene contract.
 export type { ScenePhase, SceneEvent, SceneProps, Bilingual } from "./core/contract";
 

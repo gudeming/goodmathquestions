@@ -8,6 +8,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@gmq/animation-engine": "*",
     "@gmq/db": "*",
     "@gmq/math-engine": "*",
     "@trpc/server": "^11.0.0",
