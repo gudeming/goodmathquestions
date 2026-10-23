@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db } from "@gmq/db";
 import { redis } from "../redis";
-import { callerFor, probeServices } from "./helpers";
+import { callerFor, newAnonId, probeServices } from "./helpers";
 
 /**
  * Phase 4: question.resolve (id or slug) and the submitAnswer XP rules.
@@ -274,10 +274,55 @@ describe.skipIf(!servicesUp)("question.reveal / expressionRules (Postgres)", () 
   });
 
   it("guests can reveal; the truth is marked for a slider-less NUMERIC hero only when derivable", async () => {
-    const res = await callerFor().question.reveal({ questionId: f.hero.id });
+    const guest = callerFor({ anonId: newAnonId() });
+    const res = await guest.question.reveal({ questionId: f.hero.id });
     expect(res).toMatchObject({ answer: "5050", aha: { en: "Pairs!", zh: "配对！" }, guessTruth: null });
-    const m = await callerFor().question.reveal({ questionId: monty.id });
+    const m = await guest.question.reveal({ questionId: monty.id });
     expect(m.guessTruth).toBe("switch");
+  });
+
+  it("a guest needs a visitor id to reveal (the web app always sends one)", async () => {
+    await expect(callerFor().question.reveal({ questionId: f.hero.id })).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("'Show me' as a guest, then signing in in the same browser: the correct answer earns no correct XP", async () => {
+    const anonId = newAnonId();
+    await callerFor({ anonId }).question.reveal({ questionId: f.noGuessRow.id });
+    const userId = await newUser(f);
+    const sameBrowser = await callerFor({ userId, anonId }).question.submitAnswer({ questionId: f.noGuessRow.id, answer: "5050", timeSpent: 3 });
+    expect(sameBrowser).toMatchObject({ isCorrect: true, xpBreakdown: { correct: 0, noHints: 0 } });
+    // Another browser that never saw the answer is paid as usual.
+    const other = await newUser(f);
+    const fresh = await callerFor({ userId: other, anonId: newAnonId() }).question.submitAnswer({ questionId: f.noGuessRow.id, answer: "5050", timeSpent: 3 });
+    expect(fresh.xpBreakdown.correct).toBe(25);
+  });
+
+  it("public payloads drop the scene's answer fields; the reveal returns the full scene", async () => {
+    const clock = await db.question.create({
+      data: {
+        titleEn: "P4 clock",
+        titleZh: "P4 钟",
+        contentEn: "How many overlaps in a day?",
+        contentZh: "一天重合几次？",
+        difficulty: "HARD",
+        category: "LOGIC",
+        ageGroup: "AGE_10_12",
+        isPublished: true,
+        hints: [],
+        answer: "22",
+        slug: `${f.tag}-clock`,
+        kind: "THREE_ACT",
+        answerType: "NUMERIC",
+        answerRule: { type: "NUMERIC", value: 22 },
+        animationConfig: { type: "clock_overlap", hours: 24, overlaps: 22 },
+      },
+      select: { id: true },
+    });
+    f.questionIds.push(clock.id);
+    const pub = await callerFor().question.getById({ id: clock.id });
+    expect(pub.animationConfig).toEqual({ type: "clock_overlap", hours: 24 });
+    const res = await callerFor({ anonId: newAnonId() }).question.reveal({ questionId: clock.id });
+    expect(res.scene).toEqual({ type: "clock_overlap", hours: 24, overlaps: 22 });
   });
 
   it("signed-in users need a correct answer or 3 attempts before reveal", async () => {

@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db } from "@gmq/db";
 import { redis } from "../redis";
 import { parseVariants, toPublicVariant } from "../lib/variant";
-import { callerFor, probeServices } from "./helpers";
+import { callerFor, newAnonId, probeServices } from "./helpers";
 
 /**
  * "Try another number": question.variants / checkVariant / submitVariant / revealVariant.
@@ -64,7 +64,7 @@ async function createFixtures(): Promise<Fixtures> {
     answerRule: { type: "NUMERIC", value: 45 },
   } as const;
   const q = await db.question.create({
-    data: { ...base, titleEn: "Var", titleZh: "Var", slug: `${tag}-q`, variants: [variant(6), variant(8), variant(12)], variantCount: 3 },
+    data: { ...base, titleEn: "Var", titleZh: "Var", slug: `${tag}-q`, variants: [variant(6), variant(8), variant(9), variant(12)], variantCount: 4 },
     select: { id: true },
   });
   const plain = await db.question.create({
@@ -99,10 +99,10 @@ describe.skipIf(!servicesUp)("question variants (Postgres)", () => {
   it("lists public variants (no answers) and the public question carries variantCount", async () => {
     const caller = callerFor();
     const list = await caller.question.variants({ questionId: f.questionId });
-    expect(list.map((v) => v.id)).toEqual(["people6", "people8", "people12"]);
+    expect(list.map((v) => v.id)).toEqual(["people6", "people8", "people9", "people12"]);
     expect(JSON.stringify(list)).not.toMatch(/answerText|wrongAnswers|aha|explanation/);
     expect(await caller.question.variants({ questionId: f.plainId })).toEqual([]);
-    expect((await caller.question.getById({ id: f.questionId })).variantCount).toBe(3);
+    expect((await caller.question.getById({ id: f.questionId })).variantCount).toBe(4);
     expect((await caller.question.getById({ id: f.plainId })).variantCount).toBe(0);
   });
 
@@ -115,8 +115,20 @@ describe.skipIf(!servicesUp)("question variants (Postgres)", () => {
     const right = await caller.question.checkVariant({ questionId: f.questionId, variantId: "people8", answer: "28" });
     expect(right).toMatchObject({ isCorrect: true, aha: { en: "8 people, 28 handshakes." } });
     await expect(caller.question.checkVariant({ questionId: f.questionId, variantId: "people99", answer: "1" })).rejects.toMatchObject({ code: "NOT_FOUND" });
-    // Guests may always "show me".
-    expect(await caller.question.revealVariant({ questionId: f.questionId, variantId: "people12" })).toMatchObject({ answer: "66" });
+    // Guests may always "show me" (with the visitor id the web app always sends).
+    expect(await callerFor({ anonId: newAnonId() }).question.revealVariant({ questionId: f.questionId, variantId: "people12" })).toMatchObject({ answer: "66" });
+    await expect(caller.question.revealVariant({ questionId: f.questionId, variantId: "people12" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("'Show me' on a variant as a guest, then signing in in the same browser: no variant XP for it", async () => {
+    const anonId = newAnonId();
+    await callerFor({ anonId }).question.revealVariant({ questionId: f.questionId, variantId: "people9" });
+    const userId = await newUser(f);
+    const caller = callerFor({ userId, anonId });
+    await caller.question.submitAnswer({ questionId: f.questionId, answer: "45", timeSpent: 5 });
+    expect(await caller.question.submitVariant({ questionId: f.questionId, variantId: "people9", answer: "36" })).toMatchObject({ isCorrect: true, xpEarned: 0 });
+    // Variants this browser didn't reveal still pay.
+    expect((await caller.question.submitVariant({ questionId: f.questionId, variantId: "people6", answer: "15" })).xpEarned).toBe(3);
   });
 
   it("signed in: variants stay closed until the original is done (their copy can contain its answer)", async () => {
@@ -176,7 +188,7 @@ describe.skipIf(!servicesUp)("question variants (Postgres)", () => {
     expect(user.xp - xpAfterStandard).toBe(6);
     // Progress follows the user: solved variants are marked for them, never for guests.
     const mine = await caller.question.variants({ questionId: f.questionId });
-    expect(mine.map((v) => [v.id, v.solved])).toEqual([["people6", true], ["people8", true], ["people12", true]]);
+    expect(mine.map((v) => [v.id, v.solved])).toEqual([["people6", true], ["people8", true], ["people9", false], ["people12", true]]);
     expect((await callerFor().question.variants({ questionId: f.questionId })).every((v) => !v.solved)).toBe(true);
     // Variant tries never count as attempts on the standard version.
     expect(await db.submission.count({ where: { userId } })).toBe(1);

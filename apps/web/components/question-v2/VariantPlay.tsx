@@ -221,8 +221,10 @@ function VariantReveal({ question, variantId, locale, gaveUp, solved }: { questi
   const t = useTranslations("questions");
   const reduced = useReducedMotion();
   const showScene = useHasScene(question.animationConfig);
-  // Solved in this view: aha and explanation came with the answer. Otherwise ("Show me" or a refresh) ask for them.
-  const reveal = trpc.question.revealVariant.useQuery({ questionId: question.id, variantId }, { enabled: solved === null, retry: 1, staleTime: Infinity });
+  // The full scene (answer fields included) and, after "Show me", the answer, aha and explanation.
+  // Solved in this view: aha and explanation already came with the answer.
+  const reveal = trpc.question.revealVariant.useQuery({ questionId: question.id, variantId }, { retry: 1, staleTime: Infinity });
+  const revealScene = reveal.data?.scene ?? (reveal.isError ? question.animationConfig : null);
   const [celebrate, setCelebrate] = useState(solved !== null && !reduced);
 
   useEffect(() => {
@@ -241,7 +243,11 @@ function VariantReveal({ question, variantId, locale, gaveUp, solved }: { questi
       <AnimatePresence>{celebrate && <CelebrationEffect xp={solved?.xpEarned ?? 0} />}</AnimatePresence>
       {showScene && (
         <div className="overflow-hidden rounded-card border-2 border-primary-100 bg-white p-3 shadow-lg sm:p-4">
-          <SceneHost config={question.animationConfig} phase="reveal" locale={locale} />
+          {revealScene !== null ? (
+            <SceneHost config={revealScene} phase="reveal" locale={locale} />
+          ) : (
+            <div aria-hidden className="h-64 w-full animate-pulse rounded-card bg-primary-50" />
+          )}
         </div>
       )}
       <div className="rounded-card border-2 border-fun-green/40 bg-white p-5" data-testid="variant-aha">

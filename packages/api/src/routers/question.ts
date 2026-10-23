@@ -119,6 +119,30 @@ const VariantAnswerInput = z.object({
   answer: AnswerInputSchema,
 });
 
+/**
+ * "Show me" for a guest: remembered by the browser's anonymous id, so signing in afterwards and typing
+ * the answer earns no correct-answer XP. A guest without an id (no x-gmq-anon header, which the web app
+ * always sends) can't reveal.
+ */
+async function recordGuestReveal(db: Db, anonId: string | null | undefined, questionId: string, variantId = ""): Promise<void> {
+  if (!anonId) throw new TRPCError({ code: "FORBIDDEN", message: "Missing visitor id" });
+  await db.guestReveal.upsert({
+    where: { anonId_questionId_variantId: { anonId, questionId, variantId } },
+    create: { anonId, questionId, variantId },
+    update: {},
+  });
+}
+
+/** This browser saw the answer as a guest (see recordGuestReveal). */
+async function revealedAsGuest(db: Db, anonId: string | null | undefined, questionId: string, variantId = ""): Promise<boolean> {
+  if (!anonId) return false;
+  const row = await db.guestReveal.findUnique({
+    where: { anonId_questionId_variantId: { anonId, questionId, variantId } },
+    select: { id: true },
+  });
+  return row !== null;
+}
+
 /** The signed-in caller's user id, or null for a guest. */
 async function signedInUserId(ctx: Parameters<typeof identityFromContext>[0]): Promise<string | null> {
   return identityFromContext(ctx)?.kind === "user" ? resolveSessionUserId(ctx as any) : null;
@@ -141,11 +165,21 @@ async function assertStandardDone(db: Db, userId: string, questionId: string): P
  * checking first. The XP is decided by inserting the user's one `VariantXpAward` row for the variant:
  * two concurrent correct submits can't both pay.
  */
-async function recordVariantAnswer(db: Db, userId: string, questionId: string, variant: StoredVariant, answer: z.infer<typeof AnswerInputSchema>) {
+async function recordVariantAnswer(
+  db: Db,
+  user: { userId: string; anonId: string | null | undefined },
+  questionId: string,
+  variant: StoredVariant,
+  answer: z.infer<typeof AnswerInputSchema>
+) {
+  const { userId } = user;
   const judgement = judgeVariant(questionId, variant, answer);
   const where = { userId, questionId, variantId: variant.id };
-  const previousAttempts = await db.variantSubmission.count({ where });
-  let xpEarned = computeVariantXp({ isCorrect: judgement.isCorrect, previousAttempts });
+  const [previousAttempts, sawAnswer] = await Promise.all([
+    db.variantSubmission.count({ where }),
+    revealedAsGuest(db, user.anonId, questionId, variant.id),
+  ]);
+  let xpEarned = sawAnswer ? 0 : computeVariantXp({ isCorrect: judgement.isCorrect, previousAttempts });
   if (xpEarned > 0) {
     try {
       await db.variantXpAward.create({ data: where });
@@ -268,7 +302,7 @@ export const questionRouter = createTRPCRouter({
     }),
 
   /**
-   * Act 3 content: aha, explanation and the answer. Used after a correct answer
+   * Act 3 content: aha, explanation, the answer and the full scene. Used after a correct answer
    * (and on refresh in the reveal phase) and for "Show me" after giving up.
    * Guests earn no XP, so they may reveal any time; a signed-in user needs a
    * correct submission or GIVE_UP_AFTER_ATTEMPTS attempts, so the answer can't be
@@ -288,6 +322,7 @@ export const questionRouter = createTRPCRouter({
           answerExplainZh: true,
           ahaEn: true,
           ahaZh: true,
+          animationConfig: true,
         },
       });
       if (!question) {
@@ -300,6 +335,8 @@ export const questionRouter = createTRPCRouter({
         if (!(await standardDone(ctx.db, userId, question.id))) {
           throw new TRPCError({ code: "FORBIDDEN", message: "Keep trying a little longer first" });
         }
+      } else {
+        await recordGuestReveal(ctx.db, ctx.anonId, question.id);
       }
 
       const spec = parseSpec(question.answerRule);
@@ -311,6 +348,8 @@ export const questionRouter = createTRPCRouter({
             ? { en: question.answerExplainEn ?? null, zh: question.answerExplainZh ?? null }
             : null,
         guessTruth: guessTruthOf(question.guessConfig, spec),
+        // The full scene, answer fields included, for the reveal animation.
+        scene: question.animationConfig,
       };
     }),
 
@@ -439,12 +478,14 @@ export const questionRouter = createTRPCRouter({
       const { isCorrect, feedback, estimate } = judgeAnswer(question, input.answer);
       const answerText = answerToText(input.answer);
 
-      const [attemptCount, priorCorrect] = await Promise.all([
+      const [attemptCount, priorCorrect, sawAnswer] = await Promise.all([
         ctx.db.submission.count({ where: { userId, questionId: input.questionId } }),
         ctx.db.submission.findFirst({
           where: { userId, questionId: input.questionId, isCorrect: true },
           select: { id: true },
         }),
+        // "Show me" as a guest in this browser, then signed in: the answer was already seen.
+        revealedAsGuest(ctx.db, ctx.anonId, input.questionId),
       ]);
 
       // Guess XP is paid with the first submission only, so it is once per question.
@@ -462,7 +503,7 @@ export const questionRouter = createTRPCRouter({
         hintsUsed: Math.min(input.hintsUsed, MAX_HINTS_REPORTED),
         guessVerified,
         previousAttempts: attemptCount,
-        alreadySolved: priorCorrect !== null,
+        alreadySolved: priorCorrect !== null || sawAnswer,
       });
       const xpEarned = xp.total;
 
@@ -553,7 +594,7 @@ export const questionRouter = createTRPCRouter({
     const userId = await signedInUserId(ctx);
     if (userId) {
       await assertStandardDone(ctx.db, userId, input.questionId);
-      return variantResult(variant, await recordVariantAnswer(ctx.db, userId, input.questionId, variant, input.answer));
+      return variantResult(variant, await recordVariantAnswer(ctx.db, { userId, anonId: ctx.anonId }, input.questionId, variant, input.answer));
     }
     return variantResult(variant, judgeVariant(input.questionId, variant, input.answer));
   }),
@@ -566,7 +607,7 @@ export const questionRouter = createTRPCRouter({
     const userId = await resolveSessionUserId(ctx as any);
     const variant = await loadVariant(ctx.db, input.questionId, input.variantId);
     await assertStandardDone(ctx.db, userId, input.questionId);
-    return variantResult(variant, await recordVariantAnswer(ctx.db, userId, input.questionId, variant, input.answer));
+    return variantResult(variant, await recordVariantAnswer(ctx.db, { userId, anonId: ctx.anonId }, input.questionId, variant, input.answer));
   }),
 
   /**
@@ -588,8 +629,10 @@ export const questionRouter = createTRPCRouter({
         if (!correct && attempts < GIVE_UP_AFTER_ATTEMPTS) {
           throw new TRPCError({ code: "FORBIDDEN", message: "Keep trying a little longer first" });
         }
+      } else {
+        await recordGuestReveal(ctx.db, ctx.anonId, input.questionId, variant.id);
       }
-      return { answer: variant.answerText, aha: variant.aha, explanation: variant.explanation };
+      return { answer: variant.answerText, aha: variant.aha, explanation: variant.explanation, scene: variant.scene };
     }),
 
   // Like a question
