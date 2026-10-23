@@ -86,7 +86,9 @@
     "pathLabel": "Puzzles in this world",
     "empty": "Puzzles for this world are on their way.",
     "loadFailed": "Couldn't load the worlds. Please try again.",
-    "play": "Play"
+    "play": "Play",
+    "variants": "Another number ×{count}",
+    "variantsHint": "After the reveal, try it again with {count} other sets of numbers."
   },
   "practice": {
     "title": "Practice",
@@ -227,7 +229,16 @@
     "loadingComments": "Loading comments…",
     "likes": "Likes",
     "submitFailed": "Something went wrong: {message}",
-    "revealFailed": "Couldn't load the answer. Try again in a moment."
+    "revealFailed": "Couldn't load the answer. Try again in a moment.",
+    "variantTitle": "Same idea, new numbers",
+    "variantIntro": "The rule you just found works for other numbers too. Try it on a fresh one.",
+    "variantStart": "Try another number",
+    "variantNext": "Another number",
+    "variantBack": "Back to the original",
+    "variantHeading": "New numbers",
+    "variantSolvedAll": "You've cracked every version. Pick any to play again.",
+    "variantLoadFailed": "Couldn't load the new numbers. Try again in a moment.",
+    "variantXpNote": "+{xp} XP for each new version you solve before \"Show me\"."
   },
   "discussion": {
     "title": "Discussion",

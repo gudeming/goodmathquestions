@@ -91,20 +91,21 @@ export interface QuestionFlow {
 }
 
 /**
+ * `persist: false` keeps the flow in memory only ("try another number" rounds start fresh each time).
  * Must be used in a component that only renders on the client (the question view
  * renders after its data loads, so the lazy localStorage read cannot mismatch SSR).
  */
-export function useQuestionFlow(questionId: string, startPhase: FlowPhase): QuestionFlow {
+export function useQuestionFlow(questionId: string, startPhase: FlowPhase, { persist = true }: { persist?: boolean } = {}): QuestionFlow {
   const restoredRef = useRef(false);
   const [state, setState] = useState<FlowState>(() => {
-    const stored = typeof window === "undefined" ? null : readStored(questionId, startPhase);
+    const stored = typeof window === "undefined" || !persist ? null : readStored(questionId, startPhase);
     restoredRef.current = stored !== null;
     return stored ?? initialFlowState(startPhase);
   });
 
   useEffect(() => {
-    writeStored(questionId, state);
-  }, [questionId, state]);
+    if (persist) writeStored(questionId, state);
+  }, [questionId, state, persist]);
 
   const saveGuess = useCallback((value: string) => {
     setState((s) => (s.phase === "hook" ? { ...s, guess: value, skippedGuess: false } : s));

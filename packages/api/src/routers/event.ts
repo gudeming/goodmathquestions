@@ -13,6 +13,7 @@ export const EVENT_NAMES = [
   "extension_open",
   "comment_post",
   "hint_reveal",
+  "variant_start",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 

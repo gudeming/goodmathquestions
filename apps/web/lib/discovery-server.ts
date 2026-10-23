@@ -48,6 +48,7 @@ export const getWorld = cache(
           slug: q.slug,
           titleEn: q.titleEn,
           titleZh: q.titleZh,
+          variantCount: q.variantCount,
           hookEn: q.hookEn,
           hookZh: q.hookZh,
           ageGroup: q.ageGroup,

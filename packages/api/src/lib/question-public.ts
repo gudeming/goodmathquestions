@@ -43,6 +43,8 @@ export const publicQuestionSelect = {
   discussionPromptEn: true,
   discussionPromptZh: true,
   solutionTags: true,
+  // How many "try another number" variants exist (the variants themselves hold answers: question.variants).
+  variantCount: true,
   tags: { include: { tag: true } },
   _count: {
     select: {

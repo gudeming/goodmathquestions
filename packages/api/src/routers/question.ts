@@ -5,12 +5,13 @@ import {
   publicProcedure,
   protectedProcedure,
 } from "../trpc";
-import { QuestionKind } from "@gmq/db";
-import { AnswerSpecSchema, computeAnswerXp, levelForXp, type AnswerSpec } from "@gmq/math-engine";
+import { Prisma, QuestionKind } from "@gmq/db";
+import { AnswerSpecSchema, computeAnswerXp, computeVariantXp, levelForXp, type AnswerSpec } from "@gmq/math-engine";
 import { identityFromContext } from "../lib/identity";
 import { publicQuestionSelect, toPublicQuestion } from "../lib/question-public";
 import { loadPublicQuestion } from "../lib/question-cache";
 import { AnswerInputSchema, answerToText, judgeAnswer } from "../lib/answer-check";
+import { VariantIdSchema, findVariant, judgeVariant, parseVariants, toPublicVariant, type StoredVariant } from "../lib/variant";
 
 const SlugSchema = z.string().min(1).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 
@@ -86,6 +87,98 @@ async function resolveSessionUserId(ctx: {
     code: "UNAUTHORIZED",
     message: "Session is stale. Please log in again.",
   });
+}
+
+type Db = typeof import("@gmq/db").db;
+
+/** The standard version is done for this user: solved, or tried enough that "Show me" unlocked. */
+async function standardDone(db: Db, userId: string, questionId: string): Promise<boolean> {
+  const [attempts, correct] = await Promise.all([
+    db.submission.count({ where: { userId, questionId } }),
+    db.submission.findFirst({ where: { userId, questionId, isCorrect: true }, select: { id: true } }),
+  ]);
+  return correct !== null || attempts >= GIVE_UP_AFTER_ATTEMPTS;
+}
+
+/** A published question's variant, or NOT_FOUND. */
+async function loadVariant(db: Db, questionId: string, variantId: string) {
+  const question = await db.question.findUnique({
+    where: { id: questionId, isPublished: true },
+    select: { id: true, variants: true },
+  });
+  const variant = question ? findVariant(question.variants, question.id, variantId) : null;
+  if (!question || !variant) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Variant not found" });
+  }
+  return variant;
+}
+
+const VariantAnswerInput = z.object({
+  questionId: z.string().min(1).max(64),
+  variantId: VariantIdSchema,
+  answer: AnswerInputSchema,
+});
+
+/** The signed-in caller's user id, or null for a guest. */
+async function signedInUserId(ctx: Parameters<typeof identityFromContext>[0]): Promise<string | null> {
+  return identityFromContext(ctx)?.kind === "user" ? resolveSessionUserId(ctx as any) : null;
+}
+
+/**
+ * Variants come after the standard version. For a signed-in user that is enforced (as `reveal` is):
+ * a variant's copy may contain the standard answer (fibonacci's term 11 lists term 10). Guests can
+ * already reveal the standard version, so they are not gated.
+ */
+async function assertStandardDone(db: Db, userId: string, questionId: string): Promise<void> {
+  if (!(await standardDone(db, userId, questionId))) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Finish the original question first" });
+  }
+}
+
+/**
+ * Records a signed-in user's variant answer and pays the variant XP. Every judged try of a signed-in
+ * user goes through here (checkVariant too), so the "before Show me" attempt cap can't be dodged by
+ * checking first. The XP is decided by inserting the user's one `VariantXpAward` row for the variant:
+ * two concurrent correct submits can't both pay.
+ */
+async function recordVariantAnswer(db: Db, userId: string, questionId: string, variant: StoredVariant, answer: z.infer<typeof AnswerInputSchema>) {
+  const judgement = judgeVariant(questionId, variant, answer);
+  const where = { userId, questionId, variantId: variant.id };
+  const previousAttempts = await db.variantSubmission.count({ where });
+  let xpEarned = computeVariantXp({ isCorrect: judgement.isCorrect, previousAttempts });
+  if (xpEarned > 0) {
+    try {
+      await db.variantXpAward.create({ data: where });
+    } catch (e) {
+      if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) throw e;
+      xpEarned = 0; // already paid for this variant
+    }
+  }
+  await db.variantSubmission.create({ data: { ...where, answer: answerToText(answer), isCorrect: judgement.isCorrect, xpEarned } });
+  if (xpEarned > 0) {
+    const user = await db.user.update({
+      where: { id: userId },
+      data: { xp: { increment: xpEarned }, lastActiveAt: new Date() },
+    });
+    const newLevel = levelForXp(user.xp);
+    if (newLevel > user.level) {
+      await db.user.update({ where: { id: userId }, data: { level: newLevel } });
+    }
+  }
+  return { ...judgement, xpEarned, attempt: previousAttempts + 1 };
+}
+
+/** checkVariant / submitVariant response: aha and explanation only after a correct answer. */
+function variantResult(variant: StoredVariant, r: { isCorrect: boolean; feedback: unknown; estimate: unknown; xpEarned?: number; attempt?: number }) {
+  return {
+    isCorrect: r.isCorrect,
+    xpEarned: r.xpEarned ?? 0,
+    attempt: r.attempt,
+    feedback: r.feedback as ReturnType<typeof judgeVariant>["feedback"],
+    estimate: r.estimate as ReturnType<typeof judgeVariant>["estimate"],
+    aha: r.isCorrect ? variant.aha : null,
+    explanation: r.isCorrect ? variant.explanation : null,
+  };
 }
 
 /** Server-only fields needed to judge an answer. */
@@ -204,14 +297,7 @@ export const questionRouter = createTRPCRouter({
       const who = identityFromContext(ctx);
       if (who?.kind === "user") {
         const userId = await resolveSessionUserId(ctx as any);
-        const [attempts, correct] = await Promise.all([
-          ctx.db.submission.count({ where: { userId, questionId: question.id } }),
-          ctx.db.submission.findFirst({
-            where: { userId, questionId: question.id, isCorrect: true },
-            select: { id: true },
-          }),
-        ]);
-        if (!correct && attempts < GIVE_UP_AFTER_ATTEMPTS) {
+        if (!(await standardDone(ctx.db, userId, question.id))) {
           throw new TRPCError({ code: "FORBIDDEN", message: "Keep trying a little longer first" });
         }
       }
@@ -426,6 +512,84 @@ export const questionRouter = createTRPCRouter({
         estimate,
         aha: isCorrect ? ahaOf(question) : null,
       };
+    }),
+
+  /**
+   * "Try another number": the variants of a question as a client may see them (prompt, scene,
+   * hints, options; never the answer), each with `solved` for the signed-in user (false for guests).
+   * Empty for questions without variants, and for a signed-in user who hasn't finished the original.
+   */
+  variants: publicProcedure
+    .input(z.object({ questionId: z.string().min(1).max(64) }))
+    .query(async ({ ctx, input }) => {
+      const question = await ctx.db.question.findUnique({
+        where: { id: input.questionId, isPublished: true },
+        select: { id: true, variants: true },
+      });
+      if (!question) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Question not found" });
+      }
+      // Signed in: which variants this user already solved, so progress follows them across devices.
+      let solved = new Set<string>();
+      const userId = await signedInUserId(ctx);
+      if (userId) {
+        if (!(await standardDone(ctx.db, userId, question.id))) return [];
+        const rows = await ctx.db.variantSubmission.findMany({
+          where: { userId, questionId: question.id, isCorrect: true },
+          select: { variantId: true },
+          distinct: ["variantId"],
+        });
+        solved = new Set(rows.map((r) => r.variantId));
+      }
+      return parseVariants(question.variants, question.id).map((v) => ({ ...toPublicVariant(v), solved: solved.has(v.id) }));
+    }),
+
+  /**
+   * Check a variant answer. Guests: no XP, nothing stored. A signed-in caller is recorded exactly
+   * like submitVariant (so checking can't be used to find the answer before a paid submit).
+   */
+  checkVariant: publicProcedure.input(VariantAnswerInput).mutation(async ({ ctx, input }) => {
+    const variant = await loadVariant(ctx.db, input.questionId, input.variantId);
+    const userId = await signedInUserId(ctx);
+    if (userId) {
+      await assertStandardDone(ctx.db, userId, input.questionId);
+      return variantResult(variant, await recordVariantAnswer(ctx.db, userId, input.questionId, variant, input.answer));
+    }
+    return variantResult(variant, judgeVariant(input.questionId, variant, input.answer));
+  }),
+
+  /**
+   * Submit a variant answer (signed-in users). XP (math-engine computeVariantXp): a small bonus once
+   * per variant, only after the standard version is done and only while "Show me" is still locked.
+   */
+  submitVariant: protectedProcedure.input(VariantAnswerInput).mutation(async ({ ctx, input }) => {
+    const userId = await resolveSessionUserId(ctx as any);
+    const variant = await loadVariant(ctx.db, input.questionId, input.variantId);
+    await assertStandardDone(ctx.db, userId, input.questionId);
+    return variantResult(variant, await recordVariantAnswer(ctx.db, userId, input.questionId, variant, input.answer));
+  }),
+
+  /**
+   * "Show me" for a variant. Guests may always; a signed-in user needs the original done and a
+   * correct submission or GIVE_UP_AFTER_ATTEMPTS tries on that variant (the same rule as `reveal`).
+   */
+  revealVariant: publicProcedure
+    .input(z.object({ questionId: z.string().min(1).max(64), variantId: VariantIdSchema }))
+    .query(async ({ ctx, input }) => {
+      const variant = await loadVariant(ctx.db, input.questionId, input.variantId);
+      const userId = await signedInUserId(ctx);
+      if (userId) {
+        await assertStandardDone(ctx.db, userId, input.questionId);
+        const where = { userId, questionId: input.questionId, variantId: variant.id };
+        const [attempts, correct] = await Promise.all([
+          ctx.db.variantSubmission.count({ where }),
+          ctx.db.variantSubmission.findFirst({ where: { ...where, isCorrect: true }, select: { id: true } }),
+        ]);
+        if (!correct && attempts < GIVE_UP_AFTER_ATTEMPTS) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Keep trying a little longer first" });
+        }
+      }
+      return { answer: variant.answerText, aha: variant.aha, explanation: variant.explanation };
     }),
 
   // Like a question

@@ -12,6 +12,7 @@ import { LazyDiscussionSection as DiscussionSection } from "@/components/questio
 import { guessOptionsFor } from "@/components/discussion/shared";
 import { MathText } from "@/components/ui/MathText";
 import { GuessHistogram } from "./GuessHistogram";
+import { VariantPlay } from "./VariantPlay";
 import { answerOptions } from "./AnswerInput";
 import { useHasScene } from "./scene";
 import type { SolvedResult } from "./ExploreStage";
@@ -127,6 +128,8 @@ export function RevealStage({ question, locale, gaveUp, guess, solved, isLoggedI
           <MathText as="p" className="mt-3 font-body text-gray-700" text={explanation} />
         </details>
       )}
+
+      {question.variantCount > 0 && <VariantPlay question={question} locale={locale} track={track} />}
 
       {funFact && (
         <div className="rounded-card border-2 border-fun-yellow/30 bg-gradient-to-r from-fun-yellow/20 to-fun-orange/20 p-5">

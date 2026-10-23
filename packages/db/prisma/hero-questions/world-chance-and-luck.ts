@@ -10,7 +10,8 @@
  * Editorial pass 2 (editorial-pass-2.md): C10 retitled, and its feedback says "streaky" / 「连成串」
  * in plain words instead of "lumpier" / 「扎堆」 and "polite" / 「讲礼貌」.
  */
-import type { HeroQuestionBlueprint } from "./_template";
+import { SOCK_COLORS, socksToGuarantee } from "@gmq/animation-engine";
+import { defineVariants, type HeroQuestionBlueprint, type WrongAnswerRule } from "./_template";
 
 /** C2. The guess is the question: the CHOICE answer reuses the guess options. */
 export const montyHall: HeroQuestionBlueprint = {
@@ -714,7 +715,134 @@ export const socksInTheDark: HeroQuestionBlueprint = {
   },
   sortOrder: 5,
   rubricNotes:
-    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: worst-case thinking is the one real path (the scene's worst-luck mode shows it); the extension and discussion lead to the general pigeonhole rule",
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: worst-case thinking is the one real path (the scene's worst-luck mode shows it); the extension and discussion lead to the general pigeonhole rule",  // More colours (the scene draws 3-5) and its two-pairs mode: colours + 2 × pairs − 1.
+  variants: defineVariants({
+    standard: { colors: 3, pairs: 1 },
+    params: [
+      { colors: 4, pairs: 1 },
+      { colors: 5, pairs: 1 },
+      { colors: 3, pairs: 2 },
+      { colors: 4, pairs: 2 },
+    ],
+    build: ({ colors: c, pairs }) => {
+      const answer = socksToGuarantee(c, pairs);
+      const names = SOCK_COLORS.slice(0, c).map((x) => x.label);
+      const listEn = `${names.slice(0, -1).map((x) => x.en).join(", ")} and ${names[c - 1].en}`;
+      const listZh = names.map((x) => x.zh).join("、");
+      const two = pairs === 2;
+      const goalEn = two ? "two matching pairs" : "two of the same colour";
+      const goalZh = two ? "两双同色的袜子" : "两只同色的";
+      const seen = new Set<string>([String(answer)]);
+      const rules: WrongAnswerRule[] = [
+        ...(two
+          ? [
+              {
+                match: String(c + 1),
+                feedback: {
+                  en: `${c + 1} socks are sure to give ONE pair. For two pairs, keep going with the worst luck: what if the pair grows into three of a kind?`,
+                  zh: `${c + 1} 只能保证一双。要两双的话，继续想最倒霉的情况：如果那一双又多了一只同色的呢？`,
+                },
+              },
+              {
+                match: String(c + 2),
+                feedback: {
+                  en: `Unlucky ${c + 2}: three of one colour and one of each other colour. That's still only one pair!`,
+                  zh: `最倒霉的 ${c + 2} 只：一种颜色 3 只，其他颜色各 1 只。还是只有一双！`,
+                },
+              },
+              {
+                match: String(2 * (c + 1)),
+                feedback: {
+                  en: `Doubling the one-pair answer works, but it's more than you need. The socks from the first pair's worst luck help with the second.`,
+                  zh: `把一双的答案翻倍当然够，但多了。为第一双拿的那些袜子，也能帮你凑第二双。`,
+                },
+              },
+              {
+                match: "4",
+                feedback: {
+                  en: "With good luck, 4 socks might make two pairs! But the question says 'be sure', so think about the worst luck.",
+                  zh: "运气好的话，4 只可能就有两双了！可是题目说要「保证」，所以要想最倒霉的情况。",
+                },
+              },
+            ]
+          : [
+              {
+                match: "2",
+                feedback: {
+                  en: `With good luck, 2 socks might match! But the question says 'be sure'. Your 2 socks could be one ${names[0].en} and one ${names[1].en}.`,
+                  zh: `运气好的话，2 只可能就配上了！可是题目说要「保证」。你拿的 2 只可能一${names[0].zh}一${names[1].zh}。`,
+                },
+              },
+              {
+                match: String(c),
+                feedback: {
+                  en: `${c} is the number of colours. With the worst luck, your ${c} socks are one of each colour, and nothing matches yet.`,
+                  zh: `${c} 是颜色的数量。运气最差的时候，${c} 只正好每种颜色各一只，还没有配成对。`,
+                },
+              },
+              {
+                match: String(2 * c),
+                feedback: {
+                  en: `${2 * c} socks would work, but you can do it with fewer. With the worst luck, after ${c} socks you hold one of each colour. What does the next sock do?`,
+                  zh: `${2 * c} 只当然够了，但可以更少。最倒霉的时候，拿 ${c} 只是每种颜色各一只。再拿一只会怎样？`,
+                },
+              },
+            ]),
+        {
+          match: "gt:correct",
+          feedback: {
+            en: "That's enough socks, but not the fewest. Turn on \"😈 Worst luck\" in the scene and stop the moment you're guaranteed.",
+            zh: "这么多肯定够，但不是最少的。在场景里试试「最倒霉模式」，一有保证就停下。",
+          },
+        },
+        {
+          match: "lt:correct",
+          feedback: {
+            en: "Too few: with bad luck those socks can still let you down. Turn on \"😈 Worst luck\" in the scene and count how long it holds out.",
+            zh: "太少了：运气不好的话，这么几只还是会让你失望。在场景里打开「最倒霉模式」，数数它能撑多久。",
+          },
+        },
+      ];
+      return {
+        prompt: {
+          en: `A drawer holds lots of socks in ${c} colours. In the dark, what is the smallest number of socks you must take to be sure you have ${goalEn}?`,
+          zh: `抽屉里有很多 ${c} 种颜色的袜子。在黑暗中，最少要拿几只，才能保证一定有${goalZh}？`,
+        },
+        scene: two ? { type: "sock_drawer", colors: c, guaranteeTwoPairs: true, seed: 4 } : { type: "sock_drawer", colors: c, seed: 4 },
+        answer: { type: "NUMERIC", value: answer },
+        hints: two
+          ? [
+              { en: `Think about the WORST luck again, now with ${c} colours (${listEn}) and two pairs to make. How long can the socks refuse?`, zh: `还是想最倒霉的情况，现在有 ${c} 种颜色（${listZh}），要凑两双。袜子最多能和你作对多久？` },
+              { en: "Turn on \"😈 Worst luck\" in the scene and pull socks one by one. When the first pair appears, what do the other socks look like?", zh: "在场景里打开「😈 最倒霉模式」，一只一只地摸。第一双出现的时候，其他袜子是什么样的？" },
+              { en: `The unluckiest ${answer - 1} socks: three of one colour and one of each of the other ${c - 1}. That's still only one pair. What does the next sock do?`, zh: `最倒霉的 ${answer - 1} 只：一种颜色 3 只，其他 ${c - 1} 种颜色各 1 只。这还只有一双。再拿一只会怎样？` },
+            ]
+          : [
+              { en: `Don't think about good luck. Think about the WORST luck with ${c} colours: how could your socks keep refusing to match?`, zh: `别想运气好的时候，想想 ${c} 种颜色时运气最差的情况：你拿的袜子怎样才能一直配不成对？` },
+              { en: `Turn on "😈 Worst luck" in the scene and press "Pull a sock". After ${c} socks, what is the unluckiest thing you could be holding?`, zh: `在场景里打开「😈 最倒霉模式」，再按「摸一只」。拿了 ${c} 只以后，手里最倒霉会是什么样？` },
+              { en: `The unluckiest ${c} socks are one each of ${listEn}. Now take one more. What colour can it be, and does it match?`, zh: `最倒霉的 ${c} 只是${listZh}各一只。再拿一只，它会是什么颜色？能配上吗？` },
+            ],
+        wrongAnswers: rules.filter((r) => !seen.has(r.match) && Boolean(seen.add(r.match))),
+        explanation: two
+          ? {
+              en: `Imagine the worst luck: ${answer - 1} socks with only one pair, which means three of one colour and one of each of the other ${c - 1} colours. The next sock has to match one of those singles (or make four of a kind), so it completes a second pair. With fewer than ${answer} you could still be unlucky, so ${answer} is the smallest number that is sure to work.`,
+              zh: `想象最倒霉的情况：${answer - 1} 只里只有一双，也就是一种颜色 3 只，其他 ${c - 1} 种颜色各 1 只。下一只一定能和某只单的配上（或者凑成 4 只同色），于是有了第二双。少于 ${answer} 只还是可能倒霉，所以 ${answer} 是保证成功的最少只数。`,
+            }
+          : {
+              en: `Imagine the worst luck: your first ${c} socks are one each of ${listEn}. Sock number ${answer} has to be one of those colours, so it matches one you already hold. With fewer than ${answer} you could still be unlucky, so ${answer} is the smallest number that is sure to work.`,
+              zh: `想象最倒霉的情况：前 ${c} 只正好是${listZh}各一只。第 ${answer} 只只能是这几种颜色之一，所以一定能和手里的一只配上。少于 ${answer} 只的话，还是可能倒霉配不上，所以 ${answer} 是保证成功的最少只数。`,
+            },
+        aha: two
+          ? {
+              en: `Worst luck again: one pair, one odd sock of every colour, and the next sock makes pair two. ${c} colours, two pairs: ${answer} socks.`,
+              zh: `还是想最倒霉的：一双，加上每种颜色各一只单的，下一只就凑成第二双。${c} 种颜色、两双：${answer} 只。`,
+            }
+          : {
+              en: `One sock of each colour, then the next one has to match: ${c} colours need ${answer} socks. Always one more than the number of colours.`,
+              zh: `每种颜色各一只，下一只就一定能配上：${c} 种颜色要拿 ${answer} 只。永远比颜色数多一只。`,
+            },
+      };
+    },
+  }),
 };
 
 /**

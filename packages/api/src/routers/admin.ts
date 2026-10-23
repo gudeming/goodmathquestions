@@ -96,6 +96,8 @@ async function funnelEventStats(db: TRPCContext["db"], since: Date, questionIds:
       WHERE e."createdAt" >= ${since}
         AND e."questionId" IN (${Prisma.join(questionIds)})
         AND (e."userId" IS NOT NULL OR e."anonId" IS NOT NULL)
+        -- "Try another number" rounds carry props.variant: they are not the original question's funnel.
+        AND NOT (e.props ? 'variant')
     ),
     per_who AS (
       SELECT qid, who,

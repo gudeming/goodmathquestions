@@ -10,7 +10,40 @@
  * Editorial pass 2 (editorial-pass-2.md): E4 and E8 hooks now ask the guess's question; E7's guess is
  * 'which shortcut?'; E9's Chinese names the two moves 小跳 (hop) and 大跳 (jump over a frog).
  */
-import type { HeroQuestionBlueprint } from "./_template";
+import { defineVariants, type HeroQuestionBlueprint, type WrongAnswerRule } from "./_template";
+
+/**
+ * "Try another number" helpers. Small parameters can make two classic slips coincide, or land on the
+ * answer itself: keep the first rule for each match and never one that names the answer.
+ */
+/** English article for a number said aloud: "an 8-litre jug", "an 11-year cycle", "a 5-litre jug". */
+const an = (n: number): "a" | "an" => (/^8/.test(String(n)) || n === 11 || n === 18 ? "an" : "a");
+const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
+
+function distinctRules(answer: number, rules: WrongAnswerRule[]): WrongAnswerRule[] {
+  const seen = new Set<string>([String(answer)]);
+  return rules.filter((r) => {
+    if (seen.has(r.match)) return false;
+    seen.add(r.match);
+    return true;
+  });
+}
+
+/** Ways up n stairs in strides of 1 or 2: 1, 2, 3, 5, 8, … */
+function climbWays(n: number): number {
+  let [prev, cur] = [1, 1];
+  for (let i = 2; i <= n; i++) [prev, cur] = [cur, prev + cur];
+  return cur;
+}
+
+function binomial(n: number, k: number): number {
+  let r = 1;
+  for (let i = 1; i <= k; i++) r = (r * (n - k + i)) / i;
+  return r;
+}
+
+const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
+const lcm = (a: number, b: number): number => (a * b) / gcd(a, b);
 
 /** E1. The child plays 3 discs; the question asks about 4 (askDiscs), which the reveal solves. */
 export const towerOfHanoi: HeroQuestionBlueprint = {
@@ -104,7 +137,87 @@ export const towerOfHanoi: HeroQuestionBlueprint = {
   sortOrder: 1,
   rubricNotes:
     "19/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 2, retell 1: play, the 'smaller tower first' idea and the 1, 3, 7 table are all real paths; the 64-disc fact is good but not a party trick",
+  // The child warms up on 3 discs and adds discs up to askDiscs (the scene goes to 8): 2^k − 1 moves.
+  variants: defineVariants({
+    standard: { discs: 4 },
+    params: [{ discs: 5 }, { discs: 6 }, { discs: 7 }],
+    build: ({ discs: k }) => {
+      const smaller = 2 ** (k - 1) - 1;
+      const answer = 2 * smaller + 1;
+      return {
+        prompt: {
+          en: `Warm up with 3 discs in the scene, then press "Add a disc" until there are ${k}. How few moves does it take to move a tower of ${k} discs to another peg?`,
+          zh: `先在场景里搬 3 个盘热热身，再点「再加一个盘」，一直加到 ${k} 个。把 ${k} 个圆盘的塔搬到另一根柱子上，最少要搬几步？`,
+        },
+        scene: { type: "tower_of_hanoi", discs: 3, askDiscs: k },
+        answer: { type: "NUMERIC", value: answer },
+        hints: [
+          { en: "Build a table first: 1 disc takes 1 move, 2 discs take 3, 3 discs take 7 (check it in the scene). How does each number come from the one before?", zh: "先列一张表：1 个盘 1 步，2 个盘 3 步，3 个盘 7 步（在场景里验证一下）。每个数是怎么从前一个数变来的？" },
+          { en: `To move the biggest of ${k} discs, the other ${k - 1} must first be stacked on the spare peg. That's a ${k - 1}-disc tower, and your table tells you its moves.`, zh: `想搬 ${k} 个盘里最大的那个，另外 ${k - 1} 个得先叠到空柱子上。那是一座 ${k - 1} 个盘的塔，它要几步，你的表里能推出来。` },
+          { en: `${k - 1} discs take ${smaller} moves. So: ${smaller} moves out of the way, 1 move for the big disc, ${smaller} moves back on top. Add them up.`, zh: `${k - 1} 个盘要 ${smaller} 步。所以：先挪开用 ${smaller} 步，搬大盘 1 步，再搬回去 ${smaller} 步。加起来。` },
+        ],
+        wrongAnswers: distinctRules(answer, [
+          {
+            match: String(2 * smaller),
+            feedback: {
+              en: `You moved the ${k - 1} smaller discs away and back: ${smaller} + ${smaller}. Nice! But don't forget the one move for the biggest disc in between.`,
+              zh: `你把 ${k - 1} 个小盘挪开再搬回来：${smaller} + ${smaller}，很好！可是别忘了中间搬最大那个盘的 1 步。`,
+            },
+          },
+          {
+            match: String(2 ** k),
+            feedback: {
+              en: `${2 ** k} is ${k} 2s multiplied together, so you're very close to the pattern! Look at 1, 3, 7, 15: each one is one less than 2, 4, 8, 16.`,
+              zh: `${2 ** k} 是 ${k} 个 2 相乘，离规律很近了！看看 1、3、7、15：它们分别比 2、4、8、16 少 1。`,
+            },
+          },
+          {
+            match: String(2 * k),
+            feedback: {
+              en: `Two moves for each of ${k} discs would be ${2 * k}, but the small discs go back and forth many times. The smallest disc alone moves ${2 ** (k - 1)} times.`,
+              zh: `${k} 个盘每个搬 2 次是 ${2 * k} 步，可是小盘要来回搬很多次。光是最小的那个盘就要搬 ${2 ** (k - 1)} 次。`,
+            },
+          },
+          {
+            match: "lt:correct",
+            feedback: {
+              en: `That's too few to be possible. ${k - 1} discs already need ${smaller} moves, and adding a bigger disc underneath can only make it take longer.`,
+              zh: `这么少是做不到的。${k - 1} 个盘就要 ${smaller} 步，下面再加一个更大的盘，只会更多。`,
+            },
+          },
+          {
+            match: "gt:correct",
+            feedback: {
+              en: `That works, but it isn't the fewest. Try this plan: ${k - 1} discs out of the way, big disc across, ${k - 1} discs back on top.`,
+              zh: `这样能搬完，但不是最少的。试试这个办法：先挪开 ${k - 1} 个，再搬大盘，再把 ${k - 1} 个搬回去。`,
+            },
+          },
+        ]),
+        explanation: {
+          en: `To move the biggest disc, the ${k - 1} smaller discs must first go to the spare peg, which takes ${smaller} moves. Then the biggest disc moves once, and the ${k - 1} discs come back on top in ${smaller} more moves. That makes ${smaller} + 1 + ${smaller} = ${answer}.`,
+          zh: `想搬最大的盘，上面 ${k - 1} 个小盘要先搬到空柱子上，这要 ${smaller} 步。然后最大的盘搬 1 步，再用 ${smaller} 步把 ${k - 1} 个小盘搬回它上面。一共 ${smaller} + 1 + ${smaller} = ${answer} 步。`,
+        },
+        aha: {
+          en: `Each extra disc doubles the moves and adds one, so ${k} discs take 2 × ${smaller} + 1 = ${answer}. That's one less than ${k} 2s multiplied together: ${2 ** k} − 1.`,
+          zh: `每多一个盘，步数就翻倍再加 1，所以 ${k} 个盘要 2 × ${smaller} + 1 = ${answer} 步。正好比 ${k} 个 2 相乘少 1：${2 ** k} − 1。`,
+        },
+      };
+    },
+  }),
 };
+
+/** E3's pictured steps 1-3 (centre plus arms of 1, 2, 3 dots), shared with its variants. */
+const PLUS_STEPS: Array<{ cells: Array<[number, number]> }> = [
+  { cells: [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]] },
+  { cells: [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [2, 0], [-2, 0], [0, 2], [0, -2]] },
+  {
+    cells: [
+      [0, 0], [1, 0], [-1, 0], [0, 1], [0, -1],
+      [2, 0], [-2, 0], [0, 2], [0, -2],
+      [3, 0], [-3, 0], [0, 3], [0, -3],
+    ],
+  },
+];
 
 /** E3. Plus sign: centre dot plus four arms of length n, so 4n + 1 dots. Cells are written out for steps 1-3. */
 export const growingPlus: HeroQuestionBlueprint = {
@@ -128,17 +241,7 @@ export const growingPlus: HeroQuestionBlueprint = {
   },
   scene: {
     type: "visual_pattern",
-    steps: [
-      { cells: [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]] },
-      { cells: [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [2, 0], [-2, 0], [0, 2], [0, -2]] },
-      {
-        cells: [
-          [0, 0], [1, 0], [-1, 0], [0, 1], [0, -1],
-          [2, 0], [-2, 0], [0, 2], [0, -2],
-          [3, 0], [-3, 0], [0, 3], [0, -3],
-        ],
-      },
-    ],
+    steps: PLUS_STEPS,
     rule: { kind: "linear", a: 4, b: 1 },
     askStep: 10,
     colorRule: "arm",
@@ -207,6 +310,62 @@ export const growingPlus: HeroQuestionBlueprint = {
   sortOrder: 3,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 1, floor 2, ceiling 2, paths 2, wrong 2, hints 2, retell 1: the hook now lets the picture give the counts; a linear rule is still gentle rather than surprising, though 'step 100 without drawing' helps",
+  // Same three pictured steps, a different step asked (the scene takes askStep 4-30): 4s + 1 dots.
+  variants: defineVariants({
+    standard: { step: 10 },
+    params: [{ step: 7 }, { step: 15 }, { step: 20 }, { step: 25 }],
+    build: ({ step: s }) => {
+      const answer = 4 * s + 1;
+      return {
+        prompt: { en: `How many dots are in step ${s} of the growing plus sign?`, zh: `第 ${s} 步的加号有多少个点？` },
+        scene: { type: "visual_pattern", steps: PLUS_STEPS, rule: { kind: "linear", a: 4, b: 1 }, askStep: s, colorRule: "arm" },
+        answer: { type: "NUMERIC", value: answer },
+        hints: [
+          { en: `Don't draw all ${s} steps. Press "By arms" to colour each arm: which dots are new in each step, and where do they grow?`, zh: `不用把 ${s} 步都画出来。点「按胳膊着色」给每条胳膊涂色：每一步多出了哪些点？长在哪里？` },
+          { en: `Each step adds one dot to the end of each of the four arms. So in step ${s}, how many dots does each arm have?`, zh: `每一步，四条胳膊各长出 1 个点。那么第 ${s} 步，每条胳膊有几个点？` },
+          { en: `In step ${s}, each of the 4 arms has ${s} dots. Don't forget the centre dot, which doesn't belong to any arm.`, zh: `第 ${s} 步，4 条胳膊每条有 ${s} 个点。别忘了中间那个点，它不属于任何一条胳膊。` },
+        ],
+        wrongAnswers: distinctRules(answer, [
+          {
+            match: String(5 * s),
+            feedback: {
+              en: `You did 5 × ${s}, because step 1 has 5 dots. But the plus doesn't add a whole new copy of itself each step: it only grows 4 new dots.`,
+              zh: `你算的是 5 × ${s}，因为第 1 步有 5 个点。可是加号不是每步复制一个自己，它每步只长出 4 个新点。`,
+            },
+          },
+          {
+            match: String(4 * s),
+            feedback: {
+              en: `4 arms × ${s} dots is exactly right for the arms. You only forgot the dot in the middle!`,
+              zh: `4 条胳膊 × ${s} 个点，胳膊算得完全正确。只是忘了中间那个点！`,
+            },
+          },
+          {
+            match: String(4 * s + 5),
+            feedback: {
+              en: `You started at 5 and added 4 ${s} times. But step 1 already has its 5 dots, so to reach step ${s} you only add 4 ${s - 1} more times.`,
+              zh: `你从 5 开始加了 ${s} 次 4。可是第 1 步已经有 5 个点了，到第 ${s} 步只需要再加 ${s - 1} 次 4。`,
+            },
+          },
+          {
+            match: String(4 * s - 3),
+            feedback: {
+              en: `${4 * s - 3} is the number of dots in step ${s - 1}. Grow it one more step!`,
+              zh: `${4 * s - 3} 是第 ${s - 1} 步的点数。再长一步！`,
+            },
+          },
+        ]),
+        explanation: {
+          en: `Each step adds one dot to each of the 4 arms, so step n has 4 arms of n dots, plus the centre. Step ${s} has 4 × ${s} + 1 = ${answer} dots. You can also start from 5 and add 4 ${s - 1} times: 5 + ${4 * (s - 1)} = ${answer}.`,
+          zh: `每一步，4 条胳膊各长出 1 个点，所以第 n 步有 4 条胳膊、每条 n 个点，再加中间 1 个。第 ${s} 步是 4 × ${s} + 1 = ${answer} 个点。也可以从 5 开始加 ${s - 1} 次 4：5 + ${4 * (s - 1)} = ${answer}。`,
+        },
+        aha: {
+          en: `Four arms of ${s} dots plus one centre: 4 × ${s} + 1 = ${answer}. The rule 4n + 1 works for any step, so you never have to draw one.`,
+          zh: `四条胳膊各 ${s} 个点，再加一个中心：4 × ${s} + 1 = ${answer}。4n + 1 对哪一步都管用，一个点都不用画。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -315,6 +474,93 @@ export const fourWeights: HeroQuestionBlueprint = {
   sortOrder: 10,
   rubricNotes:
     "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the shopkeeper story gives the hook a problem to solve before the numbers; the subtraction idea is still a real hurdle, and the main path is build-up-and-check; the scene's '/40' progress bar gives the target away (scene issue)",
+  // Powers of 3 on a two-pan balance reach every whole number up to their total (the scene takes up to 6 weights).
+  variants: defineVariants({
+    standard: { count: 4 },
+    params: [{ count: 2 }, { count: 3 }, { count: 5 }],
+    build: ({ count: k }) => {
+      const weights = Array.from({ length: k }, (_, i) => 3 ** i);
+      const answer = weights.reduce((s, w) => s + w, 0);
+      const biggest = weights[k - 1];
+      const rest = answer - biggest;
+      const steps = weights.slice(2).map((w, i) => {
+        const below = weights.slice(0, i + 2).reverse();
+        const reach = weights.slice(0, i + 3).reduce((s, x) => s + x, 0);
+        const first = reach - w + 1;
+        return {
+          en: `adding ${w} reaches ${reach} (${first} = ${w} − ${below.join(" − ")})`,
+          zh: `加上 ${w} 能到 ${reach}（${first} = ${w} − ${below.join(" − ")}）`,
+        };
+      });
+      const stepsEn = ["With 1 and 3 you can make 1 to 4 (2 = 3 − 1)", ...steps.map((s) => s.en)];
+      const stepsZh = ["用 1 和 3 能称 1 到 4（2 = 3 − 1）", ...steps.map((s, i) => (i === steps.length - 1 && steps.length > 1 ? `再${s.zh}` : s.zh))];
+      return {
+        prompt: {
+          en: `Now she has ${k} weights: ${weights.slice(0, -1).join(", ")} and ${biggest} grams. Weights may go on either pan, including the pan with the sweets. Starting from 1 gram, what is the biggest weight you can reach so that every whole number of grams on the way can be weighed?`,
+          zh: `现在她有 ${k} 个砝码：${weights.join("、")} 克。砝码放在哪一边都行，也可以和糖放在同一边。从 1 克开始往上，最多能称到几克，并且中间每一个整数克都能称出来？`,
+        },
+        scene: { type: "balance_lab", mode: "weights", weights, target: k >= 3 ? 5 : 2 },
+        answer: { type: "NUMERIC", value: answer, unit: { en: "grams", zh: "克" } },
+        hints: [
+          { en: `Try 2 grams with the ${weights.slice(0, -1).join(", ")} and ${biggest}. In the scene, tap the 1-gram weight until it moves to the "object's pan", next to the sweets. What happens?`, zh: `用 ${weights.join("、")} 试着称 2 克。在场景里点 1 克砝码，直到它跑到「物品这边」，和糖放在一起。会怎样？` },
+          { en: "A weight next to the sweets works like a subtraction: 3 on the other pan and sweets + 1 on this one means the sweets weigh 3 − 1 = 2 grams. Keep going up: where do you first get stuck?", zh: "和糖放在同一边的砝码相当于做减法：对面盘放 3，这边放糖和 1，糖就是 3 − 1 = 2 克。继续往上称：第一次卡住是在几克？" },
+          { en: `Each weight can be on the other pan (+), beside the sweets (−) or not used (0). What is the most you can make with ${k === 2 ? "both" : `all ${k}`} weights on the other pan, and is there any gap below that?`, zh: `每个砝码可以放在对面盘（加）、放在糖旁边（减），或者不用（0）。${k} 个砝码全部放在对面盘最多是多少？比它小的数里有没有称不出来的？` },
+        ],
+        wrongAnswers: distinctRules(answer, [
+          {
+            match: String(biggest),
+            feedback: {
+              en: `${biggest} is the biggest single weight, but you can use several weights at once. ${biggest} + 1 already gives ${biggest + 1}.`,
+              zh: `${biggest} 是最重的一个砝码，可是你可以同时用好几个。${biggest} + 1 就已经是 ${biggest + 1} 了。`,
+            },
+          },
+          {
+            match: String(3 * biggest),
+            feedback: {
+              en: `${3 * biggest} is the next weight in the pattern, 3 × ${biggest}, but she doesn't have it. Even with ${k === 2 ? "both" : `all ${k}`} weights on one pan, the most you can balance is ${weights.join(" + ")}.`,
+              zh: `${3 * biggest} 是规律里的下一个砝码（3 × ${biggest}），可是她手里没有它。就算 ${k} 个砝码全放一边，最多也只能平衡 ${weights.join(" + ")}。`,
+            },
+          },
+          {
+            match: "1",
+            feedback: {
+              en: "If weights could only go on the other pan, 2 grams would be impossible and you'd stop at 1. But the balance has two pans: try putting a weight beside the sweets.",
+              zh: "如果砝码只能放在对面盘，2 克就称不出来，只能停在 1 克。可是天平有两边：试试把砝码放在糖旁边。",
+            },
+          },
+          {
+            match: String(rest),
+            feedback: {
+              en: `${weights.slice(0, -1).join(" + ")} = ${rest}, and those weights really can weigh everything up to ${rest}. Now bring in the ${biggest}: what can ${biggest} minus a few small weights make?`,
+              zh: `${weights.slice(0, -1).join(" + ")} = ${rest}，用这几个确实能称出 1 到 ${rest} 的每一个数。现在把 ${biggest} 也用上：${biggest} 减去几个小砝码能得到多少？`,
+            },
+          },
+          {
+            match: "gt:correct",
+            feedback: {
+              en: `Add up ${k === 2 ? "both" : `all ${k}`} weights: nothing heavier than that can ever balance, wherever you put them.`,
+              zh: `把 ${k} 个砝码加起来看看：比这个更重的东西，不管砝码怎么放都平衡不了。`,
+            },
+          },
+          {
+            match: "lt:correct",
+            feedback: {
+              en: "You can go further. At the number where you got stuck, try putting weights beside the sweets as well as on the other pan.",
+              zh: "还能更往上。在你卡住的那个数，试试对面盘放砝码，糖旁边也放砝码。",
+            },
+          },
+        ]),
+        explanation: {
+          en: `A weight on the other pan adds, a weight beside the sweets subtracts, and an unused weight counts 0. ${stepsEn.join(", ")}. ${k === 2 ? "Both weights" : `All ${k} weights`} add up to ${answer}, so nothing heavier can balance, and the answer is ${answer}.`,
+          zh: `放在对面盘的砝码是加，放在糖旁边的是减，不用的算 0。${stepsZh.join("，")}。${k} 个砝码加起来正好 ${answer} 克，更重的就平衡不了，所以答案是 ${answer}。`,
+        },
+        aha: {
+          en: `Each weight can add, subtract or sit out, so weights that grow by threes leave no gaps: ${k} weights reach every whole number up to ${answer}.`,
+          zh: `每个砝码可以加、减或不用，所以一个比一个大 3 倍的砝码不会留空：${k} 个砝码能一克不漏地称到 ${answer} 克。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -429,6 +675,87 @@ export const staircaseWays: HeroQuestionBlueprint = {
   sortOrder: 2,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 1, floor 2, ceiling 2, paths 2, wrong 2, hints 2, retell 1: listing small staircases, the last-stride recurrence and counting by the number of 2-strides are all real paths; kids who did fibonacci-next will see Fibonacci coming; the scene's count row (1-6 stairs) shows only the ways a child has found, with a ✓ when a staircase is complete",
+  // The scene stays playable on 4 stairs and builds the counts up to askN (1-40) in the reveal.
+  variants: defineVariants({
+    standard: { stairs: 10 },
+    params: [{ stairs: 7 }, { stairs: 8 }, { stairs: 12 }, { stairs: 15 }],
+    build: ({ stairs: n }) => {
+      const answer = climbWays(n);
+      const counts = Array.from({ length: n - 2 }, (_, i) => climbWays(i + 3));
+      return {
+        prompt: {
+          en: `Each stride goes up 1 stair or 2 stairs, and the order of the strides matters (1 + 2 and 2 + 1 are different ways). How many different ways are there to climb a staircase of ${n} stairs?`,
+          zh: `每一步上 1 级或 2 级，步子的先后顺序不同就算不同的走法（1 + 2 和 2 + 1 是两种）。${n} 级楼梯一共有几种不同的走法？`,
+        },
+        scene: { type: "staircase_paths", steps: 4, maxHop: 2, askN: n, ways: answer },
+        answer: { type: "NUMERIC", value: answer, unit: { en: "ways", zh: "种" } },
+        hints: [
+          { en: `${n} stairs is too many to list, so start small. Pick 1, 2, 3, 4 stairs in the scene, climb them with "+1 step" and "+2 steps", and find every way: a ✓ appears once you have them all.`, zh: `${n} 级太多，列不完，先从小的开始。在场景里选 1、2、3、4 级，用「上 1 级」「上 2 级」爬上去，把每种走法都找出来：找全了会出现 ✓。` },
+          { en: `Write the counts in a row: 1, 2, 3, 5, 8, … Each number is the sum of the two just before it. Keep the row going until you reach ${n} stairs.`, zh: `把这些数排成一行：1、2、3、5、8……每个数都是它前面两个数的和。一直写到 ${n} 级。` },
+          { en: `Your last stride lands on the top from one stair below or from two below. So the ways for ${n} stairs = the ways for ${n - 1} + the ways for ${n - 2}.`, zh: `最后一步要么从下面 1 级跨上来，要么从下面 2 级跨上来。所以 ${n} 级的走法 = ${n - 1} 级的走法 + ${n - 2} 级的走法。` },
+        ],
+        wrongAnswers: distinctRules(answer, [
+          {
+            match: String(n),
+            feedback: {
+              en: `${n} is the number of stairs, and taking them one at a time is just one of the ways. Strides of 2 can go in many different places, too.`,
+              zh: `${n} 是楼梯的级数，一级一级地走只是其中一种走法。跨 2 级的那几步还可以放在很多不同的位置。`,
+            },
+          },
+          {
+            match: String(climbWays(n - 1)),
+            feedback: {
+              en: `${climbWays(n - 1)} is the number of ways for ${n - 1} stairs: you stopped one stair early. Add one more pair: the ways for ${n - 1} and for ${n - 2} stairs.`,
+              zh: `${climbWays(n - 1)} 是 ${n - 1} 级楼梯的走法数，你少走了一级。再往上加一次：把 ${n - 1} 级和 ${n - 2} 级的走法加起来。`,
+            },
+          },
+          {
+            match: String(climbWays(n + 1)),
+            feedback: {
+              en: `${climbWays(n + 1)} is the answer for ${n + 1} stairs, one too many. Check your list again: 3 stairs have 3 ways, 4 stairs have 5.`,
+              zh: `${climbWays(n + 1)} 是 ${n + 1} 级楼梯的答案，多走了一级。再对一下你的表：3 级有 3 种，4 级有 5 种。`,
+            },
+          },
+          {
+            match: String(2 ** n),
+            feedback: {
+              en: `You gave every stair two choices, so ${n} 2s multiplied make ${2 ** n}. But a stride of 2 skips a stair, so stairs can't each choose on their own.`,
+              zh: `你让每一级都有两种选择，于是 ${n} 个 2 相乘是 ${2 ** n}。可是跨 2 级的时候会跳过一级，不是每一级都能自己选。`,
+            },
+          },
+          {
+            match: String(2 * n),
+            feedback: {
+              en: `You did ${n} × 2, as if each stair added two new ways. The counts grow faster than that: 4 stairs already have 5 ways and 6 stairs have 13.`,
+              zh: `你算的是 ${n} × 2，好像每多一级就多 2 种。其实走法长得比这快：4 级就有 5 种，6 级有 13 种。`,
+            },
+          },
+          {
+            match: "lt:correct",
+            feedback: {
+              en: `That's too few. ${n - 2} stairs already have ${climbWays(n - 2)} ways, and every extra stair adds the two counts before it.`,
+              zh: `太少了。光是 ${n - 2} 级楼梯就有 ${climbWays(n - 2)} 种走法，每多一级，都要把前面两个数加起来。`,
+            },
+          },
+          {
+            match: "gt:correct",
+            feedback: {
+              en: `That's too many. Build the list up from the bottom: each count is the sum of the two before it, 1, 2, 3, 5, 8, …, and stop at ${n} stairs.`,
+              zh: `太多了。从下往上一个个算：每个数都是前两个数的和，1、2、3、5、8……算到 ${n} 级就停。`,
+            },
+          },
+        ]),
+        explanation: {
+          en: `Call the number of ways to climb n stairs W(n). The last stride starts either one stair below the top or two stairs below it, so W(n) = W(n − 1) + W(n − 2). Starting from W(1) = 1 and W(2) = 2, the counts go ${counts.join(", ")}. So there are ${answer} ways to climb ${n} stairs.`,
+          zh: `把爬 n 级楼梯的走法数记作 W(n)。最后一步要么是从顶层下面 1 级跨上来的，要么是从下面 2 级跨上来的，所以 W(n) = W(n − 1) + W(n − 2)。从 W(1) = 1、W(2) = 2 开始，往下依次是 ${counts.join("、")}。所以 ${n} 级楼梯有 ${answer} 种走法。`,
+        },
+        aha: {
+          en: `Every count is the sum of the two before it: the Fibonacci numbers again. ${n} stairs have ${answer} ways, and you never had to list a single one.`,
+          zh: `每个数都是前两个数的和：又是斐波那契数。${n} 级楼梯有 ${answer} 种走法，一种都不用列。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -544,6 +871,93 @@ export const pascalRowSum: HeroQuestionBlueprint = {
   sortOrder: 4,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: filling rows and reading the sum column is the main path, the 'each number is used twice' argument explains it rather than finding it; the sum column shows rows 0-9 but keeps row 10's total as '?' until the reveal, so the doubling has to be spotted, not read off; editorial pass 2 made the hook ask the guess's question and added a 'more than 5,000' option so the choices bracket 1024",
+  // The scene draws rows 0..r (4-12) and keeps row r's total as "?" until the reveal: 2^r.
+  variants: defineVariants({
+    standard: { row: 10 },
+    params: [{ row: 6 }, { row: 8 }, { row: 9 }, { row: 12 }],
+    build: ({ row: r }) => {
+      const answer = 2 ** r;
+      const middle = binomial(r, Math.floor(r / 2));
+      return {
+        prompt: {
+          en: `Call the single 1 at the very top row 0, so the row below it (1, 1) is row 1. What do the numbers in row ${r} add up to?`,
+          zh: `把最顶上那个单独的 1 叫作第 0 行，它下面的 1、1 是第 1 行。第 ${r} 行所有的数加起来是多少？`,
+        },
+        scene: { type: "pascal_triangle", rows: r, prefilled: 3, askRow: r, rowSum: answer },
+        answer: { type: "NUMERIC", value: answer },
+        hints: [
+          { en: `Fill a few rows with "Fill a row" and watch the "sum" column on the right. Write the totals down: 1, 2, 4, … How does each one come from the one before?`, zh: `用「填一整行」填几行，看右边那一列「和」。把每行的和记下来：1、2、4……每个数是怎么从前一个变来的？` },
+          { en: `Each total is double the one before, because every number is passed down to two numbers in the next row. How many doublings take you from row 0 to row ${r}?`, zh: `每一行的和都是上一行的 2 倍，因为每个数都会传给下一行的两个数。从第 0 行到第 ${r} 行，要翻几次倍？` },
+          { en: `Row 0 adds up to 1, and every row doubles it once. Row ${r} is ${r} doublings from the top: ${r} 2s multiplied together.`, zh: `第 0 行的和是 1，每往下一行就翻一倍。第 ${r} 行离顶上翻了 ${r} 次：${r} 个 2 相乘。` },
+        ],
+        wrongAnswers: distinctRules(answer, [
+          {
+            match: String(answer / 2),
+            feedback: {
+              en: `${answer / 2} is the total of row ${r - 1}. You probably called the top 1 "row 1", but here the top is row 0, so you need one more doubling.`,
+              zh: `${answer / 2} 是第 ${r - 1} 行的和。你大概把顶上的 1 当成了第 1 行，可这里顶上是第 0 行，所以还要再翻一倍。`,
+            },
+          },
+          {
+            match: String(answer * 2),
+            feedback: {
+              en: `${answer * 2} is the total of row ${r + 1}, one doubling too many. Row 1 (1, 1) adds up to 2, row 2 adds up to 4: row ${r} is ${r} doublings of 1.`,
+              zh: `${answer * 2} 是第 ${r + 1} 行的和，多翻了一倍。第 1 行（1、1）的和是 2，第 2 行是 4：第 ${r} 行是 1 翻了 ${r} 次。`,
+            },
+          },
+          {
+            match: String(middle),
+            feedback:
+              r % 2 === 0
+                ? {
+                    en: `${middle} is the biggest number in row ${r}, the one in the middle. The question asks for the whole row added together.`,
+                    zh: `${middle} 是第 ${r} 行里最大的那个数，就在正中间。题目要的是一整行加起来的和。`,
+                  }
+                : {
+                    en: `${middle} is the biggest number in row ${r}: it sits twice in the middle. The question asks for the whole row added together.`,
+                    zh: `${middle} 是第 ${r} 行里最大的数，正中间有两个。题目要的是一整行加起来的和。`,
+                  },
+          },
+          {
+            match: String((r * (r + 1)) / 2),
+            feedback: {
+              en: `${(r * (r + 1)) / 2} is 1 + 2 + … + ${r}, as if each row added just one more. Check the sum column: the totals 1, 2, 4, 8 are doubling, not going up by one.`,
+              zh: `${(r * (r + 1)) / 2} 是 1 + 2 + … + ${r}，好像每行只多一点点。看看「和」那一列：1、2、4、8 是在翻倍，不是每次加 1。`,
+            },
+          },
+          {
+            match: String(2 * r),
+            feedback: {
+              en: "You added 2 for every row. But the totals don't go up by 2: they go 1, 2, 4, 8, 16, each one twice the one before.",
+              zh: "你每一行加了 2。可是每行的和不是每次多 2，而是 1、2、4、8、16，每个都是前一个的 2 倍。",
+            },
+          },
+          {
+            match: "lt:correct",
+            feedback: {
+              en: `That's too small. Row ${r - 2} alone already adds up to ${answer / 4}, and every row after it doubles.`,
+              zh: `太小了。光是第 ${r - 2} 行的和就已经是 ${answer / 4}，后面每一行还要再翻倍。`,
+            },
+          },
+          {
+            match: "gt:correct",
+            feedback: {
+              en: `That's too big. Count the doublings carefully: from row 0 to row ${r} is exactly ${r} of them.`,
+              zh: `太大了。仔细数一数翻了几次：从第 0 行到第 ${r} 行，正好翻 ${r} 次。`,
+            },
+          },
+        ]),
+        explanation: {
+          en: `When the next row is built, each number is added into two numbers below it, one on the left and one on the right. So each row adds up to exactly double the row above: 1, 2, 4, 8, 16, and so on. Row ${r} is ${r} doublings from row 0, and ${r} 2s multiplied together make ${answer}.`,
+          zh: `搭下一行的时候，每个数都会加进它下面的两个数里，一个在左下，一个在右下。所以每一行的和正好是上一行的 2 倍：1、2、4、8、16……第 ${r} 行离第 0 行翻了 ${r} 次，${r} 个 2 相乘是 ${answer}。`,
+        },
+        aha: {
+          en: `Every number feeds into the two numbers below it, so every row doubles: row ${r} adds up to ${answer}. Press "Colour: evens" to see triangles hiding inside the triangle.`,
+          zh: `每个数都会加进它下面的两个数里，所以每一行都翻倍：第 ${r} 行的和是 ${answer}。点「涂色：偶数」，看看三角形里藏着的三角形。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -861,6 +1275,69 @@ export const calendarSquare: HeroQuestionBlueprint = {
   sortOrder: 7,
   rubricNotes:
     "19/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 1, paths 2, wrong 2, hints 2, retell 2: a real trick kids can do on a family calendar; editorial pass 2 turned the guess into 'which shortcut?' (× 3 / × 9 / × 10 / none), a real hunch with × 3 as the tempting slip, where 'does it always work?' was a giveaway; the explore panel now shows the sum next to the middle date (not 'middle × 9') and hides the asked box's total, so the rule is found by moving the frame; adding all nine, pairing opposites and ×9 are all real paths; extensions stay close",
+  // Same month (November 2026); the middle date must leave a whole 3 × 3 box on the calendar: 9 × middle.
+  variants: defineVariants({
+    standard: { middle: 17 },
+    params: [{ middle: 9 }, { middle: 12 }, { middle: 19 }, { middle: 20 }],
+    build: ({ middle: c }) => {
+      const answer = 9 * c;
+      return {
+        prompt: { en: `The middle date of the box is ${c}. What do all nine dates in the box add up to?`, zh: `方框中间的日期是 ${c}。框里九个日期加起来是多少？` },
+        scene: { type: "calendar_grid", year: 2026, month: 11, centre: c, sum: answer },
+        answer: { type: "NUMERIC", value: answer },
+        hints: [
+          { en: `Drag the frame to a few other places and compare "add all nine" with "middle date". What do you notice every time? Then come back to ${c}.`, zh: `把方框拖到几个别的地方，比一比「九个数相加」和「中间的日期」。每次都发现了什么？然后再回到 ${c}。` },
+          { en: `The date left of ${c} is one less, and the date right of it is one more, so together they make ${c} + ${c}. What about the dates just above and below ${c}?`, zh: `${c} 左边的日期少 1，右边的多 1，所以这两个加起来是 ${c} + ${c}。${c} 正上方和正下方的日期呢？` },
+          { en: `All four pairs of opposite dates make ${c} + ${c}. Four pairs plus the ${c} in the middle is nine ${c}s. Quick way: 10 × ${c}, then take away one ${c}.`, zh: `四对相对的日期每对都是 ${c} + ${c}。四对再加上中间的 ${c}，就是九个 ${c}。快算法：先算 10 × ${c}，再减去一个 ${c}。` },
+        ],
+        wrongAnswers: distinctRules(answer, [
+          {
+            match: String(8 * c),
+            feedback: {
+              en: `That's 8 × ${c}: you counted the four pairs, two ${c}s each, but forgot the ${c} in the middle of the box.`,
+              zh: `这是 8 × ${c}：你算了四对、每对两个 ${c}，可是忘了方框正中间的那个 ${c}。`,
+            },
+          },
+          {
+            match: String(10 * c),
+            feedback: {
+              en: `That's 10 × ${c}, one ${c} too many. There are only nine dates in the box, so take one ${c} away.`,
+              zh: `这是 10 × ${c}，多了一个 ${c}。框里只有九个日期，所以要减掉一个 ${c}。`,
+            },
+          },
+          {
+            match: String(3 * c),
+            feedback: {
+              en: `${3 * c} is just the middle row: ${c - 1} + ${c} + ${c + 1}. The rows above and below count too.`,
+              zh: `${3 * c} 只是中间那一行：${c - 1} + ${c} + ${c + 1}。上面一行和下面一行也要算进去。`,
+            },
+          },
+          {
+            match: "lt:correct",
+            feedback: {
+              en: `A little too small. Check your adding: each of the four opposite pairs makes ${2 * c}, and then the middle ${c} is added on top.`,
+              zh: `小了一点。检查一下加法：四对相对的日期每对都是 ${2 * c}，最后还要加上中间的 ${c}。`,
+            },
+          },
+          {
+            match: "gt:correct",
+            feedback: {
+              en: `A little too big. Count the dates in the box again: there are exactly nine, and they balance out to nine ${c}s.`,
+              zh: `大了一点。再数一数框里的日期：正好九个，多的和少的互相抵消，合起来正好是九个 ${c}。`,
+            },
+          },
+        ]),
+        explanation: {
+          en: `In the box around ${c}, the date to the left is one less and the date to the right is one more, so that pair adds up to ${c} + ${c}; the dates above and below are 7 less and 7 more, so they balance too. The same happens for both diagonals, so all four opposite pairs make ${2 * c} each. Four pairs plus the ${c} in the middle give 4 × ${2 * c} + ${c} = ${answer}, which is the same as 9 × ${c}.`,
+          zh: `在围着 ${c} 的方框里，左边的日期少 1，右边的多 1，这一对加起来是 ${c} + ${c}；上面的少 7，下面的多 7，也正好抵消。两条对角线也是这样，所以四对相对的日期每对都是 ${2 * c}。四对加上中间的 ${c}：4 × ${2 * c} + ${c} = ${answer}，也就是 9 × ${c}。`,
+        },
+        aha: {
+          en: `Opposite dates balance around the middle, so nine dates always add up to nine times the middle one: 9 × ${c} = ${answer}.`,
+          zh: `相对的两个日期围着中间数正好扯平，所以九个日期的和总是中间数的 9 倍：9 × ${c} = ${answer}。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -971,6 +1448,83 @@ export const cicadaPrimes: HeroQuestionBlueprint = {
   rubricNotes:
     "19/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 2, retell 1: listing both sets of years and the 'multiple of both' idea are two real paths, and the 12-vs-13 presets carry the surprise; the explore readout now counts the meetings and asks for the first ★ instead of printing 'First together: year 78', so the hints lead again (that item was 1 before pass 2); editorial pass 2 made the hook ask the guess's question (a 12-year cicada) instead of a 'why?' the options didn't answer",
   upgradesLegacyTitleEn: "Cicada Underground Mystery",
+  // A prime cycle against a shorter predator cycle it doesn't divide, so they first meet at a × b.
+  // altA is the first multiple of b from 10 up: the "unlucky" cycle that meets the predator every time.
+  variants: defineVariants({
+    standard: { a: 13, b: 6 },
+    params: [{ a: 17, b: 6 }, { a: 11, b: 6 }, { a: 13, b: 4 }, { a: 13, b: 5 }],
+    build: ({ a, b }) => {
+      const answer = lcm(a, b);
+      const altA = Math.ceil(10 / b) * b;
+      const before = Math.floor(a / b) * b;
+      const cicadaYears = Array.from({ length: answer / a }, (_, i) => (i + 1) * a);
+      return {
+        prompt: {
+          en: `A cicada that comes out every ${a} years and a predator that booms every ${b} years were both out this year. How many years until they are out in the same year again?`,
+          zh: `每 ${a} 年出来一次的蝉，和每 ${b} 年爆发一次的天敌，今年同时出现了。再过多少年，它们才会又在同一年出现？`,
+        },
+        scene: { type: "cycle_timeline", a, b, years: 120, altA, collision: answer },
+        answer: { type: "NUMERIC", value: answer, unit: { en: "years", zh: "年" } },
+        hints: [
+          { en: `Press "🦗 ${altA}" first and watch the timeline: how often do the cicada years and the predator years light up together? Then press "🦗 ${a}" and compare.`, zh: `先点「🦗 ${altA}」，看时间轴：蝉出来的年份和天敌爆发的年份多久撞在一起一次？再点「🦗 ${a}」比一比。` },
+          { en: `List both: the predator is out in years ${b}, ${2 * b}, ${3 * b}, ${4 * b}, …, and the cicadas in years ${a}, ${2 * a}, ${3 * a}, … Which is the first number in both lists?`, zh: `把两串年份都写出来：天敌在第 ${b}、${2 * b}、${3 * b}、${4 * b}……年，蝉在第 ${a}、${2 * a}、${3 * a}……年。两串里第一个相同的数是几？` },
+          { en: `A year in both lists must be a multiple of ${a} and a multiple of ${b} at the same time. ${a} is prime and doesn't divide ${b}, so the first such year is ${a} × ${b}.`, zh: `两串里都有的年份，必须既是 ${a} 的倍数，又是 ${b} 的倍数。${a} 是质数，又不能整除 ${b}，所以第一个这样的年份就是 ${a} × ${b}。` },
+        ],
+        wrongAnswers: distinctRules(answer, [
+          {
+            match: String(a + b),
+            feedback: {
+              en: `You added ${a} + ${b}. But they meet in a year that is on both lists, a multiple of ${a} and of ${b}, and ${a + b} isn't a multiple of either.`,
+              zh: `你算的是 ${a} + ${b}。可是它们相遇的年份要同时在两串里，既是 ${a} 的倍数又是 ${b} 的倍数，${a + b} 哪个都不是。`,
+            },
+          },
+          {
+            match: String(a),
+            feedback: {
+              en: `Year ${a} is when the cicadas come back the first time, but the predator is out in years ${before} and ${before + b}, not ${a}. Keep going along both lists.`,
+              zh: `第 ${a} 年是蝉第一次回来的时候，可是天敌在第 ${before} 年和第 ${before + b} 年出现，不在第 ${a} 年。沿着两串年份继续往下找。`,
+            },
+          },
+          {
+            match: String(a - b),
+            feedback: {
+              en: `That's ${a} − ${b}, the gap between the two cycles. But the question is when both are out in the same year: list the years each one appears.`,
+              zh: `这是 ${a} − ${b}，两个周期的差。可题目问的是它们哪一年同时出现：把各自出现的年份列出来。`,
+            },
+          },
+          {
+            match: String(altA * b),
+            feedback: {
+              en: `${altA * b} is ${altA} × ${b}, using ${an(altA)} ${altA}-year cycle. This cicada comes out every ${a} years, and that changes everything.`,
+              zh: `${altA * b} 是 ${altA} × ${b}，用的是 ${altA} 年的周期。这里的蝉是每 ${a} 年出来一次，这一下全变了。`,
+            },
+          },
+          {
+            match: "lt:correct",
+            feedback: {
+              en: `Too soon. Check that your year is on the cicada list (${a}, ${2 * a}, ${3 * a}, …) AND on the predator list (${b}, ${2 * b}, ${3 * b}, …).`,
+              zh: `太早了。检查一下：你的年份要在蝉的那串里（${a}、${2 * a}、${3 * a}……），也要在天敌的那串里（${b}、${2 * b}、${3 * b}……）。`,
+            },
+          },
+          {
+            match: "gt:correct",
+            feedback: {
+              en: "That's a year they really do meet, but not the first one. Look for an earlier year that's on both lists.",
+              zh: "它们那一年确实会撞上，但不是第一次。找找有没有更早的、两串里都有的年份。",
+            },
+          },
+        ]),
+        explanation: {
+          en: `The predator is out in years ${b}, ${2 * b}, ${3 * b}, …, and the cicadas in years ${cicadaYears.slice(0, -1).join(", ")} and ${answer}. A year on both lists has to be a multiple of ${b} and of ${a} at the same time. Since ${a} is prime and doesn't divide ${b}, the first such year is ${a} × ${b} = ${answer}.`,
+          zh: `天敌在第 ${b}、${2 * b}、${3 * b}……年出现，蝉在第 ${cicadaYears.join("、")} 年出现。两串里都有的年份，必须同时是 ${b} 和 ${a} 的倍数。${a} 是质数，又不能整除 ${b}，所以第一个这样的年份是 ${a} × ${b} = ${answer}。`,
+        },
+        aha: {
+          en: `${cap(an(altA))} ${altA}-year cicada would meet this predator every time it comes out, but ${an(a)} ${a}-year cicada only once in ${answer} years. Prime cycles share no factors, so they dodge other rhythms.`,
+          zh: `${altA} 年的蝉每次出来都会撞上这个天敌，${a} 年的蝉却 ${answer} 年才撞一次。质数周期和别的周期没有公因数，最能躲开别人的节奏。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -1070,6 +1624,68 @@ export const frogSwap: HeroQuestionBlueprint = {
   sortOrder: 9,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 1, hints 2, retell 1: playing and the jumps-plus-hops count are two real paths, and 'every finished swap is exactly 15' is a true surprise; the scene proposes 15 the moment the swap is done, so the wrong-answer rules mostly catch kids who count on paper",
+  // The scene plays 1-4 frogs a side on 2n + 1 pads: n × n jumps plus 2n hops.
+  variants: defineVariants({
+    standard: { perSide: 3 },
+    params: [{ perSide: 1 }, { perSide: 2 }, { perSide: 4 }],
+    build: ({ perSide: n }) => {
+      const jumps = n * n;
+      const answer = jumps + 2 * n;
+      const pads = 2 * n * (n + 1);
+      const teamEn = n === 1 ? "one green frog on the left and one brown frog on the right" : `${n} green frogs on the left and ${n} brown frogs on the right`;
+      return {
+        prompt: {
+          en: `Now there are ${2 * n + 1} lily pads: ${teamEn}, with the empty pad in the middle. Green frogs move only to the right and brown frogs only to the left, and every hop or jump counts as one move. How few moves does it take to swap the two teams completely?`,
+          zh: `现在有 ${2 * n + 1} 片荷叶：左边 ${n} 只绿蛙，右边 ${n} 只棕蛙，中间空着一片。绿蛙只能往右，棕蛙只能往左，小跳和大跳每跳一次都算一步。让两队青蛙完全换位，最少要几步？`,
+        },
+        scene: { type: "frog_puzzle", perSide: n, minMoves: answer },
+        answer: { type: "NUMERIC", value: answer, unit: { en: "moves", zh: "步" } },
+        hints: [
+          { en: `Play first with ${n === 1 ? "one frog" : `${n} frogs`} a side: tap a frog to make it hop or jump, and press "Undo" when you get stuck. What went wrong just before you got stuck?`, zh: `先用每边 ${n} 只青蛙玩一玩：点一只青蛙让它跳，卡住了就点「撤销」。卡住之前出了什么问题？` },
+          { en: `Count the jumps first: every green frog has to jump over every brown frog exactly once. With ${n} of each colour, how many jumps is that?`, zh: `先数大跳：每只绿蛙都要正好跳过每只棕蛙一次。每种颜色 ${n} 只，一共几次大跳？` },
+          { en: `${n === 1 ? "Both frogs travel" : `All ${2 * n} frogs travel`} ${n + 1} pads each, ${pads} pads in total, and a jump covers 2 pads. Take away the pads the jumps cover: how many one-pad hops are left?`, zh: `${2 * n} 只青蛙每只都要走 ${n + 1} 片荷叶，一共 ${pads} 片，一次大跳走 2 片。减去大跳走的荷叶：还剩几次只走 1 片的小跳？` },
+        ],
+        wrongAnswers: distinctRules(answer, [
+          {
+            match: String(jumps),
+            feedback: {
+              en: `${jumps} is the number of jumps: each green frog leaps over each brown frog once. But the frogs also need some small hops onto the pad right next to them. Count those too.`,
+              zh: `${jumps} 是大跳的次数：每只绿蛙都跳过每只棕蛙一次。可青蛙还需要几次跳到旁边空荷叶的小跳，那些也要算上。`,
+            },
+          },
+          {
+            match: String(2 * n),
+            feedback: {
+              en: `${2 * n} is the number of small hops onto a neighbouring pad. The frogs also have to jump over each other: ${jumps} ${jumps === 1 ? "jump" : "jumps"} in all.`,
+              zh: `${2 * n} 是小跳的次数。青蛙还得互相跳过去，一共 ${jumps} 次大跳。`,
+            },
+          },
+          {
+            match: "lt:correct",
+            feedback: {
+              en: `That's too few to be possible. Every green frog must get past every brown frog, and the only way past is a jump: that's ${jumps} ${jumps === 1 ? "jump" : "jumps"} before you count a single hop.`,
+              zh: `这么少是做不到的。每只绿蛙都得越过每只棕蛙，而越过去只能靠大跳：光大跳就要 ${jumps} 次，还没算小跳呢。`,
+            },
+          },
+          {
+            match: "gt:correct",
+            feedback: {
+              en: "That's more than you need. Count the two kinds of move separately: one jump for every green-brown pair, and then only the short hops the frogs still need.",
+              zh: "比需要的多了。把两种跳法分开数：每一对绿蛙和棕蛙一次大跳，再加上青蛙还需要的小跳。",
+            },
+          },
+        ]),
+        explanation: {
+          en: `Every green frog has to get past every brown frog, and the only way past is a jump, so there ${jumps === 1 ? "is 1 × 1 = 1 jump" : `are ${n} × ${n} = ${jumps} jumps`}. ${n === 1 ? "Each of the 2 frogs travels" : `Each of the ${2 * n} frogs travels`} ${n + 1} pads, ${pads} pads in total; the jumps cover ${2 * jumps} of them, so ${2 * n} one-pad hops cover the rest. That's ${jumps} + ${2 * n} = ${answer} moves, and no swap can do it in fewer.`,
+          zh: `每只绿蛙都要越过每只棕蛙，而越过去只能靠大跳，所以要大跳 ${n} × ${n} = ${jumps} 次。${2 * n} 只青蛙每只走 ${n + 1} 片荷叶，一共 ${pads} 片；大跳走了其中 ${2 * jumps} 片，剩下的靠 ${2 * n} 次小跳。一共 ${jumps} + ${2 * n} = ${answer} 步，没有更少的换法。`,
+        },
+        aha: {
+          en: `With ${n === 1 ? "one frog" : `${n} frogs`} a side it's ${n} × ${n} jumps plus ${2 * n} hops, ${answer} moves. The same count, n × n + 2n = n(n + 2), works for any number of frogs.`,
+          zh: `每边 ${n} 只青蛙：${n} × ${n} 次大跳加 ${2 * n} 次小跳，一共 ${answer} 步。n × n + 2n = n(n + 2) 对任何只数的青蛙都管用。`,
+        },
+      };
+    },
+  }),
 };
 
 export const PATTERNS_EVERYWHERE: readonly HeroQuestionBlueprint[] = [

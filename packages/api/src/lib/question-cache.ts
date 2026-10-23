@@ -22,7 +22,8 @@ import { publicQuestionSelect, toPublicQuestion, type PublicQuestion, type Publi
 export const QUESTION_PAYLOAD_TTL_SEC = 600;
 export const QUESTION_COUNT_TTL_SEC = 60;
 
-const KEY_VERSION = "v1";
+// v2: the payload gained `variantCount`.
+const KEY_VERSION = "v2";
 export const questionPayloadKey = (id: string, updatedAt: Date): string =>
   `q:pub:${KEY_VERSION}:${id}:${updatedAt.getTime()}`;
 export const questionCountKey = (id: string): string => `q:count:${KEY_VERSION}:${id}`;

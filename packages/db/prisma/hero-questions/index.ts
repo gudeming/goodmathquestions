@@ -18,7 +18,7 @@ export {
   resolveChoiceOptions,
   HERO_LIMITS,
 } from "./validate";
-export { heroQuestionData, heroSortOrder, canonicalAnswerText, answerTypeFor, HERO_SORT_ORDER_BASE, type HeroQuestionData } from "./to-prisma";
+export { heroQuestionData, heroVariantsData, heroSortOrder, canonicalAnswerText, answerTypeFor, HERO_SORT_ORDER_BASE, type HeroQuestionData } from "./to-prisma";
 
 /** All hero blueprints, validated. Throws `HeroBlueprintValidationError` on any problem. */
 export function buildHeroQuestions(): HeroQuestionBlueprint[] {

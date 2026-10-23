@@ -29,6 +29,8 @@ interface ExploreStageProps {
   sessionLoading: boolean;
   onSolved: (result: SolvedResult) => void;
   track: Track;
+  /** "Try another number": answers go to the variant endpoints (`question` already carries its prompt, scene and hints). */
+  variantId?: string;
 }
 
 /** Scene events that are not the child operating the scene. */
@@ -37,7 +39,7 @@ const NON_INTERACTION_EVENTS = new Set(["scene_config_invalid", "scene_error", "
 const COMPACT_TYPES = new Set(["NUMERIC", "ESTIMATE", "EXPRESSION", "MULTI_VALUE", "OPEN"]);
 
 /** Act 2: the scene, the real question, the answer box, hints and the coach. */
-export function ExploreStage({ question, locale, flow, isLoggedIn, sessionLoading, onSolved, track }: ExploreStageProps) {
+export function ExploreStage({ question, locale, flow, isLoggedIn, sessionLoading, onSolved, track, variantId }: ExploreStageProps) {
   const t = useTranslations("questions");
   const labelId = useId();
   const showScene = useHasScene(question.animationConfig);
@@ -52,7 +54,12 @@ export function ExploreStage({ question, locale, flow, isLoggedIn, sessionLoadin
   const handleResult = (res: CheckResult & { xpEarned?: number; attempt?: number }) => {
     setError(null);
     const attempt = res.attempt ?? state.attempts + 1;
-    track("answer_submit", { correct: res.isCorrect, attempt, hintsUsed: state.hintsRevealed, answerType: question.answerType });
+    track("answer_submit", {
+      correct: res.isCorrect,
+      attempt,
+      hintsUsed: state.hintsRevealed,
+      answerType: question.answerType,
+    });
     flow.recordAttempt(res.isCorrect);
     if (res.isCorrect) {
       setWrong(null);
@@ -65,12 +72,18 @@ export function ExploreStage({ question, locale, flow, isLoggedIn, sessionLoadin
 
   const check = trpc.question.checkAnswer.useMutation({ onSuccess: handleResult, onError });
   const submit = trpc.question.submitAnswer.useMutation({ onSuccess: handleResult, onError });
-  const pending = check.isPending || submit.isPending;
+  const checkVariant = trpc.question.checkVariant.useMutation({ onSuccess: handleResult, onError });
+  const submitVariant = trpc.question.submitVariant.useMutation({ onSuccess: handleResult, onError });
+  const pending = check.isPending || submit.isPending || checkVariant.isPending || submitVariant.isPending;
 
   const send = () => {
     if (pending || sessionLoading || !isDraftReady(question.answerType, draft)) return;
     const answer = Array.isArray(draft) ? draft : draft.trim();
-    if (isLoggedIn) {
+    if (variantId) {
+      const input = { questionId: question.id, variantId, answer };
+      if (isLoggedIn) submitVariant.mutate(input);
+      else checkVariant.mutate(input);
+    } else if (isLoggedIn) {
       submit.mutate({
         questionId: question.id,
         answer,

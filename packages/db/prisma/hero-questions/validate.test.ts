@@ -29,9 +29,10 @@ import { scrambleAndNine, mindReadingFive } from "./world-number-magic";
 import { squaresOnChessboard } from "./world-shapes-that-lie";
 import { montyHall } from "./world-chance-and-luck";
 
-/** Deep copy with overrides; the originals are frozen-by-convention module constants. */
+/** Deep copy with overrides; the originals are frozen-by-convention module constants. `variants` (it holds a function) is shared. */
 function broken(bp: HeroQuestionBlueprint, patch: (copy: HeroQuestionBlueprint) => void): HeroQuestionBlueprint {
-  const copy = structuredClone(bp) as HeroQuestionBlueprint;
+  const { variants, ...data } = bp;
+  const copy = { ...structuredClone(data), ...(variants && { variants }) } as HeroQuestionBlueprint;
   patch(copy);
   return copy;
 }

@@ -11,7 +11,10 @@
  * Editorial pass 2 (editorial-pass-2.md): B5 gained a real extension, B10's fun fact names McCarthy (1964),
  * B11's title no longer rules out a guess.
  */
-import type { HeroQuestionBlueprint } from "./_template";
+import { defineVariants, type HeroQuestionBlueprint, type WrongAnswerRule } from "./_template";
+
+/** Drops later rules whose match repeats an earlier one (two slips can land on the same number). */
+const uniqueMatches = (rules: WrongAnswerRule[]): WrongAnswerRule[] => rules.filter((r, i) => rules.findIndex((o) => o.match === r.match) === i);
 
 /** B1. */
 export const squaresOnChessboard: HeroQuestionBlueprint = {
@@ -98,6 +101,67 @@ export const squaresOnChessboard: HeroQuestionBlueprint = {
   sortOrder: 1,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: almost everyone counts by size in a table; the pyramid picture is the only other path",
+  // grid_squares draws 4 × 4 to 8 × 8 boards; the answer is 1² + 2² + … + n².
+  variants: defineVariants({
+    standard: { size: 8 },
+    params: [{ size: 4 }, { size: 5 }, { size: 6 }, { size: 7 }],
+    build: ({ size: n }) => {
+      const sizes = Array.from({ length: n }, (_, i) => (n - i) ** 2);
+      const answer = sizes.reduce((a, b) => a + b, 0);
+      const list = sizes.join(" + ");
+      return {
+        prompt: {
+          en: `A board is a ${n} × ${n} grid. Count every square of every size, from 1 × 1 up to the whole board. How many squares are there?`,
+          zh: `一块 ${n} × ${n} 的方格棋盘。从 1 × 1 到整块棋盘，所有大小的正方形都算。一共有多少个？`,
+        },
+        scene: { type: "grid_squares", size: n },
+        answer: { type: "NUMERIC", value: answer },
+        hints: [
+          { en: `Squares come in ${n} sizes here. Press "2×2" in the scene and slide the frame: every spot it fits is another square.`, zh: `这里的正方形有 ${n} 种大小。在场景里点「2×2」，把方框挪来挪去：每个能放下的位置都是一个正方形。` },
+          { en: `A 2 × 2 square can start in ${n - 1} places across and ${n - 1} places down, so there are ${n - 1} × ${n - 1} = ${(n - 1) ** 2} of them.`, zh: `2 × 2 的正方形横着有 ${n - 1} 个起点，竖着也有 ${n - 1} 个，所以一共 ${n - 1} × ${n - 1} = ${(n - 1) ** 2} 个。` },
+          { en: `Each size gives a square number: ${n * n} small ones, ${(n - 1) ** 2} of size 2 × 2, and so on down to 1 whole board. Add them all.`, zh: `每种大小都是一个平方数：小格 ${n * n} 个，2 × 2 的 ${(n - 1) ** 2} 个……一直到整块棋盘 1 个。全部加起来。` },
+        ],
+        wrongAnswers: [
+          {
+            match: String(n * n),
+            feedback: {
+              en: `You counted the ${n * n} little squares. A 2 × 2 block is a square too: count those next.`,
+              zh: `你数的是 ${n * n} 个最小的格子。2 × 2 的一块也是正方形，接着数数那些吧。`,
+            },
+          },
+          {
+            match: String(n * n + 1),
+            feedback: {
+              en: `The small squares plus the whole board: good thinking! But there are sizes in between, like 2 × 2 and 3 × 3.`,
+              zh: `小格加上整块棋盘，想得好！可是中间还有别的大小，比如 2 × 2 和 3 × 3。`,
+            },
+          },
+          {
+            match: String(2 * n * n),
+            feedback: {
+              en: `That's ${n * n} × 2. Bigger squares don't come in the same number as small ones: the bigger the square, the fewer places it fits.`,
+              zh: `这是 ${n * n} × 2。大正方形的个数和小正方形不一样：正方形越大，能放的位置越少。`,
+            },
+          },
+          {
+            match: `lt:${n * n}`,
+            feedback: {
+              en: `Too few: the ${n * n} small squares alone are already more than that.`,
+              zh: `太少了：光是 ${n * n} 个小格就比这个多。`,
+            },
+          },
+        ],
+        explanation: {
+          en: `A k × k square fits in (${n + 1} − k) places across and (${n + 1} − k) places down, so there are (${n + 1} − k)² squares of each size. That gives ${list}. The total is ${answer}.`,
+          zh: `k × k 的正方形横着有 (${n + 1} − k) 个位置，竖着也有 (${n + 1} − k) 个，所以每种大小有 (${n + 1} − k)² 个。加起来是 ${list}。一共 ${answer} 个。`,
+        },
+        aha: {
+          en: `Same trick on a smaller board: it hides every square number from ${n * n} down to 1. Together they make ${answer}.`,
+          zh: `换一块棋盘，方法不变：里面藏着从 ${n * n} 一直到 1 的每个平方数，加起来是 ${answer}。`,
+        },
+      };
+    },
+  }),
 };
 
 /** B2. Lazy caterer: 4 cuts -> 1 + 1 + 2 + 3 + 4 = 11 pieces. */
@@ -185,6 +249,67 @@ export const pizzaCuts: HeroQuestionBlueprint = {
   sortOrder: 2,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: drawing and counting is the main path, the 'each cut adds one more' rule comes out of it rather than beside it",
+  // pizza_cuts allows 2-6 cuts; the most pieces from c cuts is 1 + (1 + 2 + … + c).
+  variants: defineVariants({
+    standard: { cuts: 4 },
+    params: [{ cuts: 3 }, { cuts: 5 }, { cuts: 6 }],
+    build: ({ cuts: c }) => {
+      const adds = Array.from({ length: c }, (_, i) => i + 1);
+      const answer = 1 + (c * (c + 1)) / 2;
+      const before = answer - c;
+      return {
+        prompt: {
+          en: `Make ${c} straight cuts across a round pizza. At most, how many pieces can you get?`,
+          zh: `在一张圆披萨上直直地切 ${c} 刀。最多能切出多少块？`,
+        },
+        scene: { type: "pizza_cuts", maxCuts: c },
+        answer: { type: "NUMERIC", value: answer },
+        hints: [
+          { en: `Don't send all ${c} cuts through the middle: the "All through the centre" button shows why. Drag cuts that don't all meet at one point.`, zh: `别让 ${c} 刀都穿过中心：点「全部过圆心」就知道为什么。试着拖出几刀，不要都交在同一个点上。` },
+          { en: "Count as you go: 1 cut makes 2 pieces, 2 cuts make 4, 3 cuts make 7. How much more does each new cut add?", zh: "边切边数：1 刀 2 块，2 刀 4 块，3 刀 7 块。每多一刀，比上一刀多出几块？" },
+          { en: `A new cut adds one piece, plus one for every old cut it crosses. So cut number ${c} can add at most ${c} pieces.`, zh: `新的一刀本身多出 1 块，每穿过一条旧刀痕再多 1 块。所以第 ${c} 刀最多多出 ${c} 块。` },
+        ],
+        wrongAnswers: uniqueMatches([
+          {
+            match: String(2 * c),
+            feedback: {
+              en: `Cutting through the centre every time gives ${2 * c}. Fair for sharing, but not the most pieces. Move a cut off-centre and count again.`,
+              zh: `每刀都过中心，就是 ${2 * c} 块。分得公平，但不是最多的。把一刀挪开中心，再数一数。`,
+            },
+          },
+          {
+            match: String(2 ** c),
+            feedback: {
+              en: `You doubled with every cut. To double, a cut would have to pass through every piece, but a straight cut can't from the third cut on.`,
+              zh: `你每刀都翻了一倍。要翻倍，这一刀得穿过每一块，可从第 3 刀起，直直的一刀做不到。`,
+            },
+          },
+          {
+            match: String(answer - 1),
+            feedback: {
+              en: `You added ${adds.join(" + ")} = ${answer - 1}. Nice pattern! But before any cut there's already 1 piece: the whole pizza.`,
+              zh: `你算的是 ${adds.join(" + ")} = ${answer - 1}，规律找得好！可是还没切的时候，整张披萨本身就是 1 块。`,
+            },
+          },
+          {
+            match: "gt:correct",
+            feedback: {
+              en: `${c} straight cuts can't make that many. The last cut crosses at most ${c - 1} old cuts, so it adds at most ${c} pieces to the ${before} you already had.`,
+              zh: `直直的 ${c} 刀切不出这么多。最后一刀最多穿过 ${c - 1} 条旧刀痕，所以最多在原来 ${before} 块的基础上再多 ${c} 块。`,
+            },
+          },
+        ]),
+        explanation: {
+          en: `Each new cut adds one piece for itself, plus one for each earlier cut it crosses. So the ${c} cuts add ${adds.join(", ")} pieces to the whole pizza you started with. That gives 1 + ${adds.join(" + ")} = ${answer}.`,
+          zh: `每切一刀，这一刀本身多出 1 块，每穿过一条旧刀痕再多 1 块。所以 ${c} 刀分别多出 ${adds.join("、")} 块，再加上一开始的整张披萨。一共 1 + ${adds.join(" + ")} = ${answer} 块。`,
+        },
+        aha: {
+          en: `Each cut adds one more piece than the cut before, so ${c} cuts make 1 + ${adds.join(" + ")} = ${answer} pieces.`,
+          zh: `每一刀都比上一刀多加 1 块，所以 ${c} 刀能切出 1 + ${adds.join(" + ")} = ${answer} 块。`,
+        },
+      };
+    },
+  }),
 };
 
 /** B4. 24 m of fence, whole-metre sides: 6 x 6 = 36 m². The wall variant (6 x 12 = 72) is the extension. */
@@ -279,6 +404,79 @@ export const fenceShaper: HeroQuestionBlueprint = {
   sortOrder: 4,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: table and slider are really the same try-every-rectangle path; the wall and circle extensions lead to a real rule",
+  // Any even fence length works; with whole-metre sides the best is the two halves of P/2 as close as possible.
+  variants: defineVariants({
+    standard: { perimeter: 24 },
+    params: [{ perimeter: 20 }, { perimeter: 30 }, { perimeter: 36 }, { perimeter: 40 }],
+    build: ({ perimeter: p }) => {
+      const half = p / 2;
+      const short = Math.floor(half / 2);
+      const long = half - short;
+      const answer = short * long;
+      const square = short === long;
+      const runnerUp = (short - 1) * (long + 1);
+      const table = Array.from({ length: short }, (_, i) => (i + 1) * (half - i - 1));
+      const shown = table.length > 6 ? [...table.slice(0, 3), "…", ...table.slice(-2)] : table;
+      return {
+        prompt: {
+          en: `The fence is ${p} metres long and every side must be a whole number of metres. How big can the garden be, in square metres?`,
+          zh: `围栏长 ${p} 米，每条边都要是整数米。菜地最大能有多少平方米？`,
+        },
+        scene: { type: "fence_shaper", perimeter: p, integerOnly: true, wallSide: false },
+        answer: { type: "NUMERIC", value: answer, unit: { en: "m²", zh: "平方米" } },
+        hints: [
+          { en: `The fence goes all the way around, so one long side plus one short side uses half of it: ${half} m.`, zh: `围栏要绕一整圈，所以一条长边加一条短边只用一半：${half} 米。` },
+          { en: `Drag the "width" slider one metre at a time, or make a table: 1 m and ${half - 1} m gives ${half - 1}, then try 2 m and ${half - 2} m…`, zh: `把「宽」的滑块一米一米地拖，或者列个表：1 米和 ${half - 1} 米，面积是 ${half - 1}；再试 2 米和 ${half - 2} 米……` },
+          { en: `The areas grow, then shrink. The biggest comes when the two sides adding up to ${half} are as close to each other as whole metres allow.`, zh: `面积先变大，再变小。加起来是 ${half} 的两条边，在整数米里越接近，面积越大。` },
+        ],
+        wrongAnswers: [
+          {
+            match: String(p),
+            feedback: {
+              en: `${p} metres is how long the fence is, all the way around. The question asks for the space inside: length × width.`,
+              zh: `${p} 米是围栏绕一圈的长度。题目问的是里面的地有多大：长 × 宽。`,
+            },
+          },
+          {
+            match: String(runnerUp),
+            feedback: {
+              en: `${short - 1} × ${long + 1} = ${runnerUp} is really close! Can the two sides get even closer and still use exactly ${p} m of fence?`,
+              zh: `${short - 1} × ${long + 1} = ${runnerUp}，非常接近了！还能让两条边更接近，同时正好用完 ${p} 米围栏吗？`,
+            },
+          },
+          {
+            match: String(half - 1),
+            feedback: {
+              en: `That's the long skinny garden, ${half - 1} × 1. Almost all the fence goes on the two long sides. Try making it wider.`,
+              zh: `这是又细又长的 ${half - 1} × 1。围栏几乎全花在两条长边上了。试着把它围宽一点。`,
+            },
+          },
+          {
+            match: String(half * half),
+            feedback: {
+              en: `That's ${half} × ${half}, but that square needs ${2 * p} m of fence. The fence has to go around all four sides.`,
+              zh: `这是 ${half} × ${half}，可是这个正方形要 ${2 * p} 米围栏。围栏要围四条边。`,
+            },
+          },
+          {
+            match: "gt:correct",
+            feedback: {
+              en: `No rectangle made from ${p} m of fence is that big. Check that your long side and short side add up to ${half} m.`,
+              zh: `${p} 米围栏围不出这么大的长方形。检查一下长边加短边是不是 ${half} 米。`,
+            },
+          },
+        ],
+        explanation: {
+          en: `Half the fence, ${half} m, makes one long side and one short side. The choices are 1 + ${half - 1}, 2 + ${half - 2}, … up to ${short} + ${long}, with areas ${shown.join(", ")}. ${square ? `The ${short} m by ${short} m square` : `The ${short} m by ${long} m garden, as close to a square as whole metres allow,`} wins with ${answer} square metres.`,
+          zh: `一半的围栏是 ${half} 米，正好是一条长边加一条短边。可以是 1 + ${half - 1}、2 + ${half - 2}……一直到 ${short} + ${long}，面积分别是 ${shown.join("、")}。${square ? `${short} 米乘 ${short} 米的正方形最大` : `${short} 米乘 ${long} 米最大，这是整数米里最接近正方形的`}，有 ${answer} 平方米。`,
+        },
+        aha: {
+          en: `Same fence rule, new length: the closer to a square, the more room. ${p} m of fence holds at most ${answer} square metres; the skinny garden gets only ${half - 1}.`,
+          zh: `换了围栏长度，规律不变：越接近正方形，地越大。${p} 米围栏最多围 ${answer} 平方米，又细又长的只有 ${half - 1}。`,
+        },
+      };
+    },
+  }),
 };
 
 /** B3. gap = 1 / 2π m = 15.92 cm for any planet. The scene proposes "16" (cm) when the slider hits 1 m. */
@@ -485,6 +683,80 @@ export const pythagorasSquares: HeroQuestionBlueprint = {
   sortOrder: 6,
   rubricNotes:
     "17/20 — hook 2, guess 1, hands-on 2, aha 2, floor 1, ceiling 2, paths 2, wrong 2, hints 2, retell 1: the scene's hook already shows 36, 64, 100 and a² + b² = c², which takes the edge off the guess; area tiles, trying other right triangles (hint 2) and the square root are real paths; needs squares and roots, so 12+",
+  // The scene takes legs up to 12 and needs a whole-number hypotenuse: the other triples in range are 3-4-5, 5-12-13 and 9-12-15.
+  variants: defineVariants({
+    standard: { a: 6, b: 8 },
+    params: [
+      { a: 3, b: 4 },
+      { a: 5, b: 12 },
+      { a: 9, b: 12 },
+    ],
+    build: ({ a, b }) => {
+      const area = a * a + b * b;
+      const c = Math.round(Math.sqrt(area));
+      const mid = (a + b) / 2;
+      const other = a === 3 ? "6 and 8" : "3 and 4";
+      const otherZh = a === 3 ? "6 和 8" : "3 和 4";
+      return {
+        prompt: {
+          en: `A right triangle has two shorter sides of ${a} and ${b}. How long is its longest side?`,
+          zh: `一个直角三角形的两条直角边是 ${a} 和 ${b}。它最长的那条边（斜边）有多长？`,
+        },
+        scene: { type: "pythagoras_squares", a, b, lockRightAngle: true },
+        answer: { type: "NUMERIC", value: c },
+        hints: [
+          { en: `Think about the squares, not the sides. Press "Show areas": the squares on the short sides have areas ${a} × ${a} = ${a * a} and ${b} × ${b} = ${b * b}.`, zh: `先别想边，想正方形。点「显示面积」：两条直角边上的正方形面积是 ${a} × ${a} = ${a * a} 和 ${b} × ${b} = ${b * b}。` },
+          { en: `Drag a pink corner to try another right triangle, like ${other}. Do the two small areas always add up to exactly the big one?`, zh: `拖动粉色的顶点，试试别的直角三角形，比如 ${otherZh}。两个小面积加起来，是不是总是正好等于大的那个？` },
+          { en: `So the big square has area ${a * a} + ${b * b} = ${area}. Its side is the number that, multiplied by itself, gives ${area}.`, zh: `所以大正方形的面积是 ${a * a} + ${b * b} = ${area}。它的边长，就是自己乘自己等于 ${area} 的那个数。` },
+        ],
+        wrongAnswers: [
+          {
+            match: String(a + b),
+            feedback: {
+              en: `${a} + ${b} = ${a + b} would only be right if the triangle were squashed flat. Cutting across a corner is always shorter than walking around it.`,
+              zh: `${a} + ${b} = ${a + b}，那得是三角形被压扁成一条直线才行。斜着抄近路，总比沿着两条边绕过去短。`,
+            },
+          },
+          {
+            match: String(area),
+            feedback: {
+              en: `${area} is the AREA of the big square, so you're one step away. Its side is the number that, times itself, makes ${area}.`,
+              zh: `${area} 是大正方形的面积，你只差一步了。边长是自己乘自己等于 ${area} 的那个数。`,
+            },
+          },
+          {
+            match: String(mid),
+            feedback: {
+              en: `${mid} is halfway between ${a} and ${b}. But the longest side of a right triangle is always longer than each of the other two.`,
+              zh: `${mid} 是 ${a} 和 ${b} 的平均数。可是直角三角形最长的边，一定比另外两条都长。`,
+            },
+          },
+          {
+            match: String(a * b),
+            feedback: {
+              en: `${a * b} is ${a} × ${b}: twice the triangle's area, not a length. Try building squares on the sides instead.`,
+              zh: `${a * b} 是 ${a} × ${b}，那是三角形面积的两倍，不是边长。试试在边上搭正方形。`,
+            },
+          },
+          {
+            match: `lt:${b}`,
+            feedback: {
+              en: `The longest side can't be shorter than ${b}: it sits opposite the biggest angle, the right angle.`,
+              zh: `最长的边不可能比 ${b} 短：它对着最大的那个角，也就是直角。`,
+            },
+          },
+        ],
+        explanation: {
+          en: `The squares on the short sides have areas ${a} × ${a} = ${a * a} and ${b} × ${b} = ${b * b}. In a right triangle they fill the big square exactly, so its area is ${a * a} + ${b * b} = ${area}. Its side is ${c}, because ${c} × ${c} = ${area}.`,
+          zh: `两条直角边上的正方形面积是 ${a} × ${a} = ${a * a} 和 ${b} × ${b} = ${b * b}。直角三角形里它们正好铺满大正方形，所以大正方形的面积是 ${a * a} + ${b * b} = ${area}。它的边长是 ${c}，因为 ${c} × ${c} = ${area}。`,
+        },
+        aha: {
+          en: `New triangle, same secret: ${a * a} + ${b * b} = ${area} = ${c} × ${c}, so ${a}, ${b}, ${c} is another whole-number right triangle.`,
+          zh: `换个三角形，秘密不变：${a * a} + ${b * b} = ${area} = ${c} × ${c}，所以 ${a}、${b}、${c} 又是一个三边都是整数的直角三角形。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -687,6 +959,82 @@ export const clockHandsMeet: HeroQuestionBlueprint = {
   sortOrder: 8,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 1, retell 1: dragging the minute hand, a table of meeting times and the 'laps' argument all work; hint 3 gives away the 11-per-12-hours step",
+  // The scene runs 12-48 hours in 12-hour steps; every 12 hours hold 11 meetings, so the answer is 11 × hours / 12.
+  variants: defineVariants({
+    standard: { hours: 24 },
+    params: [{ hours: 12 }, { hours: 36 }, { hours: 48 }],
+    build: ({ hours }) => {
+      const halves = hours / 12;
+      const answer = 11 * halves;
+      const span = ({ 12: { en: "12 hours (half a day)", zh: "12 小时（半天）" }, 24: { en: "24 hours (one whole day)", zh: "24 小时（一整天）" }, 36: { en: "36 hours (a day and a half)", zh: "36 小时（一天半）" }, 48: { en: "48 hours (two whole days)", zh: "48 小时（整整两天）" } } as const)[hours as 12 | 24 | 36 | 48];
+      const end = hours % 24 === 0 ? { en: "midnight", zh: "半夜 12 点" } : { en: "noon", zh: "中午 12 点" };
+      const prompt = {
+        en: `Start at midnight, when the hands overlap, and count that as the first time. In the next ${span.en}, how many times do the hands overlap? (Stop just before the ${end.en} at the end: don't count it.)`,
+        zh: `从半夜 12 点开始，那时两针重合，算第 1 次。接下来的 ${span.zh}里，两针一共重合几次？（最后那个${end.zh}不算。）`,
+      };
+      return {
+        prompt,
+        scene: { type: "clock_overlap", hours: hours as 12 | 24 | 36 | 48, overlaps: answer },
+        answer: { type: "NUMERIC", value: answer },
+        hints: [
+          { en: "First find how many meetings fit into 12 hours. Drag the minute hand round: when does it catch the hour hand after 12:00?", zh: "先算 12 小时里有几次重合。拖着分针转：12 点以后，它第一次追上时针是什么时候？" },
+          { en: "Each catch-up takes a bit more than an hour, about 1 hour 5 minutes. So the meeting that 'should' be at 11 o'clock slides all the way to 12:00.", zh: "每追上一次要比一小时多一点，大约 1 小时 5 分。所以本该在 11 点左右的那次，一直滑到了 12 点整。" },
+          halves === 1
+            ? { en: "Between 11 and 12 the minute hand doesn't catch up until exactly 12:00, and that noon isn't counted. List the meetings from midnight to just before noon.", zh: "11 点到 12 点之间，分针要到 12 点整才追上，而那个中午 12 点不算。把半夜 12 点到中午之前的重合列出来数一数。" }
+            : { en: `12 hours hold 11 meetings, counting the first one. ${hours} hours is ${halves} lots of 12 hours.`, zh: `12 小时里，算上开头那次，重合 11 次。${hours} 小时是 ${halves} 个 12 小时。` },
+        ],
+        wrongAnswers: uniqueMatches([
+          {
+            match: String(hours),
+            feedback: {
+              en: "That's 'once every hour'. But the hour hand keeps moving, so each catch-up takes about 1 hour 5 minutes, a little more than an hour.",
+              zh: "这是「每小时一次」。可是时针也在走，每次追上要大约 1 小时 5 分，比一小时多一点。",
+            },
+          },
+          {
+            match: String(answer - 1),
+            feedback: {
+              en: "So close! You probably left out the overlap at midnight, where we started. It counts as the first one.",
+              zh: "很接近了！你可能没算开头半夜 12 点那一次。它算第 1 次。",
+            },
+          },
+          {
+            match: String(answer + 1),
+            feedback: {
+              en: `So close! You may have counted the ${end.en} at the very end too. Stop just before it.`,
+              zh: `很接近了！你可能把最后那个${end.zh}也算上了。它不算。`,
+            },
+          },
+          {
+            match: String(2 * hours),
+            feedback: {
+              en: "That would be twice an hour. The minute hand laps the hour hand only about once an hour, and a little less.",
+              zh: "这是每小时两次。分针大约一小时才追上时针一次，还不到一次。",
+            },
+          },
+          ...(halves > 1
+            ? [
+                {
+                  match: "11",
+                  feedback: {
+                    en: `11 is exactly right for 12 hours! But ${span.en.replace(/ \(.*\)/, "")} is ${halves} lots of 12 hours.`,
+                    zh: `12 小时里正好是 11 次！可是 ${hours} 小时是 ${halves} 个 12 小时。`,
+                  },
+                },
+              ]
+            : []),
+        ]),
+        explanation: {
+          en: `In 12 hours the minute hand goes round 12 times and the hour hand once, so the minute hand gains 11 laps and catches the hour hand 11 times. ${halves === 1 ? "That is all 12 hours: 11 meetings." : `${hours} hours are ${halves} lots of 12 hours, so ${halves} × 11 = ${answer} meetings.`}`,
+          zh: `12 小时里，分针转 12 圈，时针转 1 圈，分针多转 11 圈，所以追上 11 次。${halves === 1 ? "12 小时就是 11 次。" : `${hours} 小时是 ${halves} 个 12 小时，所以是 ${halves} × 11 = ${answer} 次。`}`,
+        },
+        aha: {
+          en: `Every 12 hours one meeting goes missing, because the hour hand is a moving target: ${hours} hours give ${answer} meetings, not ${hours}.`,
+          zh: `时针也在往前走，所以每 12 小时就少一次重合：${hours} 小时里是 ${answer} 次，而不是 ${hours} 次。`,
+        },
+      };
+    },
+  }),
 };
 
 /**

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { XP_RULES, computeAnswerXp, difficultyXp, levelForXp, solutionCommentXp, type AnswerXpInput } from "./xp";
+import { XP_RULES, computeAnswerXp,
+  computeVariantXp, difficultyXp, levelForXp, solutionCommentXp, type AnswerXpInput } from "./xp";
 
 const base: AnswerXpInput = {
   difficulty: "MEDIUM",
@@ -84,6 +85,18 @@ describe("solutionCommentXp", () => {
   it("counts Chinese characters one each", () => {
     expect(solutionCommentXp("我".repeat(30), false)).toBe(10);
     expect(solutionCommentXp("我".repeat(29), false)).toBe(0);
+  });
+});
+
+describe("computeVariantXp", () => {
+  it("pays +3 for a correct answer within the first 3 tries", () => {
+    expect(computeVariantXp({ isCorrect: true, previousAttempts: 0 })).toBe(XP_RULES.variant);
+    expect(computeVariantXp({ isCorrect: true, previousAttempts: 2 })).toBe(3);
+  });
+
+  it("pays nothing once 'show me' could have been used, or for a wrong answer", () => {
+    expect(computeVariantXp({ isCorrect: true, previousAttempts: 3 })).toBe(0);
+    expect(computeVariantXp({ isCorrect: false, previousAttempts: 0 })).toBe(0);
   });
 });
 

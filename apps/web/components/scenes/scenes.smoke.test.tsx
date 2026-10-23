@@ -153,6 +153,8 @@ const CASES: Array<[string, AnyScene, unknown]> = [
   ["bridges no layout", BridgesTraceScene as AnyScene, { type: "bridges_trace", nodes: KONIGSBERG.nodes, edges: KONIGSBERG.edges }],
   ["clock 24h", ClockOverlapScene as AnyScene, SAMPLE_SCENE_CONFIGS.clock_overlap],
   ["clock 12h", ClockOverlapScene as AnyScene, { type: "clock_overlap", hours: 12 }],
+  ["clock 36h", ClockOverlapScene as AnyScene, { type: "clock_overlap", hours: 36 }],
+  ["clock 48h", ClockOverlapScene as AnyScene, { type: "clock_overlap", hours: 48, overlaps: 44 }],
   ["coins 10", CoinFlipsScene as AnyScene, SAMPLE_SCENE_CONFIGS.coin_flips],
   ["coins 3 unseeded", CoinFlipsScene as AnyScene, { type: "coin_flips", streak: 3 }],
   ["coins 12", CoinFlipsScene as AnyScene, { type: "coin_flips", streak: 12, seed: 5 }],
