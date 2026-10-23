@@ -14,6 +14,10 @@ import { JUG_ACTIONS, applyJugAction, binarySearchSteps, isJugsSolved, jugsShort
 import { defineVariants, type HeroQuestionBlueprint, type WrongAnswerRule } from "./_template";
 
 /** Drops rules whose match repeats an earlier one or names the correct value (variant copy is generated, so slips can coincide). */
+/** English article for a number said aloud: "an 8-litre jug", "an 11-year cycle", "a 5-litre jug". */
+const an = (n: number): "a" | "an" => (/^8/.test(String(n)) || n === 11 || n === 18 ? "an" : "a");
+const litres = (n: number): string => `${n} ${n === 1 ? "litre" : "litres"}`;
+
 function distinctRules(rules: WrongAnswerRule[], correct: number): WrongAnswerRule[] {
   const seen = new Set<string>([String(correct)]);
   return rules.filter((r) => (seen.has(r.match) ? false : (seen.add(r.match), true)));
@@ -858,7 +862,7 @@ export const waterJugs: HeroQuestionBlueprint = {
       if (fills * caps[src] - empties * caps[dst] - left !== target) throw new Error("water bookkeeping is off");
       return {
         prompt: {
-          en: `You have a ${small}-litre jug and a ${big}-litre jug. Filling a jug from the tap, emptying a jug, or pouring one jug into the other each counts as one step. How few steps can leave exactly ${target} litres in a jug?`,
+          en: `You have ${an(small)} ${small}-litre jug and ${an(big)} ${big}-litre jug. Filling a jug from the tap, emptying a jug, or pouring one jug into the other each counts as one step. How few steps can leave exactly ${litres(target)} in a jug?`,
           zh: `你有一个 ${small} 升的壶和一个 ${big} 升的壶。从水龙头装满一个壶、倒空一个壶、把一个壶倒进另一个壶，每一下都算一步。最少几步，能让一个壶里正好有 ${target} 升水？`,
         },
         scene: { type: "water_jugs", jugs: [small, big], target, minSteps: steps },
@@ -866,14 +870,14 @@ export const waterJugs: HeroQuestionBlueprint = {
         hints: [
           { en: `Try it in the scene. Start with "${first.en}" and think about what could come next.`, zh: `在场景里试试。先点「${first.zh}」，再想想下一步能做什么。` },
           { en: `Then press "${second.en}". Now the ${small} L jug holds ${after2[0]} and the ${big} L jug holds ${after2[1]}. Keep a note like that after every step.`, zh: `接着点「${second.zh}」。现在 ${small} 升壶里有 ${after2[0]} 升，${big} 升壶里有 ${after2[1]} 升。每走一步都这样记一下。` },
-          { en: `Only ever fill the ${caps[src]} L jug, only ever empty the ${caps[dst]} L jug, and pour ${caps[src]} → ${caps[dst]} in between. Stop as soon as ${target} litres appear, and count every step.`, zh: `只装满 ${caps[src]} 升壶，只倒空 ${caps[dst]} 升壶，中间把 ${caps[src]} 倒入 ${caps[dst]}。一出现 ${target} 升就停，数一数一共几步。` },
+          { en: `Only ever fill the ${caps[src]} L jug, only ever empty the ${caps[dst]} L jug, and pour ${caps[src]} → ${caps[dst]} in between. Stop as soon as ${litres(target)} appear, and count every step.`, zh: `只装满 ${caps[src]} 升壶，只倒空 ${caps[dst]} 升壶，中间把 ${caps[src]} 倒入 ${caps[dst]}。一出现 ${target} 升就停，数一数一共几步。` },
         ],
         wrongAnswers: distinctRules(
           [
             { match: String(other), feedback: { en: `You started by filling the ${caps[dst]}-litre jug. That works too, but it takes ${other} steps. Try starting with the ${caps[src]}-litre jug instead.`, zh: `你是先装满 ${caps[dst]} 升壶的。这样也能量出来，但要 ${other} 步。换成先装满 ${caps[src]} 升壶试试。` } },
             { match: String(pours), feedback: { en: `${pours} is the number of pours from one jug into the other. Filling a jug and emptying a jug count as steps too.`, zh: `${pours} 是两个壶之间互相倒的次数。装满一个壶、倒空一个壶，也都算一步。` } },
             { match: "lt:correct", feedback: { en: "That's fewer steps than anyone can manage. Try it in the scene: each step can only fill, empty or pour once.", zh: "没有人能用这么少的步数。在场景里试试：每一步只能装满、倒空或倒一次。" } },
-            { match: "gt:correct", feedback: { en: `You got ${target} litres, which is great, but there's a shorter way. Count your steps again, or try starting with the other jug.`, zh: `你量出了 ${target} 升，很好，但还有更短的办法。再数一遍步数，或者换另一个壶先装。` } },
+            { match: "gt:correct", feedback: { en: `You got ${litres(target)}, which is great, but there's a shorter way. Count your steps again, or try starting with the other jug.`, zh: `你量出了 ${target} 升，很好，但还有更短的办法。再数一遍步数，或者换另一个壶先装。` } },
           ],
           steps
         ),

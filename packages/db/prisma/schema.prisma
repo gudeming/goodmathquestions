@@ -117,6 +117,7 @@ model User {
   // Relations
   submissions      Submission[]
   variantSubmissions VariantSubmission[]
+  variantXpAwards    VariantXpAward[]
   badges           UserBadge[]
   comments         Comment[]
   likes            QuestionLike[]
@@ -231,6 +232,7 @@ model Question {
   // Relations
   submissions  Submission[]
   variantSubmissions VariantSubmission[]
+  variantXpAwards    VariantXpAward[]
   comments     Comment[]
   tags         TagsOnQuestions[]
   likes        QuestionLike[]
@@ -370,6 +372,20 @@ model VariantSubmission {
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([userId, questionId, variantId])
+}
+
+// The variant XP paid to a user, at most once per variant (the unique key is what makes it once).
+model VariantXpAward {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  variantId  String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId, variantId])
 }
 
 model Badge {

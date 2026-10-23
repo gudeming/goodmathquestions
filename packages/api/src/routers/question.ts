@@ -5,13 +5,13 @@ import {
   publicProcedure,
   protectedProcedure,
 } from "../trpc";
-import { QuestionKind } from "@gmq/db";
+import { Prisma, QuestionKind } from "@gmq/db";
 import { AnswerSpecSchema, computeAnswerXp, computeVariantXp, levelForXp, type AnswerSpec } from "@gmq/math-engine";
 import { identityFromContext } from "../lib/identity";
 import { publicQuestionSelect, toPublicQuestion } from "../lib/question-public";
 import { loadPublicQuestion } from "../lib/question-cache";
 import { AnswerInputSchema, answerToText, judgeAnswer } from "../lib/answer-check";
-import { VariantIdSchema, findVariant, judgeVariant, parseVariants, toPublicVariant } from "../lib/variant";
+import { VariantIdSchema, findVariant, judgeVariant, parseVariants, toPublicVariant, type StoredVariant } from "../lib/variant";
 
 const SlugSchema = z.string().min(1).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 
@@ -118,6 +118,68 @@ const VariantAnswerInput = z.object({
   variantId: VariantIdSchema,
   answer: AnswerInputSchema,
 });
+
+/** The signed-in caller's user id, or null for a guest. */
+async function signedInUserId(ctx: Parameters<typeof identityFromContext>[0]): Promise<string | null> {
+  return identityFromContext(ctx)?.kind === "user" ? resolveSessionUserId(ctx as any) : null;
+}
+
+/**
+ * Variants come after the standard version. For a signed-in user that is enforced (as `reveal` is):
+ * a variant's copy may contain the standard answer (fibonacci's term 11 lists term 10). Guests can
+ * already reveal the standard version, so they are not gated.
+ */
+async function assertStandardDone(db: Db, userId: string, questionId: string): Promise<void> {
+  if (!(await standardDone(db, userId, questionId))) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Finish the original question first" });
+  }
+}
+
+/**
+ * Records a signed-in user's variant answer and pays the variant XP. Every judged try of a signed-in
+ * user goes through here (checkVariant too), so the "before Show me" attempt cap can't be dodged by
+ * checking first. The XP is decided by inserting the user's one `VariantXpAward` row for the variant:
+ * two concurrent correct submits can't both pay.
+ */
+async function recordVariantAnswer(db: Db, userId: string, questionId: string, variant: StoredVariant, answer: z.infer<typeof AnswerInputSchema>) {
+  const judgement = judgeVariant(questionId, variant, answer);
+  const where = { userId, questionId, variantId: variant.id };
+  const previousAttempts = await db.variantSubmission.count({ where });
+  let xpEarned = computeVariantXp({ isCorrect: judgement.isCorrect, previousAttempts });
+  if (xpEarned > 0) {
+    try {
+      await db.variantXpAward.create({ data: where });
+    } catch (e) {
+      if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) throw e;
+      xpEarned = 0; // already paid for this variant
+    }
+  }
+  await db.variantSubmission.create({ data: { ...where, answer: answerToText(answer), isCorrect: judgement.isCorrect, xpEarned } });
+  if (xpEarned > 0) {
+    const user = await db.user.update({
+      where: { id: userId },
+      data: { xp: { increment: xpEarned }, lastActiveAt: new Date() },
+    });
+    const newLevel = levelForXp(user.xp);
+    if (newLevel > user.level) {
+      await db.user.update({ where: { id: userId }, data: { level: newLevel } });
+    }
+  }
+  return { ...judgement, xpEarned, attempt: previousAttempts + 1 };
+}
+
+/** checkVariant / submitVariant response: aha and explanation only after a correct answer. */
+function variantResult(variant: StoredVariant, r: { isCorrect: boolean; feedback: unknown; estimate: unknown; xpEarned?: number; attempt?: number }) {
+  return {
+    isCorrect: r.isCorrect,
+    xpEarned: r.xpEarned ?? 0,
+    attempt: r.attempt,
+    feedback: r.feedback as ReturnType<typeof judgeVariant>["feedback"],
+    estimate: r.estimate as ReturnType<typeof judgeVariant>["estimate"],
+    aha: r.isCorrect ? variant.aha : null,
+    explanation: r.isCorrect ? variant.explanation : null,
+  };
+}
 
 /** Server-only fields needed to judge an answer. */
 const judgedQuestionSelect = {
@@ -455,7 +517,7 @@ export const questionRouter = createTRPCRouter({
   /**
    * "Try another number": the variants of a question as a client may see them (prompt, scene,
    * hints, options; never the answer), each with `solved` for the signed-in user (false for guests).
-   * Empty for questions without variants.
+   * Empty for questions without variants, and for a signed-in user who hasn't finished the original.
    */
   variants: publicProcedure
     .input(z.object({ questionId: z.string().min(1).max(64) }))
@@ -469,8 +531,9 @@ export const questionRouter = createTRPCRouter({
       }
       // Signed in: which variants this user already solved, so progress follows them across devices.
       let solved = new Set<string>();
-      if (identityFromContext(ctx)?.kind === "user") {
-        const userId = await resolveSessionUserId(ctx as any);
+      const userId = await signedInUserId(ctx);
+      if (userId) {
+        if (!(await standardDone(ctx.db, userId, question.id))) return [];
         const rows = await ctx.db.variantSubmission.findMany({
           where: { userId, questionId: question.id, isCorrect: true },
           select: { variantId: true },
@@ -481,17 +544,18 @@ export const questionRouter = createTRPCRouter({
       return parseVariants(question.variants, question.id).map((v) => ({ ...toPublicVariant(v), solved: solved.has(v.id) }));
     }),
 
-  /** Check a variant answer (guests: no XP, nothing stored). Same response shape as checkAnswer. */
+  /**
+   * Check a variant answer. Guests: no XP, nothing stored. A signed-in caller is recorded exactly
+   * like submitVariant (so checking can't be used to find the answer before a paid submit).
+   */
   checkVariant: publicProcedure.input(VariantAnswerInput).mutation(async ({ ctx, input }) => {
     const variant = await loadVariant(ctx.db, input.questionId, input.variantId);
-    const { isCorrect, feedback, estimate } = judgeVariant(input.questionId, variant, input.answer);
-    return {
-      isCorrect,
-      feedback,
-      estimate,
-      aha: isCorrect ? variant.aha : null,
-      explanation: isCorrect ? variant.explanation : null,
-    };
+    const userId = await signedInUserId(ctx);
+    if (userId) {
+      await assertStandardDone(ctx.db, userId, input.questionId);
+      return variantResult(variant, await recordVariantAnswer(ctx.db, userId, input.questionId, variant, input.answer));
+    }
+    return variantResult(variant, judgeVariant(input.questionId, variant, input.answer));
   }),
 
   /**
@@ -501,52 +565,21 @@ export const questionRouter = createTRPCRouter({
   submitVariant: protectedProcedure.input(VariantAnswerInput).mutation(async ({ ctx, input }) => {
     const userId = await resolveSessionUserId(ctx as any);
     const variant = await loadVariant(ctx.db, input.questionId, input.variantId);
-    const { isCorrect, feedback, estimate } = judgeVariant(input.questionId, variant, input.answer);
-
-    const where = { userId, questionId: input.questionId, variantId: variant.id };
-    const [previousAttempts, priorCorrect, done] = await Promise.all([
-      ctx.db.variantSubmission.count({ where }),
-      ctx.db.variantSubmission.findFirst({ where: { ...where, isCorrect: true }, select: { id: true } }),
-      standardDone(ctx.db, userId, input.questionId),
-    ]);
-    const xpEarned = computeVariantXp({ isCorrect, previousAttempts, alreadySolved: priorCorrect !== null, standardDone: done });
-
-    await ctx.db.variantSubmission.create({
-      data: { ...where, answer: answerToText(input.answer), isCorrect, xpEarned },
-    });
-    if (xpEarned > 0) {
-      const user = await ctx.db.user.update({
-        where: { id: userId },
-        data: { xp: { increment: xpEarned }, lastActiveAt: new Date() },
-      });
-      const newLevel = levelForXp(user.xp);
-      if (newLevel > user.level) {
-        await ctx.db.user.update({ where: { id: userId }, data: { level: newLevel } });
-      }
-    }
-
-    return {
-      isCorrect,
-      xpEarned,
-      attempt: previousAttempts + 1,
-      feedback,
-      estimate,
-      aha: isCorrect ? variant.aha : null,
-      explanation: isCorrect ? variant.explanation : null,
-    };
+    await assertStandardDone(ctx.db, userId, input.questionId);
+    return variantResult(variant, await recordVariantAnswer(ctx.db, userId, input.questionId, variant, input.answer));
   }),
 
   /**
-   * "Show me" for a variant. Guests may always; a signed-in user needs a correct submission or
-   * GIVE_UP_AFTER_ATTEMPTS tries on that variant (the same rule as `reveal`).
+   * "Show me" for a variant. Guests may always; a signed-in user needs the original done and a
+   * correct submission or GIVE_UP_AFTER_ATTEMPTS tries on that variant (the same rule as `reveal`).
    */
   revealVariant: publicProcedure
     .input(z.object({ questionId: z.string().min(1).max(64), variantId: VariantIdSchema }))
     .query(async ({ ctx, input }) => {
       const variant = await loadVariant(ctx.db, input.questionId, input.variantId);
-      const who = identityFromContext(ctx);
-      if (who?.kind === "user") {
-        const userId = await resolveSessionUserId(ctx as any);
+      const userId = await signedInUserId(ctx);
+      if (userId) {
+        await assertStandardDone(ctx.db, userId, input.questionId);
         const where = { userId, questionId: input.questionId, variantId: variant.id };
         const [attempts, correct] = await Promise.all([
           ctx.db.variantSubmission.count({ where }),

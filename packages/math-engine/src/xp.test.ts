@@ -89,18 +89,14 @@ describe("solutionCommentXp", () => {
 });
 
 describe("computeVariantXp", () => {
-  const ok = { isCorrect: true, previousAttempts: 0, alreadySolved: false, standardDone: true };
-
-  it("pays +3 for a variant solved within the first 3 tries, once", () => {
-    expect(computeVariantXp(ok)).toBe(XP_RULES.variant);
-    expect(computeVariantXp({ ...ok, previousAttempts: 2 })).toBe(3);
-    expect(computeVariantXp({ ...ok, alreadySolved: true })).toBe(0);
+  it("pays +3 for a correct answer within the first 3 tries", () => {
+    expect(computeVariantXp({ isCorrect: true, previousAttempts: 0 })).toBe(XP_RULES.variant);
+    expect(computeVariantXp({ isCorrect: true, previousAttempts: 2 })).toBe(3);
   });
 
-  it("pays nothing once 'show me' could have been used, for a wrong answer, or before the standard version is done", () => {
-    expect(computeVariantXp({ ...ok, previousAttempts: 3 })).toBe(0);
-    expect(computeVariantXp({ ...ok, isCorrect: false })).toBe(0);
-    expect(computeVariantXp({ ...ok, standardDone: false })).toBe(0);
+  it("pays nothing once 'show me' could have been used, or for a wrong answer", () => {
+    expect(computeVariantXp({ isCorrect: true, previousAttempts: 3 })).toBe(0);
+    expect(computeVariantXp({ isCorrect: false, previousAttempts: 0 })).toBe(0);
   });
 });
 

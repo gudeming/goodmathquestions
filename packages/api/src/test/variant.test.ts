@@ -119,11 +119,37 @@ describe.skipIf(!servicesUp)("question variants (Postgres)", () => {
     expect(await caller.question.revealVariant({ questionId: f.questionId, variantId: "people12" })).toMatchObject({ answer: "66" });
   });
 
-  it("signed in: no variant XP before the standard version is done", async () => {
+  it("signed in: variants stay closed until the original is done (their copy can contain its answer)", async () => {
     const userId = await newUser(f);
     const caller = callerFor({ userId });
-    const res = await caller.question.submitVariant({ questionId: f.questionId, variantId: "people6", answer: "15" });
-    expect(res).toMatchObject({ isCorrect: true, xpEarned: 0, attempt: 1 });
+    const args = { questionId: f.questionId, variantId: "people6", answer: "15" };
+    expect(await caller.question.variants({ questionId: f.questionId })).toEqual([]);
+    await expect(caller.question.submitVariant(args)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.question.checkVariant(args)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.question.revealVariant({ questionId: f.questionId, variantId: "people6" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    // Nothing was stored, so nothing is lost: once the original is done the first correct answer still pays.
+    await caller.question.submitAnswer({ questionId: f.questionId, answer: "45", timeSpent: 5 });
+    expect(await caller.question.submitVariant(args)).toMatchObject({ isCorrect: true, xpEarned: 3, attempt: 1 });
+  });
+
+  it("signed in: checkVariant is recorded like a submit, so checking first can't dodge the 3-try cap", async () => {
+    const userId = await newUser(f);
+    const caller = callerFor({ userId });
+    await caller.question.submitAnswer({ questionId: f.questionId, answer: "45", timeSpent: 5 });
+    for (const a of ["1", "2", "3"]) await caller.question.checkVariant({ questionId: f.questionId, variantId: "people8", answer: a });
+    expect(await db.variantSubmission.count({ where: { userId, variantId: "people8" } })).toBe(3);
+    expect(await caller.question.submitVariant({ questionId: f.questionId, variantId: "people8", answer: "28" })).toMatchObject({ isCorrect: true, xpEarned: 0 });
+  });
+
+  it("signed in: two concurrent correct submits pay once", async () => {
+    const userId = await newUser(f);
+    const caller = callerFor({ userId });
+    await caller.question.submitAnswer({ questionId: f.questionId, answer: "45", timeSpent: 5 });
+    const before = (await db.user.findUniqueOrThrow({ where: { id: userId }, select: { xp: true } })).xp;
+    const args = { questionId: f.questionId, variantId: "people12", answer: "66" };
+    const results = await Promise.all([caller.question.submitVariant(args), caller.question.submitVariant(args), caller.question.submitVariant(args)]);
+    expect(results.map((r) => r.xpEarned).sort()).toEqual([0, 0, 3]);
+    expect((await db.user.findUniqueOrThrow({ where: { id: userId }, select: { xp: true } })).xp - before).toBe(3);
   });
 
   it("signed in: +3 once per variant after solving the standard version; none after 'show me' unlocks", async () => {

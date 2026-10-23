@@ -516,6 +516,8 @@ export const collatzHailstone: HeroQuestionBlueprint = {
       const others = Array.from({ length: n }, (_, i) => i + 1).filter((x) => x !== best);
       const second = others.reduce((a, b) => (collatzSteps(b) > collatzSteps(a) ? b : a));
       const secondSteps = collatzSteps(second);
+      // Several starts can share second place (in 1..25, 18 and 19 both take 20 steps).
+      const runnersUp = others.filter((x) => collatzSteps(x) === secondSteps).sort((x, y) => x - y);
       return {
         prompt: {
           en: `Play the game from every start from 1 to ${n}. Which start takes the most steps to reach 1?`,
@@ -566,8 +568,8 @@ export const collatzHailstone: HeroQuestionBlueprint = {
           best
         ),
         explanation: {
-          en: `Count the steps for every start from 1 to ${n}. ${best} takes ${steps} steps and the runner-up, ${second}, takes ${secondSteps}. So ${best} takes the most steps.`,
-          zh: `把 1 到 ${n} 每个起点的步数都数一遍。${best} 要走 ${steps} 步，第二名 ${second} 走 ${secondSteps} 步。所以 ${best} 走的步数最多。`,
+          en: `Count the steps for every start from 1 to ${n}. ${best} takes ${steps} steps; next come ${runnersUp.join(" and ")} with ${secondSteps}. So ${best} takes the most steps.`,
+          zh: `把 1 到 ${n} 每个起点的步数都数一遍。${best} 要走 ${steps} 步，其次是 ${runnersUp.join(" 和 ")}，走 ${secondSteps} 步。所以 ${best} 走的步数最多。`,
         },
         aha: {
           en: `Size doesn't predict the trip: from 1 to ${n} the longest ride starts at ${best}, with ${steps} steps. Every start still lands on 1.`,

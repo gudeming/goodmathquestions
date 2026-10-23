@@ -85,6 +85,10 @@ describe.skipIf(!servicesUp)("admin.heroFunnel (Postgres)", () => {
         ev("question_view", B, 0),
         ev("guess_made", B, 5),
         ev("reveal_seen", B, 60, { gaveUp: true }),
+        // ...then solves a "try another number" round: not the original's funnel, B stays a give-up.
+        ev("variant_start", B, 70, { variant: "people8" }),
+        ev("hint_reveal", B, 75, { index: 1, variant: "people8" }),
+        ev("answer_submit", B, 80, { correct: true, variant: "people8" }),
         // C: bounces.
         ev("question_view", C, 0),
         // Signed-in kid: hint, correct, reveal after 30 s.

@@ -471,8 +471,11 @@ export function validateHeroBlueprint(bp: HeroQuestionBlueprint): string[] {
   return errors;
 }
 
-/** Answer types a variant may use: EXPRESSION needs per-variant number rules, SCENE_COMPLETION has no typed answer. */
-const VARIANT_ANSWER_TYPES: ReadonlySet<string> = new Set(["NUMERIC", "ESTIMATE", "CHOICE", "MULTI_VALUE", "ORDERING"]);
+/**
+ * Answer types a variant may use. EXPRESSION needs per-variant number rules, SCENE_COMPLETION has no typed
+ * answer, and ORDERING takes its items from the standard guess, which a variant doesn't carry.
+ */
+const VARIANT_ANSWER_TYPES: ReadonlySet<string> = new Set(["NUMERIC", "ESTIMATE", "CHOICE", "MULTI_VALUE"]);
 
 const sameJson = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
 

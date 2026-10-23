@@ -59,7 +59,6 @@ export function ExploreStage({ question, locale, flow, isLoggedIn, sessionLoadin
       attempt,
       hintsUsed: state.hintsRevealed,
       answerType: question.answerType,
-      ...(variantId && { variant: variantId }),
     });
     flow.recordAttempt(res.isCorrect);
     if (res.isCorrect) {

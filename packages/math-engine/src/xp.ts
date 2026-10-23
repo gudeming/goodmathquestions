@@ -85,20 +85,15 @@ export interface VariantXpInput {
   isCorrect: boolean;
   /** Earlier submissions by this user for this variant. */
   previousAttempts: number;
-  /** One of them was already correct. */
-  alreadySolved: boolean;
-  /** The standard version is done (solved, or tried enough to see the reveal): variants come after it. */
-  standardDone: boolean;
 }
 
 /**
- * XP for one variant submission: a small bonus, paid once per variant, and only while "show me"
- * is still locked (so reading the answer and then typing it earns nothing).
+ * XP for one variant submission: a small bonus, only while "show me" is still locked (so reading the
+ * answer and then typing it earns nothing). The router pays it at most once per variant (a unique
+ * award row) and only after the standard version is done.
  */
 export function computeVariantXp(input: VariantXpInput): number {
-  const earned =
-    input.isCorrect && !input.alreadySolved && input.standardDone && input.previousAttempts <= XP_RULES.variantMaxPriorAttempts;
-  return earned ? XP_RULES.variant : 0;
+  return input.isCorrect && input.previousAttempts <= XP_RULES.variantMaxPriorAttempts ? XP_RULES.variant : 0;
 }
 
 /** Level for a total XP (level 1 at 0 XP, +1 every 100 XP). */

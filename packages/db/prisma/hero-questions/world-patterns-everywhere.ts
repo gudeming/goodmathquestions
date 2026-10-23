@@ -16,6 +16,10 @@ import { defineVariants, type HeroQuestionBlueprint, type WrongAnswerRule } from
  * "Try another number" helpers. Small parameters can make two classic slips coincide, or land on the
  * answer itself: keep the first rule for each match and never one that names the answer.
  */
+/** English article for a number said aloud: "an 8-litre jug", "an 11-year cycle", "a 5-litre jug". */
+const an = (n: number): "a" | "an" => (/^8/.test(String(n)) || n === 11 || n === 18 ? "an" : "a");
+const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
+
 function distinctRules(answer: number, rules: WrongAnswerRule[]): WrongAnswerRule[] {
   const seen = new Set<string>([String(answer)]);
   return rules.filter((r) => {
@@ -1491,7 +1495,7 @@ export const cicadaPrimes: HeroQuestionBlueprint = {
           {
             match: String(altA * b),
             feedback: {
-              en: `${altA * b} is ${altA} × ${b}, using a ${altA}-year cycle. This cicada comes out every ${a} years, and that changes everything.`,
+              en: `${altA * b} is ${altA} × ${b}, using ${an(altA)} ${altA}-year cycle. This cicada comes out every ${a} years, and that changes everything.`,
               zh: `${altA * b} 是 ${altA} × ${b}，用的是 ${altA} 年的周期。这里的蝉是每 ${a} 年出来一次，这一下全变了。`,
             },
           },
@@ -1515,7 +1519,7 @@ export const cicadaPrimes: HeroQuestionBlueprint = {
           zh: `天敌在第 ${b}、${2 * b}、${3 * b}……年出现，蝉在第 ${cicadaYears.join("、")} 年出现。两串里都有的年份，必须同时是 ${b} 和 ${a} 的倍数。${a} 是质数，又不能整除 ${b}，所以第一个这样的年份是 ${a} × ${b} = ${answer}。`,
         },
         aha: {
-          en: `A ${altA}-year cicada would meet this predator every time it comes out, but a ${a}-year cicada only once in ${answer} years. Prime cycles share no factors, so they dodge other rhythms.`,
+          en: `${cap(an(altA))} ${altA}-year cicada would meet this predator every time it comes out, but ${an(a)} ${a}-year cicada only once in ${answer} years. Prime cycles share no factors, so they dodge other rhythms.`,
           zh: `${altA} 年的蝉每次出来都会撞上这个天敌，${a} 年的蝉却 ${answer} 年才撞一次。质数周期和别的周期没有公因数，最能躲开别人的节奏。`,
         },
       };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
@@ -12,7 +12,7 @@ import { CelebrationEffect } from "@/components/animations/CelebrationEffect";
 import { MathText } from "@/components/ui/MathText";
 import { ExploreStage, type SolvedResult } from "./ExploreStage";
 import { answerOptions } from "./AnswerInput";
-import { flowStorageKey, useQuestionFlow } from "./useQuestionFlow";
+import { useQuestionFlow } from "./useQuestionFlow";
 import { useHasScene } from "./scene";
 import type { Track } from "./useTrack";
 import { pick, type Locale, type PublicQuestion, type PublicVariant } from "./types";
@@ -20,8 +20,6 @@ import { pick, type Locale, type PublicQuestion, type PublicVariant } from "./ty
 const CELEBRATION_MS = 3000;
 
 const solvedKey = (questionId: string) => `gmq:variants:solved:${questionId}`;
-/** Flow state of one variant lives next to the question's own (`gmq:qflow:<id>~<variant>`). */
-const variantFlowId = (questionId: string, variantId: string) => `${questionId}~${variantId}`;
 
 function readSolved(questionId: string): string[] {
   try {
@@ -84,6 +82,8 @@ export function VariantPlay({ question, locale, track }: VariantPlayProps) {
   const [solved, setSolved] = useState<string[]>([]);
   const [active, setActive] = useState<{ id: string; round: number } | null>(null);
   const roundRef = useRef<HTMLDivElement>(null);
+  /** The variant played last, kept after "Back" too, so the next pick is a different one. */
+  const lastPlayed = useRef<string | null>(null);
   const reduced = useReducedMotion();
 
   useEffect(() => setSolved(readSolved(question.id)), [question.id]);
@@ -96,14 +96,9 @@ export function VariantPlay({ question, locale, track }: VariantPlayProps) {
   const current = active ? list.find((v) => v.id === active.id) ?? null : null;
 
   const start = () => {
-    const id = pickNextVariant(ids, solvedSet, active?.id ?? null);
+    const id = pickNextVariant(ids, solvedSet, lastPlayed.current);
     if (!id) return;
-    // A replay starts fresh rather than restoring the last reveal of that variant.
-    try {
-      window.localStorage.removeItem(flowStorageKey(variantFlowId(question.id, id)));
-    } catch {
-      // Storage blocked: nothing was stored either.
-    }
+    lastPlayed.current = id;
     setActive((a) => ({ id, round: (a?.round ?? 0) + 1 }));
     track("variant_start", { variant: id });
     requestAnimationFrame(() => roundRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }));
@@ -181,7 +176,10 @@ interface VariantRoundProps {
 function VariantRound({ question, variant, locale, isLoggedIn, sessionLoading, track, onSolved, onNext, onBack }: VariantRoundProps) {
   const t = useTranslations("questions");
   const q = useMemo(() => variantQuestion(question, variant), [question, variant]);
-  const flow = useQuestionFlow(variantFlowId(question.id, variant.id), "explore");
+  // In memory only: a round is never restored, a replay starts fresh.
+  const flow = useQuestionFlow(variant.id, "explore", { persist: false });
+  // Every event of this round (answers, hints, scene use) is tagged, so funnels can tell it from the original.
+  const trackVariant = useCallback<Track>((name, props) => track(name, { ...props, variant: variant.id }), [track, variant.id]);
   const [solved, setSolved] = useState<SolvedResult | null>(null);
   const { phase, gaveUp } = flow.state;
 
@@ -199,7 +197,7 @@ function VariantRound({ question, variant, locale, isLoggedIn, sessionLoading, t
             setSolved(r);
             onSolved();
           }}
-          track={track}
+          track={trackVariant}
           variantId={variant.id}
         />
       ) : (
