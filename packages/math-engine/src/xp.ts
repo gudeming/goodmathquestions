@@ -6,6 +6,7 @@
  *   correct          +difficulty XP (EASY 10 / MEDIUM 25 / HARD 50 / CHALLENGE 100), once
  *   no hints         +10  correct without revealing any hint, once (with the correct XP)
  *   solution comment +10  a comment of >= 30 characters, once per question
+ *   variant          +3   "try another number": correct within the first 3 tries, once per variant
  *
  * Pure functions; the router supplies the facts it read from the database.
  */
@@ -18,6 +19,9 @@ export const XP_RULES = {
   noHintsBonus: 10,
   solutionComment: 10,
   solutionCommentMinChars: 30,
+  /** A "try another number" variant, solved before "show me" unlocks (fewer than 3 earlier tries). */
+  variant: 3,
+  variantMaxPriorAttempts: 2,
   difficulty: { EASY: 10, MEDIUM: 25, HARD: 50, CHALLENGE: 100 } as const satisfies Record<XpDifficulty, number>,
   /** Every 100 XP is one level. */
   xpPerLevel: 100,
@@ -75,6 +79,26 @@ export function computeAnswerXp(input: AnswerXpInput): AnswerXpBreakdown {
 export function solutionCommentXp(content: string, alreadyAwarded: boolean): number {
   if (alreadyAwarded) return 0;
   return [...content.trim()].length >= XP_RULES.solutionCommentMinChars ? XP_RULES.solutionComment : 0;
+}
+
+export interface VariantXpInput {
+  isCorrect: boolean;
+  /** Earlier submissions by this user for this variant. */
+  previousAttempts: number;
+  /** One of them was already correct. */
+  alreadySolved: boolean;
+  /** The standard version is done (solved, or tried enough to see the reveal): variants come after it. */
+  standardDone: boolean;
+}
+
+/**
+ * XP for one variant submission: a small bonus, paid once per variant, and only while "show me"
+ * is still locked (so reading the answer and then typing it earns nothing).
+ */
+export function computeVariantXp(input: VariantXpInput): number {
+  const earned =
+    input.isCorrect && !input.alreadySolved && input.standardDone && input.previousAttempts <= XP_RULES.variantMaxPriorAttempts;
+  return earned ? XP_RULES.variant : 0;
 }
 
 /** Level for a total XP (level 1 at 0 XP, +1 every 100 XP). */

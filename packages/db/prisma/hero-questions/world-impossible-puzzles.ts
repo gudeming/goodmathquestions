@@ -10,7 +10,49 @@
  * Editorial pass 2 (editorial-pass-2.md): batch-4 copy re-read; F4's aha is the 'hide the 5 inside
  * the 10' picture, F11 names von Neumann as a legend, F12's Chinese matches the scene's 「比 g 大 / 小」.
  */
-import type { HeroQuestionBlueprint } from "./_template";
+import { JUG_ACTIONS, applyJugAction, binarySearchSteps, isJugsSolved, jugsShortestSolution, queensSolutions, type JugAction, type JugState } from "@gmq/animation-engine";
+import { defineVariants, type HeroQuestionBlueprint, type WrongAnswerRule } from "./_template";
+
+/** Drops rules whose match repeats an earlier one or names the correct value (variant copy is generated, so slips can coincide). */
+function distinctRules(rules: WrongAnswerRule[], correct: number): WrongAnswerRule[] {
+  const seen = new Set<string>([String(correct)]);
+  return rules.filter((r) => (seen.has(r.match) ? false : (seen.add(r.match), true)));
+}
+
+/** Suspects left after each weighing when you keep splitting into thirds (rounded up): 18 → 6 → 2 → 1. */
+function thirdsChain(n: number): number[] {
+  const out = [n];
+  while (out[out.length - 1] > 1) out.push(Math.ceil(out[out.length - 1] / 3));
+  return out;
+}
+
+/** The water_jugs scene's button labels. */
+function jugLabel(a: JugAction, caps: readonly [number, number]): { en: string; zh: string } {
+  if (a.kind === "fill") return { en: `Fill ${caps[a.jug]} L`, zh: `装满 ${caps[a.jug]} 升` };
+  if (a.kind === "empty") return { en: `Empty ${caps[a.jug]} L`, zh: `倒空 ${caps[a.jug]} 升` };
+  return { en: `Pour ${caps[a.from]} → ${caps[a.to]}`, zh: `${caps[a.from]} 倒入 ${caps[a.to]}` };
+}
+
+/** Fewest steps when the first step must be filling jug `first` (the "started with the other jug" slip). */
+function jugsStepsStartingWith(caps: readonly [number, number], target: number, first: 0 | 1): number | null {
+  const start = applyJugAction([0, 0], { kind: "fill", jug: first }, caps);
+  const dist = new Map<string, number>([[start.join(), 1]]);
+  const queue: JugState[] = [start];
+  while (queue.length) {
+    const cur = queue.shift()!;
+    const d = dist.get(cur.join())!;
+    if (isJugsSolved(cur, target)) return d;
+    for (const action of JUG_ACTIONS) {
+      const next = applyJugAction(cur, action, caps);
+      if (!dist.has(next.join())) {
+        dist.set(next.join(), d + 1);
+        queue.push(next);
+      }
+    }
+  }
+  return null;
+}
+
 
 /**
  * F1. Answered as NUMERIC 7 (fewest crossings) rather than SCENE_COMPLETION: the scene counts
@@ -213,6 +255,57 @@ export const nineBallsBalance: HeroQuestionBlueprint = {
   sortOrder: 2,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the halving strategy is the natural first try, and the three-group split is the only real path to 2",
+  // balance_lab draws 3-27 balls. From 4 up the split into thirds still needs at least two weighings, so the copy holds.
+  variants: defineVariants({
+    standard: { balls: 9 },
+    params: [{ balls: 4 }, { balls: 6 }, { balls: 18 }, { balls: 27 }],
+    build: ({ balls: n }) => {
+      const chain = thirdsChain(n);
+      const w = chain.length - 1;
+      const side = Math.ceil(n / 3);
+      const off = n - 2 * side;
+      const fewer = w - 1;
+      const fewerMax = 3 ** fewer;
+      const pans = off > 0
+        ? { en: `${side} on the left pan, ${side} on the right and ${off} kept off`, zh: `左盘 ${side} 个、右盘 ${side} 个、留 ${off} 个在外面` }
+        : { en: `${side} on each pan`, zh: `左右各放 ${side} 个` };
+      const outcome = off > 0
+        ? { en: "If one side drops, the heavy ball is there; if they balance, it's among the balls kept off.", zh: "哪边沉，重球就在哪边；一样平，就在没上秤的球里。" }
+        : { en: "The side that drops holds the heavy ball.", zh: "哪边沉，重球就在哪边。" };
+      const plural = (k: number) => (k === 1 ? "weighing" : "weighings");
+      return {
+        prompt: {
+          en: `One of ${n} balls is heavier. What is the fewest number of weighings that is guaranteed to find it, even if you are unlucky?`,
+          zh: `${n} 个球里有一个重球。最少称几次，就算运气最差，也一定能把它找出来？`,
+        },
+        scene: { type: "balance_lab", mode: "find_heavy", items: n, seed: 5 },
+        answer: { type: "NUMERIC", value: w },
+        hints: [
+          { en: `A weighing has three possible results: left side down, right side down, or balanced. With ${n} balls, how can each result point to a different group?`, zh: `称一次有三种结果：左边沉、右边沉、一样平。${n} 个球的时候，怎么让每种结果各指向一组球？` },
+          { en: `Put ${pans.en}, then press "Weigh". Whatever happens, how many balls could still be the heavy one?`, zh: `${pans.zh}，再按「称一称」。不管结果怎样，还有几个球可能是重球？` },
+          { en: `Each weighing leaves at most a third of the suspects, rounded up: ${chain.join(" → ")}. Count the arrows.`, zh: `每称一次，嫌疑球最多剩下三分之一（不够就往上取整）：${chain.join(" → ")}。数一数有几个箭头。` },
+        ],
+        wrongAnswers: distinctRules(
+          [
+            { match: String(Math.ceil(Math.log2(n) - 1e-9)), feedback: { en: `That's splitting the balls in half each time. It works, but THREE groups are faster, because "balanced" tells you something too.`, zh: `这是每次都分成两半。能找到，可是分成三组更快，因为「一样平」也能告诉你答案在哪儿。` } },
+            { match: String(Math.floor(n / 2)), feedback: { en: `Comparing two balls at a time, an unlucky search takes ${Math.floor(n / 2)} weighings. Put more balls on the scale at once.`, zh: `一次比两个球，运气差的时候要称 ${Math.floor(n / 2)} 次。试试一次多放几个球上去。` } },
+            { match: String(n - 1), feedback: { en: `Checking the balls one by one could take ${n - 1} weighings. Put several balls on each pan and learn about all of them in one go.`, zh: `一个一个地比，可能要称 ${n - 1} 次。每边一次放好几个球，一下子就知道好多球的情况。` } },
+            { match: "gt:correct", feedback: { en: "That works, but you can do it in fewer. Use all three results of every weighing.", zh: "这样能找到，但还能更少。把每次称的三种结果都用上。" } },
+            { match: "lt:correct", feedback: { en: `You might get lucky, but the question says "guaranteed". Each weighing can only tell three groups apart.`, zh: "运气好也许能行，可题目说的是「一定」。称一次最多只能分出三组。" } },
+          ],
+          w
+        ),
+        explanation: {
+          en: `Weigh with ${pans.en}. ${outcome.en} Each weighing shrinks the suspects like this: ${chain.join(" → ")}, so ${w} ${plural(w)} always find it. ${fewer} ${plural(fewer)} can't, because ${fewer} ${plural(fewer)} can tell apart at most ${fewerMax} balls.`,
+          zh: `称的时候${pans.zh}。${outcome.zh}每称一次，嫌疑球这样变少：${chain.join(" → ")}，所以 ${w} 次一定能找到。${fewer} 次不够，因为 ${fewer} 次最多只能分辨 ${fewerMax} 个球。`,
+        },
+        aha: {
+          en: `Three answers per weighing means each one cuts the suspects to a third: ${chain.join(", ")}. ${w} ${plural(w)} can handle up to ${3 ** w} balls.`,
+          zh: `称一次有三种答案，所以每次都把嫌疑球减到三分之一：${chain.join("、")}。称 ${w} 次最多能管 ${3 ** w} 个球。`,
+        },
+      };
+    },
+  }),
 };
 
 /** F3. Illustration until the T3 `switch_room` scene lands (待替换为 switch_room). The guess is the question. */
@@ -728,6 +821,73 @@ export const waterJugs: HeroQuestionBlueprint = {
   sortOrder: 6,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the scene is the puzzle and asks 'can you do it in fewer?' until the reveal shows the shortest route; trial is the main path (the 5 + 5 − 3 − 3 view comes after); feedback covers the 8-step route and counting only pours",
+  // Each set: two jugs with no common factor (every amount is reachable) and a shortest route of 4-8 steps.
+  // Hints and the explanation are read off the real shortest route, so they always match the scene.
+  variants: defineVariants({
+    standard: { small: 3, big: 5, target: 4 },
+    params: [
+      { small: 3, big: 5, target: 1 },
+      { small: 5, big: 8, target: 6 },
+      { small: 4, big: 7, target: 5 },
+      { small: 4, big: 9, target: 6 },
+    ],
+    build: ({ small, big, target }) => {
+      const caps = [small, big] as const;
+      const route = jugsShortestSolution({ jugs: caps, target });
+      if (!route) throw new Error(`${small} & ${big} can't make ${target}`);
+      const steps = route.length;
+      const src = route[0].kind === "fill" ? route[0].jug : 0;
+      const dst = (1 - src) as 0 | 1;
+      const other = jugsStepsStartingWith(caps, target, dst);
+      if (other === null) throw new Error("no route from the other jug");
+      const pours = route.filter((a) => a.kind === "pour").length;
+      const fills = route.filter((a) => a.kind === "fill").length;
+      const empties = route.filter((a) => a.kind === "empty").length;
+      let state: JugState = [0, 0];
+      const trace = route.map((a) => {
+        state = applyJugAction(state, a, caps);
+        const l = jugLabel(a, caps);
+        return { en: `${l.en} (${state[0]}, ${state[1]})`, zh: `${l.zh}（${state[0]}，${state[1]}）` };
+      });
+      const after2 = applyJugAction(applyJugAction([0, 0], route[0], caps), route[1], caps);
+      const first = jugLabel(route[0], caps);
+      const second = jugLabel(route[1], caps);
+      // Water in = tap fills, water out = drained, plus whatever stays in the jug that isn't holding the target.
+      const left = state[0] === target ? state[1] : state[0];
+      const sum = Array(fills).fill(`${caps[src]}`).join(" + ") + Array(empties).fill(` − ${caps[dst]}`).join("") + (left > 0 ? ` − ${left}` : "");
+      if (fills * caps[src] - empties * caps[dst] - left !== target) throw new Error("water bookkeeping is off");
+      return {
+        prompt: {
+          en: `You have a ${small}-litre jug and a ${big}-litre jug. Filling a jug from the tap, emptying a jug, or pouring one jug into the other each counts as one step. How few steps can leave exactly ${target} litres in a jug?`,
+          zh: `你有一个 ${small} 升的壶和一个 ${big} 升的壶。从水龙头装满一个壶、倒空一个壶、把一个壶倒进另一个壶，每一下都算一步。最少几步，能让一个壶里正好有 ${target} 升水？`,
+        },
+        scene: { type: "water_jugs", jugs: [small, big], target, minSteps: steps },
+        answer: { type: "NUMERIC", value: steps },
+        hints: [
+          { en: `Try it in the scene. Start with "${first.en}" and think about what could come next.`, zh: `在场景里试试。先点「${first.zh}」，再想想下一步能做什么。` },
+          { en: `Then press "${second.en}". Now the ${small} L jug holds ${after2[0]} and the ${big} L jug holds ${after2[1]}. Keep a note like that after every step.`, zh: `接着点「${second.zh}」。现在 ${small} 升壶里有 ${after2[0]} 升，${big} 升壶里有 ${after2[1]} 升。每走一步都这样记一下。` },
+          { en: `Only ever fill the ${caps[src]} L jug, only ever empty the ${caps[dst]} L jug, and pour ${caps[src]} → ${caps[dst]} in between. Stop as soon as ${target} litres appear, and count every step.`, zh: `只装满 ${caps[src]} 升壶，只倒空 ${caps[dst]} 升壶，中间把 ${caps[src]} 倒入 ${caps[dst]}。一出现 ${target} 升就停，数一数一共几步。` },
+        ],
+        wrongAnswers: distinctRules(
+          [
+            { match: String(other), feedback: { en: `You started by filling the ${caps[dst]}-litre jug. That works too, but it takes ${other} steps. Try starting with the ${caps[src]}-litre jug instead.`, zh: `你是先装满 ${caps[dst]} 升壶的。这样也能量出来，但要 ${other} 步。换成先装满 ${caps[src]} 升壶试试。` } },
+            { match: String(pours), feedback: { en: `${pours} is the number of pours from one jug into the other. Filling a jug and emptying a jug count as steps too.`, zh: `${pours} 是两个壶之间互相倒的次数。装满一个壶、倒空一个壶，也都算一步。` } },
+            { match: "lt:correct", feedback: { en: "That's fewer steps than anyone can manage. Try it in the scene: each step can only fill, empty or pour once.", zh: "没有人能用这么少的步数。在场景里试试：每一步只能装满、倒空或倒一次。" } },
+            { match: "gt:correct", feedback: { en: `You got ${target} litres, which is great, but there's a shorter way. Count your steps again, or try starting with the other jug.`, zh: `你量出了 ${target} 升，很好，但还有更短的办法。再数一遍步数，或者换另一个壶先装。` } },
+          ],
+          steps
+        ),
+        explanation: {
+          en: `Writing the jugs as (${small} L, ${big} L): ${trace.map((t) => t.en).join(", ")}. That's ${steps} steps. Starting with the ${caps[dst]}-litre jug also works, but it needs ${other}.`,
+          zh: `把两个壶记作（${small} 升，${big} 升）：${trace.map((t) => t.zh).join("，")}。一共 ${steps} 步。先装 ${caps[dst]} 升壶也能量出来，但要 ${other} 步。`,
+        },
+        aha: {
+          en: `Every litre comes from the tap and then goes down the drain, stays in the other jug, or is the amount you want, so it's just adding and taking away: ${sum} = ${target}. Jugs of ${small} and ${big} litres can make every amount up to ${big}.`,
+          zh: `每一升水都从水龙头来，最后不是倒掉了、留在另一个壶里，就是你要的 ${target} 升，所以其实就是加加减减：${sum} = ${target}。${small} 升和 ${big} 升的壶，${big} 升以内的每个量都能量出来。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -828,6 +988,49 @@ export const fourQueens: HeroQuestionBlueprint = {
   sortOrder: 7,
   rubricNotes:
     "17/20 — hook 2, guess 2, hands-on 2, aha 1, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the board is the puzzle; the aha (row by row, mirror pairs) is solid but not startling; trial on the board is the one path; the 6 × 6 < 5 × 5 extension lifts the ceiling",
+  // queens_board draws 4-8; 8 × 8 (92) is beyond finding by hand, so the variants stop at 7 × 7.
+  // The copy sorts solutions by the top queen's column, which the child can do on the board.
+  variants: defineVariants({
+    standard: { n: 4 },
+    params: [{ n: 5 }, { n: 6 }, { n: 7 }],
+    build: ({ n }) => {
+      const all = queensSolutions(n);
+      const total = all.length;
+      const byColumn = Array.from({ length: n }, (_, c) => all.filter((sol) => sol[0] === c).length);
+      const previous = queensSolutions(n - 1).length;
+      const cornerFree = byColumn[0] === 0;
+      return {
+        prompt: {
+          en: `Place ${n} queens on the ${n} × ${n} board so that no two share a row, a column or a diagonal. How many different arrangements are there? (Two arrangements that are mirror images of each other count as different.)`,
+          zh: `在 ${n} × ${n} 的棋盘上放 ${n} 个皇后，任何两个都不在同一行、同一列或同一条斜线上。一共有几种不同的摆法？（互为镜像的两种算不同的摆法。）`,
+        },
+        scene: { type: "queens_board", n, countSolutions: false, dedupeMirrors: false, solutions: total },
+        answer: { type: "NUMERIC", value: total },
+        hints: [
+          { en: `There is one queen in each of the ${n} rows, so work row by row. Place a queen in the top row and follow the free squares downward.`, zh: `${n} 行里每行正好一个皇后，所以一行一行地放。先在第一行放一个皇后，再往下找没被攻击的格子。` },
+          { en: `Sort the solutions by where the top queen sits. ${cornerFree ? "A corner queen in the top row never works here, so" : "Start with the top queen in the corner, then"} move her one square at a time and find every arrangement for each spot.`, zh: `按第一行皇后的位置给摆法分类。${cornerFree ? "这里第一行的皇后放在角上永远不行，所以" : "先把第一行的皇后放在角上，再"}一格一格地挪，每个位置都把所有摆法找出来。` },
+          { en: `Every solution's mirror image is also a solution, so the top-row columns come in matching pairs: column 1 has as many as column ${n}. Column by column the counts are ${byColumn.join(", ")}.`, zh: `每种摆法照镜子也是一种摆法，所以第一行的位置两两对应：第 1 列和第 ${n} 列一样多。按列数下来分别是 ${byColumn.join("、")}。` },
+        ],
+        wrongAnswers: distinctRules(
+          [
+            { match: String(total / 2), feedback: { en: `You counted each arrangement and its mirror image once. Mirror images count as different here, so double it.`, zh: "你把一种摆法和它的镜像只算了一次。这里镜像算不同的摆法，要乘 2。" } },
+            { match: String(previous), feedback: { en: `${previous} is the count for the ${n - 1} × ${n - 1} board. A bigger board changes the answer, and not always in the direction you'd expect.`, zh: `${previous} 是 ${n - 1} × ${n - 1} 棋盘的答案。棋盘变大，答案也会变，而且不一定往你想的方向变。` } },
+            { match: "lt:correct", feedback: { en: "You've missed some. Go through the top-row squares one by one and find every arrangement for each.", zh: "还漏了一些。把第一行的格子一个一个试过去，每个位置都把摆法找全。" } },
+            { match: "gt:correct", feedback: { en: "That's too many. Check each arrangement for two queens on one diagonal, and make sure none is counted twice.", zh: "太多了。检查每种摆法里有没有两个皇后在同一条斜线上，再看看有没有数重复。" } },
+          ],
+          total
+        ),
+        explanation: {
+          en: `Only one queen fits in each row, so sort the solutions by the top queen's column. Columns 1 to ${n} give ${byColumn.join(", ")} arrangements. That's ${total} in all, and they come in mirror-image pairs.`,
+          zh: `每一行只能放一个皇后，所以按第一行皇后在哪一列来分类。第 1 列到第 ${n} 列分别有 ${byColumn.join("、")} 种摆法。一共 ${total} 种，而且两两互为镜像。`,
+        },
+        aha: {
+          en: `Row by row, sorted by the top queen, the search becomes a list you can finish. ${n} × ${n} has ${total} solutions, while ${n - 1} × ${n - 1} has ${previous}: bigger isn't always more.`,
+          zh: `一行一行地放、按第一行分类，找摆法就变成了能做完的清单。${n} × ${n} 有 ${total} 种，${n - 1} × ${n - 1} 有 ${previous} 种：棋盘大，摆法不一定多。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -1126,6 +1329,54 @@ export const flyBetweenTrains: HeroQuestionBlueprint = {
   sortOrder: 11,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 2, wrong 2, hints 2, retell 1: the time slider is the puzzle and the reveal adds the legs, so the shortcut and the infinite series are both on screen; needs speed × time, so the floor is 1",
+  // Whole-number answers: each set's meeting time is a whole or half hour.
+  variants: defineVariants({
+    standard: { distanceKm: 100, trainSpeed: 50, flySpeed: 75 },
+    params: [
+      { distanceKm: 90, trainSpeed: 45, flySpeed: 60 },
+      { distanceKm: 120, trainSpeed: 30, flySpeed: 50 },
+      { distanceKm: 150, trainSpeed: 25, flySpeed: 80 },
+      { distanceKm: 200, trainSpeed: 40, flySpeed: 100 },
+    ],
+    build: ({ distanceKm: d, trainSpeed: v, flySpeed: f }) => {
+      const closing = 2 * v;
+      const hours = d / closing;
+      const km = f * hours;
+      const hourWord = hours === 1 ? "hour" : "hours";
+      return {
+        prompt: {
+          en: `The trains start ${d} km apart, and each one goes ${v} km/h. The fly flies at ${f} km/h. How many kilometres does the fly fly before the trains meet?`,
+          zh: `两车开始时相距 ${d} 千米，每列车的速度都是 ${v} 千米/时，苍蝇的速度是 ${f} 千米/时。两车相遇以前，苍蝇一共飞了多少千米？`,
+        },
+        scene: { type: "trains_fly", distanceKm: d, trainSpeed: v, flySpeed: f, flyKm: km },
+        answer: { type: "NUMERIC", value: km },
+        hints: [
+          { en: "Don't add up the zigzags: there are endlessly many. Ask how LONG the fly is in the air instead.", zh: "别去加每一段来回：有无穷多段。改问：苍蝇一共在空中飞了多长时间？" },
+          { en: `Each train covers ${v} km in an hour, so the gap shrinks by ${closing} km every hour. When is the ${d} km gap gone? Drag the time slider to check.`, zh: `每列车每小时开 ${v} 千米，两车之间的距离每小时缩短 ${closing} 千米。${d} 千米的距离什么时候缩没？拖动时间滑块看看。` },
+          { en: `The trains meet after ${hours} ${hourWord}, and the fly never stops until then. How far does something going ${f} km/h get in that time?`, zh: `两车 ${hours} 小时后相遇，在那之前苍蝇一直没停。速度是 ${f} 千米/时，这段时间能飞多远？` },
+        ],
+        wrongAnswers: distinctRules(
+          [
+            { match: String(d), feedback: { en: `${d} km is the gap at the start. The fly never crosses that whole gap: the trains keep closing in, so its trips keep shrinking.`, zh: `${d} 千米是两车一开始的距离。苍蝇从来没飞过这么长的一整段：两车一直在靠近，每一趟都越来越短。` } },
+            { match: String(km * 2), feedback: { en: `You let only one train move, so they took ${hours * 2} hours. Both drive toward each other, so the gap closes at ${closing} km/h.`, zh: `你只让一列车在开，所以算成了 ${hours * 2} 小时。两列车都朝对方开，距离每小时缩短 ${closing} 千米。` } },
+            { match: String(v * hours), feedback: { en: `${v * hours} km is how far ONE train goes before they meet. The fly is faster: it covers ${f} km in every hour.`, zh: `${v * hours} 千米是一列火车相遇前开的路程。苍蝇更快，每小时飞 ${f} 千米。` } },
+            { match: "regex:^\\s*(∞|[Ii]nf|[Ff]orever|无限|无穷|永远)", feedback: { en: "Infinitely many trips, yes! But they shrink so fast that they add up to an ordinary distance. Work out how long the fly is in the air.", zh: "来回确实有无穷多趟！可它们缩短得飞快，加起来只是一段普通的距离。算算苍蝇在空中飞了多久。" } },
+            { match: "lt:correct", feedback: { en: "Too short: the fly keeps flying for the whole time the trains are moving. Work out how long that is first.", zh: "太短了：火车开多久，苍蝇就飞多久。先算出这段时间有多长。" } },
+            { match: "gt:correct", feedback: { en: "Too far: the fly is only in the air until the trains meet. Work out how long that takes first.", zh: "太远了：苍蝇只飞到两车相遇为止。先算出两车多久相遇。" } },
+          ],
+          km
+        ),
+        explanation: {
+          en: `The gap closes at ${v} + ${v} = ${closing} km/h, so the trains meet after ${d} ÷ ${closing} = ${hours} ${hourWord}. The fly flies that whole time at ${f} km/h, so it covers ${f} × ${hours} = ${km} km. Adding the trips one by one gives the same ${km}, but the adding never ends.`,
+          zh: `两车之间的距离每小时缩短 ${v} + ${v} = ${closing} 千米，所以 ${d} ÷ ${closing} = ${hours} 小时后相遇。苍蝇这段时间一直以 ${f} 千米/时在飞，所以飞了 ${f} × ${hours} = ${km} 千米。一段一段加起来也是 ${km}，只是要一直加下去，没完没了。`,
+        },
+        aha: {
+          en: `Ask "how long" instead of "how far" and the zigzags collapse into ${hours} easy ${hourWord}. Infinitely many trips still add up to an ordinary ${km} km.`,
+          zh: `把「飞了多远」换成「飞了多久」，无穷多段来回就变成了简单的 ${hours} 小时。无穷多段路，加起来也只是普通的 ${km} 千米。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -1232,6 +1483,52 @@ export const guessMyNumber: HeroQuestionBlueprint = {
   sortOrder: 12,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: the game is the puzzle and both modes (you guess / I guess) show the halving; the middle-guess strategy is the one real path; the 63-number argument for why 6 fails is in the feedback",
+  // guess_game takes 10-1000. The halving chain (worst case: half of what's left, rounded down) must agree with binarySearchSteps.
+  variants: defineVariants({
+    standard: { max: 100 },
+    params: [{ max: 10 }, { max: 50 }, { max: 200 }, { max: 1000 }],
+    build: ({ max }) => {
+      const chain = [max];
+      while (chain[chain.length - 1] > 1) chain.push(Math.floor(chain[chain.length - 1] / 2));
+      const k = chain.length;
+      if (k !== binarySearchSteps(max)) throw new Error(`halving chain for ${max} gives ${k}, binarySearchSteps ${binarySearchSteps(max)}`);
+      const fewer = k - 1;
+      const reach = 2 ** fewer - 1;
+      const powers = Array.from({ length: fewer }, (_, i) => 2 ** i);
+      const powerSum = powers.length > 4 ? `1 + 2 + 4 + … + ${powers[powers.length - 1]}` : powers.join(" + ");
+      return {
+        prompt: {
+          en: `Play smart, and there's a number of guesses you never need to go past, whatever my secret number from 1 to ${max} is. How many guesses is that?`,
+          zh: `我的数是 1 到 ${max} 之间的整数。只要你猜得聪明，不管我想的是哪个数，最多几次一定能猜中？`,
+        },
+        scene: { type: "guess_game", max, mode: "you_guess", minGuesses: k },
+        answer: { type: "NUMERIC", value: k },
+        hints: [
+          { en: `Play a few rounds of 1 to ${max} in the scene with "You guess". Which first guess tells you the most, whatever my answer is?`, zh: `在场景里选「你来猜」，玩几局 1 到 ${max}。第一次猜哪个数，不管我怎么回答，你知道得最多？` },
+          { en: `Guess ${Math.floor(max / 2)} first: whether I say higher or lower, about half the numbers are gone. Then guess the middle of what's left.`, zh: `先猜 ${Math.floor(max / 2)}：不管我说大还是小，差不多一半的数都被排除了。接着猜剩下那些数的中间。` },
+          { en: `Guessing the middle every time, the numbers still possible shrink like this: ${chain.join(", ")}. Once just one is left, your next guess is right. Count the guesses.`, zh: `每次都猜中间，可能的数会这样变少：${chain.join("、")}。只剩一个数的时候，下一次一定猜中。数一数一共猜了几次。` },
+        ],
+        wrongAnswers: distinctRules(
+          [
+            { match: String(max / 2), feedback: { en: `${max / 2} is half of the numbers, but you don't stop after halving once. After every guess you can halve what's left again.`, zh: `${max / 2} 是一半的数，可是减半一次就停太早了。每猜一次，都能把剩下的再砍掉一半。` } },
+            { match: String(max), feedback: { en: `That's guessing 1, 2, 3 … in order, which really might take ${max} tries. "Higher" and "lower" let you throw away lots of numbers at once.`, zh: `这是按 1、2、3……顺着猜，确实可能要猜 ${max} 次。「大」和「小」能让你一下子排除一大堆数。` } },
+            { match: String(fewer), feedback: { en: `So close! ${fewer} guesses can sort out at most ${reach} numbers (${powerSum}), and there are ${max}. On an unlucky day you need one more.`, zh: `很接近了！${fewer} 次最多只能分辨 ${reach} 个数（${powerSum}），可这里有 ${max} 个。运气差的时候还要再猜一次。` } },
+            { match: "lt:correct", feedback: { en: `Too few. You might get lucky, but the question says "always": after that many middle guesses, several numbers can still be left.`, zh: "太少了。运气好也许能猜中，可题目问的是「一定」：猜了这么多次中间以后，还可能剩好几个数。" } },
+            { match: "gt:correct", feedback: { en: "That always works, but you can do it in fewer. Guess right in the middle of what's left, every single time.", zh: "这样一定能猜中，但还能更少。每一次都猜剩下那些数的正中间。" } },
+          ],
+          k
+        ),
+        explanation: {
+          en: `Guess the middle each time, so every answer throws away about half of what's left: the numbers still possible go ${chain.join(", ")}. Guess number ${k} hits that last one. ${fewer} guesses aren't enough, because they can tell apart at most ${powerSum} = ${reach} numbers.`,
+          zh: `每次都猜中间，不管回答是什么，都能排除剩下的一半左右：可能的数从 ${chain.join(" 个变成 ")} 个。第 ${k} 次就猜中最后那个数。${fewer} 次不够，因为 ${fewer} 次最多只能分辨 ${powerSum} = ${reach} 个数。`,
+        },
+        aha: {
+          en: `Every smart guess cuts the list in half, and halving is fast: ${k} guesses are enough for ${max} numbers.`,
+          zh: `每一次聪明的猜测都把范围砍掉一半，而减半非常快：${max} 个数，${k} 次就够了。`,
+        },
+      };
+    },
+  }),
 };
 
 export const IMPOSSIBLE_PUZZLES: readonly HeroQuestionBlueprint[] = [

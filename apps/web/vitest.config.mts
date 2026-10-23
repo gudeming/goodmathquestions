@@ -8,7 +8,7 @@ export default defineProject({
   resolve: { alias: { "@": fileURLToPath(new URL(".", import.meta.url)) } },
   test: {
     name: "web-scenes",
-    include: ["components/scenes/**/*.test.tsx", "components/tools/**/*.test.ts"],
+    include: ["components/scenes/**/*.test.tsx", "components/tools/**/*.test.ts", "components/question-v2/**/*.test.tsx"],
     environment: "node",
   },
 });

@@ -13,7 +13,21 @@
  * Editorial pass 2 (editorial-pass-2.md): D7's Chinese title no longer names the answer; D10's hook
  * is three sentences in Chinese too and its aha says plainly that only the sum is wrong.
  */
-import type { GuessConfig, HeroQuestionBlueprint } from "./_template";
+import { collatzSteps, longestCollatz } from "@gmq/animation-engine";
+import { defineVariants, type GuessConfig, type HeroQuestionBlueprint, type WrongAnswerRule } from "./_template";
+
+/** Drops rules whose match repeats an earlier one or is the correct answer (variants build their slips from formulas). */
+function distinctSlips(rules: WrongAnswerRule[], correct: number): WrongAnswerRule[] {
+  const seen = new Set<string>([String(correct)]);
+  return rules.filter((r) => !seen.has(r.match) && Boolean(seen.add(r.match)));
+}
+
+/** F(1) = F(2) = 1, …: the first k Fibonacci numbers. */
+function fibonacci(k: number): number[] {
+  const f = [1, 1];
+  while (f.length < k) f.push(f[f.length - 1] + f[f.length - 2]);
+  return f.slice(0, k);
+}
 
 /** Act 1 for the fixed-answer tricks: "will everyone land on the same number?" */
 const SAME_OR_DIFFERENT_GUESS: GuessConfig = {
@@ -492,7 +506,76 @@ export const collatzHailstone: HeroQuestionBlueprint = {
   },
   sortOrder: 5,
   rubricNotes:
-    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: a table of steps (by hand or in the scene) is the one path; the open problem gives an unlimited ceiling",
+    "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: a table of steps (by hand or in the scene) is the one path; the open problem gives an unlimited ceiling",  // Ranges 1..N whose longest start is unique (1..20 would tie 18 and 19 at 20 steps); the scene compares at most 30 starts.
+  variants: defineVariants({
+    standard: { upTo: 9 },
+    params: [{ upTo: 5 }, { upTo: 8 }, { upTo: 25 }, { upTo: 30 }],
+    build: ({ upTo: n }) => {
+      const best = longestCollatz(1, n);
+      const steps = collatzSteps(best);
+      const others = Array.from({ length: n }, (_, i) => i + 1).filter((x) => x !== best);
+      const second = others.reduce((a, b) => (collatzSteps(b) > collatzSteps(a) ? b : a));
+      const secondSteps = collatzSteps(second);
+      return {
+        prompt: {
+          en: `Play the game from every start from 1 to ${n}. Which start takes the most steps to reach 1?`,
+          zh: `从 1 到 ${n}，每个数都当一次起点玩这个游戏。哪个起点要走最多步才到 1？`,
+        },
+        scene: { type: "collatz_path", maxStart: 200, highlightRange: [1, n] },
+        answer: { type: "NUMERIC", value: best },
+        hints: [
+          { en: `Bigger isn't always longer. Type starts from 1 to ${n} into the scene and press "Go": the table keeps each one's steps.`, zh: `大的数不一定走得久。把 1 到 ${n} 的起点输入场景，点「出发」：表格会记下每个起点的步数。` },
+          { en: "Even starts get halved straight away, so they often fall fast. Odd starts jump UP first. Which odd starts might climb high?", zh: "偶数起点一上来就被除以 2，常常掉得很快。奇数起点会先往上跳。哪些奇数起点可能爬得很高？" },
+          { en: `${second} takes ${secondSteps} steps. Is there a start from 1 to ${n} that takes even more?`, zh: `${second} 要走 ${secondSteps} 步。1 到 ${n} 里还有比它走得更久的起点吗？` },
+        ],
+        wrongAnswers: distinctSlips(
+          [
+            {
+              match: String(second),
+              feedback: {
+                en: `Close! ${second} takes ${secondSteps} steps, but ${secondSteps} isn't the most. Check the other odd starts in the table.`,
+                zh: `很接近！${second} 要走 ${secondSteps} 步，可这还不是最多的。再看看表里其他的奇数起点。`,
+              },
+            },
+            {
+              match: String(n),
+              feedback: {
+                en: `${n} is the biggest start, but bigger doesn't mean longer: try it in the scene and count its steps.`,
+                zh: `${n} 是最大的起点，可是大不等于走得久：在场景里试一下，数数它的步数。`,
+              },
+            },
+            ...(steps > n
+              ? [
+                  {
+                    match: String(steps),
+                    feedback: {
+                      en: `${steps} is the number of STEPS for the winner. The question asks which starting number takes them.`,
+                      zh: `${steps} 是最多的步数。题目问的是哪个起点要走这么多步。`,
+                    },
+                  },
+                ]
+              : []),
+            {
+              match: `gt:${n}`,
+              feedback: {
+                en: `Pick a start from 1 to ${n} only. Bigger starts are great to explore afterwards!`,
+                zh: `只能从 1 到 ${n} 里选哦。更大的起点可以以后再去探索！`,
+              },
+            },
+          ],
+          best
+        ),
+        explanation: {
+          en: `Count the steps for every start from 1 to ${n}. ${best} takes ${steps} steps and the runner-up, ${second}, takes ${secondSteps}. So ${best} takes the most steps.`,
+          zh: `把 1 到 ${n} 每个起点的步数都数一遍。${best} 要走 ${steps} 步，第二名 ${second} 走 ${secondSteps} 步。所以 ${best} 走的步数最多。`,
+        },
+        aha: {
+          en: `Size doesn't predict the trip: from 1 to ${n} the longest ride starts at ${best}, with ${steps} steps. Every start still lands on 1.`,
+          zh: `数的大小猜不出路有多长：1 到 ${n} 里走得最久的是 ${best}，要 ${steps} 步。可每个起点最后还是落到了 1。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -599,7 +682,120 @@ export const timesEleven: HeroQuestionBlueprint = {
   },
   sortOrder: 6,
   rubricNotes:
-    "18/20 — hook 2, guess 1, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 2: the new guess (where does the middle digit come from?) lets a kid commit to 'always 8 or 9' before exploring, though the right option is easy to spot; spotting the pattern is the one path; a trick kids really do show at home",
+    "18/20 — hook 2, guess 1, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 2: the new guess (where does the middle digit come from?) lets a kid commit to 'always 8 or 9' before exploring, though the right option is easy to spot; spotting the pattern is the one path; a trick kids really do show at home",  // Two numbers whose digits add to less than 10 and two that carry; the scene takes any two-digit number.
+  variants: defineVariants({
+    standard: { number: 72 },
+    params: [{ number: 53 }, { number: 36 }, { number: 67 }, { number: 48 }],
+    build: ({ number: n }) => {
+      const a = Math.floor(n / 10);
+      const b = n % 10;
+      const sum = a + b;
+      const answer = n * 11;
+      const carry = sum >= 10;
+      const slips: WrongAnswerRule[] = carry
+        ? [
+            {
+              match: `${a}${sum}${b}`,
+              feedback: {
+                en: `You dropped the whole ${sum} into the middle. It doesn't fit in one digit: keep the ${sum % 10} there and carry the 1 onto the ${a}.`,
+                zh: `你把整个 ${sum} 塞进了中间。一格放不下：中间留 ${sum % 10}，把 1 进到 ${a} 上。`,
+              },
+            },
+            {
+              match: `${a}${sum % 10}${b}`,
+              feedback: {
+                en: `The ${sum % 10} in the middle is right! But ${a} + ${b} = ${sum}, so the 1 you didn't write has to be carried onto the ${a}.`,
+                zh: `中间的 ${sum % 10} 对了！可是 ${a} + ${b} = ${sum}，没写的那个 1 要进到 ${a} 上。`,
+              },
+            },
+          ]
+        : [
+            {
+              match: `${a}${a}${b}`,
+              feedback: {
+                en: `You kept ${a} and ${b} on the outside, which is right! But the middle isn't a copy of the ${a}: it's the SUM of the two digits, ${a} + ${b}.`,
+                zh: `外面的 ${a} 和 ${b} 放对了！可是中间不是再抄一个 ${a}，而是两个数字的和：${a} + ${b}。`,
+              },
+            },
+            {
+              match: `${a}${sum - 1}${b}`,
+              feedback: {
+                en: `Nearly! The ${a} and the ${b} on the outside are right. Check the middle digit again: ${a} + ${b} is ${sum}, not ${sum - 1}.`,
+                zh: `差一点！外面的 ${a} 和 ${b} 都对了。再算一次中间：${a} + ${b} 是 ${sum}，不是 ${sum - 1}。`,
+              },
+            },
+          ];
+      return {
+        prompt: {
+          en: `Use the secret to work out ${n} × 11 in your head, without long multiplication. Then type ${n} into the scene to check. What is ${n} × 11?`,
+          zh: `用这个秘密心算 ${n} × 11，别列竖式。算完在场景里输入 ${n} 验证一下。${n} × 11 等于多少？`,
+        },
+        scene: { type: "digit_slide", multiplier: 11, examples: [45, 63, 26, 85] },
+        answer: { type: "NUMERIC", value: answer },
+        hints: [
+          { en: `In 45 × 11 = 495 the 4 and the 5 stay on the outside. Type ${n} into the scene and watch where the ${a} and the ${b} go.`, zh: `45 × 11 = 495 里，4 和 5 留在两边。在场景里输入 ${n}，看看 ${a} 和 ${b} 跑到哪里去。` },
+          carry
+            ? { en: `The middle is ${a} + ${b} = ${sum}, and that's two digits. Tap 85 in the scene: what happens to the extra 1?`, zh: `中间是 ${a} + ${b} = ${sum}，这是两位数。在场景里点 85：多出来的 1 去哪了？` }
+            : { en: `The middle digit comes from ${a} and ${b} together. Which way of combining two digits gave 9 for 45 and 8 for 26?`, zh: `中间那位由 ${a} 和 ${b} 一起变出来。45 中间是 9，26 中间是 8，两个数字怎么组合才得到它们？` },
+          carry
+            ? { en: `Write ${sum % 10} in the middle and carry the 1 onto the ${a}, which becomes ${a + 1}. The ${b} stays on the right.`, zh: `中间写 ${sum % 10}，把 1 进到 ${a} 上，它就变成 ${a + 1}。${b} 留在右边。` }
+            : { en: `Slide ${a} and ${b} apart and drop their sum, ${a} + ${b} = ${sum}, in between.`, zh: `把 ${a} 和 ${b} 分开，中间放它们的和：${a} + ${b} = ${sum}。` },
+        ],
+        wrongAnswers: distinctSlips(
+          [
+            ...slips,
+            {
+              match: `${a}${a * b}${b}`,
+              feedback: {
+                en: `You put ${a} × ${b} = ${a * b} in the middle. The middle is the two digits ADDED, not multiplied: look at 45 × 11 = 495, where 4 + 5 = 9.`,
+                zh: `你在中间放的是 ${a} × ${b} = ${a * b}。中间是两个数字相加，不是相乘：看 45 × 11 = 495，4 + 5 = 9。`,
+              },
+            },
+            {
+              match: String(n * 2),
+              feedback: {
+                en: `That's ${n} × 2, as if 11 were 1 + 1. But 11 is 10 + 1, so you need ${n} × 10 = ${n * 10}, plus one more ${n}.`,
+                zh: `这是 ${n} × 2，好像把 11 当成了 1 + 1。可 11 是 10 + 1，所以是 ${n} × 10 = ${n * 10}，再加一个 ${n}。`,
+              },
+            },
+            {
+              match: String(n * 10),
+              feedback: {
+                en: `${n * 10} is ${n} × 10. You need one more ${n} on top: ${n} × 11 = ${n} × 10 + ${n}.`,
+                zh: `${n * 10} 是 ${n} × 10。还要再加一个 ${n}：${n} × 11 = ${n} × 10 + ${n}。`,
+              },
+            },
+            {
+              match: `${n}${n}`,
+              feedback: {
+                en: `Writing ${n} twice is a fun idea, but that's ${n} × 101. For × 11, the two copies of ${n} overlap, shifted by just one place.`,
+                zh: `把 ${n} 写两遍很好玩，可那是 ${n} × 101。乘 11 的时候，两个 ${n} 只错开一位，叠在一起。`,
+              },
+            },
+          ],
+          answer
+        ),
+        explanation: carry
+          ? {
+              en: `${n} × 11 = ${n * 10} + ${n}. When you add them, the ${a} and the ${b} land in the same column and make ${sum}. Write the ${sum % 10} in the middle and carry the 1 onto the ${a}, which gives ${answer}.`,
+              zh: `${n} × 11 = ${n * 10} + ${n}。这两个数相加时，${a} 和 ${b} 落在同一列，加起来是 ${sum}。中间写 ${sum % 10}，把 1 进到 ${a} 上，得到 ${answer}。`,
+            }
+          : {
+              en: `${n} × 11 = ${n * 10} + ${n}. When you add them, the ${a} and the ${b} land in the same column, so the middle digit is ${a} + ${b} = ${sum}. That gives ${answer}.`,
+              zh: `${n} × 11 = ${n * 10} + ${n}。这两个数相加时，${a} 和 ${b} 落在同一列，所以中间一位是 ${a} + ${b} = ${sum}。答案就是 ${answer}。`,
+            },
+        aha: carry
+          ? {
+              en: `When the middle sum is 10 or more, the slide still works: carry the 1 onto the left digit. ${n} × 11 = ${answer}.`,
+              zh: `中间的和满 10 也不怕，照样分开，再把 1 进到左边那位上。${n} × 11 = ${answer}。`,
+            }
+          : {
+              en: `${a} on the left, ${b} on the right, ${sum} in the middle: ${n} × 11 = ${answer}. The slide works for every two-digit number.`,
+              zh: `左边 ${a}，右边 ${b}，中间 ${sum}：${n} × 11 = ${answer}。每个两位数都能这样分开。`,
+            },
+      };
+    },
+  }),
 };
 
 /**
@@ -691,6 +887,73 @@ export const fibonacciNext: HeroQuestionBlueprint = {
   rubricNotes:
     "17/20 — hook 2, guess 1, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: once kids spot the rule most guess 55, so the guess gap is small; upgrades the legacy 'Sunflower Fibonacci Spiral' row (which asked for 34)",
   upgradesLegacyTitleEn: "Sunflower Fibonacci Spiral",
+  // Ask for another term: the scene draws 5-14 squares and ends on the one asked for.
+  variants: defineVariants({
+    standard: { term: 10 },
+    params: [{ term: 8 }, { term: 11 }, { term: 12 }, { term: 13 }],
+    build: ({ term: k }) => {
+      const f = fibonacci(k + 1);
+      const shown = f.slice(0, k - 1);
+      const [last, prev, before] = [f[k - 2], f[k - 3], f[k - 4]];
+      const answer = f[k - 1];
+      const listEn = `${shown.join(", ")} …`;
+      const listZh = `${shown.join("、")}……`;
+      return {
+        prompt: {
+          en: `In the list ${listEn}, what is the next number?`,
+          zh: `在 ${listZh}这串数里，下一个数是几？`,
+        },
+        scene: { type: "fib_spiral", terms: k },
+        answer: { type: "NUMERIC", value: answer },
+        hints: [
+          { en: `Don't look for a times table. Press "Next square" in the scene until the ${last} square appears. How was its size made from the squares before it?`, zh: `别去找乘法表。在场景里一直点「下一个」，直到出现边长 ${last} 的正方形。它的边长是怎么由前面的正方形变出来的？` },
+          { en: `Check it on the end of the list: ${before} + ${prev} = ${last}. Do the earlier numbers work the same way?`, zh: `用这串数的最后几个验证一下：${before} + ${prev} = ${last}。前面的数也是这样吗？` },
+          { en: `Every number is the two before it added together. So the next one is ${prev} + ${last}.`, zh: `每个数都是它前面两个数的和。所以下一个是 ${prev} + ${last}。` },
+        ],
+        wrongAnswers: distinctSlips(
+          [
+            {
+              match: String(last + before),
+              feedback: {
+                en: `You added ${last} and ${before}. Close idea! But use the two numbers right before the gap: ${prev} and ${last}.`,
+                zh: `你算的是 ${last} + ${before}，想法很接近！可是要用紧挨着空位的两个数：${prev} 和 ${last}。`,
+              },
+            },
+            {
+              match: String(last * 2),
+              feedback: {
+                en: `That's ${last} doubled. Each number is the sum of the TWO before it, not twice the last one.`,
+                zh: `这是 ${last} 的两倍。每个数是前面两个数的和，不是最后一个数的两倍。`,
+              },
+            },
+            {
+              match: String(last + 1),
+              feedback: {
+                en: `Adding 1 each time is the rule for counting, but this list grows faster and faster. Look at ${before}, ${prev}, ${last}: how is each one made?`,
+                zh: `每次加 1 是数数的规律，这串数却越长越快。看看 ${before}、${prev}、${last}，每个是怎么来的？`,
+              },
+            },
+            {
+              match: String(f[k]),
+              feedback: {
+                en: `${f[k]} really is in the list, but it's one step too far! It comes right after the number we're looking for.`,
+                zh: `${f[k]} 确实在这串数里，可是走过头了一步！它紧跟在我们要找的那个数后面。`,
+              },
+            },
+          ],
+          answer
+        ),
+        explanation: {
+          en: `Each number in the list is the sum of the two before it: 1 + 1 = 2, 1 + 2 = 3, 2 + 3 = 5, and so on. The last two numbers are ${prev} and ${last}. So the next one is ${prev} + ${last} = ${answer}.`,
+          zh: `这串数里每个数都是前面两个数的和：1 + 1 = 2，1 + 2 = 3，2 + 3 = 5，依此类推。最后两个数是 ${prev} 和 ${last}。所以下一个是 ${prev} + ${last} = ${answer}。`,
+        },
+        aha: {
+          en: `The same rule reaches any term: add the last two. After ${prev} and ${last} comes ${answer}, and the spiral grows by one more square.`,
+          zh: `同一个规则能走到任何一项：把最后两个数相加。${prev} 和 ${last} 后面就是 ${answer}，螺旋又多了一个正方形。`,
+        },
+      };
+    },
+  }),
 };
 
 /** D9. 20..30: aliquot sums 22, 11, 14, 13, 36, 6, 16, 13, 28, 1, 42; only 28 is perfect. The scene proposes "28". */

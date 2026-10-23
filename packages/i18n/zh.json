@@ -86,7 +86,9 @@
     "pathLabel": "本世界的题目",
     "empty": "这个世界的题目正在路上。",
     "loadFailed": "世界加载失败，请重试。",
-    "play": "去玩"
+    "play": "去玩",
+    "variants": "可换数 ×{count}",
+    "variantsHint": "看完真相后，还能换 {count} 组数再来一次。"
   },
   "practice": {
     "title": "练习",
@@ -227,7 +229,16 @@
     "loadingComments": "评论加载中……",
     "likes": "点赞",
     "submitFailed": "出了点问题：{message}",
-    "revealFailed": "答案没加载出来，过一会儿再试。"
+    "revealFailed": "答案没加载出来，过一会儿再试。",
+    "variantTitle": "同一个道理，换一组数",
+    "variantIntro": "你刚找到的规律，换个数也成立。用新的数再试一次。",
+    "variantStart": "换个数再来一次",
+    "variantNext": "再换一个数",
+    "variantBack": "回到原题",
+    "variantHeading": "换一组数",
+    "variantSolvedAll": "每一组数你都解出来了，挑一组再玩一次吧。",
+    "variantLoadFailed": "新的数没加载出来，过一会儿再试。",
+    "variantXpNote": "每解出一组新数（在「看答案」之前）得 +{xp} 经验值。"
   },
   "discussion": {
     "title": "讨论区",

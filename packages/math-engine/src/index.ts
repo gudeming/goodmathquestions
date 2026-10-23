@@ -90,9 +90,11 @@ export {
   XP_RULES,
   difficultyXp,
   computeAnswerXp,
+  computeVariantXp,
   solutionCommentXp,
   levelForXp,
   type XpDifficulty,
   type AnswerXpInput,
   type AnswerXpBreakdown,
+  type VariantXpInput,
 } from "./xp";

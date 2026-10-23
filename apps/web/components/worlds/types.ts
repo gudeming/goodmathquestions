@@ -29,6 +29,8 @@ export interface WorldQuestionCard {
   hookEn: string | null;
   hookZh: string | null;
   ageGroup: string;
+  /** "Try another number" versions offered after the reveal (0 = none). */
+  variantCount: number;
 }
 
 /** Text in the page locale, falling back to the other language. */

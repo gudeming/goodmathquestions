@@ -11,7 +11,10 @@
  * Editorial pass 2 (editorial-pass-2.md): batch-4 copy re-read; A6's gap argument now says "smaller than
  * every positive number", A7's fun fact dates Hilbert's lecture (1924).
  */
-import type { HeroQuestionBlueprint } from "./_template";
+import { defineVariants, type HeroQuestionBlueprint } from "./_template";
+
+/** Numbers as the copy writes them: 1,048,576 (the Chinese copy uses the same separators). */
+const fmt = (x: number): string => x.toLocaleString("en-US");
 
 /** A1. Built on the rubric's §4.1 example; the pass only added scene references and "the story goes". */
 export const gaussSum: HeroQuestionBlueprint = {
@@ -71,6 +74,39 @@ export const gaussSum: HeroQuestionBlueprint = {
   },
   sortOrder: 1,
   rubricNotes: "19/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 2, retell 1",
+  // gauss_pairing takes an even n up to 1000; the pairing argument is the same at every size.
+  variants: defineVariants({
+    standard: { n: 100 },
+    params: [{ n: 20 }, { n: 50 }, { n: 200 }, { n: 1000 }],
+    build: ({ n }) => {
+      const pairs = n / 2;
+      const answer = pairs * (n + 1);
+      const lastTen = 10 * n - 45;
+      return {
+        prompt: { en: `Add up 1 + 2 + 3 + … + ${n}. What do you get?`, zh: `1 + 2 + 3 + … + ${n} 等于多少？` },
+        scene: { type: "gauss_pairing", n, visibleHead: 6, visibleTail: 6, pairSum: n + 1, pairCount: pairs },
+        answer: { type: "NUMERIC", value: answer },
+        hints: [
+          { en: `Same trick as before: in the scene, pair the FIRST number with the LAST. What do 1 and ${n} make?`, zh: `还是老办法：在场景里把第一个数和最后一个数配成一对。1 和 ${n} 加起来是多少？` },
+          { en: `1 + ${n} = ${n + 1}, and 2 + ${n - 1} = ${n + 1} too. Does every pair make ${n + 1}?`, zh: `1 + ${n} = ${n + 1}，2 + ${n - 1} 也是 ${n + 1}。是不是每一对都是 ${n + 1}？` },
+          { en: `Every pair makes ${n + 1}. ${n} numbers make ${n} ÷ 2 pairs. Multiply.`, zh: `每一对都是 ${n + 1}。${n} 个数能配成 ${n} ÷ 2 对。乘一下。` },
+        ],
+        wrongAnswers: [
+          { match: String(n * (n + 1)), feedback: { en: `That's ${n} × ${n + 1}. Each pair uses two numbers, so ${n} numbers make only ${pairs} pairs: you counted every pair twice.`, zh: `这是 ${n} × ${n + 1}。每一对用掉两个数，${n} 个数只能配成 ${pairs} 对，你把每对数了两遍。` } },
+          { match: String(pairs * n), feedback: { en: `So close! ${pairs} pairs is right, but each pair adds up to ${n + 1}, not ${n}.`, zh: `很接近了！${pairs} 对没错，但每一对的和是 ${n + 1}，不是 ${n}。` } },
+          { match: `lt:${lastTen}`, feedback: { en: `Too small. Just the last ten numbers, ${n - 9} to ${n}, already add up to ${fmt(lastTen)}.`, zh: `太小了。光是最后十个数 ${n - 9} 到 ${n} 加起来就有 ${fmt(lastTen)} 了。` } },
+        ],
+        explanation: {
+          en: `Pair the numbers from both ends: 1 + ${n}, 2 + ${n - 1}, 3 + ${n - 2} … each pair is ${n + 1}. There are ${pairs} pairs, so the total is ${pairs} × ${n + 1} = ${fmt(answer)}.`,
+          zh: `从两头往中间配对：1 + ${n}、2 + ${n - 1}、3 + ${n - 2}……每一对都是 ${n + 1}。一共 ${pairs} 对，所以总和是 ${pairs} × ${n + 1} = ${fmt(answer)}。`,
+        },
+        aha: {
+          en: `Any length, one multiplication: (number of pairs) × (each pair). Up to ${n} that's ${pairs} × ${n + 1} = ${fmt(answer)}.`,
+          zh: `不管加到多少，都只要一次乘法：对数 × 每对的和。加到 ${n} 就是 ${pairs} × ${n + 1} = ${fmt(answer)}。`,
+        },
+      };
+    },
+  }),
 };
 
 /** A8. The scene shows ten numbered people (no names), so the feedback talks about person 1 and person 2. */
@@ -158,6 +194,65 @@ export const handshakeParty: HeroQuestionBlueprint = {
   sortOrder: 8,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 1, retell 1: hint 3 nearly gives the method away; the 435-for-a-class line helps the retell but it's still a nice fact rather than a jaw-dropper",
+  // The scene draws 3-12 people; from 6 up none of the classic slips (n(n-1), n², 1 + … + n, n) collide with the answer.
+  variants: defineVariants({
+    standard: { people: 10 },
+    params: [{ people: 6 }, { people: 8 }, { people: 9 }, { people: 12 }],
+    build: ({ people: n }) => {
+      const answer = (n * (n - 1)) / 2;
+      return {
+        prompt: {
+          en: `${n} friends each shake hands once with every other friend. How many handshakes are there in total?`,
+          zh: `${n} 个朋友，每两个人握一次手。一共握了多少次手？`,
+        },
+        scene: { type: "handshake_graph", people: n },
+        answer: { type: "NUMERIC", value: answer },
+        hints: [
+          { en: `Use the scene: tap "1 shakes everyone's hand". How many lines leave person 1 when there are ${n} people?`, zh: `用场景：点「让 1 和所有人握手」。${n} 个人的时候，从 1 号连出几条线？` },
+          { en: `Every one of the ${n} friends shakes ${n - 1} hands. Does ${n} × ${n - 1} count each handshake once?`, zh: `${n} 个人每人都握 ${n - 1} 次手。${n} × ${n - 1} 是把每次握手只数了一遍吗？` },
+          { en: `${n} × ${n - 1} = ${n * (n - 1)} sees every handshake from both people's side. Halve it.`, zh: `${n} × ${n - 1} = ${n * (n - 1)} 把每次握手从两个人那边各数了一遍。除以 2。` },
+        ],
+        wrongAnswers: [
+          {
+            match: String(n * (n - 1)),
+            feedback: {
+              en: `That's ${n} × ${n - 1}. When person 1 shakes person 2's hand, person 2 is shaking person 1's too, so each handshake got counted twice.`,
+              zh: `这是 ${n} × ${n - 1}。1 号和 2 号握手时，2 号也在和 1 号握手，每次握手被数了两遍。`,
+            },
+          },
+          {
+            match: String(n * n),
+            feedback: {
+              en: `That's ${n} × ${n}: it has everyone shaking their own hand, and counts each real handshake twice.`,
+              zh: `这是 ${n} × ${n}：把每个人和自己握手也算进去了，还把每次握手数了两遍。`,
+            },
+          },
+          {
+            match: String((n * (n + 1)) / 2),
+            feedback: {
+              en: `That's 1 + 2 + … + ${n}. Close! The last friend to arrive meets only the ${n - 1} people already there.`,
+              zh: `这是 1 + 2 + … + ${n}。很接近！最后到的朋友只会遇到已经在场的 ${n - 1} 个人。`,
+            },
+          },
+          {
+            match: String(n),
+            feedback: {
+              en: `${n} is the number of friends, not handshakes. One friend alone already shakes ${n - 1} hands.`,
+              zh: `${n} 是人数，不是握手次数。光一个人就要握 ${n - 1} 次手。`,
+            },
+          },
+        ],
+        explanation: {
+          en: `Each of the ${n} friends shakes hands with the other ${n - 1}, which gives ${n} × ${n - 1} = ${n * (n - 1)}. Every handshake has two people in it, so that counts each one twice: ${n * (n - 1)} ÷ 2 = ${answer}.`,
+          zh: `${n} 个人每人和另外 ${n - 1} 个人握手，得到 ${n} × ${n - 1} = ${n * (n - 1)}。每次握手有两个人，所以每次都被数了两遍：${n * (n - 1)} ÷ 2 = ${answer}。`,
+        },
+        aha: {
+          en: `Same rule, new number: people × (people − 1) ÷ 2. ${n} friends make ${answer} handshakes.`,
+          zh: `换了人数，规律不变：人数 ×（人数 − 1）÷ 2。${n} 个朋友握 ${answer} 次手。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -257,6 +352,50 @@ export const chessboardRice: HeroQuestionBlueprint = {
   sortOrder: 2,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 1, wrong 2, hints 2, retell 1: doubling twenty times by hand is long, so most kids lean on the scene or a table; the guess is about the board, the answer about square 21",
+  // Any square of the 64 works; from square 11 up none of the slips (2k, one doubling too many/few) collide.
+  variants: defineVariants({
+    standard: { square: 21 },
+    params: [{ square: 11 }, { square: 16 }, { square: 25 }, { square: 30 }],
+    build: ({ square: k }) => {
+      const d = k - 1;
+      const answer = 2 ** d;
+      const early = 2 ** (k - 4);
+      return {
+        prompt: {
+          en: `Square 1 gets 1 grain, and every square gets twice as many as the one before. How many grains go on square ${k}?`,
+          zh: `第 1 格放 1 粒米，后面每一格都是前一格的 2 倍。第 ${k} 格要放多少粒？`,
+        },
+        scene: {
+          type: "chessboard_doubling",
+          squares: 64,
+          unitLabel: { en: "grains of rice", zh: "粒米" },
+          startAmount: 1,
+          showLogScale: true,
+          askSquare: k,
+        },
+        answer: { type: "NUMERIC", value: answer },
+        hints: [
+          { en: `Press "Next square ×2" and write the counts down: 1, 2, 4, 8, … How many doublings does square 5 take?`, zh: `按「下一格 ×2」，把数写下来：1、2、4、8……到第 5 格翻了几次倍？` },
+          { en: `Square 2 is 1 doubling, square 3 is 2 doublings. So square ${k} is ${d} doublings after square 1.`, zh: `第 2 格翻了 1 次倍，第 3 格翻了 2 次。所以第 ${k} 格比第 1 格多翻了 ${d} 次倍。` },
+          { en: `Multiply ${d} twos together. Shortcut: ten doublings make 1,024, so use 1,024 for every ten.`, zh: `把 ${d} 个 2 乘起来。捷径：翻 10 次是 1,024，每十次就乘一个 1,024。` },
+        ],
+        wrongAnswers: [
+          { match: String(2 * k), feedback: { en: `That's ${k} × 2, as if each square got 2 more grains. But every square doubles the one before: 1, 2, 4, 8, 16…`, zh: `这是 ${k} × 2，好像每格只多 2 粒。可是每一格都是前一格的两倍：1、2、4、8、16……` } },
+          { match: String(answer * 2), feedback: { en: `So close! That's ${k} doublings. But square 1's single grain hasn't been doubled yet, so square ${k} is only ${d} doublings along.`, zh: `非常接近！这是翻了 ${k} 次倍。可是第 1 格的 1 粒还没翻过倍，所以到第 ${k} 格只翻了 ${d} 次。` } },
+          { match: String(answer / 2), feedback: { en: `Close, but one doubling short. Square 2 is 1 doubling, square 3 is 2 doublings, so square ${k} is…`, zh: `很接近，可是少翻了一次倍。第 2 格翻了 1 次，第 3 格翻了 2 次，那第 ${k} 格呢？` } },
+          { match: `lt:${early}`, feedback: { en: `Much too small. Square ${k - 3} alone already has ${fmt(early)} grains.`, zh: `太小了。光是第 ${k - 3} 格就已经有 ${fmt(early)} 粒了。` } },
+        ],
+        explanation: {
+          en: `Every square doubles the one before, so square ${k} is ${d} doublings after square 1: ${d} twos multiplied together. That makes 2^${d} = ${fmt(answer)} grains on square ${k}.`,
+          zh: `每一格都是前一格的两倍，所以第 ${k} 格比第 1 格多翻了 ${d} 次倍：${d} 个 2 相乘。所以第 ${k} 格有 2^${d} = ${fmt(answer)} 粒米。`,
+        },
+        aha: {
+          en: `Square ${k} is just ${d} doublings, yet it holds ${fmt(answer)} grains. Every ten more squares multiply the pile by about a thousand.`,
+          zh: `第 ${k} 格只翻了 ${d} 次倍，就有 ${fmt(answer)} 粒米。每往后走十格，米就多大约一千倍。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -466,6 +605,54 @@ export const millionSeconds: HeroQuestionBlueprint = {
   sortOrder: 4,
   rubricNotes:
     "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 1, paths 1, wrong 2, hints 2, retell 1: one real path (divide unit by unit, on paper or on the ladder); the extension is 'more seconds' rather than a new idea",
+  // The time ladder takes any whole number of seconds; the accepted range is the whole days either side of the truth.
+  variants: defineVariants({
+    standard: { seconds: 1_000_000 },
+    params: [{ seconds: 500_000 }, { seconds: 2_000_000 }, { seconds: 3_000_000 }, { seconds: 10_000_000 }],
+    build: ({ seconds: S }) => {
+      const minutes = S / 60;
+      const hours = S / 3600;
+      const days = S / 86_400;
+      const r = (x: number) => fmt(Math.round(x));
+      const days1 = fmt(Math.round(days * 10) / 10);
+      return {
+        prompt: {
+          en: `About how many days is ${fmt(S)} seconds? (One decimal place is fine.)`,
+          zh: `${fmt(S)} 秒大约是多少天？（保留一位小数就行。）`,
+        },
+        scene: {
+          type: "scale_ladder",
+          mode: "time",
+          start: S,
+          references: [
+            { value: 23_400, emoji: "🏫", label: { en: "a school day", zh: "一天的课" } },
+            { value: 604_800, emoji: "📅", label: { en: "a week", zh: "一周" } },
+            { value: 4_838_400, emoji: "🏖️", label: { en: "a summer holiday", zh: "一个暑假" } },
+          ],
+        },
+        answer: { type: "ESTIMATE", min: Math.floor(days), max: Math.ceil(days), truth: Math.round(days * 100) / 100, unit: { en: "days", zh: "天" } },
+        hints: [
+          { en: `Climb the ladder again, starting from ${fmt(S)} seconds. Which button turns seconds into minutes?`, zh: `从 ${fmt(S)} 秒开始，再爬一次梯子。哪个按钮把秒换成分钟？` },
+          { en: `"÷ 60" gives about ${r(minutes)} minutes, and "÷ 60" again gives about ${r(hours)} hours.`, zh: `按「÷ 60」大约是 ${r(minutes)} 分钟，再按「÷ 60」大约是 ${r(hours)} 小时。` },
+          { en: `A day has 24 hours. How many days is ${r(hours)} hours? Press "÷ 24".`, zh: `一天有 24 小时。${r(hours)} 小时是几天？按「÷ 24」。` },
+        ],
+        wrongAnswers: [
+          { match: `gt:${Math.round(minutes * 0.6)}`, feedback: { en: `That looks like minutes! ${fmt(S)} ÷ 60 ≈ ${r(minutes)} is the number of minutes. Keep climbing: minutes into hours, then hours into days.`, zh: `这看起来是分钟数！${fmt(S)} ÷ 60 ≈ ${r(minutes)} 是分钟。继续往上爬：分钟换成小时，再换成天。` } },
+          { match: `gt:${Math.round(hours * 0.36)}`, feedback: { en: `If you got about ${r(hours)}, those are hours: one more step, because a day has 24 hours.`, zh: `如果你算出来大约是 ${r(hours)}，那是小时数：还差一步，一天有 24 小时。` } },
+          { match: `lt:${Math.floor(days)}`, feedback: { en: `A bit short. One day is 86,400 seconds; check your last division.`, zh: `有点少。一天是 86,400 秒，检查一下最后一步除法。` } },
+          { match: `gt:${Math.ceil(days)}`, feedback: { en: `A bit long. A day is 86,400 seconds. How many of those fit into ${fmt(S)}?`, zh: `有点多。一天是 86,400 秒。${fmt(S)} 里面装得下几个 86,400？` } },
+        ],
+        explanation: {
+          en: `Climb one rung at a time: ${fmt(S)} ÷ 60 ≈ ${r(minutes)} minutes, and ÷ 60 again ≈ ${r(hours)} hours. Then ${r(hours)} ÷ 24 ≈ ${days1} days.`,
+          zh: `一级一级往上爬：${fmt(S)} ÷ 60 ≈ ${r(minutes)} 分钟，再 ÷ 60 ≈ ${r(hours)} 小时。然后 ${r(hours)} ÷ 24 ≈ ${days1} 天。`,
+        },
+        aha: {
+          en: `The same three divisions work for any number of seconds: ÷ 60, ÷ 60, ÷ 24. ${fmt(S)} seconds is about ${days1} days.`,
+          zh: `不管多少秒，都是同样三步：÷ 60、÷ 60、÷ 24。${fmt(S)} 秒大约是 ${days1} 天。`,
+        },
+      };
+    },
+  }),
 };
 
 /**
@@ -581,6 +768,60 @@ export const billionHeartbeats: HeroQuestionBlueprint = {
   sortOrder: 5,
   rubricNotes:
     "17/20 — hook 2, guess 2, hands-on 2, aha 2, floor 1, ceiling 2, paths 1, wrong 2, hints 2, retell 1: multiplying into the millions is a stretch below 10; the ladder is the one path; the 一亿/十亿 slip gets its own feedback",
+  // The heartbeat ladder takes 20-600 beats a minute; the accepted range is about -8% / +10% of the truth (70 gives the hand-set 25-30).
+  variants: defineVariants({
+    standard: { bpm: 70 },
+    params: [{ bpm: 60 }, { bpm: 80 }, { bpm: 90 }, { bpm: 120 }],
+    build: ({ bpm: b }) => {
+      const perHour = b * 60;
+      const perYear = perHour * 24 * 365;
+      const years = 1e9 / perYear;
+      const truth = Math.round(years * 10) / 10;
+      const millions = Math.round(perYear / 1e5) / 10;
+      const wan = fmt(Math.round(millions * 100));
+      const min = Math.floor(years * 0.92);
+      const max = Math.ceil(years * 1.1);
+      return {
+        prompt: {
+          en: `Suppose your heart beats ${b} times a minute. About how old will you be when it beats for the 1,000,000,000th time? (Answer in years.)`,
+          zh: `假如你的心每分钟跳 ${b} 下。它跳到第 1,000,000,000 下的时候，你大约几岁？（用「岁」回答。）`,
+        },
+        scene: {
+          type: "scale_ladder",
+          mode: "heartbeats",
+          start: b,
+          target: 1_000_000_000,
+          references: [
+            { value: 6, emoji: "🎒", label: { en: "starting school", zh: "上小学" } },
+            { value: 18, emoji: "🎓", label: { en: "finishing school", zh: "高中毕业" } },
+            { value: 40, emoji: "🧑", label: { en: "a parent", zh: "爸爸妈妈" } },
+          ],
+        },
+        answer: { type: "ESTIMATE", min, max, truth, unit: { en: "years old", zh: "岁" } },
+        hints: [
+          { en: `Start with one hour: ${b} beats a minute × 60 is how many beats an hour? (The scene's "× 60" button.)`, zh: `先算一小时：每分钟 ${b} 下，× 60 是每小时多少下？（场景里的「× 60」按钮。）` },
+          { en: `${b} × 60 = ${fmt(perHour)} beats an hour. Then "× 24" gives a day and "× 365" gives a year.`, zh: `${b} × 60 = ${fmt(perHour)}，这是一小时的心跳。再「× 24」是一天，「× 365」是一年。` },
+          { en: `A year has about ${millions} million beats. How many of those years fit into 1,000,000,000? Divide.`, zh: `一年大约跳 ${wan} 万下。1,000,000,000 下里能装下几年？除一下。` },
+        ],
+        wrongAnswers: [
+          { match: `gt:${Math.round(years * 20)}`, feedback: { en: "Way too old! You probably skipped a step: minute to hour is × 60, hour to day × 24, day to year × 365. Did you do all three?", zh: "太老了！你可能漏了一步：每分钟到每小时 × 60，每小时到每天 × 24，每天到每年 × 365。三步都做了吗？" } },
+          { match: `gt:${Math.round(years * 5)}`, feedback: { en: `Did you get about ${fmt(Math.round(years * 10))}? A billion has nine zeros, not ten. With the right number the age is ten times smaller.`, zh: `你算出来大约是 ${fmt(Math.round(years * 10))} 岁吗？十亿是 9 个 0，不是 10 个。用对的数，年龄会小十倍。` } },
+          { match: `gt:${max}`, feedback: { en: `A little too old. Check each step, and use ${b} beats a minute all the way through.`, zh: `有点大了。检查每一步，记得一直用每分钟 ${b} 下。` } },
+          { match: "lt:1", feedback: { en: `Less than a year? In one year this heart beats about ${millions} million times, and a billion is far more.`, zh: `不到一岁？光是一年，这颗心就要跳大约 ${wan} 万下，十亿可比这多多了。` } },
+          { match: `lt:${Math.ceil(years / 5)}`, feedback: { en: "Did you use a hundred million (100,000,000)? A billion is 1,000,000,000, ten times more, so the age is ten times bigger too.", zh: "你是不是用了一亿（100,000,000）？十亿是 1,000,000,000，是一亿的十倍，所以年龄也要大十倍。" } },
+          { match: `lt:${min}`, feedback: { en: `A little too young. One year is about ${millions} million beats. How many times does that fit into a billion?`, zh: `有点小了。一年大约是 ${wan} 万下。十亿里面能装下几个 ${wan} 万？` } },
+        ],
+        explanation: {
+          en: `Climb the ladder: ${b} beats a minute × 60 = ${fmt(perHour)} an hour, × 24 = ${fmt(perHour * 24)} a day, and × 365 ≈ ${millions} million a year. Then 1,000,000,000 ÷ ${fmt(millions * 1e6)} ≈ ${fmt(truth)}, so you'd be about ${Math.round(years)} years old.`,
+          zh: `沿着梯子往上爬：每分钟 ${b} 下，× 60 是每小时 ${fmt(perHour)} 下，× 24 是每天 ${fmt(perHour * 24)} 下，× 365 大约是每年 ${wan} 万下。然后 1,000,000,000 ÷ ${fmt(millions * 1e6)} ≈ ${fmt(truth)}，所以那时你大约 ${Math.round(years)} 岁。`,
+        },
+        aha: {
+          en: `A faster heart reaches a billion sooner: at ${b} beats a minute it takes about ${Math.round(years)} years. Twice the beats, half the years.`,
+          zh: `心跳得越快，越早到十亿：每分钟 ${b} 下，大约要 ${Math.round(years)} 年。心跳快一倍，年数就少一半。`,
+        },
+      };
+    },
+  }),
 };
 
 /**

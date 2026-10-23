@@ -84,4 +84,7 @@ These legacy rows were taken over in place by a hero blueprint (`packages/db/pri
 
 | Legacy title | Hero slug |
 |---|---|
+| Paper Folding Challenge | `fold-to-the-moon` |
 | Math Mind-Reading Trick | `mind-reading-five` |
+| Sunflower Fibonacci Spiral | `fibonacci-next` |
+| Cicada Underground Mystery | `cicada-primes` |

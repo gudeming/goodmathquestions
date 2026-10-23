@@ -116,6 +116,7 @@ model User {
 
   // Relations
   submissions      Submission[]
+  variantSubmissions VariantSubmission[]
   badges           UserBadge[]
   comments         Comment[]
   likes            QuestionLike[]
@@ -224,9 +225,12 @@ model Question {
   collection          Collection?  @relation(fields: [collectionId], references: [id])
   collectionId        String?
   slug                String?      @unique // stable URL, e.g. "gauss-sum"
+  variants            Json         @default("[]") // "try another number": expanded variants incl. answers, never sent as is
+  variantCount        Int          @default(0)
 
   // Relations
   submissions  Submission[]
+  variantSubmissions VariantSubmission[]
   comments     Comment[]
   tags         TagsOnQuestions[]
   likes        QuestionLike[]
@@ -349,6 +353,23 @@ model Submission {
 
   @@index([userId, questionId])
   @@index([userId, createdAt])
+}
+
+// One answer to a "try another number" variant (Question.variants[].id).
+model VariantSubmission {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  variantId  String
+  answer     String
+  isCorrect  Boolean
+  xpEarned   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, questionId, variantId])
 }
 
 model Badge {

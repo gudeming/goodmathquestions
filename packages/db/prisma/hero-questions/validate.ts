@@ -54,6 +54,8 @@ import {
   COLLECTION_SLUGS,
   HERO_AGE_GROUPS,
   HERO_KINDS,
+  expandHeroVariants,
+  variantId,
   type HeroQuestionBlueprint,
 } from "./_template";
 import { ALL_HERO_BLUEPRINTS, HERO_WORLDS, type HeroWorld } from "./worlds";
@@ -67,6 +69,8 @@ export const HERO_LIMITS = {
   funFactMaxChars: 300,
   titleMaxChars: 30,
   minWrongAnswers: 2,
+  minVariants: 3,
+  maxVariants: 5,
   rubricBar: 14,
   rubricMax: 20,
 } as const;
@@ -462,7 +466,86 @@ export function validateHeroBlueprint(bp: HeroQuestionBlueprint): string[] {
   checkWrongAnswers(bp, spec, options, errors);
   if (scene.ok) checkSceneAnswer(scene.config, spec, errors);
 
+  if (bp.variants !== undefined) checkVariants(bp, spec, errors);
+
   return errors;
+}
+
+/** Answer types a variant may use: EXPRESSION needs per-variant number rules, SCENE_COMPLETION has no typed answer. */
+const VARIANT_ANSWER_TYPES: ReadonlySet<string> = new Set(["NUMERIC", "ESTIMATE", "CHOICE", "MULTI_VALUE", "ORDERING"]);
+
+const sameJson = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * "Try another number": the formula must reproduce the standard version, and every expanded
+ * variant must pass the same checks as a blueprint (scene parses and agrees with the answer,
+ * wrong-answer rules miss the truth, three real hints, aha/explanation limits).
+ */
+function checkVariants(bp: HeroQuestionBlueprint, spec: AnswerSpec, errors: string[]): void {
+  const v = bp.variants!;
+  if (!VARIANT_ANSWER_TYPES.has(spec.type)) {
+    errors.push(`variants: ${spec.type} answers can't have variants`);
+    return;
+  }
+  if (v.params.length < HERO_LIMITS.minVariants || v.params.length > HERO_LIMITS.maxVariants) {
+    errors.push(`variants: need ${HERO_LIMITS.minVariants}-${HERO_LIMITS.maxVariants} parameter sets, got ${v.params.length}`);
+  }
+  const keys = Object.keys(v.standard).sort().join();
+  const standardId = variantId(v.standard);
+
+  let standard;
+  try {
+    standard = v.build(v.standard);
+  } catch (e) {
+    errors.push(`variants: build(standard) throws: ${(e as Error).message}`);
+    return;
+  }
+  if (!sameJson(standard.answer, bp.answer)) {
+    errors.push(`variants: build(standard) gives answer ${JSON.stringify(standard.answer)}, the blueprint says ${JSON.stringify(bp.answer)}`);
+  }
+  if (!sameJson(parseSceneConfig(standard.scene), parseSceneConfig(bp.scene))) {
+    errors.push(`variants: build(standard) gives a different scene from the blueprint's`);
+  }
+
+  const ids = new Set<string>();
+  v.params.forEach((p, i) => {
+    const id = variantId(p);
+    const label = `variants[${i}] (${id})`;
+    if (Object.keys(p).sort().join() !== keys) errors.push(`${label}: parameters must be the standard's (${keys})`);
+    if (Object.values(p).some((x) => !Number.isFinite(x))) errors.push(`${label}: parameters must be finite numbers`);
+    if (id === standardId) errors.push(`${label}: same parameters as the standard version`);
+    if (ids.has(id)) errors.push(`${label}: duplicate parameters`);
+    ids.add(id);
+  });
+
+  let expanded;
+  try {
+    expanded = expandHeroVariants(bp);
+  } catch (e) {
+    errors.push(`variants: build throws: ${(e as Error).message}`);
+    return;
+  }
+  const prompts = new Set([normalise(bp.prompt.en)]);
+  expanded.forEach((variant, i) => {
+    const label = `variants[${i}] (${variant.id})`;
+    if (variant.answer.type !== spec.type) errors.push(`${label}: answer type ${variant.answer.type}, the standard is ${spec.type}`);
+    if (prompts.has(normalise(variant.prompt.en))) errors.push(`${label}: prompt is the same as another version's; put the numbers in it`);
+    prompts.add(normalise(variant.prompt.en));
+    // The variant replaces only these fields, so checking it as a blueprint covers exactly them.
+    const asBlueprint: HeroQuestionBlueprint = {
+      ...bp,
+      prompt: variant.prompt,
+      scene: variant.scene,
+      answer: variant.answer,
+      choices: variant.choices ?? bp.choices,
+      hints: variant.hints,
+      wrongAnswers: variant.wrongAnswers,
+      explanation: variant.explanation,
+      aha: variant.aha,
+      variants: undefined,
+    };
+    for (const problem of validateHeroBlueprint(asBlueprint)) errors.push(`${label}: ${problem}`);
+  });
 }
 
 /** Problems across a set of blueprints, keyed by slug (or `#index` when the slug is blank). */

@@ -9,6 +9,7 @@ export type Histogram = Outputs["guess"]["histogram"];
 export type CheckResult = Outputs["question"]["checkAnswer"];
 export type SubmitResult = Outputs["question"]["submitAnswer"];
 export type RevealData = Outputs["question"]["reveal"];
+export type PublicVariant = Outputs["question"]["variants"][number];
 export type ExpressionRules = NonNullable<Outputs["question"]["expressionRules"]>;
 export type EventName = Inputs["event"]["track"]["name"];
 export type EventProps = NonNullable<Inputs["event"]["track"]["props"]>;

@@ -2,7 +2,7 @@
  * Blueprint -> Prisma `Question` columns. Pure (no client is created), so tests can pin it.
  */
 import { Prisma, type AnswerType } from "@prisma/client";
-import type { AnswerSpec, HeroQuestionBlueprint } from "./_template";
+import { expandHeroVariants, type AnswerSpec, type HeroQuestionBlueprint } from "./_template";
 import { resolveChoiceOptions } from "./validate";
 
 /** Hero sortOrders start here so they never collide with the legacy rows (1..567) that `questions_only` matches by sortOrder. */
@@ -42,12 +42,33 @@ export function canonicalAnswerText(spec: AnswerSpec): string {
 const json = (value: unknown): Prisma.InputJsonValue => value as Prisma.InputJsonValue;
 
 /**
+ * The `variants` column: each "try another number" version fully expanded, with the answer
+ * text for "show me" and the CHOICE options resolved. Server-only, like `answerRule`.
+ */
+export function heroVariantsData(bp: HeroQuestionBlueprint) {
+  return expandHeroVariants(bp).map((v) => ({
+    id: v.id,
+    params: v.params,
+    prompt: v.prompt,
+    scene: v.scene,
+    answer: v.answer,
+    answerText: canonicalAnswerText(v.answer),
+    choices: v.answer.type === "CHOICE" ? (resolveChoiceOptions({ choices: v.choices ?? bp.choices, guess: bp.guess }) ?? null) : null,
+    hints: v.hints,
+    wrongAnswers: v.wrongAnswers,
+    explanation: v.explanation,
+    aha: v.aha,
+  }));
+}
+
+/**
  * Every column a hero question owns. Absent optional JSON (guess, choices) is written as SQL NULL
  * explicitly so re-seeding after removing a guess clears it.
  */
 export function heroQuestionData(bp: HeroQuestionBlueprint, opts: { collectionId: string; worldSortOrder: number }) {
   const options = bp.answer.type === "CHOICE" ? resolveChoiceOptions(bp) : null;
   const correctId = bp.answer.type === "CHOICE" ? bp.answer.correctId : null;
+  const variants = heroVariantsData(bp);
   return {
     slug: bp.slug,
     kind: bp.kind,
@@ -79,6 +100,8 @@ export function heroQuestionData(bp: HeroQuestionBlueprint, opts: { collectionId
     solutionTags: json(bp.solutionTags),
     funFactEn: bp.funFact?.en ?? null,
     funFactZh: bp.funFact?.zh ?? null,
+    variants: json(variants),
+    variantCount: variants.length,
     collectionId: opts.collectionId,
     isPublished: true,
     sortOrder: heroSortOrder(opts.worldSortOrder, bp.sortOrder),

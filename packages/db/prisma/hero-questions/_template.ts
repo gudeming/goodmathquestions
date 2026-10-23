@@ -99,4 +99,64 @@ export interface HeroQuestionBlueprint {
    * row in place (same id, so links and submissions survive) instead of creating one.
    */
   upgradesLegacyTitleEn?: string;
+  /**
+   * "Try another number": parameter sets the reveal offers after the standard version.
+   * Only for questions whose maths and scene genuinely work at other sizes; see `HeroVariants`.
+   */
+  variants?: HeroVariants;
+}
+
+/** The numbers one variant is built from, e.g. `{ people: 8 }`. */
+export type VariantParams = Record<string, number>;
+
+/**
+ * What a variant replaces. Everything else (title, hook, guess, extension, discussion, fun fact)
+ * belongs to the standard version: a variant goes straight to "try it" and then its own reveal.
+ */
+export interface HeroVariantContent {
+  prompt: Bi;
+  scene: SceneConfigInput;
+  answer: AnswerSpec;
+  /** CHOICE options; when omitted a CHOICE answer reuses the standard version's options. */
+  choices?: GuessOption[];
+  hints: [Bi, Bi, Bi];
+  wrongAnswers: WrongAnswerRule[];
+  explanation: Bi;
+  aha: Bi;
+}
+
+export interface HeroVariants<P extends VariantParams = VariantParams> {
+  /** The standard version's numbers: `build(standard)` must give the blueprint's own answer and scene (the formula check). */
+  standard: P;
+  /** 3-5 other parameter sets, each different from `standard`. */
+  params: P[];
+  /** Answer from a formula, scene from the parameters, copy with the numbers filled in. */
+  build(p: P): HeroVariantContent;
+}
+
+/** Typed helper: `variants: defineVariants({ standard: { n: 10 }, params: [...], build: (p) => ... })`. */
+export function defineVariants<P extends VariantParams>(v: HeroVariants<P>): HeroVariants {
+  return v as unknown as HeroVariants;
+}
+
+/** One expanded variant, as the seed stores it. */
+export interface HeroVariant extends HeroVariantContent {
+  /** Stable id from the parameters ("people8", "m3-n5"), so solves survive re-seeding. */
+  id: string;
+  params: VariantParams;
+}
+
+/** Variant id from its parameters: keys sorted, `key` + value, joined with "-". */
+export function variantId(params: VariantParams): string {
+  return Object.keys(params)
+    .sort()
+    .map((k) => `${k}${String(params[k]).replace(/[^0-9a-z]/gi, "_")}`)
+    .join("-");
+}
+
+/** Every variant of a blueprint, expanded (empty when it has none). */
+export function expandHeroVariants(bp: Pick<HeroQuestionBlueprint, "variants">): HeroVariant[] {
+  if (!bp.variants) return [];
+  const { params, build } = bp.variants;
+  return params.map((p) => ({ id: variantId(p), params: { ...p }, ...build(p) }));
 }

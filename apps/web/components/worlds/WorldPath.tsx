@@ -71,6 +71,15 @@ export function WorldPath({ world, questions }: WorldPathProps) {
                 {age && (
                   <span className="rounded-full bg-primary-50 px-2 py-0.5 font-heading text-xs text-primary-700">{t("ages", { range: age })}</span>
                 )}
+                {q.variantCount > 0 && (
+                  <span
+                    className="rounded-full bg-fun-purple/10 px-2 py-0.5 font-heading text-xs text-purple-700"
+                    title={t("variantsHint", { count: q.variantCount })}
+                    data-testid="variant-badge"
+                  >
+                    🔁 {t("variants", { count: q.variantCount })}
+                  </span>
+                )}
               </div>
               <p className="font-body text-base leading-relaxed text-gray-800 line-clamp-3 sm:text-lg">{hook}</p>
               <span className="mt-3 inline-block font-heading text-sm font-semibold text-primary-600 group-hover:text-primary-800">
