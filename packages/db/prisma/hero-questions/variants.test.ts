@@ -95,6 +95,22 @@ describe("variants: build-time expansion and checks", () => {
     expect(problems(tweaked({ params: [{ people: 6 }, { people: 10 }, { people: 8 }] })).some((e) => /same parameters as the standard/.test(e))).toBe(true);
   });
 
+  it("an ESTIMATE variant's accepted range must sit on the standard slider", async () => {
+    const { billionHeartbeats } = await import("./world-huge-numbers");
+    expect(billionHeartbeats.guess?.type).toBe("slider");
+    expect(problems(billionHeartbeats)).toEqual([]);
+    const base = billionHeartbeats.variants!;
+    const offSlider = withVariants(
+      billionHeartbeats,
+      defineVariants<{ bpm: number }>({
+        standard: { bpm: 70 },
+        params: [{ bpm: 60 }, { bpm: 80 }, { bpm: 10 }],
+        build: (p) => base.build(p),
+      })
+    );
+    expect(problems(offSlider).some((e) => /variants\[2\] \(bpm10\): accepted range .* is off the slider \[0, 100\]/.test(e))).toBe(true);
+  });
+
   it("rejects variants on answer types that can't vary", () => {
     const expression = ALL_HERO_BLUEPRINTS.find((bp) => bp.answer.type === "EXPRESSION")!;
     const bp = withVariants(expression, defineVariants({ standard: { n: 1 }, params: [{ n: 2 }, { n: 3 }, { n: 4 }], build: () => { throw new Error("unused"); } }));

@@ -74,8 +74,9 @@ export const BridgesTraceBase = z.object({
 /** B8: drag the minute hand; count the overlaps. */
 export const ClockOverlapBase = z.object({
   type: z.literal("clock_overlap"),
-  hours: z.union([z.literal(12), z.literal(24)]).default(24),
-  /** Answer-bearing: when given, must equal the number of overlaps in `hours` (22 or 11). */
+  /** Half a day to two days, in 12-hour steps (24 = the classic whole day). */
+  hours: z.union([z.literal(12), z.literal(24), z.literal(36), z.literal(48)]).default(24),
+  /** Answer-bearing: when given, must equal the number of overlaps in `hours` (11 per 12 hours). */
   overlaps: int.optional(),
 });
 

@@ -1,4 +1,4 @@
-/** Pure helpers for clock_overlap (B8). Time is minutes after midnight, 0 <= t < 1440. */
+/** Pure helpers for clock_overlap (B8). Time is minutes after the first midnight (a scene spans up to two days). */
 
 export const MINUTES_PER_DAY = 1440;
 /** The minute hand laps the hour hand every 720/11 minutes (1 h 5 min 27 s). */

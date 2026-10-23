@@ -454,7 +454,8 @@ export const questionRouter = createTRPCRouter({
 
   /**
    * "Try another number": the variants of a question as a client may see them (prompt, scene,
-   * hints, options; never the answer). Empty for questions without variants.
+   * hints, options; never the answer), each with `solved` for the signed-in user (false for guests).
+   * Empty for questions without variants.
    */
   variants: publicProcedure
     .input(z.object({ questionId: z.string().min(1).max(64) }))
@@ -466,7 +467,18 @@ export const questionRouter = createTRPCRouter({
       if (!question) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Question not found" });
       }
-      return parseVariants(question.variants, question.id).map(toPublicVariant);
+      // Signed in: which variants this user already solved, so progress follows them across devices.
+      let solved = new Set<string>();
+      if (identityFromContext(ctx)?.kind === "user") {
+        const userId = await resolveSessionUserId(ctx as any);
+        const rows = await ctx.db.variantSubmission.findMany({
+          where: { userId, questionId: question.id, isCorrect: true },
+          select: { variantId: true },
+          distinct: ["variantId"],
+        });
+        solved = new Set(rows.map((r) => r.variantId));
+      }
+      return parseVariants(question.variants, question.id).map((v) => ({ ...toPublicVariant(v), solved: solved.has(v.id) }));
     }),
 
   /** Check a variant answer (guests: no XP, nothing stored). Same response shape as checkAnswer. */

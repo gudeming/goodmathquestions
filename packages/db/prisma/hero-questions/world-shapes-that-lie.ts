@@ -959,6 +959,82 @@ export const clockHandsMeet: HeroQuestionBlueprint = {
   sortOrder: 8,
   rubricNotes:
     "18/20 — hook 2, guess 2, hands-on 2, aha 2, floor 2, ceiling 2, paths 2, wrong 2, hints 1, retell 1: dragging the minute hand, a table of meeting times and the 'laps' argument all work; hint 3 gives away the 11-per-12-hours step",
+  // The scene runs 12-48 hours in 12-hour steps; every 12 hours hold 11 meetings, so the answer is 11 × hours / 12.
+  variants: defineVariants({
+    standard: { hours: 24 },
+    params: [{ hours: 12 }, { hours: 36 }, { hours: 48 }],
+    build: ({ hours }) => {
+      const halves = hours / 12;
+      const answer = 11 * halves;
+      const span = ({ 12: { en: "12 hours (half a day)", zh: "12 小时（半天）" }, 24: { en: "24 hours (one whole day)", zh: "24 小时（一整天）" }, 36: { en: "36 hours (a day and a half)", zh: "36 小时（一天半）" }, 48: { en: "48 hours (two whole days)", zh: "48 小时（整整两天）" } } as const)[hours as 12 | 24 | 36 | 48];
+      const end = hours % 24 === 0 ? { en: "midnight", zh: "半夜 12 点" } : { en: "noon", zh: "中午 12 点" };
+      const prompt = {
+        en: `Start at midnight, when the hands overlap, and count that as the first time. In the next ${span.en}, how many times do the hands overlap? (Stop just before the ${end.en} at the end: don't count it.)`,
+        zh: `从半夜 12 点开始，那时两针重合，算第 1 次。接下来的 ${span.zh}里，两针一共重合几次？（最后那个${end.zh}不算。）`,
+      };
+      return {
+        prompt,
+        scene: { type: "clock_overlap", hours: hours as 12 | 24 | 36 | 48, overlaps: answer },
+        answer: { type: "NUMERIC", value: answer },
+        hints: [
+          { en: "First find how many meetings fit into 12 hours. Drag the minute hand round: when does it catch the hour hand after 12:00?", zh: "先算 12 小时里有几次重合。拖着分针转：12 点以后，它第一次追上时针是什么时候？" },
+          { en: "Each catch-up takes a bit more than an hour, about 1 hour 5 minutes. So the meeting that 'should' be at 11 o'clock slides all the way to 12:00.", zh: "每追上一次要比一小时多一点，大约 1 小时 5 分。所以本该在 11 点左右的那次，一直滑到了 12 点整。" },
+          halves === 1
+            ? { en: "Between 11 and 12 the minute hand doesn't catch up until exactly 12:00, and that noon isn't counted. List the meetings from midnight to just before noon.", zh: "11 点到 12 点之间，分针要到 12 点整才追上，而那个中午 12 点不算。把半夜 12 点到中午之前的重合列出来数一数。" }
+            : { en: `12 hours hold 11 meetings, counting the first one. ${hours} hours is ${halves} lots of 12 hours.`, zh: `12 小时里，算上开头那次，重合 11 次。${hours} 小时是 ${halves} 个 12 小时。` },
+        ],
+        wrongAnswers: uniqueMatches([
+          {
+            match: String(hours),
+            feedback: {
+              en: "That's 'once every hour'. But the hour hand keeps moving, so each catch-up takes about 1 hour 5 minutes, a little more than an hour.",
+              zh: "这是「每小时一次」。可是时针也在走，每次追上要大约 1 小时 5 分，比一小时多一点。",
+            },
+          },
+          {
+            match: String(answer - 1),
+            feedback: {
+              en: "So close! You probably left out the overlap at midnight, where we started. It counts as the first one.",
+              zh: "很接近了！你可能没算开头半夜 12 点那一次。它算第 1 次。",
+            },
+          },
+          {
+            match: String(answer + 1),
+            feedback: {
+              en: `So close! You may have counted the ${end.en} at the very end too. Stop just before it.`,
+              zh: `很接近了！你可能把最后那个${end.zh}也算上了。它不算。`,
+            },
+          },
+          {
+            match: String(2 * hours),
+            feedback: {
+              en: "That would be twice an hour. The minute hand laps the hour hand only about once an hour, and a little less.",
+              zh: "这是每小时两次。分针大约一小时才追上时针一次，还不到一次。",
+            },
+          },
+          ...(halves > 1
+            ? [
+                {
+                  match: "11",
+                  feedback: {
+                    en: `11 is exactly right for 12 hours! But ${span.en.replace(/ \(.*\)/, "")} is ${halves} lots of 12 hours.`,
+                    zh: `12 小时里正好是 11 次！可是 ${hours} 小时是 ${halves} 个 12 小时。`,
+                  },
+                },
+              ]
+            : []),
+        ]),
+        explanation: {
+          en: `In 12 hours the minute hand goes round 12 times and the hour hand once, so the minute hand gains 11 laps and catches the hour hand 11 times. ${halves === 1 ? "That is all 12 hours: 11 meetings." : `${hours} hours are ${halves} lots of 12 hours, so ${halves} × 11 = ${answer} meetings.`}`,
+          zh: `12 小时里，分针转 12 圈，时针转 1 圈，分针多转 11 圈，所以追上 11 次。${halves === 1 ? "12 小时就是 11 次。" : `${hours} 小时是 ${halves} 个 12 小时，所以是 ${halves} × 11 = ${answer} 次。`}`,
+        },
+        aha: {
+          en: `Every 12 hours one meeting goes missing, because the hour hand is a moving target: ${hours} hours give ${answer} meetings, not ${hours}.`,
+          zh: `时针也在往前走，所以每 12 小时就少一次重合：${hours} 小时里是 ${answer} 次，而不是 ${hours} 次。`,
+        },
+      };
+    },
+  }),
 };
 
 /**

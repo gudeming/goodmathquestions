@@ -57,8 +57,9 @@ export function variantQuestion(question: PublicQuestion, variant: PublicVariant
     animationConfig: variant.scene as PublicQuestion["animationConfig"],
     hints: variant.hints,
     choices: variant.choices,
-    // The standard version's guess (and its slider) is about the standard numbers.
-    guessConfig: null,
+    // An estimate keeps the standard slider (the build checks every variant's range is on it);
+    // any other guess is about the standard numbers, and a variant has no guess act.
+    guessConfig: question.answerType === "ESTIMATE" && question.guessConfig?.type === "slider" ? question.guessConfig : null,
     hookEn: null,
     hookZh: null,
   };
@@ -89,7 +90,8 @@ export function VariantPlay({ question, locale, track }: VariantPlayProps) {
 
   const list = useMemo(() => variants.data ?? [], [variants.data]);
   const ids = useMemo(() => list.map((v) => v.id), [list]);
-  const solvedSet = useMemo(() => new Set(solved), [solved]);
+  // Solved on this device, plus (signed in) what the server has on record from any device.
+  const solvedSet = useMemo(() => new Set([...solved, ...list.filter((v) => v.solved).map((v) => v.id)]), [solved, list]);
   const solvedCount = ids.filter((id) => solvedSet.has(id)).length;
   const current = active ? list.find((v) => v.id === active.id) ?? null : null;
 

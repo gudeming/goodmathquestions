@@ -529,6 +529,10 @@ function checkVariants(bp: HeroQuestionBlueprint, spec: AnswerSpec, errors: stri
   expanded.forEach((variant, i) => {
     const label = `variants[${i}] (${variant.id})`;
     if (variant.answer.type !== spec.type) errors.push(`${label}: answer type ${variant.answer.type}, the standard is ${spec.type}`);
+    // An ESTIMATE variant answers on the standard version's slider (VariantPlay keeps it), so its range must be on it.
+    if (variant.answer.type === "ESTIMATE" && bp.guess?.type === "slider" && (variant.answer.min < bp.guess.min || variant.answer.max > bp.guess.max)) {
+      errors.push(`${label}: accepted range [${variant.answer.min}, ${variant.answer.max}] is off the slider [${bp.guess.min}, ${bp.guess.max}]`);
+    }
     if (prompts.has(normalise(variant.prompt.en))) errors.push(`${label}: prompt is the same as another version's; put the numbers in it`);
     prompts.add(normalise(variant.prompt.en));
     // The variant replaces only these fields, so checking it as a blueprint covers exactly them.

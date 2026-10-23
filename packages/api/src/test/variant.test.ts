@@ -148,6 +148,10 @@ describe.skipIf(!servicesUp)("question variants (Postgres)", () => {
 
     const user = await db.user.findUniqueOrThrow({ where: { id: userId }, select: { xp: true } });
     expect(user.xp - xpAfterStandard).toBe(6);
+    // Progress follows the user: solved variants are marked for them, never for guests.
+    const mine = await caller.question.variants({ questionId: f.questionId });
+    expect(mine.map((v) => [v.id, v.solved])).toEqual([["people6", true], ["people8", true], ["people12", true]]);
+    expect((await callerFor().question.variants({ questionId: f.questionId })).every((v) => !v.solved)).toBe(true);
     // Variant tries never count as attempts on the standard version.
     expect(await db.submission.count({ where: { userId } })).toBe(1);
   });
